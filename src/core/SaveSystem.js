@@ -220,10 +220,8 @@ export class SaveSystem {
         });
       }
 
-      // 3. Nebel-Stempel wiederherstellen (nur Tiefen-Stempel y >= 8, niemals über der Erdoberfläche)
-      if (data.grid && Array.isArray(data.grid.exploredStamps)) {
-        gs.exploredStamps = data.grid.exploredStamps.filter(s => s && s.y >= 8);
-      }
+      // 3. Nebel-Stempel bereinigen (Ablösung durch sauberes Kachel-Raster)
+      gs.exploredStamps = [];
 
       // 4. Gebäude-Ausbau wiederherstellen
       if (bs && Array.isArray(data.buildings)) {

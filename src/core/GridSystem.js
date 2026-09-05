@@ -498,18 +498,6 @@ export class GridSystem {
     const sensorRadTiles = player ? player.sensorRadius : 3.5;
     const sensorRadPx = sensorRadTiles * TILE_SIZE;
 
-    // Stempel für besuchte Position hinzufügen (STRIKT NUR UNTER DER ERDE: gy >= 0, pY >= 8)
-    if (player && player.gy >= 0 && pY >= 8) {
-      if (this.lastStampX === null || Math.hypot(pX - this.lastStampX, pY - this.lastStampY) >= 24) {
-        this.lastStampX = pX;
-        this.lastStampY = pY;
-        this.exploredStamps.push({
-          x: Math.round(pX),
-          y: Math.round(pY),
-          r: Math.round(sensorRadPx)
-        });
-      }
-    }
 
     for (let y = startRow; y <= endRow; y++) {
       const depthTint = getDepthTint(y);
@@ -672,32 +660,6 @@ export class GridSystem {
         }
       }
 
-      // 2. Weiche kreisrunde Übergänge anhand der gespeicherten Scanner-Stempel
-      const pad = sensorRadPx + 96;
-      const minX = worldX - pad;
-      const maxX = worldX + targetW + pad;
-      const minY = fogTopY - pad;
-      const maxY = fogBottomY + pad;
-
-      for (let i = 0; i < this.exploredStamps.length; i++) {
-        const s = this.exploredStamps[i];
-        if (s.y >= 8 && s.x >= minX && s.x <= maxX && s.y >= minY && s.y <= maxY) {
-          const cx = s.x - worldX;
-          const cy = s.y - fogTopY;
-          ctx.beginPath();
-          ctx.arc(cx, cy, s.r, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-
-      // 3. Aktueller Scanner-Umkreis um den Bohrer (STRIKT NUR WENN UNTER DER ERDE: pY > 0 und gy >= 0)
-      if (player && player.gy >= 0 && pY > 0) {
-        const pcx = pX - worldX;
-        const pcy = pY - fogTopY;
-        ctx.beginPath();
-        ctx.arc(pcx, pcy, sensorRadPx, 0, Math.PI * 2);
-        ctx.fill();
-      }
 
       ctx.globalCompositeOperation = 'source-over';
       this.fogTexture.refresh();
