@@ -2708,18 +2708,6 @@ export class BaseSystem {
     const fuelCost = Math.round((this.player.maxFuel - this.player.fuel) * 0.4);
     const repairCost = Math.round((this.player.maxHull - this.player.hull) * 1.0);
 
-    let sammlerInfo = '';
-    if (this.sammlerState === 'WAITING') {
-      sammlerInfo = `
-        <div style="background: rgba(16,185,129,0.15); border: 1px solid #10b981; border-radius: 10px; padding: 10px 12px; font-size: 12px; display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
-          <span style="color: #10b981; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">${icon('microscope', '', 14)} Steineforscher wartet am Hangar! (${Math.ceil(this.sammlerTimer)}s)</span>
-        </div>
-      `;
-    } else if (this.sammlerState === 'WALKING_IN') {
-      sammlerInfo = `<div style="font-size: 11px; color: #38bdf8; margin-top: 4px;">Steineforscher nähert sich dem Hangar...</div>`;
-    } else {
-      sammlerInfo = `<div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Steineforscher unterwegs (Nächster Besuch in ca. ${Math.max(1, Math.ceil(this.sammlerTimer))}s)</div>`;
-    }
 
     // Helper für Bauteil- und Levelanforderungen
     const checkAfford = (nextData) => {
@@ -3001,8 +2989,6 @@ export class BaseSystem {
             </button>
           </div>
         </div>
-
-        ${sammlerInfo}
 
         <div style="font-weight: 800; font-size: 12px; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 6px; display: flex; align-items: center; gap: 6px;">
           ${icon('wrench', '', 14)} Modul-Aufrüstung
