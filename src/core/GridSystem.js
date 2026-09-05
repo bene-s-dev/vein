@@ -200,6 +200,7 @@ export class GridSystem {
 
     // Verfolgung aller besuchten Positionen (wo man schon war bleibt hell angezeigt)
     this.exploredStamps = [];
+    this.exploredTiles = new Set();
     this.lastStampX = null;
     this.lastStampY = null;
 
@@ -353,16 +354,18 @@ export class GridSystem {
       totalHp = Math.round(baseHp * ORE_DATA[ore].hardness);
     }
 
+    const key = `${gx},${gy}`;
+    const isAlreadyExplored = this.exploredTiles ? this.exploredTiles.has(key) : false;
+
     const tile = {
       type,
       ore,
       maxHp: totalHp,
       hp: totalHp,
       indestructible: false,
-      explored: false
+      explored: isAlreadyExplored
     };
 
-    const key = `${gx},${gy}`;
     this.tiles.set(key, tile);
     return tile;
   }
@@ -403,6 +406,8 @@ export class GridSystem {
       const destroyedOre = tile.ore;
       tile.type = TILE_TYPES.EMPTY;
       tile.ore = null;
+      tile.explored = true;
+      if (this.exploredTiles) this.exploredTiles.add(`${gx},${gy}`);
 
       // Anstatt eines leeren schwarzen Lochs: Strukturierte Schacht-Hintergrundwand setzen!
       const key = `${gx},${gy}`;
@@ -495,7 +500,7 @@ export class GridSystem {
 
     // Stempel für besuchte Position hinzufügen (STRIKT NUR UNTER DER ERDE: gy >= 0, pY >= 8)
     if (player && player.gy >= 0 && pY >= 8) {
-      if (this.lastStampX === null || Math.hypot(pX - this.lastStampX, pY - this.lastStampY) >= 12) {
+      if (this.lastStampX === null || Math.hypot(pX - this.lastStampX, pY - this.lastStampY) >= 24) {
         this.lastStampX = pX;
         this.lastStampY = pY;
         this.exploredStamps.push({
@@ -523,6 +528,7 @@ export class GridSystem {
 
         if (distPx <= sensorRadPx + 6) {
           tile.explored = true;
+          if (this.exploredTiles) this.exploredTiles.add(key);
         }
 
         // 1. Ausgegrabene Hohlräume unter der Erde (y >= 0): Schacht-Hintergrundwand rendern!
@@ -649,11 +655,24 @@ export class GridSystem {
       }
       ctx.fillRect(0, 0, targetW, targetH);
 
-      // Licht kreisrund in die Dunkelheit stanzen
+      // Licht in die Dunkelheit stanzen
       ctx.globalCompositeOperation = 'destination-out';
       ctx.fillStyle = '#000000';
 
-      // 1. Bereits erforschte Wegpunkte (nur unter der Erde y >= 0 stanzen)
+      // 1. Alle aufgedeckten oder abgebauten Kacheln im aktuellen Sichtfeld stanzen (Kacheln bleiben IMMER sichtbar!)
+      for (let y = startRow; y <= endRow; y++) {
+        for (let x = startCol; x <= endCol; x++) {
+          const key = `${x},${y}`;
+          const tile = this.getTile(x, y);
+          if (tile && (tile.explored || tile.type === TILE_TYPES.EMPTY || (this.exploredTiles && this.exploredTiles.has(key)))) {
+            const cx = x * TILE_SIZE - worldX;
+            const cy = y * TILE_SIZE - fogTopY;
+            ctx.fillRect(cx - 1, cy - 1, TILE_SIZE + 2, TILE_SIZE + 2);
+          }
+        }
+      }
+
+      // 2. Weiche kreisrunde Übergänge anhand der gespeicherten Scanner-Stempel
       const pad = sensorRadPx + 96;
       const minX = worldX - pad;
       const maxX = worldX + targetW + pad;
@@ -671,7 +690,7 @@ export class GridSystem {
         }
       }
 
-      // 2. Aktueller Scanner-Umkreis um den Bohrer (STRIKT NUR WENN UNTER DER ERDE: pY > 0 und gy >= 0)
+      // 3. Aktueller Scanner-Umkreis um den Bohrer (STRIKT NUR WENN UNTER DER ERDE: pY > 0 und gy >= 0)
       if (player && player.gy >= 0 && pY > 0) {
         const pcx = pX - worldX;
         const pcy = pY - fogTopY;

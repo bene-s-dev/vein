@@ -95,7 +95,8 @@ export class SaveSystem {
         },
         grid: {
           destroyedTiles,
-          exploredStamps: (gs.exploredStamps || []).slice(-1500)
+          exploredTiles: Array.from(gs.exploredTiles || []),
+          exploredStamps: (gs.exploredStamps || []).slice(-8000)
         },
         buildings: buildingsData,
         refinery: bs && bs.getRefinerySaveData ? bs.getRefinerySaveData() : null,
@@ -201,6 +202,20 @@ export class SaveSystem {
             indestructible: false,
             explored: true
           });
+          if (gs.exploredTiles) {
+            gs.exploredTiles.add(key);
+          }
+        });
+      }
+
+      // 2b. Aufgedeckte Kacheln wiederherstellen
+      if (data.grid && Array.isArray(data.grid.exploredTiles)) {
+        data.grid.exploredTiles.forEach((key) => {
+          if (gs.exploredTiles) {
+            gs.exploredTiles.add(key);
+          }
+          const t = gs.tiles.get(key);
+          if (t) t.explored = true;
         });
       }
 
