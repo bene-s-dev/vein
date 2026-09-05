@@ -3568,8 +3568,8 @@ export class BaseSystem {
           </div>
 
           <button id="btn-transfer-to-storage" class="btn-buy" style="height: 34px; font-size: 11.5px; font-weight: 700; padding: 0 14px; width: 100%; justify-content: center; display: inline-flex; align-items: center; gap: 6px;">
-            ${icon('container', '', 14)}
-            <span>Waren ins Lager übernehmen</span>
+            ${icon('warehouse', '', 14)}
+            <span>Waren ins Depot einlagern</span>
           </button>
         </div>
       `;
@@ -3891,51 +3891,56 @@ export class BaseSystem {
   }
 
   transferFinishedToStorage() {
-    if (this.refinery.finished.length === 0) return;
-    if (!this.player.factoryProducts) this.player.factoryProducts = {};
+    if (!this.refinery.finished || this.refinery.finished.length === 0) return;
     if (!this.depot) {
-      this.depot = { ores: {}, products: {}, capacity: 10, tier: 1, currentTab: 'ores' };
+      this.depot = { ores: {}, products: {}, capacity: 10, tier: 1 };
     }
     if (!this.depot.ores) this.depot.ores = {};
     if (!this.depot.products) this.depot.products = {};
 
-    let prodTransferred = 0;
-    let oreTransferred = 0;
-
     const depotCap = this.depot.capacity || 10;
     let currentDepotCount = this.getDepotTotalCount();
+    let freeCapacity = Math.max(0, depotCap - currentDepotCount);
 
-    this.refinery.finished.forEach(item => {
-      if (item.isProduct && item.productId) {
-        if (currentDepotCount < depotCap) {
+    if (freeCapacity <= 0) {
+      this.scene.events.emit('notify', '⚠️ Depot ist voll! Bitte Lagerkapazität im Depot ausbauen.');
+      return;
+    }
+
+    const remainingFinished = [];
+    let transferredBars = 0;
+    let transferredProducts = 0;
+
+    for (const item of this.refinery.finished) {
+      if (freeCapacity > 0) {
+        if (item.isProduct && item.productId) {
           this.depot.products[item.productId] = (this.depot.products[item.productId] || 0) + 1;
-          currentDepotCount++;
-          prodTransferred++;
-        } else {
-          this.player.factoryProducts[item.productId] = (this.player.factoryProducts[item.productId] || 0) + 1;
-          prodTransferred++;
+          transferredProducts++;
+          freeCapacity--;
+        } else if (item.ore) {
+          const barKey = 'bar_' + item.ore;
+          this.depot.products[barKey] = (this.depot.products[barKey] || 0) + 1;
+          transferredBars++;
+          freeCapacity--;
         }
-      } else if (item.ore) {
-        this.player.cargo.push(item.ore);
-        oreTransferred++;
+      } else {
+        remainingFinished.push(item);
       }
-    });
+    }
 
-    const totalCount = this.refinery.finished.length;
-    this.refinery.finished = [];
+    this.refinery.finished = remainingFinished;
     soundFx.playPurchase();
     this.renderRefineryModalBody();
     if (this.scene.hud) this.scene.hud.update();
 
-    let msg = '';
-    if (oreTransferred > 0 && prodTransferred > 0) {
-      msg = `📦 ${oreTransferred}x Barren/Briketts & ${prodTransferred}x Waren sicher ins Lager/Inventar übernommen!`;
-    } else if (oreTransferred > 0) {
-      msg = `📦 ${oreTransferred}x veredelte Barren/Briketts sicher ins Lager/Inventar übernommen!`;
-    } else if (prodTransferred > 0) {
-      msg = `📦 ${prodTransferred}x Fabrik-Waren sicher ins Lager/Inventar übernommen!`;
+    const totalTransferred = transferredBars + transferredProducts;
+    if (totalTransferred > 0) {
+      let msg = `📦 ${totalTransferred}x Waren direkt ins Depot eingelagert!`;
+      if (remainingFinished.length > 0) {
+        msg += ` (${remainingFinished.length}x verbleiben in der Fabrik - Depot voll)`;
+      }
+      this.scene.events.emit('notify', msg);
     }
-    if (msg) this.scene.events.emit('notify', msg);
   }
 
   depositOreToRefinery(oreKey, count = 1) {
