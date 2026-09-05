@@ -1384,23 +1384,13 @@ export class BaseSystem {
       </div>
     `;
 
-    // Action Header über den Inventaren
+    // Action Header über den Inventaren (nur Erze aus dem Bohrer einlagern)
     const actionsHtml = `
-      <div style="display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 2px;">
-        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-          <button id="btn-depot-all-ores" class="btn-action" style="height: 28px; font-size: 11px; font-weight: 800; padding: 0 10px; display: inline-flex; align-items: center; gap: 4px;" ${playerCargoOreLength > 0 && freeDepot > 0 ? '' : 'disabled'}>
-            ${icon('stone', '', 12)}
-            <span>Erze (${playerCargoOreLength})</span>
-          </button>
-          <button id="btn-depot-all-products" class="btn-action" style="height: 28px; font-size: 11px; font-weight: 800; padding: 0 10px; display: inline-flex; align-items: center; gap: 4px;" ${totalPlayerProdCount > 0 && freeDepot > 0 ? '' : 'disabled'}>
-            ${icon('layers', '', 12)}
-            <span>Waren (${totalPlayerProdCount})</span>
-          </button>
-          <button id="btn-depot-all" class="btn-buy" style="height: 28px; font-size: 11px; font-weight: 800; padding: 0 12px; display: inline-flex; align-items: center; gap: 5px;" ${totalPlayerItems > 0 && freeDepot > 0 ? '' : 'disabled'}>
-            ${icon('arrow-down-to-line', '', 12)}
-            <span>Alle einlagern (${totalPlayerItems})</span>
-          </button>
-        </div>
+      <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 2px;">
+        <button id="btn-depot-all-ores" class="btn-buy" style="height: 28px; font-size: 11.5px; font-weight: 800; padding: 0 14px; display: inline-flex; align-items: center; gap: 6px;" ${playerCargoOreLength > 0 && freeDepot > 0 ? '' : 'disabled'}>
+          ${icon('arrow-down-to-line', '', 13)}
+          <span>Erze einlagern (${playerCargoOreLength})</span>
+        </button>
       </div>
     `;
 
@@ -1516,27 +1506,21 @@ export class BaseSystem {
     let goodsItemsHtml = '';
     let filledGoodsCount = 0;
 
-    // Barren im Depot & Bohrer
+    // Barren im Depot
     const refinedBarKeys = Object.entries(REFINED_ORE_DATA).map(([_, r]) => r.key).filter(k => {
-      const inDepot = this.depot.products?.[k] || 0;
-      const inCargo = this.player.cargo ? this.player.cargo.filter(c => c === k).length : 0;
-      const inPlayer = (playerProducts[k] || 0) + inCargo;
-      return inDepot > 0 || inPlayer > 0;
+      return (this.depot.products?.[k] || 0) > 0;
     });
 
     refinedBarKeys.forEach(key => {
       filledGoodsCount++;
       const depotCount = this.depot.products?.[key] || 0;
-      const inCargo = this.player.cargo ? this.player.cargo.filter(c => c === key).length : 0;
-      const inPlayer = (playerProducts[key] || 0) + inCargo;
       const name = getRefinedOreName(key.replace('bar_', ''));
-      const canDeposit = inPlayer > 0 && freeDepot > 0;
 
       goodsItemsHtml += `
         <div class="depot-goods-card" data-type="product" data-key="${key}" style="
           position: relative;
           background: rgba(15, 23, 42, 0.9);
-          border: 1px solid ${canDeposit ? 'rgba(245, 158, 11, 0.55)' : 'rgba(245, 158, 11, 0.35)'};
+          border: 1px solid rgba(245, 158, 11, 0.4);
           border-radius: 10px;
           padding: 10px 6px 8px 6px;
           display: flex;
@@ -1547,10 +1531,9 @@ export class BaseSystem {
           min-height: 84px;
           box-sizing: border-box;
           box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-          cursor: ${canDeposit ? 'pointer' : 'default'};
+          cursor: default;
           user-select: none;
-          transition: transform 0.1s ease, border-color 0.15s ease;
-        " title="${name}: ${depotCount}x im Depot${inPlayer > 0 ? ` · ${inPlayer}x im Bohrer (Klick = 1x einlagern, Shift-Klick = Alle)` : ''}">
+        " title="${name}: ${depotCount}x im Depot">
           <!-- Anzahl Badge -->
           <span style="
             position: absolute;
@@ -1565,22 +1548,6 @@ export class BaseSystem {
             border-radius: 99px;
             line-height: 1.2;
           ">${depotCount}x</span>
-
-          ${inPlayer > 0 ? `
-            <span style="
-              position: absolute;
-              top: 5px;
-              left: 5px;
-              background: rgba(16, 185, 129, 0.25);
-              border: 1px solid rgba(16, 185, 129, 0.5);
-              color: #34d399;
-              font-size: 9px;
-              font-weight: 800;
-              padding: 1px 4px;
-              border-radius: 99px;
-              line-height: 1.2;
-            ">+${inPlayer}</span>
-          ` : ''}
 
           <!-- Icon -->
           <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; margin-top: 2px;">
@@ -1602,25 +1569,21 @@ export class BaseSystem {
       `;
     });
 
-    // Fabrikprodukte im Depot & Bohrer
+    // Fabrikprodukte im Depot
     const factoryKeys = Object.keys(FACTORY_PRODUCTS).filter(k => {
-      const inDepot = this.depot.products?.[k] || 0;
-      const inPlayer = playerProducts[k] || 0;
-      return inDepot > 0 || inPlayer > 0;
+      return (this.depot.products?.[k] || 0) > 0;
     });
 
     factoryKeys.forEach(key => {
       filledGoodsCount++;
       const depotCount = this.depot.products?.[key] || 0;
-      const inPlayer = playerProducts[key] || 0;
       const name = FACTORY_PRODUCTS[key]?.name || key;
-      const canDeposit = inPlayer > 0 && freeDepot > 0;
 
       goodsItemsHtml += `
         <div class="depot-goods-card" data-type="product" data-key="${key}" style="
           position: relative;
           background: rgba(15, 23, 42, 0.9);
-          border: 1px solid ${canDeposit ? 'rgba(192, 132, 252, 0.55)' : 'rgba(192, 132, 252, 0.35)'};
+          border: 1px solid rgba(192, 132, 252, 0.4);
           border-radius: 10px;
           padding: 10px 6px 8px 6px;
           display: flex;
@@ -1631,10 +1594,9 @@ export class BaseSystem {
           min-height: 84px;
           box-sizing: border-box;
           box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-          cursor: ${canDeposit ? 'pointer' : 'default'};
+          cursor: default;
           user-select: none;
-          transition: transform 0.1s ease, border-color 0.15s ease;
-        " title="${name}: ${depotCount}x im Depot${inPlayer > 0 ? ` · ${inPlayer}x im Bohrer (Klick = 1x einlagern, Shift-Klick = Alle)` : ''}">
+        " title="${name}: ${depotCount}x im Depot">
           <!-- Anzahl Badge -->
           <span style="
             position: absolute;
@@ -1649,22 +1611,6 @@ export class BaseSystem {
             border-radius: 99px;
             line-height: 1.2;
           ">${depotCount}x</span>
-
-          ${inPlayer > 0 ? `
-            <span style="
-              position: absolute;
-              top: 5px;
-              left: 5px;
-              background: rgba(16, 185, 129, 0.25);
-              border: 1px solid rgba(16, 185, 129, 0.5);
-              color: #34d399;
-              font-size: 9px;
-              font-weight: 800;
-              padding: 1px 4px;
-              border-radius: 99px;
-              line-height: 1.2;
-            ">+${inPlayer}</span>
-          ` : ''}
 
           <!-- Icon -->
           <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; margin-top: 2px;">
@@ -1824,15 +1770,9 @@ export class BaseSystem {
     const body = this.modalBodyEl;
     if (!body) return;
 
-    // Bulk Aktionen
-    const btnAll = body.querySelector('#btn-depot-all');
-    if (btnAll) btnAll.onclick = () => this.depositAll();
-
+    // Bulk Aktionen: Nur Erze aus dem Bohrer einlagern
     const btnAllOres = body.querySelector('#btn-depot-all-ores');
     if (btnAllOres) btnAllOres.onclick = () => this.depositAllOres();
-
-    const btnAllProducts = body.querySelector('#btn-depot-all-products');
-    if (btnAllProducts) btnAllProducts.onclick = () => this.depositAllProducts();
 
     // Klick auf Erz-Kachel (Einlagern aus Bohrer)
     body.querySelectorAll('.depot-ore-card').forEach(card => {
@@ -1840,20 +1780,6 @@ export class BaseSystem {
         const key = card.getAttribute('data-key');
         const count = e.shiftKey ? 9999 : 1;
         this.depositOre(key, count);
-      };
-    });
-
-    // Klick auf Waren-Kachel (Einlagern aus Bohrer)
-    body.querySelectorAll('.depot-goods-card').forEach(card => {
-      card.onclick = (e) => {
-        const type = card.getAttribute('data-type');
-        const key = card.getAttribute('data-key');
-        const count = e.shiftKey ? 9999 : 1;
-        if (type === 'product') {
-          this.depositProduct(key, count);
-        } else if (type === 'component') {
-          this.scene.events.emit('notify', 'ℹ️ Spezial-Bauteile verbleiben sicher im Depot für Modul-Upgrades.');
-        }
       };
     });
 
@@ -3478,9 +3404,20 @@ export class BaseSystem {
 
     if (elapsedMs <= 0 || this.refinery.queue.length === 0) return 0;
 
+    // Migration: Falls noch unverarbeitete fertige Waren aus vorigem Stand existieren, direkt ins Depot übertragen
+    if (this.refinery.finished && this.refinery.finished.length > 0) {
+      if (!this.depot) this.depot = { ores: {}, products: {}, capacity: 10, tier: 1 };
+      if (!this.depot.products) this.depot.products = {};
+      this.refinery.finished.forEach(item => {
+        const key = item.isProduct ? item.productId : ('bar_' + item.ore);
+        if (key) this.depot.products[key] = (this.depot.products[key] || 0) + 1;
+      });
+      this.refinery.finished = [];
+    }
+
     let finishedCount = 0;
 
-    // 1. Schmelzofen-Linie (Erze -> Barren)
+    // 1. Schmelzofen-Linie (Erze -> Barren direkt ins Depot)
     let remSmelt = elapsedMs;
     while (remSmelt > 0) {
       const currentSmelt = this.refinery.queue.find(item => !item.isProduct);
@@ -3492,7 +3429,13 @@ export class BaseSystem {
         this.refinery.queue.splice(idx, 1);
         currentSmelt.remainingMs = 0;
         currentSmelt.finishedAt = now - remSmelt;
-        this.refinery.finished.push(currentSmelt);
+
+        // Automatisch direkt ins Depot einlagern
+        if (!this.depot) this.depot = { ores: {}, products: {}, capacity: 10, tier: 1 };
+        if (!this.depot.products) this.depot.products = {};
+        const barKey = 'bar_' + currentSmelt.ore;
+        this.depot.products[barKey] = (this.depot.products[barKey] || 0) + 1;
+
         finishedCount++;
       } else {
         currentSmelt.remainingMs -= remSmelt;
@@ -3500,7 +3443,7 @@ export class BaseSystem {
       }
     }
 
-    // 2. Industrie-Fertigungslinie (Produkte)
+    // 2. Industrie-Fertigungslinie (Produkte direkt ins Depot)
     let remCraft = elapsedMs;
     while (remCraft > 0) {
       const currentCraft = this.refinery.queue.find(item => item.isProduct);
@@ -3512,7 +3455,13 @@ export class BaseSystem {
         this.refinery.queue.splice(idx, 1);
         currentCraft.remainingMs = 0;
         currentCraft.finishedAt = now - remCraft;
-        this.refinery.finished.push(currentCraft);
+
+        // Automatisch direkt ins Depot einlagern
+        if (!this.depot) this.depot = { ores: {}, products: {}, capacity: 10, tier: 1 };
+        if (!this.depot.products) this.depot.products = {};
+        const prodId = currentCraft.productId;
+        this.depot.products[prodId] = (this.depot.products[prodId] || 0) + 1;
+
         finishedCount++;
       } else {
         currentCraft.remainingMs -= remCraft;

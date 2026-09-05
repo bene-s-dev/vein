@@ -161,25 +161,7 @@ export class DrillerMenuModal {
       oreCounts[oreKey] = (oreCounts[oreKey] || 0) + 1;
     });
 
-    // Optionale Fabrik-Waren im Frachtraum mit einbeziehen (falls vorhanden)
-    const fp = this.player.factoryProducts || {};
-    const productCounts = {};
-    Object.entries(fp).forEach(([k, v]) => {
-      if (v > 0) productCounts[k] = v;
-    });
-
-    const PRODUCT_NAMES = {
-      steel_beam: 'Stahlträger',
-      bronze_ingot: 'Bronze-Barren',
-      circuit_board: 'Leiterplatte',
-      polished_gem: 'Polierter Kristall',
-      titan_plate: 'Titanplatte',
-      fusion_rod: 'Fusionsstab'
-    };
-
     const oreKeys = Object.keys(oreCounts);
-    const prodKeys = Object.keys(productCounts);
-    const filledItemsCount = oreKeys.length + prodKeys.length;
 
     // Freie Slots exakt basierend auf der verbleibenden Frachtraum-Kapazität
     const emptySlotsCount = Math.max(0, maxCargo - cargoCount);
@@ -242,65 +224,7 @@ export class DrillerMenuModal {
       `;
     });
 
-    // Fabrikprodukte & veredelte Barren/Briketts rendern
-    prodKeys.forEach(key => {
-      const count = productCounts[key];
-      const isBar = key.startsWith('bar_');
-      const name = isBar ? getRefinedOreName(key.replace('bar_', '')) : (PRODUCT_NAMES[key] || key);
-      const borderCol = isBar ? 'rgba(245, 158, 11, 0.35)' : 'rgba(192, 132, 252, 0.35)';
-      const badgeBg = isBar ? '#d97706' : '#7c3aed';
-      const badgeBorder = isBar ? '#f59e0b' : '#c084fc';
 
-      gridItemsHtml += `
-        <div style="
-          position: relative;
-          background: rgba(15, 23, 42, 0.9);
-          border: 1px solid ${borderCol};
-          border-radius: 10px;
-          padding: 10px 6px 8px 6px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          gap: 6px;
-          min-height: 84px;
-          box-sizing: border-box;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-        ">
-          <!-- Anzahl Badge -->
-          <span style="
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: ${badgeBg};
-            border: 1px solid ${badgeBorder};
-            color: #ffffff;
-            font-size: 10px;
-            font-weight: 800;
-            padding: 1px 5px;
-            border-radius: 99px;
-            line-height: 1.2;
-          ">${count}x</span>
-
-          <!-- Icon (Barren/Brikett oder Fabrikprodukt) -->
-          <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; margin-top: 2px;">
-            ${itemDisplayIcon(key, 28)}
-          </div>
-
-          <!-- Name -->
-          <span style="
-            font-size: 11px;
-            font-weight: 700;
-            color: #f8fafc;
-            text-align: center;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 100%;
-          ">${name}</span>
-        </div>
-      `;
-    });
 
     // Leere Slots für den echten Inventar-Grid-Look
     for (let i = 0; i < emptySlotsCount; i++) {
