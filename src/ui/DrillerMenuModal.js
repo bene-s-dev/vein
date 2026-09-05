@@ -339,9 +339,6 @@ export class DrillerMenuModal {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
           gap: 8px;
-          max-height: 320px;
-          overflow-y: auto;
-          padding-right: 2px;
         ">
           ${gridItemsHtml}
         </div>

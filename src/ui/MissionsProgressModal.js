@@ -358,7 +358,7 @@ export class MissionsProgressModal {
         </div>
 
         <!-- Rang-Stufen Roadmap -->
-        <div style="display: flex; flex-direction: column; gap: 8px; max-height: 280px; overflow-y: auto; padding-right: 4px;">
+        <div style="display: flex; flex-direction: column; gap: 8px;">
           ${ranks.map(r => {
             const isCurrent = curLevel === r.level;
             const isUnlocked = curLevel >= r.level;
@@ -416,7 +416,7 @@ export class MissionsProgressModal {
         <p style="font-size: 12px; color: #94a3b8;">
           Wähle einen Bergbau-Auftrag aus. Aufträge mit höherer Stufe erfordern tiefere Vorstöße, bieten aber massive Geld- und XP-Prämien.
         </p>
-        <div style="display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; padding-right: 4px;">
+        <div style="display: flex; flex-direction: column; gap: 8px;">
           ${visibleMissions.length === 0 ? `
             <div style="text-align: center; padding: 24px 16px; color: #94a3b8; font-size: 12px; background: rgba(15,23,42,0.5); border-radius: 10px; border: 1px dashed rgba(255,255,255,0.1);">
               Keine weiteren Aufträge verfügbar. Erkunde tiefere Schichten, um neue Erze und Aufträge freizuschalten!
@@ -609,7 +609,7 @@ export class MissionsProgressModal {
 
         ${compInventoryHtml}
 
-        <div style="display: flex; flex-direction: column; gap: 8px; max-height: 250px; overflow-y: auto; padding-right: 4px;">
+        <div style="display: flex; flex-direction: column; gap: 8px;">
           ${visibleQuests.length === 0 ? `
             <div style="text-align: center; padding: 24px 16px; color: #94a3b8; font-size: 12px; background: rgba(15,23,42,0.5); border-radius: 10px; border: 1px dashed rgba(255,255,255,0.1);">
               <div style="font-weight: 700; color: #f8fafc; font-size: 13px; margin-bottom: 4px;">Keine Proben-Aufträge verfügbar</div>
@@ -692,7 +692,7 @@ export class MissionsProgressModal {
     const totalBuildings = bs ? bs.purchasableBuildings.length : 3;
 
     return `
-      <div style="display: flex; flex-direction: column; gap: 12px; max-height: 360px; overflow-y: auto; padding-right: 4px;">
+      <div style="display: flex; flex-direction: column; gap: 12px;">
         <!-- Haupt-Kennzahlen Grid -->
         <div style="
           display: grid;

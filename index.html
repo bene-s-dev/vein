@@ -35,6 +35,36 @@
       user-select: none;
       -webkit-user-select: none;
       -webkit-touch-callout: none;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
+    }
+
+    /* Dezent gestaltete, moderne Scrollbar für alle Menüs und das gesamte Interface */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.25);
+      border-radius: 99px;
+      transition: background 0.15s ease;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(56, 189, 248, 0.55);
+    }
+
+    ::-webkit-scrollbar-thumb:active {
+      background: #38bdf8;
+    }
+
+    ::-webkit-scrollbar-corner {
+      background: transparent;
     }
 
     body, html {
@@ -826,12 +856,17 @@
         width: 95vw !important;
         max-width: 95vw !important;
         max-height: 90vh;
-        padding: 14px;
+        padding: 14px 4px 12px 14px;
         border-radius: 14px;
       }
 
+      .modal-header {
+        padding-right: 10px;
+      }
+
       .modal-content {
-        max-height: 72vh;
+        padding-right: 10px;
+        max-height: calc(90vh - 70px);
         -webkit-overflow-scrolling: touch;
       }
 
@@ -900,10 +935,12 @@
       border-radius: 16px;
       width: 92%;
       max-width: 860px;
-      max-height: calc(100vh - 90px);
-      overflow-y: auto;
+      max-height: calc(100vh - 80px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
       box-sizing: border-box;
-      padding: 22px 24px;
+      padding: 20px 4px 16px 24px;
       box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
       position: relative;
       pointer-events: auto !important;
@@ -914,8 +951,10 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
       padding-bottom: 8px;
+      padding-right: 20px;
+      flex-shrink: 0;
     }
 
     .modal-title {
@@ -961,9 +1000,13 @@
       font-size: 13px;
       line-height: 1.5;
       color: #cbd5e1;
-      margin-bottom: 16px;
-      max-height: 65vh;
+      margin-bottom: 0;
+      flex: 1 1 auto;
+      min-height: 0;
+      max-height: calc(100vh - 150px);
       overflow-y: auto;
+      overflow-x: hidden;
+      padding-right: 18px;
       pointer-events: auto !important;
       touch-action: pan-y !important;
       -webkit-overflow-scrolling: touch;

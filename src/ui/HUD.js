@@ -409,7 +409,7 @@ export class HUD {
     const freeCount = typeof this.player.freeRescues === 'number' ? this.player.freeRescues : 3;
 
     bodyEl.innerHTML = `
-      <div style="display: flex; flex-direction: column; gap: 12px; max-height: 520px; overflow-y: auto; padding-right: 2px;">
+      <div style="display: flex; flex-direction: column; gap: 12px;">
         <!-- Status-Übersicht -->
         <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; font-size: 11.5px;">
           <span style="color: #94a3b8;">Tiefe: <strong style="color: #38bdf8;">${this.player.depthMeters} m</strong></span>
@@ -522,7 +522,7 @@ export class HUD {
     `;
 
     bodyEl.innerHTML = `
-      <div style="display: flex; flex-direction: column; gap: 14px; max-height: 520px; overflow-y: auto; padding-right: 2px;">
+      <div style="display: flex; flex-direction: column; gap: 14px;">
         <button id="btn-back-to-menu" class="btn-3d-secondary" style="height: 30px; padding: 0 12px; font-size: 11px; align-self: flex-start; display: inline-flex; align-items: center; gap: 6px;">
           ${icon('arrow-left', '', 13)}
           <span>Zurück zum Spielmenü</span>
@@ -871,7 +871,7 @@ export class HUD {
     }
 
     bodyEl.innerHTML = `
-      <div style="display: flex; flex-direction: column; gap: 12px; max-height: 520px; overflow-y: auto; padding-right: 2px;">
+      <div style="display: flex; flex-direction: column; gap: 12px;">
         <button id="btn-back-to-menu" class="btn-3d-secondary" style="height: 30px; padding: 0 12px; font-size: 11px; align-self: flex-start; display: inline-flex; align-items: center; gap: 6px;">
           ${icon('arrow-left', '', 13)}
           <span>Zurück zum Spielmenü</span>

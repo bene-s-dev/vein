@@ -716,7 +716,7 @@ export class BaseSystem {
     if (totalOreCount === 0) {
       oreListHtml = '<p style="color: #94a3b8; font-style: italic; margin: 18px 0; text-align: center;">Keine Erze im Frachtraum oder Depot vorhanden. Baue Erze im Schacht ab!</p>';
     } else {
-      oreListHtml = '<div style="display: flex; flex-direction: column; gap: 10px; margin: 12px 0; max-height: 280px; overflow-y: auto; padding-right: 4px;">';
+      oreListHtml = '<div style="display: flex; flex-direction: column; gap: 10px; margin: 12px 0;">';
       for (const [ore, count] of Object.entries(combinedCounts)) {
         if (count <= 0) continue;
         const data = ORE_DATA[ore];
@@ -1766,7 +1766,7 @@ export class BaseSystem {
 
     // Zusammenbau des scrollbaren Modals mit ZWEI Inventaren untereinander
     this.modalBodyEl.innerHTML = `
-      <div style="display: flex; flex-direction: column; gap: 12px; max-height: 560px; overflow-y: auto; padding-right: 4px;">
+      <div style="display: flex; flex-direction: column; gap: 12px;">
         ${headerHtml}
         ${actionsHtml}
 
@@ -1781,9 +1781,6 @@ export class BaseSystem {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
             gap: 8px;
-            max-height: 195px;
-            overflow-y: auto;
-            padding-right: 2px;
           ">
             ${oresItemsHtml}
           </div>
@@ -1800,9 +1797,6 @@ export class BaseSystem {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
             gap: 8px;
-            max-height: 195px;
-            overflow-y: auto;
-            padding-right: 2px;
           ">
             ${goodsItemsHtml}
           </div>
@@ -2306,7 +2300,7 @@ export class BaseSystem {
     });
     const depotOres = this.depot?.ores || {};
 
-    let questsHtml = '<div style="display: flex; flex-direction: column; gap: 10px; margin: 12px 0; max-height: 280px; overflow-y: auto; padding-right: 4px;">';
+    let questsHtml = '<div style="display: flex; flex-direction: column; gap: 10px; margin: 12px 0;">';
 
     const visibleQuests = quests.filter(q => Object.keys(q.reqs).every(ore => p.isOreDiscovered(ore)));
 
@@ -2491,7 +2485,7 @@ export class BaseSystem {
     ];
 
     // Feste Kategorien mit Segmented Progress Bar (OHNE Filterleiste!)
-    let cardsHtml = '<div class="tech-lab-categories" style="display: flex; flex-direction: column; gap: 14px; max-height: 480px; overflow-y: auto; padding-right: 4px;">';
+    let cardsHtml = '<div class="tech-lab-categories" style="display: flex; flex-direction: column; gap: 14px;">';
 
     tracks.forEach((track) => {
       const currentTierData = track.tiers[track.currentTier - 1];
@@ -3222,7 +3216,7 @@ export class BaseSystem {
     });
 
     const content = `
-      <div style="display: flex; flex-direction: column; gap: 8px; max-height: 520px; overflow-y: auto; padding-right: 4px;">
+      <div style="display: flex; flex-direction: column; gap: 8px;">
         <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); padding: 10px 14px; border-radius: 10px; display: flex; align-items: center; gap: 10px; box-sizing: border-box;">
           <div style="width: 135px; min-width: 135px; flex-shrink: 0;">
             <strong style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #f8fafc; white-space: nowrap;">
@@ -3684,7 +3678,7 @@ export class BaseSystem {
     const pctCraft = currentCraft ? Math.min(100, Math.max(0, Math.round(((currentCraft.durationMs - currentCraft.remainingMs) / currentCraft.durationMs) * 100))) : 0;
 
     let html = `
-      <div style="display: flex; flex-direction: column; gap: 12px; max-height: 520px; overflow-y: auto; padding-right: 4px;">
+      <div style="display: flex; flex-direction: column; gap: 12px;">
 
         <!-- 1. ZWEI VISUELLE PRODUKTIONSLINIEN (SCHMELZE & FERTIGUNG) -->
         <div style="background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(10, 15, 26, 0.98) 100%); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px;">
