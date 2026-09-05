@@ -89,14 +89,14 @@ export class DrillerMenuModal {
             <span style="font-size: 11px; font-weight: 700; color: #94a3b8; display: inline-flex; align-items: center; gap: 4px;">
               ${icon('fuel', '', 12)} Tank
             </span>
-            <span style="font-size: 13px; font-weight: 800; color: #f59e0b;">
+            <span style="font-size: 13px; font-weight: 800; color: #f59e0b; width: 44px; min-width: 44px; text-align: right; font-variant-numeric: tabular-nums; display: inline-block;">
               ${fuelPct}%
             </span>
           </div>
           <div style="height: 6px; background: rgba(0, 0, 0, 0.6); border-radius: 99px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.08);">
             <div style="width: ${fuelPct}%; height: 100%; background: #f59e0b; border-radius: 99px; transition: width 0.2s ease;"></div>
           </div>
-          <div style="font-size: 9.5px; color: #64748b; text-align: right;">
+          <div style="font-size: 9.5px; color: #64748b; text-align: right; font-variant-numeric: tabular-nums;">
             ${Math.round(fuel)} / ${maxFuel} L
           </div>
         </div>
@@ -115,14 +115,14 @@ export class DrillerMenuModal {
             <span style="font-size: 11px; font-weight: 700; color: #94a3b8; display: inline-flex; align-items: center; gap: 4px;">
               ${icon('shield-cog', '', 12)} Hülle
             </span>
-            <span style="font-size: 13px; font-weight: 800; color: ${hullPct <= 25 ? '#ef4444' : hullPct <= 50 ? '#f59e0b' : '#10b981'};">
+            <span style="font-size: 13px; font-weight: 800; color: ${hullPct <= 25 ? '#ef4444' : hullPct <= 50 ? '#f59e0b' : '#10b981'}; width: 44px; min-width: 44px; text-align: right; font-variant-numeric: tabular-nums; display: inline-block;">
               ${hullPct}%
             </span>
           </div>
           <div style="height: 6px; background: rgba(0, 0, 0, 0.6); border-radius: 99px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.08);">
             <div style="width: ${hullPct}%; height: 100%; background: ${hullPct <= 25 ? '#ef4444' : hullPct <= 50 ? '#f59e0b' : '#10b981'}; border-radius: 99px; transition: width 0.2s ease;"></div>
           </div>
-          <div style="font-size: 9.5px; color: #64748b; text-align: right;">
+          <div style="font-size: 9.5px; color: #64748b; text-align: right; font-variant-numeric: tabular-nums;">
             ${Math.round(hull)} / ${maxHull} HP
           </div>
         </div>
@@ -141,14 +141,14 @@ export class DrillerMenuModal {
             <span style="font-size: 11px; font-weight: 700; color: #94a3b8; display: inline-flex; align-items: center; gap: 4px;">
               ${icon('container', '', 12)} Fracht
             </span>
-            <span style="font-size: 13px; font-weight: 800; color: ${cargoPct >= 100 ? '#ef4444' : '#38bdf8'};">
+            <span style="font-size: 13px; font-weight: 800; color: ${cargoPct >= 100 ? '#ef4444' : '#38bdf8'}; width: 44px; min-width: 44px; text-align: right; font-variant-numeric: tabular-nums; display: inline-block;">
               ${cargoPct}%
             </span>
           </div>
           <div style="height: 6px; background: rgba(0, 0, 0, 0.6); border-radius: 99px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.08);">
             <div style="width: ${cargoPct}%; height: 100%; background: ${cargoPct >= 100 ? '#ef4444' : '#38bdf8'}; border-radius: 99px; transition: width 0.2s ease;"></div>
           </div>
-          <div style="font-size: 9.5px; color: #64748b; text-align: right;">
+          <div style="font-size: 9.5px; color: #64748b; text-align: right; font-variant-numeric: tabular-nums;">
             ${cargoCount} / ${maxCargo}
           </div>
         </div>

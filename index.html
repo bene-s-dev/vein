@@ -135,6 +135,18 @@
       gap: 3px;
     }
 
+    #hud-fuel-cluster {
+      min-width: 54px;
+    }
+
+    #hud-hull-cluster {
+      min-width: 54px;
+    }
+
+    #hud-cargo-cluster {
+      min-width: 62px;
+    }
+
     .stat-cluster {
       display: flex;
       flex-direction: column;
@@ -168,6 +180,21 @@
       color: #ffffff;
       height: 18px;
       line-height: 18px;
+    }
+
+    .hud-label {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: #94a3b8;
+      text-transform: uppercase;
+    }
+
+    .hud-level-indicator {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: #ffffff;
     }
 
     .stat-row span:first-child,
@@ -222,46 +249,54 @@
     }
 
     #hud-fuel-text {
-      width: 36px;
-      min-width: 36px;
-      text-align: right;
-      font-variant-numeric: tabular-nums;
-    }
-
-    #hud-hull-text {
-      width: 36px;
-      min-width: 36px;
-      text-align: right;
-      font-variant-numeric: tabular-nums;
-    }
-
-    #hud-cargo-text {
+      width: 38px;
       min-width: 38px;
       text-align: right;
       font-variant-numeric: tabular-nums;
+      display: inline-block;
+    }
+
+    #hud-hull-text {
+      width: 38px;
+      min-width: 38px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      display: inline-block;
+    }
+
+    #hud-cargo-text {
+      width: 44px;
+      min-width: 44px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      display: inline-block;
     }
 
     .cash-badge {
       color: var(--color-cash);
       font-weight: 800;
       font-size: 13px;
-      min-width: 58px;
+      min-width: 62px;
       text-align: right;
       font-variant-numeric: tabular-nums;
+      display: inline-block;
     }
 
     .depth-badge {
       color: var(--color-primary);
       font-weight: 700;
-      min-width: 48px;
+      min-width: 52px;
       text-align: center;
       font-variant-numeric: tabular-nums;
+      display: inline-block;
     }
 
     #hud-level-right {
-      min-width: 16px;
+      min-width: 18px;
+      width: 18px;
       text-align: center;
       font-variant-numeric: tabular-nums;
+      display: inline-block;
     }
 
     #hud-center-depth {
