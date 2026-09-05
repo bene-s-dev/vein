@@ -324,7 +324,12 @@ export class Player {
       curTipY: -30 + 20,
       curMidX: 15 * TILE_SIZE + 32 - 16,
       curMidY: -30 + 8,
-      activeWeight: 0 // 0 = geparkt, 1 = voll am Fahrzeug
+      activeWeight: 0, // 0 = geparkt, 1 = voll am Fahrzeug
+      spotIndex: 0,
+      phase: 'traveling', // 'traveling' | 'welding'
+      timer: 0,
+      isWelding: false,
+      lastSoundTime: 0
     };
 
     this.fuelArmState = {
@@ -832,6 +837,19 @@ export class Player {
       };
     }
 
+    if (typeof this.repairArmState.spotIndex !== 'number' || isNaN(this.repairArmState.spotIndex)) {
+      this.repairArmState.spotIndex = 0;
+    }
+    if (!this.repairArmState.phase) {
+      this.repairArmState.phase = 'traveling';
+    }
+    if (typeof this.repairArmState.timer !== 'number' || isNaN(this.repairArmState.timer)) {
+      this.repairArmState.timer = 0;
+    }
+    if (typeof this.repairArmState.isWelding !== 'boolean') {
+      this.repairArmState.isWelding = false;
+    }
+
     const isConnected = this.repairArmState.activeWeight > 0.75;
     const isStationary = shouldDeploy && (this.hull < this.maxHull);
 
@@ -841,13 +859,17 @@ export class Player {
     const parkMidX = armBaseX - 16;
     const parkMidY = armBaseY + 8;
 
-    let targetTipX, targetTipY, targetMidX, targetMidY;
+    let targetTipX = parkTipX;
+    let targetTipY = parkTipY;
+    let targetMidX = parkMidX;
+    let targetMidY = parkMidY;
 
     if (isStationary) {
       const clampedVehX = Phaser.Math.Clamp(this.sprite.x, 15 * TILE_SIZE - 20, 15 * TILE_SIZE + 20);
       const clampedVehY = Phaser.Math.Clamp(this.sprite.y, -32, -4);
 
-      const spot = REPAIR_SPOTS[this.repairArmState.spotIndex % REPAIR_SPOTS.length];
+      const spotIdx = Math.abs(this.repairArmState.spotIndex || 0) % REPAIR_SPOTS.length;
+      const spot = REPAIR_SPOTS[spotIdx] || REPAIR_SPOTS[0];
       const spotX = clampedVehX + spot.dx;
       const spotY = clampedVehY + spot.dy;
 
