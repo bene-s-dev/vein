@@ -1522,13 +1522,11 @@ export class BaseSystem {
           background: rgba(15, 23, 42, 0.9);
           border: 1px solid rgba(245, 158, 11, 0.4);
           border-radius: 10px;
-          padding: 10px 6px 8px 6px;
+          padding: 8px 12px;
           display: flex;
-          flex-direction: column;
           align-items: center;
-          justify-content: center;
-          gap: 6px;
-          min-height: 84px;
+          gap: 10px;
+          min-height: 64px;
           box-sizing: border-box;
           box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
           cursor: default;
@@ -1537,34 +1535,29 @@ export class BaseSystem {
           <!-- Anzahl Badge -->
           <span style="
             position: absolute;
-            top: 5px;
-            right: 5px;
+            top: 6px;
+            right: 6px;
             background: #d97706;
             border: 1px solid #f59e0b;
             color: #ffffff;
             font-size: 10px;
             font-weight: 800;
-            padding: 1px 5px;
+            padding: 1px 6px;
             border-radius: 99px;
             line-height: 1.2;
           ">${depotCount}x</span>
 
           <!-- Icon -->
-          <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; margin-top: 2px;">
-            ${itemDisplayIcon(key, 28)}
+          <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; min-width: 34px; border-radius: 8px; background: rgba(0, 0, 0, 0.35);">
+            ${itemDisplayIcon(key, 24)}
           </div>
 
           <!-- Name -->
-          <span style="
-            font-size: 11px;
-            font-weight: 700;
-            color: #f8fafc;
-            text-align: center;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 100%;
-          ">${name}</span>
+          <div style="display: flex; flex-direction: column; min-width: 0; flex: 1; padding-right: 28px;">
+            <span style="font-size: 11.5px; font-weight: 700; color: #f8fafc; line-height: 1.25; white-space: normal; word-break: break-word;">
+              ${name}
+            </span>
+          </div>
         </div>
       `;
     });
@@ -1585,13 +1578,11 @@ export class BaseSystem {
           background: rgba(15, 23, 42, 0.9);
           border: 1px solid rgba(192, 132, 252, 0.4);
           border-radius: 10px;
-          padding: 10px 6px 8px 6px;
+          padding: 8px 12px;
           display: flex;
-          flex-direction: column;
           align-items: center;
-          justify-content: center;
-          gap: 6px;
-          min-height: 84px;
+          gap: 10px;
+          min-height: 64px;
           box-sizing: border-box;
           box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
           cursor: default;
@@ -1600,34 +1591,29 @@ export class BaseSystem {
           <!-- Anzahl Badge -->
           <span style="
             position: absolute;
-            top: 5px;
-            right: 5px;
+            top: 6px;
+            right: 6px;
             background: #7c3aed;
             border: 1px solid #c084fc;
             color: #ffffff;
             font-size: 10px;
             font-weight: 800;
-            padding: 1px 5px;
+            padding: 1px 6px;
             border-radius: 99px;
             line-height: 1.2;
           ">${depotCount}x</span>
 
           <!-- Icon -->
-          <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; margin-top: 2px;">
-            ${itemDisplayIcon(key, 28)}
+          <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; min-width: 34px; border-radius: 8px; background: rgba(0, 0, 0, 0.35);">
+            ${itemDisplayIcon(key, 24)}
           </div>
 
           <!-- Name -->
-          <span style="
-            font-size: 11px;
-            font-weight: 700;
-            color: #f8fafc;
-            text-align: center;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 100%;
-          ">${name}</span>
+          <div style="display: flex; flex-direction: column; min-width: 0; flex: 1; padding-right: 28px;">
+            <span style="font-size: 11.5px; font-weight: 700; color: #f8fafc; line-height: 1.25; white-space: normal; word-break: break-word;">
+              ${name}
+            </span>
+          </div>
         </div>
       `;
     });
@@ -1648,13 +1634,11 @@ export class BaseSystem {
           background: rgba(15, 23, 42, 0.9);
           border: 1px solid rgba(168, 85, 247, 0.45);
           border-radius: 10px;
-          padding: 10px 6px 8px 6px;
+          padding: 8px 12px;
           display: flex;
-          flex-direction: column;
           align-items: center;
-          justify-content: center;
-          gap: 6px;
-          min-height: 84px;
+          gap: 10px;
+          min-height: 64px;
           box-sizing: border-box;
           box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
           user-select: none;
@@ -1663,41 +1647,36 @@ export class BaseSystem {
           <!-- Anzahl Badge -->
           <span style="
             position: absolute;
-            top: 5px;
-            right: 5px;
+            top: 6px;
+            right: 6px;
             background: #7c3aed;
             border: 1px solid #c084fc;
             color: #ffffff;
             font-size: 10px;
             font-weight: 800;
-            padding: 1px 5px;
+            padding: 1px 6px;
             border-radius: 99px;
             line-height: 1.2;
           ">${count}x</span>
 
           <!-- Icon -->
-          <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; margin-top: 2px; color: ${compInfo.color || '#c084fc'};">
-            ${icon(compInfo.icon, '', 28)}
+          <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; min-width: 34px; border-radius: 8px; background: rgba(0, 0, 0, 0.35); color: ${compInfo.color || '#c084fc'};">
+            ${icon(compInfo.icon, '', 22)}
           </div>
 
           <!-- Name -->
-          <span style="
-            font-size: 11px;
-            font-weight: 700;
-            color: #f8fafc;
-            text-align: center;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 100%;
-          ">${compInfo.name}</span>
+          <div style="display: flex; flex-direction: column; min-width: 0; flex: 1; padding-right: 28px;">
+            <span style="font-size: 11.5px; font-weight: 700; color: #f8fafc; line-height: 1.25; white-space: normal; word-break: break-word;">
+              ${compInfo.name}
+            </span>
+          </div>
         </div>
       `;
     });
 
-    // Leere Slots für das Waren-Grid
-    const minGoodsSlots = 12;
-    const totalGoodsSlots = Math.max(minGoodsSlots, Math.ceil(filledGoodsCount / 4) * 4);
+    // Leere 2x1 Slots für das Waren-Grid
+    const minGoodsSlots = 6;
+    const totalGoodsSlots = Math.max(minGoodsSlots, Math.ceil(filledGoodsCount / 2) * 2);
     const emptyGoodsSlots = Math.max(0, totalGoodsSlots - filledGoodsCount);
     for (let i = 0; i < emptyGoodsSlots; i++) {
       goodsItemsHtml += `
@@ -1705,7 +1684,7 @@ export class BaseSystem {
           background: rgba(15, 23, 42, 0.3);
           border: 1px dashed rgba(255, 255, 255, 0.08);
           border-radius: 10px;
-          min-height: 84px;
+          min-height: 64px;
           box-sizing: border-box;
           display: flex;
           align-items: center;
@@ -1750,7 +1729,7 @@ export class BaseSystem {
           </div>
           <div style="
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
             gap: 8px;
           ">
             ${goodsItemsHtml}
