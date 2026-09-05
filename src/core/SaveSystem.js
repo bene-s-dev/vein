@@ -134,10 +134,11 @@ export class SaveSystem {
       p.xpNeeded = data.player.xpNeeded || 350;
       p.highestDepthReached = data.player.highestDepthReached || 0;
 
-      p.fuel = typeof data.player.fuel === 'number' ? data.player.fuel : p.fuel;
-      p.maxFuel = data.player.maxFuel || p.maxFuel;
-      p.fuelEfficiency = data.player.fuelEfficiency || p.fuelEfficiency;
       p.tankTier = data.player.tankTier || p.tankTier;
+      if (p.upgradeTank) {
+        p.upgradeTank(p.tankTier);
+      }
+      p.fuel = Math.min(p.maxFuel, typeof data.player.fuel === 'number' ? data.player.fuel : p.maxFuel);
       p.batteryTier = data.player.batteryTier || 1;
 
       p.hull = typeof data.player.hull === 'number' ? data.player.hull : p.hull;

@@ -31,15 +31,15 @@ export const RANK_NAMES = [
 ];
 
 export const TANK_TIERS = [
-  { tier: 1, name: 'Standard-Tank', maxFuel: 100, stat: '100 L', cost: 0, comp: null, level: 1, desc: 'Basis-Treibstofftank für kurze Bohrgänge.' },
-  { tier: 2, name: 'Kerosin-Tank Mk.II', maxFuel: 140, stat: '140 L', cost: 180, comp: null, level: 1, desc: 'Erhöht Treibstoff auf 140 Liter und senkt Verbrauch um 12%.' },
-  { tier: 3, name: 'Spartriebwerk Mk.III', maxFuel: 190, stat: '190 L', cost: 420, comp: null, level: 1, desc: 'Erhöht Treibstoff auf 190 Liter und spart 20% Kerosin.' },
-  { tier: 4, name: 'Dual-Injektor Mk.IV', maxFuel: 250, stat: '250 L', cost: 950, comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 }, level: 2, desc: 'Verbessert Steigflug-Effizienz mit Hochdruck-Injektoren.' },
-  { tier: 5, name: 'Kompressions-Tank Mk.V', maxFuel: 330, stat: '330 L', cost: 2000, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 }, level: 3, desc: 'Hochfeste Legierung erlaubt 330 Liter Treibstoffkapazität.' },
-  { tier: 6, name: 'Turbo-Booster Mk.VI', maxFuel: 430, stat: '430 L', cost: 4200, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 2 }, level: 4, desc: 'Großer 430L Tank für tiefe Expeditionen.' },
-  { tier: 7, name: 'Fusions-Zelle Mk.VII', maxFuel: 560, stat: '560 L', cost: 8500, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 5, desc: 'Hocheffizienter Fusions-Antrieb mit 560 Litern Kapazität.' },
-  { tier: 8, name: 'Plasma-Injektor Mk.VIII', maxFuel: 720, stat: '720 L', cost: 16000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 1 }, level: 6, desc: 'Plasmagespeister 720L Tank mit geringstem Kerosinverbrauch.' },
-  { tier: 9, name: 'Dunkelfeld-Speicher Mk.IX', maxFuel: 920, stat: '920 L', cost: 27000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 8, desc: 'Hochenergie-Tank für ausgedehnte Tiefen-Expeditionen.' },
+  { tier: 1, name: 'Standard-Tank', maxFuel: 45, stat: '45 L', cost: 0, comp: null, level: 1, desc: 'Kompakter Basis-Tank für kurze erste Erkundungen.' },
+  { tier: 2, name: 'Kerosin-Tank Mk.II', maxFuel: 75, stat: '75 L', cost: 160, comp: null, level: 1, desc: 'Erhöht Treibstoff auf 75 Liter (+66%) und senkt Verbrauch um 12%.' },
+  { tier: 3, name: 'Spartriebwerk Mk.III', maxFuel: 120, stat: '120 L', cost: 380, comp: null, level: 1, desc: 'Erhöht Treibstoff auf 120 Liter und spart 20% Kerosin.' },
+  { tier: 4, name: 'Dual-Injektor Mk.IV', maxFuel: 180, stat: '180 L', cost: 900, comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 }, level: 2, desc: 'Verbessert Steigflug-Effizienz mit Hochdruck-Injektoren (180 L).' },
+  { tier: 5, name: 'Kompressions-Tank Mk.V', maxFuel: 260, stat: '260 L', cost: 1900, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 }, level: 3, desc: 'Hochfeste Legierung erlaubt 260 Liter Treibstoffkapazität.' },
+  { tier: 6, name: 'Turbo-Booster Mk.VI', maxFuel: 370, stat: '370 L', cost: 4000, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 2 }, level: 4, desc: 'Großer 370L Tank für tiefe Expeditionen.' },
+  { tier: 7, name: 'Fusions-Zelle Mk.VII', maxFuel: 500, stat: '500 L', cost: 8200, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 5, desc: 'Hocheffizienter Fusions-Antrieb mit 500 Litern Kapazität.' },
+  { tier: 8, name: 'Plasma-Injektor Mk.VIII', maxFuel: 680, stat: '680 L', cost: 16000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 1 }, level: 6, desc: 'Plasmagespeister 680L Tank mit geringstem Kerosinverbrauch.' },
+  { tier: 9, name: 'Dunkelfeld-Speicher Mk.IX', maxFuel: 900, stat: '900 L', cost: 27000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 8, desc: 'Hochenergie-Tank für ausgedehnte Tiefen-Expeditionen.' },
   { tier: 10, name: 'Quanten-Ionen-Matrix X', maxFuel: 1200, stat: '1200 L', cost: 42000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 3 }, level: 10, desc: 'Ultimative 1200L Quantenmatrix mit nahezu unerschöpflichem Schub.' }
 ];
 
@@ -253,8 +253,8 @@ export class Player {
       .setVisible(false);
 
     // Fahrzeug-Werte & Stats (ausbalancierte Wirtschaft)
-    this.maxFuel = 100;
-    this.fuel = 100;
+    this.maxFuel = 45;
+    this.fuel = 45;
     this.fuelEfficiency = 1.0;
     this.tankTier = 1;
     this.batteryTier = 1;
@@ -1080,7 +1080,7 @@ export class Player {
     if (!isTargetSolid) {
       // Freies Feld: normale Fahrt (Geschwindigkeit skaliert über Antriebsstufe this.moveDuration)
       this.moveTo(targetGx, targetGy);
-      this.consumeFuel(0.3);
+      this.consumeFuel(0.45);
       soundFx.startDrive();
     } else {
       // Festes Feld: Bohren
@@ -1105,8 +1105,8 @@ export class Player {
 
     const dt = delta / 1000;
 
-    // Sanfter, gleichmäßiger Treibstoffverbrauch im Flug
-    this.consumeFuel(dt * 1.8);
+    // Vertikaler Jetpack-Steigflug mit Treibstoffverbrauch
+    this.consumeFuel(dt * 2.8);
 
     // Zwei sichtbare blaue Jetpack-Strahlen (unter dem Fahrgestell bei den Unterflurdüsen)
     const n1X = this.sprite.x - 7;
@@ -1314,7 +1314,8 @@ export class Player {
       return;
     }
 
-    this.consumeFuel(0.6 * (delta / 1000));
+    // Treibstoffverbrauch während des aktiven Bohrens
+    this.consumeFuel(1.2 * (delta / 1000));
 
     // Karosserie-Verschleiß beim Bohren (nur beim Bohren, nicht beim Fahren)
     // Auf Level 1 besonders robust (nur ca. 0.35 HP/s statt 1.5 HP/s, mehr als 4x langsamer kaputt)
@@ -1481,7 +1482,7 @@ export class Player {
       // Überirdisch: nur horizontaler Rückweg zur Einfahrt (gx ~19.5)
       const tilesX = Math.abs(this.gx - entranceGx);
       if (tilesX < 1) return 0; // Schon nah genug an der Basis
-      return (tilesX * (0.3 / efficiency)) * 1.10;
+      return (tilesX * (0.45 / efficiency)) * 1.10;
     }
 
     // Unterirdisch: Steigflug + horizontaler Weg
@@ -1490,10 +1491,10 @@ export class Player {
     const flightSpeed = Math.max(1, this.flightSpeed || 120);
 
     const flightTimeSec = distY / flightSpeed;
-    const verticalFuel = flightTimeSec * (1.8 / efficiency);
+    const verticalFuel = flightTimeSec * (2.8 / efficiency);
 
     const tilesX = Math.abs(this.gx - entranceGx);
-    const horizontalFuel = tilesX * (0.3 / efficiency);
+    const horizontalFuel = tilesX * (0.45 / efficiency);
 
     return (verticalFuel + horizontalFuel) * 1.10;
   }
