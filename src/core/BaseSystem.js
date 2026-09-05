@@ -3789,7 +3789,7 @@ export class BaseSystem {
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <strong style="color: #38bdf8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 6px;">
             ${icon('anvil', '', 14)}
-            Industrie-Fertigung (Baupläne & Waren)
+            Industrie-Fertigung
           </strong>
         </div>
         <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -3874,7 +3874,7 @@ export class BaseSystem {
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
           <strong style="color: #38bdf8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 6px;">
             ${icon('container', '', 14)}
-            Roherz-Schmelzofen (${totalAvailableOres} Erze verfügbar)
+            Roherz-Schmelzofen
           </strong>
         </div>
     `;
@@ -3912,13 +3912,15 @@ export class BaseSystem {
 
         html += `
           <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 12px; box-sizing: border-box;">
-            <!-- Spalte 1: Icon + Erz ➔ Barren (220px) -->
-            <div style="display: flex; align-items: center; gap: 10px; width: 220px; min-width: 220px; flex-shrink: 0;">
+            <!-- Spalte 1: Icon + Erz ➔ Barren (240px) -->
+            <div style="display: flex; align-items: center; gap: 10px; width: 240px; min-width: 240px; flex-shrink: 0;">
               <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.25); border-radius: 8px; flex-shrink: 0;">
                 ${itemDisplayIcon(oreKey, 18)}
               </span>
-              <strong style="color: #f8fafc; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                ${oreName} <span style="color: #64748b; font-size: 11px;">➔</span> <span style="color: #fbbf24; display: inline-flex; align-items: center; gap: 4px;">${itemDisplayIcon('bar_' + oreKey, 14)} ${refinedName}</span>
+              <strong style="color: #f8fafc; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; min-width: 0;">
+                <span style="display: inline-block; width: 62px; min-width: 62px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${oreName}</span>
+                <span style="color: #64748b; font-size: 11px; width: 14px; min-width: 14px; display: inline-flex; justify-content: center; align-items: center; flex-shrink: 0;">➔</span>
+                <span style="color: #fbbf24; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${itemDisplayIcon('bar_' + oreKey, 14)} ${refinedName}</span>
               </strong>
             </div>
 
