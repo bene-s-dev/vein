@@ -53,9 +53,21 @@ function shieldUiElements() {
   });
 }
 
+function initModalObserver() {
+  const modal = document.getElementById('building-modal');
+  if (modal) {
+    const obs = new MutationObserver(() => {
+      const isOpen = modal.style.display === 'flex' || (modal.style.display !== 'none' && modal.style.display !== '');
+      document.body.classList.toggle('modal-open', isOpen);
+    });
+    obs.observe(modal, { attributes: true, attributeFilter: ['style'] });
+  }
+}
+
 function initGame() {
   refreshIcons();
   shieldUiElements();
+  initModalObserver();
   window.__game = new Phaser.Game(config);
 }
 

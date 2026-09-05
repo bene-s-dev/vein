@@ -852,37 +852,209 @@
         gap: 4px;
       }
 
+      /* Vollbild-Menü auf Mobilgeräten & HUD im Blick behalten */
+      .modal-backdrop {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: #090d16 !important;
+        backdrop-filter: blur(16px) !important;
+        justify-content: flex-start !important;
+        align-items: stretch !important;
+        z-index: 250 !important; /* Unter HUD (z-index: 300), damit HUD oben voll sichtbar bleibt */
+      }
+
       .modal-window {
-        width: 95vw !important;
-        max-width: 95vw !important;
-        max-height: 90vh;
-        padding: 14px 4px 12px 14px;
-        border-radius: 14px;
+        width: 100vw !important;
+        max-width: 100vw !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
+        border-radius: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        margin: 0 !important;
+        padding: calc(max(6px, env(safe-area-inset-top)) + 42px) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)) !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
       }
 
       .modal-header {
-        padding-right: 10px;
+        padding: 0 42px 6px 2px !important;
+        margin-bottom: 6px !important;
+        min-height: 26px !important;
+        display: flex !important;
+        align-items: center !important;
+        flex-shrink: 0 !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+      }
+
+      .modal-title {
+        font-size: 13px !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.5px !important;
+      }
+
+      /* Prominenter Schließen-Button oben rechts */
+      .modal-close {
+        position: fixed !important;
+        top: max(6px, env(safe-area-inset-top)) !important;
+        right: max(8px, env(safe-area-inset-right)) !important;
+        z-index: 400 !important;
+        width: 32px !important;
+        height: 30px !important;
+        min-width: 32px !important;
+        min-height: 30px !important;
+        border-radius: 6px !important;
+        background: rgba(30, 41, 59, 0.95) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        color: #f8fafc !important;
+        font-size: 18px !important;
+        font-weight: 700 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6) !important;
+      }
+
+      .modal-close:hover,
+      .modal-close:active {
+        background: rgba(239, 68, 68, 0.35) !important;
+        border-color: rgba(239, 68, 68, 0.6) !important;
+        color: #ffffff !important;
+      }
+
+      body.modal-open #btn-pause {
+        display: none !important; /* Pause-Button wird durch Schließen-X ersetzt */
       }
 
       .modal-content {
-        padding-right: 10px;
-        max-height: calc(90vh - 70px);
-        -webkit-overflow-scrolling: touch;
+        padding-right: 4px !important;
+        padding-bottom: 16px !important;
+        font-size: 11px !important;
+        flex: 1 1 auto !important;
+        max-height: none !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
       }
 
+      /* ========================================================
+         KOMPAKTE MOBILE MENÜ-ELEMENTE (WENIGER SCROLLEN)
+         ======================================================== */
+      /* Fließbänder / Fabrik */
+      .modal-content .conveyor-arrow {
+        font-size: 8px !important;
+      }
+      .modal-content div[style*="width: 72px"] {
+        width: 52px !important;
+        height: 36px !important;
+      }
+      .modal-content div[style*="height: 44px"] {
+        height: 36px !important;
+      }
+
+      /* Generelle Paddings & Gaps in Modal-Karten & Boxen */
+      .modal-content > div {
+        gap: 6px !important;
+      }
+      .modal-content div[style*="padding: 12px"] {
+        padding: 6px 8px !important;
+      }
+      .modal-content div[style*="padding: 10px"] {
+        padding: 5px 7px !important;
+      }
+      .modal-content div[style*="gap: 12px"],
+      .modal-content div[style*="gap: 10px"] {
+        gap: 6px !important;
+      }
+      .modal-content div[style*="gap: 8px"] {
+        gap: 5px !important;
+      }
+      .modal-content div[style*="margin-bottom: 16px"] {
+        margin-bottom: 8px !important;
+      }
+
+      /* Upgrade- & Missions-Listen */
+      .upgrade-list, .mission-list {
+        gap: 5px !important;
+      }
+      .upgrade-item, .mission-item {
+        padding: 5px 8px !important;
+        gap: 8px !important;
+        border-radius: 8px !important;
+      }
+      .upgrade-info h4, .mission-info h4 {
+        font-size: 11.5px !important;
+        margin-bottom: 1px !important;
+      }
+      .upgrade-info p, .mission-info p {
+        font-size: 10px !important;
+      }
+      .btn-buy {
+        height: 27px !important;
+        padding: 0 10px !important;
+        font-size: 10px !important;
+        border-radius: 6px !important;
+      }
+
+      /* Labor & Forschung */
+      .tech-lab-categories {
+        gap: 6px !important;
+        max-height: none !important;
+      }
+      .tech-category-card {
+        padding: 6px 8px !important;
+        gap: 4px !important;
+        border-radius: 8px !important;
+      }
+      .cat-title-wrap {
+        font-size: 11.5px !important;
+        gap: 5px !important;
+      }
+      .cat-status-pill {
+        font-size: 9.5px !important;
+        padding: 2px 5px !important;
+      }
       .segmented-progress-bar {
-        gap: 2px;
+        margin: 3px 0 !important;
+        gap: 2px !important;
       }
-
       .seg-step {
-        height: 24px;
-        padding: 0 1px;
-        font-size: 10px;
-        white-space: nowrap;
+        height: 20px !important;
+        font-size: 9px !important;
+        border-radius: 4px !important;
+      }
+      .seg-step .step-label {
+        display: none !important;
+      }
+      .cat-action-row {
+        padding-top: 1px !important;
+        margin-top: 0 !important;
+      }
+      .cat-next-desc {
+        font-size: 9.5px !important;
+      }
+      .cat-next-desc span {
+        font-size: 9px !important;
       }
 
-      .seg-step .step-label {
-        display: none;
+      /* Bohrer-Menü Inventar-Slots */
+      .modal-content div[style*="min-height: 84px"] {
+        min-height: 62px !important;
+        padding: 6px 4px 5px 4px !important;
+        gap: 3px !important;
+      }
+      .modal-content div[style*="width: 34px"][style*="height: 34px"] {
+        width: 24px !important;
+        height: 24px !important;
+        margin-top: 0 !important;
       }
     }
 

@@ -277,6 +277,12 @@ export class DrillerMenuModal {
     modalEl.style.display = 'flex';
     refreshIcons(modalEl);
 
-
+    const closeBtn = document.getElementById('modal-close-btn');
+    if (closeBtn) {
+      closeBtn.onclick = (e) => {
+        if (e) e.stopPropagation();
+        this.close();
+      };
+    }
   }
 }
