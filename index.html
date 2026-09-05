@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>DEEP MINER - Bergbau & Expedition</title>
+  <meta name="description" content="2D vertikaler Mining-Crawler und Base-Builder mit prozeduralem Kachelraster, Rohstoff-Abbau und Upgrade-System.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base: #090d16;
+      --surface-1: rgba(26, 34, 51, 0.88);
+      --surface-2: #202b40;
+      --surface-border: rgba(255, 255, 255, 0.08);
+      --surface-border-focus: rgba(56, 189, 248, 0.4);
+      --color-primary: #38bdf8;
+      --color-primary-hover: #0ea5e9;
+      --color-fuel: #f59e0b;
+      --color-cargo: #38bdf8;
+      --color-xp: #a855f7;
+      --color-success: #10b981;
+      --color-cash: #fbbf24;
+      --color-danger: #ef4444;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--bg-base);
+      font-family: var(--font-family);
+      color: var(--text-main);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    #game-container {
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      display: block;
+      position: fixed;
+      top: 0;
+      left: 0;
+      overflow: hidden;
+      background: var(--bg-base);
+      touch-action: none;
+    }
+
+    canvas {
+      display: block;
+      image-rendering: -moz-crisp-edges;
+      image-rendering: -webkit-crisp-edges;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    /* Clean Cockpit HUD Overlay - Completely Transparent Without Background */
+    #hud-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: 12px 18px;
+      pointer-events: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      z-index: 100;
+      gap: 14px;
+      color: #ffffff;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95), 0 2px 8px rgba(0, 0, 0, 0.85);
+    }
+
+    #hud-overlay svg {
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.95));
+    }
+
+    .hud-card {
+      pointer-events: auto;
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      padding: 0;
+      box-shadow: none;
+      backdrop-filter: none;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .stat-cluster {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .stat-cluster-compact {
+      min-width: unset;
+    }
+
+    .stat-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      color: #ffffff;
+      height: 18px;
+      line-height: 18px;
+    }
+
+    .stat-row span:first-child,
+    .stat-row span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: #ffffff;
+    }
+
+    .bar-container {
+      width: 50px;
+      height: 5px;
+      background: rgba(0, 0, 0, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 99px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: 100%;
+      border-radius: 99px;
+      transition: width 0.18s ease-out;
+    }
+
+    .bar-fuel {
+      background: var(--color-fuel);
+    }
+
+    .bar-cargo {
+      background: var(--color-cargo);
+    }
+
+    .bar-hull {
+      background: var(--color-success);
+    }
+
+    .bar-xp {
+      background: var(--color-xp);
+    }
+
+    .hud-value-badge {
+      font-size: 11px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .cash-badge {
+      color: var(--color-cash);
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .depth-badge {
+      color: var(--color-primary);
+      font-weight: 700;
+    }
+
+    .rank-badge {
+      color: #c084fc;
+      font-weight: 700;
+      font-size: 11px;
+    }
+
+    #hud-center-depth {
+      position: absolute;
+      left: 50%;
+      top: 12px;
+      transform: translateX(-50%);
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 101;
+    }
+
+    /* Mission Tracker Window Hidden (Missions managed exclusively in Büro) */
+    #mission-tracker {
+      display: none !important;
+    }
+
+    .mission-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--color-cash);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .mission-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .mission-prog-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Tactile 3D Buttons - Strict 32px Default Height */
+    button {
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn-action {
+      height: 32px;
+      box-sizing: border-box;
+      background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+      border: 1px solid #3b82f6;
+      border-bottom: 3px solid #1e3a8a;
+      color: #ffffff;
+      font-family: var(--font-family);
+      font-weight: 700;
+      font-size: 12px;
+      padding: 0 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      transition: background 0.12s, transform 0.08s, box-shadow 0.08s;
+      user-select: none;
+      white-space: nowrap;
+      line-height: 1;
+    }
+
+    .btn-action:hover:not(:disabled) {
+      background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.35);
+    }
+
+    .btn-action:active:not(:disabled) {
+      transform: translateY(2px);
+      border-bottom-width: 1px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    }
+
+    .btn-action:disabled {
+      background: #334155;
+      border: 1px solid #475569;
+      border-bottom: 2px solid #1e293b;
+      color: #64748b;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .btn-3d-secondary {
+      height: 32px;
+      box-sizing: border-box;
+      background: linear-gradient(180deg, #334155 0%, #1e293b 100%);
+      border: 1px solid #475569;
+      border-bottom: 3px solid #0f172a;
+      color: #f1f5f9;
+      font-family: var(--font-family);
+      font-weight: 700;
+      font-size: 12px;
+      padding: 0 12px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      user-select: none;
+      transition: background 0.12s, transform 0.08s, box-shadow 0.08s;
+      white-space: nowrap;
+      line-height: 1;
+    }
+
+    .btn-3d-secondary:hover:not(:disabled) {
+      background: linear-gradient(180deg, #475569 0%, #334155 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.35);
+    }
+
+    .btn-3d-secondary:active:not(:disabled) {
+      transform: translateY(2px);
+      border-bottom-width: 1px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    }
+
+    .btn-3d-secondary:disabled {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-bottom: 2px solid #0f172a;
+      color: #64748b;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .btn-3d-danger {
+      height: 32px;
+      box-sizing: border-box;
+      background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+      border: 1px solid #f87171;
+      border-bottom: 3px solid #991b1b;
+      color: #ffffff;
+      font-family: var(--font-family);
+      font-weight: 700;
+      font-size: 12px;
+      padding: 0 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      transition: background 0.12s, transform 0.08s, box-shadow 0.08s;
+      user-select: none;
+      white-space: nowrap;
+      line-height: 1;
+    }
+
+    .btn-3d-danger:hover:not(:disabled) {
+      background: linear-gradient(180deg, #f87171 0%, #ef4444 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.35);
+    }
+
+    .btn-3d-danger:active:not(:disabled) {
+      transform: translateY(2px);
+      border-bottom-width: 1px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    }
+
+    .btn-3d-danger:disabled {
+      background: #334155;
+      border: 1px solid #475569;
+      border-bottom: 2px solid #1e293b;
+      color: #64748b;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .btn-3d-success {
+      height: 32px;
+      box-sizing: border-box;
+      background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+      border: 1px solid #34d399;
+      border-bottom: 3px solid #047857;
+      color: #ffffff;
+      font-family: var(--font-family);
+      font-weight: 700;
+      font-size: 12px;
+      padding: 0 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      transition: background 0.12s, transform 0.08s, box-shadow 0.08s;
+      user-select: none;
+      white-space: nowrap;
+      line-height: 1;
+    }
+
+    .btn-3d-success:hover:not(:disabled) {
+      background: linear-gradient(180deg, #34d399 0%, #10b981 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.35);
+    }
+
+    .btn-3d-success:active:not(:disabled) {
+      transform: translateY(2px);
+      border-bottom-width: 1px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    }
+
+    .btn-3d-success:disabled {
+      background: #334155;
+      border: 1px solid #475569;
+      border-bottom: 2px solid #1e293b;
+      color: #64748b;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    /* Full-width Modal Action Button (Hero) */
+    .btn-lg {
+      height: 38px !important;
+      font-size: 13px !important;
+      font-weight: 800 !important;
+    }
+
+    /* Clean Number Inputs Without Browser Spinners */
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type="number"] {
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+
+
+
+    /* Tankalarm - Auf das neue transparente Cockpit-HUD abgestimmt (ab 15% rot) */
+    .fuel-warning #hud-fuel-bar {
+      background: #ef4444 !important;
+      animation: fuel-bar-flash 0.8s infinite alternate;
+    }
+
+    .fuel-warning #hud-fuel-text {
+      color: #ef4444 !important;
+      animation: fuel-text-flash 0.8s infinite alternate;
+    }
+
+    .hull-warning #hud-hull-bar {
+      background: #ef4444 !important;
+    }
+    .hull-warning #hud-hull-text {
+      color: #ef4444 !important;
+      animation: fuel-text-flash 0.8s infinite alternate;
+    }
+
+    /* Feste Icon-Farben im HUD: Tank gelb, Rumpf grün, Fracht blau, Level lila (auch bei Alarm) */
+    #hud-fuel-icon, #hud-fuel-cluster svg, #hud-fuel-cluster i {
+      color: #fbbf24 !important;
+      stroke: #fbbf24 !important;
+    }
+
+    #hud-hull-icon, #hud-hull-cluster svg, #hud-hull-cluster i {
+      color: #10b981 !important;
+      stroke: #10b981 !important;
+    }
+
+    #hud-cargo-icon, #hud-cargo-cluster svg, #hud-cargo-cluster i {
+      color: #38bdf8 !important;
+      stroke: #38bdf8 !important;
+    }
+
+    #hud-level-icon, #hud-level-cluster svg, #hud-level-cluster i {
+      color: #c084fc !important;
+      stroke: #c084fc !important;
+    }
+
+    /* Roter Strich im Tankbalken zur garantierten Rückkehr */
+    .fuel-return-line {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 2.5px;
+      background: #ef4444;
+      z-index: 4;
+      pointer-events: none;
+      transform: translateX(-50%);
+      display: none;
+      border-radius: 1px;
+      box-shadow: 0 0 5px rgba(239, 68, 68, 0.85);
+      transition: left 0.12s ease-out;
+    }
+
+    /* Dezent gestalteter Orientierungs-Hinweis für Mobile */
+    #orientation-tip {
+      position: absolute;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: #94a3b8;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 99px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(12px);
+      display: none;
+      align-items: center;
+      gap: 10px;
+      z-index: 110;
+      pointer-events: auto;
+      white-space: nowrap;
+      transition: opacity 0.25s ease-out;
+    }
+
+    #close-tip {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: #f8fafc;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      cursor: pointer;
+    }
+
+    /* Frei platzierbarer Floating Joystick in dezenten Grautönen */
+    #floating-joystick {
+      position: fixed;
+      top: 0;
+      left: 0;
+      display: none;
+      pointer-events: none;
+      user-select: none;
+      -webkit-user-select: none;
+      z-index: 95;
+      opacity: 0;
+      transition: opacity 0.12s ease-out;
+    }
+
+    #joystick-base {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      background: rgba(15, 23, 42, 0.45);
+      border: 1.5px solid rgba(148, 163, 184, 0.35);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(8px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    #joystick-knob {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(51, 65, 85, 0.72);
+      border: 1.5px solid rgba(148, 163, 184, 0.55);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+      position: absolute;
+      transform: translate(0px, 0px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: transform 0.03s linear;
+    }
+
+    #joystick-knob::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(241, 245, 249, 0.8);
+    }
+
+    /* Mobile Jetpack Schnell-Button */
+    .mobile-fly-btn {
+      position: fixed;
+      bottom: 24px;
+      right: 20px;
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: rgba(30, 41, 59, 0.65);
+      border: 1.5px solid rgba(56, 189, 248, 0.45);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(10px);
+      color: #f8fafc;
+      font-family: var(--font-family);
+      font-size: 10px;
+      font-weight: 700;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      z-index: 100;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+      transition: transform 0.1s, background 0.1s;
+    }
+
+    .mobile-fly-btn:active, .mobile-fly-btn.active {
+      background: rgba(56, 189, 248, 0.4);
+      border-color: #38bdf8;
+      transform: scale(0.92);
+    }
+
+    @media (max-width: 900px) {
+      .mobile-fly-btn {
+        display: flex;
+      }
+    }
+
+    /* ========================================================
+       MOBILE SCALING & RESPONSIVE ANPASSUNGEN
+       ======================================================== */
+    @media (max-width: 960px), (max-height: 520px) {
+      #hud-overlay {
+        padding: max(4px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) 2px max(8px, env(safe-area-inset-left));
+        gap: 6px;
+        align-items: center;
+        flex-wrap: nowrap;
+        justify-content: space-between;
+        width: 100%;
+      }
+
+      .hud-card {
+        padding: 4px 8px;
+        gap: 6px;
+        border-radius: 8px;
+        flex-shrink: 0;
+      }
+
+      .stat-cluster {
+        min-width: auto;
+        gap: 2px;
+      }
+
+      .stat-row {
+        font-size: 10px;
+        gap: 4px;
+      }
+
+      .bar-container {
+        width: 40px;
+        height: 5px;
+      }
+
+      #hud-level-cluster {
+        display: none !important; /* LVL/XP in Mini-Top-Bar ausblenden für maximale Übersicht */
+      }
+
+      #hud-center-depth {
+        top: max(6px, env(safe-area-inset-top));
+      }
+
+      #mission-tracker {
+        display: none !important;
+      }
+
+      #card-status {
+        padding: 4px 8px;
+        gap: 6px;
+        flex-shrink: 0;
+      }
+
+      .cash-badge {
+        font-size: 11.5px;
+      }
+
+      .depth-badge {
+        font-size: 10.5px;
+      }
+
+      .btn-action {
+        padding: 4px 7px;
+        font-size: 10.5px;
+        min-height: 26px;
+        gap: 4px;
+      }
+
+      .modal-window {
+        width: 95vw !important;
+        max-width: 95vw !important;
+        max-height: 90vh;
+        padding: 14px;
+        border-radius: 14px;
+      }
+
+      .modal-content {
+        max-height: 72vh;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .segmented-progress-bar {
+        gap: 2px;
+      }
+
+      .seg-step {
+        height: 26px;
+        padding: 0 2px;
+        font-size: 10px;
+        white-space: nowrap;
+      }
+    }
+
+    @media (max-width: 580px) {
+      #mission-tracker {
+        display: none !important; /* Auf sehr schmalen Bildschirmen Auftrag ausblenden */
+      }
+    }
+
+    @media (max-width: 600px) and (orientation: portrait) {
+      #orientation-tip {
+        display: flex;
+      }
+    }
+
+    .key-badge {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-main);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Clean Material Dialog / Modal */
+    .modal-backdrop {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(10, 14, 23, 0.75);
+      backdrop-filter: blur(12px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 200;
+    }
+
+    .modal-window {
+      background: #182234;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      width: 90%;
+      max-width: 540px;
+      padding: 22px 24px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+      position: relative;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: 0.2px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 20px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px;
+      border-radius: 6px;
+    }
+
+    .modal-close:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .modal-content {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #cbd5e1;
+      margin-bottom: 16px;
+      max-height: 65vh;
+      overflow-y: auto;
+    }
+
+    .upgrade-list, .mission-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .upgrade-item, .mission-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      padding: 10px 14px;
+      gap: 12px;
+    }
+
+    .upgrade-info h4, .mission-info h4 {
+      font-size: 13px;
+      color: var(--text-main);
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .upgrade-info p, .mission-info p {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .btn-buy {
+      height: 32px;
+      box-sizing: border-box;
+      background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+      color: #041325;
+      font-weight: 800;
+      border: 1px solid #7dd3fc;
+      border-bottom: 3px solid #0369a1;
+      border-radius: 8px;
+      padding: 0 14px;
+      font-family: var(--font-family);
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      transition: background 0.12s, transform 0.08s, box-shadow 0.08s;
+      user-select: none;
+      line-height: 1;
+    }
+
+    .btn-buy:not(:disabled):hover {
+      background: linear-gradient(180deg, #7dd3fc 0%, #38bdf8 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.35);
+    }
+
+    .btn-buy:not(:disabled):active {
+      transform: translateY(2px);
+      border-bottom-width: 1px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    }
+
+    .btn-buy:disabled {
+      background: #334155;
+      border: 1px solid #475569;
+      border-bottom: 2px solid #1e293b;
+      color: #94a3b8;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    /* Tech Lab Fixed Categories & Segmented Progress Bar */
+    .tech-lab-categories {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 56vh;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .tech-category-card {
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: border-color 0.2s;
+    }
+
+    .tech-category-card:hover {
+      border-color: rgba(56, 189, 248, 0.3);
+    }
+
+    .cat-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .cat-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 13px;
+      color: #f8fafc;
+    }
+
+    .cat-status-pill {
+      font-size: 11px;
+      background: rgba(255, 255, 255, 0.06);
+      padding: 3px 8px;
+      border-radius: 6px;
+      color: #94a3b8;
+    }
+
+    .cat-status-pill strong {
+      color: #38bdf8;
+    }
+
+    .segmented-progress-bar {
+      display: flex;
+      gap: 5px;
+      width: 100%;
+      margin: 6px 0;
+    }
+
+    .seg-step {
+      flex: 1;
+      height: 28px;
+      padding: 0 4px;
+      text-align: center;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+      user-select: none;
+      transition: all 0.2s;
+    }
+
+    .seg-step.completed {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      border: 1px solid #34d399;
+      color: #ffffff;
+    }
+
+    .seg-step.completed.current {
+      box-shadow: none;
+      border: 1.5px solid #6ee7b7;
+    }
+
+    .seg-step.active {
+      background: rgba(56, 189, 248, 0.14);
+      border: 1.5px solid #38bdf8;
+      color: #38bdf8;
+      box-shadow: none;
+    }
+
+    .seg-step.locked {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px dashed rgba(255, 255, 255, 0.14);
+      color: rgba(255, 255, 255, 0.35);
+    }
+
+    .cat-action-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-top: 2px;
+      padding-top: 6px;
+    }
+
+    .cat-next-desc {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-size: 11px;
+    }
+
+    .cat-next-desc strong {
+      color: #e2e8f0;
+    }
+
+    .cat-next-desc span {
+      color: #94a3b8;
+      font-size: 10.5px;
+    }
+
+    .cat-max-badge {
+      font-size: 11px;
+      font-weight: 700;
+      color: #10b981;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      background: rgba(16, 185, 129, 0.12);
+      border-radius: 6px;
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+
+    .badge-level-req {
+      font-size: 10px;
+      background: #ef4444;
+      color: #ffffff;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    /* Visualisierte Fabrikstrecke */
+    @keyframes conveyorFlow {
+      0% { opacity: 0.3; transform: translateX(-3px); }
+      50% { opacity: 1; transform: translateX(0); }
+      100% { opacity: 0.3; transform: translateX(3px); }
+    }
+
+    .conveyor-arrow {
+      color: #475569;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      transition: all 0.3s;
+      user-select: none;
+    }
+
+    .conveyor-arrow.running {
+      color: #f97316;
+      animation: conveyorFlow 0.9s infinite ease-in-out;
+      text-shadow: 0 0 8px rgba(249, 115, 22, 0.7);
+    }
+
+    @keyframes furnaceGlow {
+      0%, 100% {
+        box-shadow: 0 0 14px rgba(249, 115, 22, 0.3);
+        border-color: rgba(249, 115, 22, 0.6);
+      }
+      50% {
+        box-shadow: 0 0 24px rgba(249, 115, 22, 0.6);
+        border-color: #fb923c;
+      }
+    }
+
+    .furnace-active {
+      animation: furnaceGlow 1.8s infinite ease-in-out;
+    }
+
+    @keyframes warnPulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 6px rgba(239, 68, 68, 0.5); }
+      50% { opacity: 0.6; box-shadow: 0 0 14px rgba(239, 68, 68, 0.85); }
+    }
+
+    @keyframes flameFlicker {
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 4px #f97316); }
+      50% { transform: scale(1.12); filter: drop-shadow(0 0 8px #ea580c); }
+    }
+
+    .flame-anim {
+      display: inline-block;
+      animation: flameFlicker 1.2s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <!-- Phaser Canvas fits full screen -->
+
+    <!-- Clean Cockpit HUD Overlay -->
+    <div id="hud-overlay">
+      <!-- Left: Gauges & Level -->
+      <div class="hud-card" id="card-gauges" style="gap: 8px;">
+        <div class="stat-cluster" id="hud-fuel-cluster">
+          <div class="stat-row" style="gap: 4px;">
+            <span id="hud-fuel-icon" style="display: inline-flex; align-items: center;"><i data-lucide="fuel" style="width: 14px; height: 14px;"></i></span>
+            <span class="hud-value-badge" id="hud-fuel-text" style="color: #f8fafc;">100%</span>
+          </div>
+          <div class="bar-container" id="hud-fuel-bar-container" style="position: relative;" title="Tank & garantierte Rückkehr">
+            <!-- Aktueller Tank-Füllstand -->
+            <div id="hud-fuel-bar" class="bar-fill bar-fuel"></div>
+            <!-- Roter Strich zur garantierten Rückkehr -->
+            <div id="hud-fuel-return-line" class="fuel-return-line"></div>
+          </div>
+        </div>
+
+        <div class="stat-cluster" id="hud-hull-cluster">
+          <div class="stat-row" style="gap: 4px;">
+            <span id="hud-hull-icon" style="display: inline-flex; align-items: center;"><i data-lucide="shield" style="width: 14px; height: 14px;"></i></span>
+            <span class="hud-value-badge" id="hud-hull-text" style="color: #f8fafc;">100%</span>
+          </div>
+          <div class="bar-container" id="hud-hull-bar-container" style="position: relative;" title="Karosserie / Panzerung">
+            <div id="hud-hull-bar" class="bar-fill bar-hull"></div>
+          </div>
+        </div>
+
+        <div class="stat-cluster stat-cluster-compact" id="hud-cargo-cluster">
+          <div class="stat-row" style="gap: 4px;">
+            <span id="hud-cargo-icon" style="display: inline-flex; align-items: center;"><i data-lucide="box" style="width: 14px; height: 14px;"></i></span>
+            <span class="hud-value-badge" id="hud-cargo-text" style="color: #38bdf8;">0/10</span>
+          </div>
+        </div>
+
+        <div class="stat-cluster stat-cluster-compact" id="hud-level-cluster">
+          <div class="stat-row" style="gap: 4px;">
+            <span id="hud-level-icon" style="display: inline-flex; align-items: center;"><i data-lucide="award" style="width: 14px; height: 14px;"></i></span>
+            <span class="hud-value-badge rank-badge" id="hud-rank-name" style="color: #f8fafc;">1</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center: Cockpit Depth Widget -->
+      <div class="hud-card" id="hud-center-depth">
+        <div class="stat-row" style="align-items: center; justify-content: center; gap: 4px;">
+          <span class="hud-value-badge depth-badge" id="hud-depth" style="color: #f8fafc; font-weight: 800; font-size: 14px;">0 m</span>
+        </div>
+      </div>
+
+      <!-- Hidden Mission Tracker (managed in Büro) -->
+      <div id="mission-tracker" style="display: none !important;">
+        <div class="mission-header">
+          <span style="display: inline-flex; align-items: center; gap: 4px;"><i data-lucide="crosshair" style="width: 13px; height: 13px;"></i> AKTIVER AUFTRAG</span>
+          <span id="hud-mission-reward">+€400</span>
+        </div>
+        <div class="mission-title" id="hud-mission-title">Kohle für das Kraftwerk</div>
+        <div class="mission-prog-row">
+          <span id="hud-mission-target">Ziel: 0/5 Kohle</span>
+          <span id="hud-mission-status" style="color: var(--color-primary); font-weight: 600;">In Arbeit</span>
+        </div>
+      </div>
+
+      <!-- Right: Level, Return Warn, Cash & Pause Menu -->
+      <div class="hud-card" id="card-status" style="align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end;">
+        <!-- Level display (purple) -->
+        <div class="stat-row" style="gap: 4px;" title="Spieler-Level">
+          <span style="display: inline-flex; align-items: center; color: #c084fc;"><i data-lucide="award" style="width: 14px; height: 14px;"></i></span>
+          <span class="hud-value-badge" id="hud-level-right" style="color: #f8fafc; font-weight: 800;">1</span>
+        </div>
+        <!-- Adaptive return warning (shown when current fuel <= return cost) -->
+        <div id="hud-return-warn" style="display: none; background: rgba(239, 68, 68, 0.18); border: 1px solid rgba(239, 68, 68, 0.55); border-radius: 6px; padding: 2px 6px; display: none; align-items: center; gap: 4px; font-size: 10px; font-weight: 800; color: #f87171; white-space: nowrap; animation: warnPulse 1.2s infinite ease-in-out;">
+          <i data-lucide="triangle-alert" style="width: 11px; height: 11px;"></i>
+          <span>UMKEHREN!</span>
+        </div>
+        <!-- Cash -->
+        <div class="stat-row" style="gap: 4px;">
+          <span id="hud-cash-icon" style="display: inline-flex; align-items: center; color: #fbbf24;"><i data-lucide="coins" style="width: 14px; height: 14px; color: #fbbf24;"></i></span>
+          <span class="hud-value-badge cash-badge" id="hud-cash">€150</span>
+        </div>
+        <button id="btn-pause" class="btn-3d-secondary" title="Spielmenü & Pause (ESC / P)" style="width: 32px; height: 30px; padding: 0; color: #ffffff;">
+          <i data-lucide="pause" style="width: 15px; height: 15px;"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Dezent gestalteter Orientierungs-Hinweis auf schmalen Bildschirmen -->
+    <div id="orientation-tip">
+      <span style="display: inline-flex; align-items: center; gap: 5px;"><i data-lucide="smartphone" style="width: 13px; height: 13px;"></i> Querformat empfohlen</span>
+      <button id="close-tip" onclick="document.getElementById('orientation-tip').style.display='none';">✕</button>
+    </div>
+
+    <!-- Frei platzierbarer Floating Joystick in dezenten Grautönen -->
+    <div id="floating-joystick">
+      <div id="joystick-base">
+        <div id="joystick-knob"></div>
+      </div>
+    </div>
+
+    <!-- Mobile Jetpack Schnell-Aufstiegs-Button -->
+    <button id="btn-mobile-fly" class="mobile-fly-btn" title="Jetpack Aufstieg">
+      <i data-lucide="chevron-up" style="width: 18px; height: 18px;"></i>
+      <span>HOCH</span>
+    </button>
+
+    <!-- Clean Material Modal Dialog -->
+    <div class="modal-backdrop" id="building-modal">
+      <div class="modal-window">
+        <div class="modal-header">
+          <div class="modal-title" id="modal-title">GEBÄUDE</div>
+          <button class="modal-close" id="modal-close-btn">&times;</button>
+        </div>
+        <div class="modal-content" id="modal-body">
+          <!-- Dynamic Content -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
