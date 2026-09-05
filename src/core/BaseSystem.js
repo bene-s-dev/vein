@@ -1251,7 +1251,7 @@ export class BaseSystem {
     this.modalTitleEl.innerHTML = `
       <div style="display: flex; align-items: center; gap: 8px; color: #38bdf8;">
         ${icon('warehouse', '', 18)}
-        <span>ROHSTOFF- & WAREN-DEPOT</span>
+        <span>DEPOT</span>
       </div>
     `;
 
@@ -1377,10 +1377,7 @@ export class BaseSystem {
 
     // Action Header über den Inventaren
     const actionsHtml = `
-      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 2px;">
-        <span style="font-size: 11.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 5px;">
-          ${icon('arrow-down-to-line', '', 13)} Einlagerung aus Bohrer
-        </span>
+      <div style="display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 2px;">
         <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
           <button id="btn-depot-all-ores" class="btn-action" style="height: 28px; font-size: 11px; font-weight: 800; padding: 0 10px; display: inline-flex; align-items: center; gap: 4px;" ${playerCargoOreLength > 0 && freeDepot > 0 ? '' : 'disabled'}>
             ${icon('stone', '', 12)}
@@ -1777,9 +1774,8 @@ export class BaseSystem {
         <div style="display: flex; flex-direction: column; gap: 6px; background: rgba(15, 23, 42, 0.55); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 12px; padding: 10px;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <span style="font-size: 11.5px; font-weight: 800; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 5px;">
-              ${icon('stone', '', 14)} Erze & Mineralien (${totalStoredOresCount} im Depot)
+              ${icon('stone', '', 14)} Erze & Mineralien
             </span>
-            <span style="font-size: 10.5px; color: #94a3b8;">${playerCargoOreLength > 0 ? 'Klick auf Erz = 1x einlagern' : 'Lagerbestand'}</span>
           </div>
           <div style="
             display: grid;
@@ -1797,9 +1793,8 @@ export class BaseSystem {
         <div style="display: flex; flex-direction: column; gap: 6px; background: rgba(15, 23, 42, 0.55); border: 1px solid rgba(192, 132, 252, 0.2); border-radius: 12px; padding: 10px;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <span style="font-size: 11.5px; font-weight: 800; color: #c084fc; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 5px;">
-              ${icon('layers', '', 14)} Waren & Bauteile (${totalStoredGoodsCount} im Depot)
+              ${icon('layers', '', 14)} Waren & Bauteile
             </span>
-            <span style="font-size: 10.5px; color: #94a3b8;">${totalPlayerProdCount > 0 ? 'Klick auf Ware = 1x einlagern' : 'Lagerbestand'}</span>
           </div>
           <div style="
             display: grid;
