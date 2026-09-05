@@ -125,7 +125,7 @@ export class HUD {
     this.returnWarn = document.getElementById('hud-return-warn');
 
     // Toast-Warnungstracking
-    this.wasBelowGround = (this.player && this.player.gy >= 0);
+    this.wasAtSurface = true;
     this.warnedReturn2Percent = false;
 
     // Oberes linkes Bohrer-Status-Widget (Tank, Hülle, Fracht) als ein einheitliches klick-/tippbares Element
@@ -361,27 +361,33 @@ export class HUD {
     // Adaptive Rückkehr-Warnung (oben rechts, rot pulsierend)
     const fuelPctRaw = Math.max(0, (this.player.fuel / this.player.maxFuel) * 100);
     const returnPct = this.player.getReturnFuelPercent ? this.player.getReturnFuelPercent() : 0;
-    // Warn wenn man unter der Erde ist UND der Tank unter die Rückkehrschwelle gefallen ist
-    const isBelowGround = this.player.gy >= 0;
+    const currentY = this.player.sprite ? this.player.sprite.y : (this.player.gy * 32 + 16);
+    const isAtSurface = this.player.gy < 0 || currentY <= -8;
+    const isBelowGround = !isAtSurface && (this.player.gy >= 0 || currentY >= 8);
+
+    // Adaptive Rückkehr-Warnung (oben rechts, rot pulsierend)
     const isReturnWarn = isBelowGround && returnPct > 0.5 && fuelPctRaw <= returnPct;
     if (this.returnWarn) {
       this.returnWarn.style.display = isReturnWarn ? 'flex' : 'none';
     }
 
     // --- Toast-Warnungen (oben zentriert) ---
-    // 1. Einmalig beim Untertage-Gehen mit unter 15% Treibstoff
-    const justEnteredUnderground = !this.wasBelowGround && isBelowGround;
-    if (justEnteredUnderground) {
-      if (fuelPctRaw < 15) {
+    // 1. NUR beim Eintritt in die Mine von der Oberfläche, wenn man dann <= 15% hat
+    if (this.wasAtSurface && isBelowGround) {
+      this.wasAtSurface = false;
+      if (fuelPctRaw <= 15) {
         toastManager.show({
           id: 'fuel-low-entry',
           text: 'Tanken empfohlen',
           duration: 4000
         });
       }
+    } else if (isAtSurface) {
+      this.wasAtSurface = true;
+      this.warnedReturn2Percent = false;
     }
 
-    // 2. Rückkehr-Vorwarnung: 2% vor Erreichen des Tankminimums zur Rückkehr
+    // 2. Rückkehr-Vorwarnung: 2% vor Erreichen des Tankminimums zur Rückkehr (nur unter Tage)
     // Tankminimum zur Rückkehr ist returnPct. 2% davor = returnPct + 2.
     const returnMinThreshold = returnPct + 2;
     if (isBelowGround && returnPct > 0.5) {
@@ -394,16 +400,9 @@ export class HUD {
           sound: 'cockpit'
         });
       }
-    }
-
-    // Zurücksetzen der Warn-Flags bei Rückkehr an die Oberfläche oder Nachtanken
-    if (!isBelowGround) {
-      this.warnedReturn2Percent = false;
     } else if (fuelPctRaw > returnMinThreshold + 5) {
       this.warnedReturn2Percent = false;
     }
-
-    this.wasBelowGround = isBelowGround;
 
     // Cash & Tiefe
     if (this.cashText) {
