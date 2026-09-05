@@ -3920,7 +3920,7 @@ export class BaseSystem {
               <strong style="color: #f8fafc; font-size: 12.5px; display: inline-flex; align-items: center; white-space: nowrap; min-width: 0;">
                 <span style="display: inline-block; width: 50px; min-width: 50px; text-align: right; overflow: hidden; text-overflow: ellipsis;">${oreName}</span>
                 <span style="color: #64748b; font-size: 11px; width: 16px; min-width: 16px; margin: 0 10px; display: inline-flex; justify-content: center; align-items: center; flex-shrink: 0;">➔</span>
-                <span style="color: #fbbf24; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${itemDisplayIcon('bar_' + oreKey, 14)} ${refinedName}</span>
+                <span style="color: #f8fafc; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${itemDisplayIcon('bar_' + oreKey, 14)} ${refinedName}</span>
               </strong>
             </div>
 
