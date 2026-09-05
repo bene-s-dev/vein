@@ -181,10 +181,8 @@ export class DrillerMenuModal {
     const prodKeys = Object.keys(productCounts);
     const filledItemsCount = oreKeys.length + prodKeys.length;
 
-    // Mindestens 12 Slots im Grid für ein schickes Inventar-Raster
-    const minSlots = 12;
-    const totalSlots = Math.max(minSlots, Math.ceil(filledItemsCount / 4) * 4);
-    const emptySlotsCount = totalSlots - filledItemsCount;
+    // Freie Slots exakt basierend auf der verbleibenden Frachtraum-Kapazität
+    const emptySlotsCount = Math.max(0, maxCargo - cargoCount);
 
     let gridItemsHtml = '';
 
