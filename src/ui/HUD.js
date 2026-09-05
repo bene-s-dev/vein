@@ -1,6 +1,7 @@
 import { soundFx } from '../core/SoundEffects.js';
 import { SaveSystem } from '../core/SaveSystem.js';
 import { MissionsProgressModal } from './MissionsProgressModal.js';
+import { DrillerMenuModal } from './DrillerMenuModal.js';
 import { icon, refreshIcons, oreIcon } from './IconHelper.js';
 import { ORE_DATA } from '../core/GridSystem.js';
 import { notifyModalClosed } from '../core/BaseSystem.js';
@@ -101,6 +102,9 @@ export class HUD {
     // Expeditions- & Fortschritts-Modal
     this.missionsModal = new MissionsProgressModal(scene, player, missionSystem, scene.baseSystem);
 
+    // Driller-Cockpit & Fracht-Modal
+    this.drillerModal = new DrillerMenuModal(scene, player, scene.baseSystem);
+
     // DOM-Referenzen
     this.fuelText = document.getElementById('hud-fuel-text');
     this.fuelBar = document.getElementById('hud-fuel-bar');
@@ -118,6 +122,46 @@ export class HUD {
     this.rankName = document.getElementById('hud-rank-name');
     this.levelRight = document.getElementById('hud-level-right');
     this.returnWarn = document.getElementById('hud-return-warn');
+
+    // Obere linke HUD-Cluster (Tank, Hülle, Fracht, Level) für Klick/Touch-Interaktion
+    this.fuelCluster = document.getElementById('hud-fuel-cluster');
+    this.hullCluster = document.getElementById('hud-hull-cluster');
+    this.cargoCluster = document.getElementById('hud-cargo-cluster');
+    this.levelCluster = document.getElementById('hud-level-cluster');
+
+    const handleOpenDriller = (tab, e) => {
+      if (e) {
+        e.stopPropagation();
+        if (e.preventDefault) e.preventDefault();
+      }
+      soundFx.playClick();
+      this.openDrillerModal(tab);
+    };
+
+    if (this.fuelCluster) {
+      this.fuelCluster.onclick = (e) => handleOpenDriller('specs', e);
+    }
+    if (this.hullCluster) {
+      this.hullCluster.onclick = (e) => handleOpenDriller('specs', e);
+    }
+    if (this.cargoCluster) {
+      this.cargoCluster.onclick = (e) => handleOpenDriller('cargo', e);
+    }
+    if (this.levelCluster) {
+      this.levelCluster.onclick = (e) => handleOpenDriller('history', e);
+    }
+    if (this.cardGauges) {
+      this.cardGauges.onclick = (e) => {
+        if (e.target === this.cardGauges) {
+          handleOpenDriller('cargo', e);
+        }
+      };
+    }
+
+    // Event aus dem Spiel (z. B. Klick/Touch auf den Driller)
+    this.scene.events.on('open_driller_menu', (tab) => {
+      this.openDrillerModal(tab || 'cargo');
+    });
 
     // Mission Tracker
     this.missionTrackerEl = document.getElementById('mission-tracker');
@@ -155,6 +199,13 @@ export class HUD {
     this.scene.events.on('ore_discovered', (oreType) => {
       this.showDiscoveryModal(oreType);
     });
+  }
+
+  openDrillerModal(tab = 'cargo') {
+    if (!this.drillerModal.baseSystem && this.scene.baseSystem) {
+      this.drillerModal.baseSystem = this.scene.baseSystem;
+    }
+    this.drillerModal.open(tab);
   }
 
   showDiscoveryModal(oreType) {

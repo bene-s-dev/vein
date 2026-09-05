@@ -129,11 +129,20 @@ export class Player {
     this.y = this.gy * TILE_SIZE + TILE_SIZE / 2;
 
     // Sprite mit Start-Textur (nach rechts schauend)
-    // Sprite mit Start-Textur (nach rechts schauend)
     this.currentDirection = 'RIGHT';
     this.sprite = scene.add.image(this.x, this.y, 'player_drill_right')
       .setDepth(10)
-      .setOrigin(0.5, 0.5);
+      .setOrigin(0.5, 0.5)
+      .setInteractive({ useHandCursor: true });
+
+    // Klick oder Touch auf das Bohr-Fahrzeug öffnet das Driller-Menü (Fracht & Stats)
+    this.sprite.on('pointerdown', (pointer) => {
+      if (pointer.event && pointer.event.stopPropagation) {
+        pointer.event.stopPropagation();
+      }
+      soundFx.playClick();
+      this.scene.events.emit('open_driller_menu', 'cargo');
+    });
 
     // Animierter Bohrkopf (6-stufige Archimedes-Spiral-Drehung)
     this.drillFrame = 0;
