@@ -3732,8 +3732,8 @@ export class BaseSystem {
           if (have < need) canCraft = false;
           const oreName = ORE_DATA[ore]?.name || ore;
           const isMet = have >= need;
-          return `<span style="background: ${isMet ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'}; border: 1px solid ${isMet ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'}; color: ${isMet ? '#34d399' : '#f87171'}; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">${itemDisplayIcon(ore, 13)} ${need}x ${oreName} <span style="font-size: 9.5px; opacity: 0.85;">(${have}/${need})</span></span>`;
-        }).join(' ');
+          return `<span style="background: ${isMet ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'}; border: 1px solid ${isMet ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'}; color: ${isMet ? '#34d399' : '#f87171'}; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">${itemDisplayIcon(ore, 13)} ${need}x ${oreName} <span style="font-size: 9.5px; opacity: 0.85; font-variant-numeric: tabular-nums;">(${have}/${need})</span></span>`;
+        }).join('');
 
         // Prüfung: Reicht die Kohle für den Ofen-Brennstoff (2x) + eventuelle Rezept-Kohle?
         const recipeCoal = prod.recipe['coal'] || 0;
@@ -3741,25 +3741,40 @@ export class BaseSystem {
         if (availableCoal < totalCoalNeeded) canCraft = false;
 
         html += `
-          <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; gap: 12px;">
-            <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;">
+          <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 12px; box-sizing: border-box;">
+            <!-- Spalte 1: Icon (32px) + Name (145px) -->
+            <div style="display: flex; align-items: center; gap: 10px; width: 185px; min-width: 185px; flex-shrink: 0;">
               <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.25); border-radius: 8px; flex-shrink: 0; color: #38bdf8;">
                 ${itemDisplayIcon(prodId, 18)}
               </span>
-              <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0;">
-                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                  <strong style="color: #f8fafc; font-size: 13px;">${prod.name}</strong>
-                  <span style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.35); padding: 1px 7px; border-radius: 6px; font-size: 11px; color: #fbbf24; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">${icon('coins', '', 11)} €${prod.value}</span>
-                  <span style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); padding: 1px 6px; border-radius: 6px; font-size: 10.5px; color: #94a3b8; font-weight: 600; display: inline-flex; align-items: center; gap: 3px;">${icon('clock', '', 10)} ${prod.durationSec}s</span>
-                </div>
-                <div style="display: flex; gap: 5px; flex-wrap: wrap;">
-                  ${ingBadges}
-                </div>
-              </div>
+              <strong style="color: #f8fafc; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${prod.name}</strong>
             </div>
-            <button class="btn-craft-product btn-buy" data-prod="${prodId}" ${canCraft ? '' : 'disabled'} style="height: 32px; padding: 0 14px; font-size: 11.5px; font-weight: 700; flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px;">
-              ${icon('hammer', '', 13)} Herstellen
-            </button>
+
+            <!-- Spalte 2: Wert / Börsenpreis (80px) -->
+            <div style="width: 80px; min-width: 80px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+              <span style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.35); padding: 2px 8px; border-radius: 6px; font-size: 11px; color: #fbbf24; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 4px; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
+                ${icon('coins', '', 11)} €${prod.value}
+              </span>
+            </div>
+
+            <!-- Spalte 3: Fertigungs-Dauer (62px) -->
+            <div style="width: 62px; min-width: 62px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+              <span style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); padding: 2px 7px; border-radius: 6px; font-size: 10.5px; color: #94a3b8; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 3px; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
+                ${icon('clock', '', 10)} ${prod.durationSec}s
+              </span>
+            </div>
+
+            <!-- Spalte 4: Zutaten / Bauplan-Rezepte (flex: 1) -->
+            <div style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+              ${ingBadges}
+            </div>
+
+            <!-- Spalte 5: Herstellen-Button (110px) -->
+            <div style="width: 110px; min-width: 110px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end;">
+              <button class="btn-craft-product btn-buy" data-prod="${prodId}" ${canCraft ? '' : 'disabled'} style="width: 100%; height: 32px; padding: 0 10px; font-size: 11.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                ${icon('hammer', '', 13)} Herstellen
+              </button>
+            </div>
           </div>
         `;
       }
@@ -3825,25 +3840,42 @@ export class BaseSystem {
         const canSmeltThis = canAffordFuel && totalThisOre > 0;
 
         html += `
-          <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 8px 10px; gap: 10px;">
-            <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 12px; box-sizing: border-box;">
+            <!-- Spalte 1: Icon + Erz ➔ Barren (220px) -->
+            <div style="display: flex; align-items: center; gap: 10px; width: 220px; min-width: 220px; flex-shrink: 0;">
               <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.25); border-radius: 8px; flex-shrink: 0;">
                 ${itemDisplayIcon(oreKey, 18)}
               </span>
-              <div>
-                <strong style="color: #f8fafc; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px;">
-                  ${oreName} <span style="color: #64748b; font-size: 11px;">➔</span> <span style="color: #fbbf24; display: inline-flex; align-items: center; gap: 4px;">${itemDisplayIcon('bar_' + oreKey, 14)} ${refinedName}</span>
-                </strong>
-                <div style="display: flex; gap: 6px; align-items: center; margin-top: 2px;">
-                  <span style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); padding: 1px 6px; border-radius: 5px; font-size: 10px; color: #94a3b8; font-weight: 600;">${totalThisOre}x (${inCargo}F + ${inDepot}D)</span>
-                  <span style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); padding: 1px 6px; border-radius: 5px; font-size: 10px; color: #94a3b8; font-weight: 600; display: inline-flex; align-items: center; gap: 3px;">${icon('clock', '', 9)} ${durSec}s</span>
-                  <span style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); padding: 1px 6px; border-radius: 5px; font-size: 10px; color: #fbbf24; font-weight: 700;">€${netVal}</span>
-                </div>
-              </div>
+              <strong style="color: #f8fafc; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                ${oreName} <span style="color: #64748b; font-size: 11px;">➔</span> <span style="color: #fbbf24; display: inline-flex; align-items: center; gap: 4px;">${itemDisplayIcon('bar_' + oreKey, 14)} ${refinedName}</span>
+              </strong>
             </div>
-            <div style="display: flex; gap: 6px; align-items: center;">
+
+            <!-- Spalte 2: Wert (80px) -->
+            <div style="width: 80px; min-width: 80px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+              <span style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); padding: 2px 8px; border-radius: 6px; font-size: 11px; color: #fbbf24; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 4px; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
+                ${icon('coins', '', 11)} €${netVal}
+              </span>
+            </div>
+
+            <!-- Spalte 3: Dauer (62px) -->
+            <div style="width: 62px; min-width: 62px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+              <span style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); padding: 2px 7px; border-radius: 6px; font-size: 10.5px; color: #94a3b8; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 3px; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
+                ${icon('clock', '', 10)} ${durSec}s
+              </span>
+            </div>
+
+            <!-- Spalte 4: Vorrat (flex: 1) -->
+            <div style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px;">
+              <span style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 6px; font-size: 11px; color: #94a3b8; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums;">
+                ${totalThisOre}x verfügbar (${inCargo}F + ${inDepot}D)
+              </span>
+            </div>
+
+            <!-- Spalte 5: Buttons -->
+            <div style="display: flex; gap: 6px; align-items: center; justify-content: flex-end; flex-shrink: 0;">
               <button class="btn-deposit-one btn-3d-secondary" data-ore="${oreKey}" ${canSmeltThis ? '' : 'disabled'} style="height: 30px; padding: 0 10px; font-size: 11px; font-weight: 700; border-radius: 6px;">+1</button>
-              <button class="btn-deposit-all-type btn-action" data-ore="${oreKey}" ${canSmeltThis ? '' : 'disabled'} style="height: 30px; padding: 0 10px; font-size: 11px; font-weight: 700; border-radius: 6px;">Alle (${totalThisOre})</button>
+              <button class="btn-deposit-all-type btn-action" data-ore="${oreKey}" ${canSmeltThis ? '' : 'disabled'} style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 700; border-radius: 6px;">Alle (${totalThisOre})</button>
             </div>
           </div>
         `;
