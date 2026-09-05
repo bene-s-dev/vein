@@ -225,7 +225,7 @@ export class Player {
       if (isModalActive()) return;
       if (pointer && pointer.event) {
         const target = pointer.event.target;
-        if (target && target.closest && target.closest('#building-modal, .modal-backdrop, .modal-window, .hud-card, button, input')) {
+        if (target && target.closest && target.closest('#building-modal, .modal-backdrop, .modal-window, .hud-card, button, input, #toast-container, .game-toast')) {
           return;
         }
         if (pointer.event.stopPropagation) {

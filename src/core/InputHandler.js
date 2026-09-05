@@ -103,7 +103,7 @@ export class InputHandler {
 
       // Wenn Klick/Touch auf HTML UI oder Buttons liegt, ignorieren
       const evTarget = pointer.event ? pointer.event.target : null;
-      if (evTarget && evTarget.closest && evTarget.closest('.hud-card, #mission-tracker, button, .modal-window, .modal-backdrop, #orientation-tip, .mobile-fly-btn, input')) {
+      if (evTarget && evTarget.closest && evTarget.closest('.hud-card, #mission-tracker, button, .modal-window, .modal-backdrop, #orientation-tip, .mobile-fly-btn, input, #toast-container, .game-toast')) {
         return;
       }
 

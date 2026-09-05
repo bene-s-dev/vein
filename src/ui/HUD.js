@@ -5,6 +5,7 @@ import { DrillerMenuModal } from './DrillerMenuModal.js';
 import { icon, refreshIcons, oreIcon } from './IconHelper.js';
 import { ORE_DATA } from '../core/GridSystem.js';
 import { notifyModalClosed } from '../core/BaseSystem.js';
+import { toastManager } from './ToastManager.js';
 
 const ORE_DESCRIPTIONS = {
   coal: 'Fossiler Kohlenstoff aus den oberen Schichten. Solide Einnahmequelle für den Einstieg.',
@@ -122,6 +123,10 @@ export class HUD {
     this.rankName = document.getElementById('hud-rank-name');
     this.levelRight = document.getElementById('hud-level-right');
     this.returnWarn = document.getElementById('hud-return-warn');
+
+    // Toast-Warnungstracking
+    this.wasBelowGround = (this.player && this.player.gy >= 0);
+    this.warnedReturn2Percent = false;
 
     // Oberes linkes Bohrer-Status-Widget (Tank, Hülle, Fracht) als ein einheitliches klick-/tippbares Element
     let lastDrillerModalOpen = 0;
@@ -362,6 +367,53 @@ export class HUD {
     if (this.returnWarn) {
       this.returnWarn.style.display = isReturnWarn ? 'flex' : 'none';
     }
+
+    // --- Toast-Warnungen (oben zentriert) ---
+    // 1. Einmalig beim Untertage-Gehen mit unter 15% Treibstoff
+    const justEnteredUnderground = !this.wasBelowGround && isBelowGround;
+    if (justEnteredUnderground) {
+      if (fuelPctRaw < 15) {
+        toastManager.show({
+          id: 'fuel-low-entry',
+          title: 'Treibstoff niedrig',
+          message: 'Einfahrt unter Tage mit unter 15% Tank! Vor längeren Abstiegen auftanken empfohlen.',
+          type: 'warning',
+          iconName: 'fuel',
+          badges: [`Tank: ${Math.round(fuelPctRaw)}%`],
+          duration: 5000
+        });
+      }
+    }
+
+    // 2. Rückkehr-Vorwarnung: 2% vor Erreichen des Tankminimums zur Rückkehr
+    // Tankminimum zur Rückkehr ist returnPct. 2% davor = returnPct + 2.
+    const returnMinThreshold = returnPct + 2;
+    if (isBelowGround && returnPct > 0.5) {
+      if (!this.warnedReturn2Percent && fuelPctRaw <= returnMinThreshold) {
+        this.warnedReturn2Percent = true;
+        toastManager.show({
+          id: 'return-fuel-2percent',
+          title: 'Rückkehr-Warnung',
+          message: 'Kritisches Tankminimum fast erreicht! Nur noch 2% Puffer für den garantierten Rückweg.',
+          type: 'critical',
+          iconName: 'triangle-alert',
+          badges: [
+            `Tank: ${Math.round(fuelPctRaw)}%`,
+            `Rückweg-Minimum: ${Math.round(returnPct)}% (+2% Puffer)`
+          ],
+          duration: 6500
+        });
+      }
+    }
+
+    // Zurücksetzen der Warn-Flags bei Rückkehr an die Oberfläche oder Nachtanken
+    if (!isBelowGround) {
+      this.warnedReturn2Percent = false;
+    } else if (fuelPctRaw > returnMinThreshold + 5) {
+      this.warnedReturn2Percent = false;
+    }
+
+    this.wasBelowGround = isBelowGround;
 
     // Cash & Tiefe
     if (this.cashText) {
