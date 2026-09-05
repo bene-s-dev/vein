@@ -31,19 +31,24 @@ const config = {
 import { refreshIcons } from './ui/IconHelper.js';
 
 function shieldUiElements() {
-  // Verhindert das Durchklicken vom HUD auf den darunterliegenden Phaser-Canvas
-  const elements = document.querySelectorAll('#hud-overlay, #btn-mobile-fly, #orientation-tip, #mission-tracker');
-  const events = ['pointerdown', 'mousedown', 'touchstart'];
+  // Verhindert das Durchklicken vom Modal & HUD auf den darunterliegenden Phaser-Canvas
+  const events = ['pointerdown', 'pointerup', 'pointermove', 'mousedown', 'mouseup', 'click', 'touchstart', 'touchend'];
   
-  elements.forEach((el) => {
+  const modal = document.getElementById('building-modal');
+  if (modal) {
     events.forEach((eventType) => {
-      el.addEventListener(eventType, (e) => {
-        // Nur stoppen, wenn nicht direkt auf ein interaktives Steuerelement geklickt wird
-        if (e.target && e.target.closest && e.target.closest('button, input, select, textarea, .stat-cluster')) {
-          return;
-        }
+      modal.addEventListener(eventType, (e) => {
         e.stopPropagation();
-      });
+      }, { passive: false });
+    });
+  }
+
+  const elements = document.querySelectorAll('#hud-overlay, #btn-mobile-fly, #orientation-tip, #mission-tracker');
+  elements.forEach((el) => {
+    ['pointerdown', 'pointerup', 'mousedown', 'mouseup', 'touchstart', 'touchend'].forEach((eventType) => {
+      el.addEventListener(eventType, (e) => {
+        e.stopPropagation();
+      }, { passive: false });
     });
   });
 }

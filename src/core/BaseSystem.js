@@ -527,12 +527,15 @@ export class BaseSystem {
     }
 
     if (this.modalEl) {
-      // Backdrop-Klick schließt das Modal
-      this.modalEl.addEventListener('click', (e) => {
-        if (e.target === this.modalEl) {
-          this.closeModal();
+      // Verhindert das Durchklicken auf Canvas und Objekte hinter dem Modal
+      const blockEvents = ['pointerdown', 'pointerup', 'pointermove', 'mousedown', 'mouseup', 'click', 'touchstart', 'touchend'];
+      blockEvents.forEach((evt) => {
+        this.modalEl.addEventListener(evt, (e) => {
+          if (evt === 'click' && e.target === this.modalEl) {
+            this.closeModal();
+          }
           e.stopPropagation();
-        }
+        });
       });
     }
 
@@ -648,6 +651,9 @@ export class BaseSystem {
   }
 
   openModal(title, contentHtml) {
+    if (this.scene) {
+      this.scene.isPaused = true;
+    }
     if (!this.modalEl || !this.modalTitleEl || !this.modalBodyEl) return;
     this.modalTitleEl.innerHTML = title;
     this.modalBodyEl.innerHTML = contentHtml;
@@ -1239,6 +1245,9 @@ export class BaseSystem {
 
   openDepotModal() {
     this.isDepotModalOpen = true;
+    if (this.scene) {
+      this.scene.isPaused = true;
+    }
     if (!this.depot) {
       this.depot = { ores: {}, products: {}, capacity: 10, tier: 1 };
     }

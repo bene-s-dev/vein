@@ -7,7 +7,7 @@
 import Phaser from 'phaser';
 import { TILE_SIZE, ORE_DATA } from './GridSystem.js';
 import { soundFx } from './SoundEffects.js';
-import { FACTORY_PRODUCTS, getRefinedOreNetValue } from './BaseSystem.js';
+import { FACTORY_PRODUCTS, getRefinedOreNetValue, isModalActive } from './BaseSystem.js';
 
 export const PLAYER_STATES = {
   IDLE: 'idle',
@@ -222,8 +222,15 @@ export class Player {
     // Klick oder Touch auf das Bohr-Fahrzeug öffnet das Driller-Menü (Fracht & Stats)
     let lastDrillerClickTime = 0;
     this.sprite.on('pointerdown', (pointer) => {
-      if (pointer && pointer.event && pointer.event.stopPropagation) {
-        pointer.event.stopPropagation();
+      if (isModalActive()) return;
+      if (pointer && pointer.event) {
+        const target = pointer.event.target;
+        if (target && target.closest && target.closest('#building-modal, .modal-backdrop, .modal-window, .hud-card, button, input')) {
+          return;
+        }
+        if (pointer.event.stopPropagation) {
+          pointer.event.stopPropagation();
+        }
       }
       const now = Date.now();
       if (now - lastDrillerClickTime < 300) return;
