@@ -273,7 +273,7 @@ class SoundManager {
     if (this._jetpackActive && this._jetpackNodes) {
       const now = this.ctx.currentTime;
       this._jetpackNodes.gain.gain.cancelScheduledValues(now);
-      this._jetpackNodes.gain.gain.setTargetAtTime(0.075, now, 0.04);
+      this._jetpackNodes.gain.gain.setTargetAtTime(0.085, now, 0.04);
       return;
     }
 
@@ -283,29 +283,19 @@ class SoundManager {
 
     const gain = this.ctx.createGain();
     gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.setTargetAtTime(0.075, now, 0.05);
+    gain.gain.setTargetAtTime(0.085, now, 0.05);
     gain.connect(this.masterGain);
 
-    // 1. Turbinen-Klang (Doppel-Sinus + Pitch-Drift)
-    const osc1 = this.ctx.createOscillator();
-    osc1.type = 'sine';
-    osc1.frequency.setValueAtTime(90, now);
-    osc1.frequency.linearRampToValueAtTime(115, now + 0.3);
-
-    const osc2 = this.ctx.createOscillator();
-    osc2.type = 'triangle';
-    osc2.frequency.setValueAtTime(180, now);
-    osc2.frequency.linearRampToValueAtTime(230, now + 0.3);
-
-    // 2. Weiches Schub-Rauschen
+    // Reines, sattes Jetpack-Schubrauschen (OHNE Oszillator-Surrtöne)
+    // 1. Aerodynamisches Haupt-Rauschen (Pink Noise sanft bandbegrenzt)
     const noise = this.createNoiseBufferSource('pink');
     const noiseFlt = this.ctx.createBiquadFilter();
-    noiseFlt.type = 'bandpass';
-    noiseFlt.frequency.setValueAtTime(360, now);
-    noiseFlt.Q.setValueAtTime(1.2, now);
+    noiseFlt.type = 'lowpass';
+    noiseFlt.frequency.setValueAtTime(540, now);
+    noiseFlt.Q.setValueAtTime(0.7, now);
 
     const noiseGain = this.ctx.createGain();
-    noiseGain.gain.setValueAtTime(0.35, now);
+    noiseGain.gain.setValueAtTime(0.42, now);
 
     if (noise) {
       noise.connect(noiseFlt);
@@ -314,18 +304,23 @@ class SoundManager {
       noise.start(now);
     }
 
-    const oscFlt = this.ctx.createBiquadFilter();
-    oscFlt.type = 'lowpass';
-    oscFlt.frequency.setValueAtTime(320, now);
+    // 2. Tiefes Wummern / Schubdruck (Brown Noise)
+    const brownNoise = this.createNoiseBufferSource('brown');
+    const brownFlt = this.ctx.createBiquadFilter();
+    brownFlt.type = 'lowpass';
+    brownFlt.frequency.setValueAtTime(220, now);
 
-    osc1.connect(oscFlt);
-    osc2.connect(oscFlt);
-    oscFlt.connect(gain);
+    const brownGain = this.ctx.createGain();
+    brownGain.gain.setValueAtTime(0.35, now);
 
-    osc1.start(now);
-    osc2.start(now);
+    if (brownNoise) {
+      brownNoise.connect(brownFlt);
+      brownFlt.connect(brownGain);
+      brownGain.connect(gain);
+      brownNoise.start(now);
+    }
 
-    this._jetpackNodes = { gain, osc1, osc2, noise, noiseGain };
+    this._jetpackNodes = { gain, noise, brownNoise };
   }
 
   stopJetpack() {
@@ -342,9 +337,8 @@ class SoundManager {
     setTimeout(() => {
       if (this._jetpackGen === currentGen) {
         try {
-          nodes.osc1.stop();
-          nodes.osc2.stop();
           if (nodes.noise) nodes.noise.stop();
+          if (nodes.brownNoise) nodes.brownNoise.stop();
           nodes.gain.disconnect();
         } catch (_) {}
         this._jetpackNodes = null;
