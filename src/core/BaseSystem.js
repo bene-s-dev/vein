@@ -1258,12 +1258,11 @@ export class BaseSystem {
     this.depot.currentTab = 'ores';
   }
 
-  openDepotModal(initialTab = 'ores') {
+  openDepotModal() {
     this.isDepotModalOpen = true;
     if (!this.depot) {
-      this.depot = { ores: {}, products: {}, capacity: 10, tier: 1, currentTab: 'ores' };
+      this.depot = { ores: {}, products: {}, capacity: 10, tier: 1 };
     }
-    this.depot.currentTab = initialTab;
     this.renderDepotModal();
   }
 
@@ -1282,40 +1281,112 @@ export class BaseSystem {
     const occPct = Math.min(100, Math.round((totalStored / capacity) * 100));
     const isFull = totalStored >= capacity;
     const totalVal = this.getDepotTotalValue();
+    const freeDepot = Math.max(0, capacity - totalStored);
 
     // Erzzählung im Laderaum des Bohrers
     const cargoOreCounts = {};
     (this.player.cargo || []).forEach(ore => {
       cargoOreCounts[ore] = (cargoOreCounts[ore] || 0) + 1;
     });
+    const playerCargoLength = this.player.cargo ? this.player.cargo.length : 0;
 
     const playerProducts = this.player.factoryProducts || {};
+    const totalPlayerProdCount = Object.values(playerProducts).reduce((s, v) => s + v, 0);
 
-    // Kopfzeile: Statusanzeige & Auslastungsbalken
+    // Ausbau-Daten
+    const DEPOT_TIERS = [
+      { tier: 1, capacity: 10, costCash: 0, label: 'Kompaktes Lagerfach' },
+      { tier: 2, capacity: 25, costCash: 250, label: 'Erweitertes Regallager' },
+      { tier: 3, capacity: 60, costCash: 800, costComp: { hydraulic_part: 1 }, compName: '1x Hydraulikzylinder', label: 'Automatisierte Förderbrücke' },
+      { tier: 4, capacity: 150, costCash: 2200, costComp: { titan_alloy: 1 }, compName: '1x Titan-Legierung', label: 'Schwergut-Containerterminal' },
+      { tier: 5, capacity: 400, costCash: 6500, costComp: { titan_alloy: 2 }, compName: '2x Titan-Legierung', label: 'Industrie-Großlager' },
+      { tier: 6, capacity: 1000, costCash: 16000, costComp: { quantum_chip: 2 }, compName: '2x Quanten-Steuerkern', label: 'Quanten-Kompressionslager' }
+    ];
+
+    const currentTier = this.depot.tier || 1;
+    const nextTierData = DEPOT_TIERS.find(t => t.tier === currentTier + 1);
+
+    let canAffordDepotComp = true;
+    if (nextTierData && nextTierData.costComp) {
+      for (const [compKey, need] of Object.entries(nextTierData.costComp)) {
+        if ((this.player.components[compKey] || 0) < need) canAffordDepotComp = false;
+      }
+    }
+    const canAffordDepot = nextTierData && (this.player.cash >= nextTierData.costCash) && canAffordDepotComp;
+
+    // 1. Kopfzeile: Statusanzeige, Auslastungsbalken & Ausbau-Aktion
+    let upgradeSnippetHtml = '';
+    if (nextTierData) {
+      const compBadgesHtml = nextTierData.costComp ? Object.entries(nextTierData.costComp).map(([compKey, need]) => {
+        const have = this.player.components[compKey] || 0;
+        const isMet = have >= need;
+        const compIconName = COMPONENT_ICONS[compKey] || 'box';
+        const compNames = {
+          hydraulic_part: 'Hydraulik-Zylinder',
+          titan_alloy: 'Titan-Legierung',
+          laser_lens: 'Kristall-Fokuslinse',
+          quantum_chip: 'Quanten-Steuerkern'
+        };
+        const cName = compNames[compKey] || compKey;
+        return `
+          <span style="background: rgba(192, 132, 252, 0.12); border: 1px solid ${isMet ? 'rgba(192, 132, 252, 0.3)' : 'rgba(239, 68, 68, 0.4)'}; color: ${isMet ? '#c084fc' : '#ef4444'}; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">
+            ${icon(compIconName, '', 11)} ${need}x ${cName} <span style="font-size: 9.5px; opacity: 0.85; font-variant-numeric: tabular-nums;">(${have}/${need})</span>
+          </span>
+        `;
+      }).join('') : '';
+
+      upgradeSnippetHtml = `
+        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.06); padding: 8px 12px; border-radius: 8px; gap: 10px; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <strong style="color: #38bdf8; font-size: 12px;">Nächste Stufe ${nextTierData.tier}: ${nextTierData.label}</strong>
+            <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-weight: 800; font-size: 11px; padding: 1px 7px; border-radius: 6px;">
+              ${nextTierData.capacity} Plätze
+            </span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <span style="background: rgba(251, 191, 36, 0.12); border: 1px solid ${this.player.cash >= nextTierData.costCash ? 'rgba(251, 191, 36, 0.3)' : 'rgba(239, 68, 68, 0.4)'}; color: ${this.player.cash >= nextTierData.costCash ? '#fbbf24' : '#ef4444'}; font-weight: 800; font-size: 11px; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; font-variant-numeric: tabular-nums;">
+              ${icon('coins', '', 11)} €${nextTierData.costCash.toLocaleString()}
+            </span>
+            ${compBadgesHtml}
+            <button id="btn-depot-upgrade" class="btn-buy" style="height: 28px; padding: 0 12px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 5px;" ${canAffordDepot ? '' : 'disabled'}>
+              ${icon('wrench', '', 12)}
+              <span>Ausbauen</span>
+            </button>
+          </div>
+        </div>
+      `;
+    } else {
+      upgradeSnippetHtml = `
+        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 6px 12px; text-align: center; color: #10b981; font-weight: 800; font-size: 11.5px;">
+          MAXIMALER DEPOT-AUSBAU ERREICHT (${capacity} PLÄTZE)
+        </div>
+      `;
+    }
+
     const headerHtml = `
       <div style="
         background: rgba(15, 23, 42, 0.85);
         border: 1px solid ${isFull ? 'rgba(239, 68, 68, 0.5)' : 'rgba(56, 189, 248, 0.25)'};
         border-radius: 12px;
         padding: 10px 14px;
-        margin-bottom: 12px;
         display: flex;
         flex-direction: column;
         gap: 8px;
+        box-sizing: border-box;
       ">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
           <div style="display: flex; align-items: center; gap: 6px;">
-            <span style="font-weight: 800; color: #f8fafc; font-size: 13px;">LAGERKAPAZITÄT</span>
-            <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-size: 10.5px; font-weight: 700; padding: 1px 7px; border-radius: 99px;">
+            <span style="font-weight: 800; color: #f8fafc; font-size: 13px; letter-spacing: 0.5px;">LAGERKAPAZITÄT</span>
+            <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-size: 10.5px; font-weight: 800; padding: 1px 7px; border-radius: 99px;">
               STUFE ${this.depot.tier || 1}
             </span>
             ${isFull ? `<span style="background: #ef4444; color: #ffffff; font-size: 9.5px; font-weight: 800; padding: 1px 6px; border-radius: 4px;">VOLL</span>` : ''}
           </div>
           <div style="display: flex; align-items: center; gap: 10px; font-size: 11px; font-weight: 700;">
-            <span style="color: ${isFull ? '#ef4444' : '#f8fafc'};">
+            <span style="color: ${isFull ? '#ef4444' : '#f8fafc'}; font-variant-numeric: tabular-nums;">
               ${totalStored} / ${capacity} Plätze belegt (${occPct}%)
             </span>
-            <span style="color: #fbbf24; display: inline-flex; align-items: center; gap: 3px;">
+            <span style="color: #fbbf24; display: inline-flex; align-items: center; gap: 3px; font-variant-numeric: tabular-nums;">
               ${icon('coins', '', 12)} Wert: +€${totalVal.toLocaleString()}
             </span>
           </div>
@@ -1324,372 +1395,223 @@ export class BaseSystem {
         <div style="height: 6px; background: rgba(0,0,0,0.6); border-radius: 99px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
           <div style="width: ${occPct}%; height: 100%; background: ${isFull ? '#ef4444' : occPct >= 80 ? '#f59e0b' : '#38bdf8'}; border-radius: 99px; transition: width 0.2s ease;"></div>
         </div>
+
+        ${upgradeSnippetHtml}
       </div>
     `;
 
-    // Tabs
-    const tabs = [
-      { id: 'ores', label: 'Erze & Mineralien', icon: 'stone' },
-      { id: 'products', label: 'Barren & Fabrik-Waren', icon: 'layers' },
-      { id: 'upgrade', label: 'Depot-Ausbau', icon: 'wrench' }
-    ];
+    // 2. Erze & Mineralien (Rohstoff-Lager)
+    const oreEntries = Object.keys(ORE_DATA).filter(key => {
+      const inDepot = this.depot.ores?.[key] || 0;
+      const inCargo = cargoOreCounts[key] || 0;
+      return this.player.isOreDiscovered(key) || inDepot > 0 || inCargo > 0;
+    });
 
-    const tabNavHtml = `
-      <div style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; scrollbar-width: none;">
-        ${tabs.map(t => {
-          const isActive = this.depot.currentTab === t.id;
-          return `
-            <button class="depot-tab-btn btn-3d-secondary" data-tab="${t.id}" style="
-              height: 32px;
-              box-sizing: border-box;
-              background: ${isActive ? 'linear-gradient(180deg, #0284c7 0%, #0369a1 100%)' : ''};
-              border-color: ${isActive ? '#38bdf8' : ''};
-              border-bottom: ${isActive ? '3px solid #075985' : ''};
-              color: ${isActive ? '#ffffff' : '#94a3b8'};
-              padding: 0 12px;
-              font-size: 11.5px;
-              font-weight: 700;
-              border-radius: 8px;
-              display: inline-flex;
-              align-items: center;
-              justify-content: center;
-              gap: 6px;
-              cursor: pointer;
-              white-space: nowrap;
-            ">
-              ${icon(t.icon, '', 14)}
-              <span>${t.label}</span>
-            </button>
-          `;
-        }).join('')}
-      </div>
+    const totalStoredOresCount = Object.values(this.depot.ores || {}).reduce((s, v) => s + v, 0);
+
+    let oresSectionHtml = `
+      <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px; box-sizing: border-box;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
+          <strong style="color: #38bdf8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 6px;">
+            ${icon('stone', '', 14)}
+            Erze & Mineralien (${totalStoredOresCount} im Depot · ${playerCargoLength} im Bohrer)
+          </strong>
+          <button id="btn-depot-all-ores" class="btn-action" style="height: 30px; font-size: 11px; font-weight: 800; padding: 0 12px; display: inline-flex; align-items: center; gap: 5px;" ${playerCargoLength > 0 && freeDepot > 0 ? '' : 'disabled'}>
+            ${icon('arrow-down-to-line', '', 12)}
+            <span>Alle Erze einlagern (${playerCargoLength})</span>
+          </button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
     `;
 
-    // Schnell-Aktionen (Bulk Transfer)
-    let bulkActionsHtml = '';
-    if (this.depot.currentTab === 'ores') {
-      const totalStoredOresCount = Object.values(this.depot.ores || {}).reduce((s, v) => s + v, 0);
-      const playerCargoLen = this.player.cargo ? this.player.cargo.length : 0;
-      const freeCargo = (this.player.maxCargo || 10) - playerCargoLen;
-
-      bulkActionsHtml = `
-        <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
-          <button id="btn-depot-all-ores" class="btn-action" style="height: 32px; font-size: 11.5px; padding: 0 12px; display: inline-flex; align-items: center; gap: 5px;" ${playerCargoLen > 0 ? '' : 'disabled'}>
-            ${icon('arrow-down-to-line', '', 13)}
-            <span>Einlagern (${playerCargoLen})</span>
-          </button>
-          <button id="btn-depot-fill-cargo" class="btn-3d-secondary" style="height: 32px; font-size: 11.5px; padding: 0 12px; display: inline-flex; align-items: center; gap: 5px;" ${(totalStoredOresCount > 0 && freeCargo > 0) ? '' : 'disabled'}>
-            ${icon('arrow-up-from-line', '', 13)}
-            <span>Auffüllen (${freeCargo})</span>
-          </button>
+    if (oreEntries.length === 0) {
+      oresSectionHtml += `
+        <div style="text-align: center; padding: 16px; color: #94a3b8; font-size: 11.5px; background: rgba(0,0,0,0.25); border-radius: 8px;">
+          Noch keine Erze entdeckt. Baue im Schacht Rohstoffe ab, um sie hier einzulagern!
         </div>
       `;
-    } else if (this.depot.currentTab === 'products') {
-      const totalStoredProdCount = Object.values(this.depot.products || {}).reduce((s, v) => s + v, 0);
-      const playerProdCount = Object.values(this.player.factoryProducts || {}).reduce((s, v) => s + v, 0);
-
-      bulkActionsHtml = `
-        <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
-          <button id="btn-depot-all-products" class="btn-action" style="height: 32px; font-size: 11.5px; padding: 0 12px; display: inline-flex; align-items: center; gap: 5px;" ${playerProdCount > 0 ? '' : 'disabled'}>
-            ${icon('arrow-down-to-line', '', 13)}
-            <span>Einlagern (${playerProdCount})</span>
-          </button>
-          <button id="btn-depot-withdraw-all-products" class="btn-3d-secondary" style="height: 32px; font-size: 11.5px; padding: 0 12px; display: inline-flex; align-items: center; gap: 5px;" ${totalStoredProdCount > 0 ? '' : 'disabled'}>
-            ${icon('arrow-up-from-line', '', 13)}
-            <span>Auslagern (${totalStoredProdCount})</span>
-          </button>
-        </div>
-      `;
-    }
-
-    // Content je nach Tab
-    let contentHtml = '';
-
-    if (this.depot.currentTab === 'ores') {
-      const oreEntries = Object.keys(ORE_DATA).filter(key => {
+    } else {
+      for (const key of oreEntries) {
+        const data = ORE_DATA[key];
         const inDepot = this.depot.ores?.[key] || 0;
         const inCargo = cargoOreCounts[key] || 0;
-        return this.player.isOreDiscovered(key) || inDepot > 0 || inCargo > 0;
-      });
-      const freeDepot = capacity - totalStored;
-      const playerCargoLength = this.player.cargo ? this.player.cargo.length : 0;
-      const freeCargo = (this.player.maxCargo || 10) - playerCargoLength;
+        const canDeposit = inCargo > 0 && freeDepot > 0;
 
-      contentHtml = `
-        ${bulkActionsHtml}
-        <div style="display: flex; flex-direction: column; gap: 6px; max-height: 270px; overflow-y: auto; padding-right: 2px;">
-          ${oreEntries.length === 0 ? `
-            <div style="text-align: center; padding: 24px 16px; color: #94a3b8; font-size: 12px; background: rgba(15,23,42,0.5); border-radius: 10px; border: 1px dashed rgba(255,255,255,0.1);">
-              Noch keine Erze entdeckt. Baue im Schacht Rohstoffe ab, um sie hier einzulagern!
+        oresSectionHtml += `
+          <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 12px; box-sizing: border-box;">
+            <!-- Spalte 1: Icon (32px) + Name (145px) -->
+            <div style="display: flex; align-items: center; gap: 10px; width: 175px; min-width: 175px; flex-shrink: 0;">
+              <div style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.25); border-radius: 8px; flex-shrink: 0;">
+                ${oreIcon(key, 18)}
+              </div>
+              <strong style="color: #f8fafc; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${data.name}</strong>
             </div>
-          ` : oreEntries.map(key => {
-            const data = ORE_DATA[key];
-            const inDepot = this.depot.ores?.[key] || 0;
-            const inCargo = cargoOreCounts[key] || 0;
 
-            const canDeposit = inCargo > 0 && freeDepot > 0;
-            const canWithdraw = inDepot > 0 && freeCargo > 0;
+            <!-- Spalte 2: Börsenwert (78px) -->
+            <div style="width: 78px; min-width: 78px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+              <span style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); padding: 2px 8px; border-radius: 6px; font-size: 11px; color: #fbbf24; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 4px; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
+                ${icon('coins', '', 11)} €${data.value}
+              </span>
+            </div>
 
-            return `
-              <div style="
-                background: #141c2b;
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                border-radius: 8px;
-                padding: 8px 12px;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 8px;
-              ">
-                <!-- Info links -->
-                <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
-                  <div style="display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; min-width: 28px; min-height: 28px; max-width: 28px; max-height: 28px; flex-shrink: 0; aspect-ratio: 1 / 1; box-sizing: border-box; background: rgba(0,0,0,0.4); border-radius: 6px; border: 1px solid rgba(255,255,255,0.08);">
-                    ${oreIcon(key, 16)}
-                  </div>
-                  <div style="display: flex; flex-direction: column; min-width: 0;">
-                    <span style="font-size: 13px; font-weight: 700; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                      ${data.name}
-                    </span>
-                    <span style="font-size: 10px; color: #94a3b8;">
-                      Börsenwert: €${data.value} • Tiefe: ab ${data.minDepth}m
-                    </span>
-                  </div>
-                </div>
+            <!-- Spalte 3: Tiefe (62px) -->
+            <div style="width: 62px; min-width: 62px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+              <span style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); padding: 2px 7px; border-radius: 6px; font-size: 10.5px; color: #94a3b8; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
+                ab ${data.minDepth}m
+              </span>
+            </div>
 
-                <!-- Bestands-Badges & Stepper rechts -->
-                <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
-                  <!-- Bestände -->
-                  <div style="display: flex; flex-direction: column; align-items: flex-end; font-size: 10.5px; font-weight: 700;">
-                    <span style="color: #38bdf8;">Depot: <strong style="color: #ffffff;">${inDepot}x</strong></span>
-                    <span style="color: #94a3b8;">Bohrer: <strong style="color: #e2e8f0;">${inCargo}x</strong></span>
-                  </div>
+            <!-- Spalte 4: Bestände (flex: 1) -->
+            <div style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px;">
+              <span style="background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; white-space: nowrap; font-variant-numeric: tabular-nums;">
+                Depot: <strong style="color: #ffffff;">${inDepot}x</strong>
+              </span>
+              <span style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); color: #94a3b8; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 6px; white-space: nowrap; font-variant-numeric: tabular-nums;">
+                Bohrer: <strong style="color: #e2e8f0;">${inCargo}x</strong>
+              </span>
+            </div>
 
-                  <!-- Aktionen (Nur Ein-/Auslagern, kein Verkauf) -->
-                  <div style="display: flex; align-items: center; gap: 4px;">
-                    <!-- Auslagern -->
-                    <button class="btn-withdraw-ore btn-3d-secondary" data-ore="${key}" ${canWithdraw ? '' : 'disabled'} style="
-                      height: 28px; padding: 0 7px; font-size: 11px; font-weight: 800; border-radius: 6px;
-                      opacity: ${canWithdraw ? '1' : '0.35'}; cursor: ${canWithdraw ? 'pointer' : 'default'};
-                    " title="1x in Bohrer laden">-1</button>
-
-                    <!-- Einlagern -->
-                    <button class="btn-deposit-ore btn-3d-secondary" data-ore="${key}" ${canDeposit ? '' : 'disabled'} style="
-                      height: 28px; padding: 0 7px; font-size: 11px; font-weight: 800; border-radius: 6px;
-                      opacity: ${canDeposit ? '1' : '0.35'}; cursor: ${canDeposit ? 'pointer' : 'default'};
-                    " title="1x ins Depot einlagern">+1</button>
-
-                    <!-- Alle einlagern dieser Sorte -->
-                    <button class="btn-deposit-all-ore btn-action" data-ore="${key}" ${canDeposit ? '' : 'disabled'} style="
-                      height: 28px; padding: 0 8px; font-size: 10.5px; font-weight: 700; border-radius: 6px;
-                      opacity: ${canDeposit ? '1' : '0.35'}; cursor: ${canDeposit ? 'pointer' : 'default'};
-                    " title="Alle dieser Erzsorte aus Bohrer ins Depot">Alle (${inCargo})</button>
-                  </div>
-                </div>
-              </div>
-            `;
-          }).join('')}
-        </div>
-      `;
-    } else if (this.depot.currentTab === 'products') {
-      const freeDepot = capacity - totalStored;
-
-      // 1. Alle veredelten Barren / Briketts / Kristalle (nur bereits entdeckte Steine oder Bestand > 0)
-      const refinedEntries = Object.entries(REFINED_ORE_DATA)
-        .filter(([rawKey, rData]) => {
-          const inDepot = this.depot.products?.[rData.key] || 0;
-          const inCargo = this.player.cargo ? this.player.cargo.filter(c => c === rData.key).length : 0;
-          const inPlayer = (playerProducts[rData.key] || 0) + inCargo;
-          return this.player.isOreDiscovered(rawKey) || inDepot > 0 || inPlayer > 0;
-        })
-        .map(([rawKey, rData]) => {
-          const key = rData.key;
-          const inDepot = this.depot.products?.[key] || 0;
-          const inPlayer = (playerProducts[key] || 0) + (this.player.cargo ? this.player.cargo.filter(c => c === key).length : 0);
-          const val = getRefinedOreNetValue(rawKey);
-          return {
-            key,
-            name: rData.name,
-            value: val,
-            desc: rData.desc,
-            inDepot,
-            inPlayer,
-            isBar: true
-          };
-        });
-
-      // 2. Industrielle Fabrik-Erzeugnisse (nur wenn alle Zutaten entdeckt oder Bestand > 0)
-      const factoryEntries = Object.entries(FACTORY_PRODUCTS)
-        .filter(([key, prod]) => {
-          const inDepot = this.depot.products?.[key] || 0;
-          const inPlayer = playerProducts[key] || 0;
-          const allIngredientsDiscovered = Object.keys(prod.recipe).every(ore => this.player.isOreDiscovered(ore));
-          return allIngredientsDiscovered || inDepot > 0 || inPlayer > 0;
-        })
-        .map(([key, prod]) => {
-          const inDepot = this.depot.products?.[key] || 0;
-          const inPlayer = playerProducts[key] || 0;
-          return {
-            key,
-            name: prod.name,
-            value: prod.value,
-            desc: prod.desc,
-            inDepot,
-            inPlayer,
-            isBar: false
-          };
-        });
-
-      const allProductItems = [...refinedEntries, ...factoryEntries];
-
-      contentHtml = `
-        ${bulkActionsHtml}
-        <div style="display: flex; flex-direction: column; gap: 6px; max-height: 270px; overflow-y: auto; padding-right: 2px;">
-          ${allProductItems.map(item => {
-            const canDeposit = item.inPlayer > 0 && freeDepot > 0;
-            const canWithdraw = item.inDepot > 0;
-
-            return `
-              <div style="
-                background: #141c2b;
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                border-radius: 8px;
-                padding: 8px 12px;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 8px;
-              ">
-                <!-- Links: Icon & Name -->
-                <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
-                  <div style="display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; min-width: 28px; min-height: 28px; max-width: 28px; max-height: 28px; flex-shrink: 0; aspect-ratio: 1 / 1; box-sizing: border-box; background: rgba(0,0,0,0.4); border-radius: 6px; border: 1px solid rgba(255,255,255,0.08);">
-                    ${itemDisplayIcon(item.key, 16)}
-                  </div>
-                  <div style="display: flex; flex-direction: column; min-width: 0;">
-                    <span style="font-size: 13px; font-weight: 700; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                      ${item.name}
-                    </span>
-                    <span style="font-size: 10px; color: #94a3b8;">
-                      Börsenwert: €${item.value}
-                    </span>
-                  </div>
-                </div>
-
-                <!-- Rechts: Bestände & Stepper -->
-                <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
-                  <!-- Bestände -->
-                  <div style="display: flex; flex-direction: column; align-items: flex-end; font-size: 10.5px; font-weight: 700;">
-                    <span style="color: #10b981;">Depot: <strong style="color: #ffffff;">${item.inDepot}x</strong></span>
-                    <span style="color: #94a3b8;">Bohrer: <strong style="color: #e2e8f0;">${item.inPlayer}x</strong></span>
-                  </div>
-
-                  <!-- Aktionen -->
-                  <div style="display: flex; align-items: center; gap: 4px;">
-                    <!-- Auslagern -->
-                    <button class="btn-withdraw-product btn-3d-secondary" data-prod="${item.key}" ${canWithdraw ? '' : 'disabled'} style="
-                      height: 28px; padding: 0 7px; font-size: 11px; font-weight: 800; border-radius: 6px;
-                      opacity: ${canWithdraw ? '1' : '0.35'}; cursor: ${canWithdraw ? 'pointer' : 'default'};
-                    " title="1x in Bohrer laden">-1</button>
-
-                    <!-- Einlagern -->
-                    <button class="btn-deposit-product btn-3d-secondary" data-prod="${item.key}" ${canDeposit ? '' : 'disabled'} style="
-                      height: 28px; padding: 0 7px; font-size: 11px; font-weight: 800; border-radius: 6px;
-                      opacity: ${canDeposit ? '1' : '0.35'}; cursor: ${canDeposit ? 'pointer' : 'default'};
-                    " title="1x ins Depot einlagern">+1</button>
-
-                    <!-- Alle einlagern -->
-                    <button class="btn-deposit-all-product btn-action" data-prod="${item.key}" ${canDeposit ? '' : 'disabled'} style="
-                      height: 28px; padding: 0 8px; font-size: 10.5px; font-weight: 700; border-radius: 6px;
-                      opacity: ${canDeposit ? '1' : '0.35'}; cursor: ${canDeposit ? 'pointer' : 'default'};
-                    " title="Alle aus Bohrer ins Depot">Alle (${item.inPlayer})</button>
-                  </div>
-                </div>
-              </div>
-            `;
-          }).join('')}
-        </div>
-      `;
-    } else if (this.depot.currentTab === 'upgrade') {
-      const DEPOT_TIERS = [
-        { tier: 1, capacity: 10, costCash: 0, label: 'Kompaktes Lagerfach' },
-        { tier: 2, capacity: 25, costCash: 250, label: 'Erweitertes Regallager' },
-        { tier: 3, capacity: 60, costCash: 800, costComp: { hydraulic_part: 1 }, compName: '1x Hydraulikzylinder', label: 'Automatisierte Förderbrücke' },
-        { tier: 4, capacity: 150, costCash: 2200, costComp: { titan_alloy: 1 }, compName: '1x Titan-Legierung', label: 'Schwergut-Containerterminal' },
-        { tier: 5, capacity: 400, costCash: 6500, costComp: { titan_alloy: 2 }, compName: '2x Titan-Legierung', label: 'Industrie-Großlager' },
-        { tier: 6, capacity: 1000, costCash: 16000, costComp: { quantum_chip: 2 }, compName: '2x Quanten-Steuerkern', label: 'Quanten-Kompressionslager' }
-      ];
-
-      const currentTier = this.depot.tier || 1;
-      const nextTierData = DEPOT_TIERS.find(t => t.tier === currentTier + 1);
-
-      let canAffordDepotComp = true;
-      if (nextTierData && nextTierData.costComp) {
-        for (const [compKey, need] of Object.entries(nextTierData.costComp)) {
-          if ((this.player.components[compKey] || 0) < need) canAffordDepotComp = false;
-        }
-      }
-      const canAffordDepot = nextTierData && (this.player.cash >= nextTierData.costCash) && canAffordDepotComp;
-
-      contentHtml = `
-        <div style="display: flex; flex-direction: column; gap: 10px;">
-          <div style="background: #141c2b; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 13px; font-weight: 700; color: #f8fafc;">Stufe ${currentTier}</span>
-            <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-weight: 800; font-size: 12px; padding: 2px 8px; border-radius: 6px;">${capacity} Plätze</span>
+            <!-- Spalte 5: Aktionen (NUR Einlagern ins Lager) -->
+            <div style="display: flex; gap: 6px; align-items: center; justify-content: flex-end; flex-shrink: 0;">
+              <button class="btn-deposit-ore btn-3d-secondary" data-ore="${key}" ${canDeposit ? '' : 'disabled'} style="height: 30px; padding: 0 10px; font-size: 11px; font-weight: 800; border-radius: 6px;" title="1x ins Depot einlagern">+1</button>
+              <button class="btn-deposit-all-ore btn-action" data-ore="${key}" ${canDeposit ? '' : 'disabled'} style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 800; border-radius: 6px;" title="Alle dieser Sorte ins Depot einlagern">Alle (${inCargo})</button>
+            </div>
           </div>
+        `;
+      }
+    }
+    oresSectionHtml += `
+        </div>
+      </div>
+    `;
 
-          ${nextTierData ? `
-            <div style="background: rgba(56, 189, 248, 0.08); border: 1.5px solid #38bdf8; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px;">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-size: 13.5px; font-weight: 800; color: #ffffff;">Stufe ${nextTierData.tier}: ${nextTierData.label}</span>
-                <span style="background: rgba(56, 189, 248, 0.2); border: 1px solid rgba(56, 189, 248, 0.35); color: #38bdf8; font-weight: 800; font-size: 12px; padding: 2px 8px; border-radius: 6px;">
-                  ${nextTierData.capacity} Plätze
-                </span>
-              </div>
+    // 3. Barren & Fabrik-Waren (Produkt-Lager)
+    const refinedEntries = Object.entries(REFINED_ORE_DATA)
+      .filter(([rawKey, rData]) => {
+        const inDepot = this.depot.products?.[rData.key] || 0;
+        const inCargo = this.player.cargo ? this.player.cargo.filter(c => c === rData.key).length : 0;
+        const inPlayer = (playerProducts[rData.key] || 0) + inCargo;
+        return this.player.isOreDiscovered(rawKey) || inDepot > 0 || inPlayer > 0;
+      })
+      .map(([rawKey, rData]) => {
+        const key = rData.key;
+        const inDepot = this.depot.products?.[key] || 0;
+        const inPlayer = (playerProducts[key] || 0) + (this.player.cargo ? this.player.cargo.filter(c => c === key).length : 0);
+        const val = getRefinedOreNetValue(rawKey);
+        return {
+          key,
+          name: rData.name,
+          value: val,
+          desc: rData.desc,
+          inDepot,
+          inPlayer,
+          isBar: true
+        };
+      });
 
-              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                <span style="background: rgba(251, 191, 36, 0.12); border: 1px solid ${this.player.cash >= nextTierData.costCash ? 'rgba(251, 191, 36, 0.3)' : 'rgba(239, 68, 68, 0.4)'}; color: ${this.player.cash >= nextTierData.costCash ? '#fbbf24' : '#ef4444'}; font-weight: 800; font-size: 11.5px; padding: 3px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
-                  ${icon('coins', '', 12)} €${nextTierData.costCash.toLocaleString()}
-                </span>
-                ${nextTierData.costComp ? Object.entries(nextTierData.costComp).map(([compKey, need]) => {
-                  const have = this.player.components[compKey] || 0;
-                  const isMet = have >= need;
-                  const compIconName = COMPONENT_ICONS[compKey] || 'box';
-                  const compNames = {
-                    hydraulic_part: 'Hydraulik-Zylinder',
-                    titan_alloy: 'Titan-Legierung',
-                    laser_lens: 'Kristall-Fokuslinse',
-                    quantum_chip: 'Quanten-Steuerkern'
-                  };
-                  const cName = compNames[compKey] || compKey;
-                  return `
-                    <span style="background: rgba(192, 132, 252, 0.12); border: 1px solid ${isMet ? 'rgba(192, 132, 252, 0.3)' : 'rgba(239, 68, 68, 0.4)'}; color: ${isMet ? '#c084fc' : '#ef4444'}; font-weight: 700; font-size: 11.5px; padding: 3px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
-                      ${icon(compIconName, '', 12)} ${need}x ${cName} (${have}/${need})
-                    </span>
-                  `;
-                }).join('') : ''}
-              </div>
+    const factoryEntries = Object.entries(FACTORY_PRODUCTS)
+      .filter(([key, prod]) => {
+        const inDepot = this.depot.products?.[key] || 0;
+        const inPlayer = playerProducts[key] || 0;
+        const allIngredientsDiscovered = Object.keys(prod.recipe).every(ore => this.player.isOreDiscovered(ore));
+        return allIngredientsDiscovered || inDepot > 0 || inPlayer > 0;
+      })
+      .map(([key, prod]) => {
+        const inDepot = this.depot.products?.[key] || 0;
+        const inPlayer = playerProducts[key] || 0;
+        return {
+          key,
+          name: prod.name,
+          value: prod.value,
+          desc: prod.desc,
+          inDepot,
+          inPlayer,
+          isBar: false
+        };
+      });
 
-              <button id="btn-depot-upgrade" class="btn-buy" style="height: 34px; font-size: 12px; font-weight: 800; margin-top: 2px;" ${canAffordDepot ? '' : 'disabled'}>
-                ${icon('wrench', '', 14)}
-                <span>Ausbauen</span>
-              </button>
-            </div>
-          ` : `
-            <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; border-radius: 10px; padding: 14px; text-align: center; color: #10b981; font-weight: 800; font-size: 13px;">
-              MAXIMALER AUSBAU (1.000 PLÄTZE)
-            </div>
-          `}
+    const allProductItems = [...refinedEntries, ...factoryEntries];
+    const totalStoredProdCount = Object.values(this.depot.products || {}).reduce((s, v) => s + v, 0);
+
+    let productsSectionHtml = `
+      <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px; box-sizing: border-box;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: gap; gap: 6px;">
+          <strong style="color: #38bdf8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 6px;">
+            ${icon('layers', '', 14)}
+            Barren & Fabrik-Waren (${totalStoredProdCount} im Depot · ${totalPlayerProdCount} im Bohrer)
+          </strong>
+          <button id="btn-depot-all-products" class="btn-action" style="height: 30px; font-size: 11px; font-weight: 800; padding: 0 12px; display: inline-flex; align-items: center; gap: 5px;" ${totalPlayerProdCount > 0 && freeDepot > 0 ? '' : 'disabled'}>
+            ${icon('arrow-down-to-line', '', 12)}
+            <span>Alle Waren einlagern (${totalPlayerProdCount})</span>
+          </button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+    `;
+
+    if (allProductItems.length === 0) {
+      productsSectionHtml += `
+        <div style="text-align: center; padding: 16px; color: #94a3b8; font-size: 11.5px; background: rgba(0,0,0,0.25); border-radius: 8px;">
+          Noch keine Fabrik-Waren oder Barren vorhanden. Nutze die Fabrik, um Produkte herzustellen!
         </div>
       `;
-    }
+    } else {
+      for (const item of allProductItems) {
+        const canDeposit = item.inPlayer > 0 && freeDepot > 0;
 
-    // Modal-Fußzeile
-    this.modalBodyEl.innerHTML = `
-      <div style="display: flex; flex-direction: column;">
-        ${headerHtml}
-        ${tabNavHtml}
-        <div id="depot-tab-content">
-          ${contentHtml}
+        productsSectionHtml += `
+          <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 12px; box-sizing: border-box;">
+            <!-- Spalte 1: Icon (32px) + Name (145px) -->
+            <div style="display: flex; align-items: center; gap: 10px; width: 175px; min-width: 175px; flex-shrink: 0;">
+              <div style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.25); border-radius: 8px; flex-shrink: 0;">
+                ${itemDisplayIcon(item.key, 18)}
+              </div>
+              <strong style="color: #f8fafc; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.name}</strong>
+            </div>
+
+            <!-- Spalte 2: Börsenwert (78px) -->
+            <div style="width: 78px; min-width: 78px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+              <span style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); padding: 2px 8px; border-radius: 6px; font-size: 11px; color: #fbbf24; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 4px; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
+                ${icon('coins', '', 11)} €${item.value}
+              </span>
+            </div>
+
+            <!-- Spalte 3: Typ (62px) -->
+            <div style="width: 62px; min-width: 62px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+              <span style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); padding: 2px 7px; border-radius: 6px; font-size: 10.5px; color: #94a3b8; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; white-space: nowrap;">
+                ${item.isBar ? 'Barren' : 'Ware'}
+              </span>
+            </div>
+
+            <!-- Spalte 4: Bestände (flex: 1) -->
+            <div style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px;">
+              <span style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; white-space: nowrap; font-variant-numeric: tabular-nums;">
+                Depot: <strong style="color: #ffffff;">${item.inDepot}x</strong>
+              </span>
+              <span style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); color: #94a3b8; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 6px; white-space: nowrap; font-variant-numeric: tabular-nums;">
+                Bohrer: <strong style="color: #e2e8f0;">${item.inPlayer}x</strong>
+              </span>
+            </div>
+
+            <!-- Spalte 5: Aktionen (NUR Einlagern ins Lager) -->
+            <div style="display: flex; gap: 6px; align-items: center; justify-content: flex-end; flex-shrink: 0;">
+              <button class="btn-deposit-product btn-3d-secondary" data-prod="${item.key}" ${canDeposit ? '' : 'disabled'} style="height: 30px; padding: 0 10px; font-size: 11px; font-weight: 800; border-radius: 6px;" title="1x ins Depot einlagern">+1</button>
+              <button class="btn-deposit-all-product btn-action" data-prod="${item.key}" ${canDeposit ? '' : 'disabled'} style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 800; border-radius: 6px;" title="Alle dieser Ware ins Depot einlagern">Alle (${item.inPlayer})</button>
+            </div>
+          </div>
+        `;
+      }
+    }
+    productsSectionHtml += `
         </div>
+      </div>
+    `;
+
+    // Zusammenbau des scrollbaren Modals
+    this.modalBodyEl.innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 12px; max-height: 520px; overflow-y: auto; padding-right: 4px;">
+        ${headerHtml}
+        ${oresSectionHtml}
+        ${productsSectionHtml}
       </div>
     `;
 
@@ -1704,46 +1626,15 @@ export class BaseSystem {
     const body = this.modalBodyEl;
     if (!body) return;
 
-    // Tabs
-    body.querySelectorAll('.depot-tab-btn').forEach(btn => {
-      btn.onclick = () => {
-        soundFx.playClick();
-        this.depot.currentTab = btn.getAttribute('data-tab');
-        this.renderDepotModal();
-      };
-    });
-
     // Bulk Aktionen Erze
     const btnAllOres = body.querySelector('#btn-depot-all-ores');
     if (btnAllOres) btnAllOres.onclick = () => this.depositAllOres();
-
-    const btnFillCargo = body.querySelector('#btn-depot-fill-cargo');
-    if (btnFillCargo) btnFillCargo.onclick = () => this.fillCargoFromDepot();
-
 
     // Bulk Aktionen Waren
     const btnAllProducts = body.querySelector('#btn-depot-all-products');
     if (btnAllProducts) btnAllProducts.onclick = () => this.depositAllProducts();
 
-    const btnWithdrawAllProducts = body.querySelector('#btn-depot-withdraw-all-products');
-    if (btnWithdrawAllProducts) btnWithdrawAllProducts.onclick = () => this.withdrawAllProducts();
-
-
-    // Einzelaktionen Erze (Einlagern / Auslagern)
-    body.querySelectorAll('.btn-withdraw-ore').forEach(btn => {
-      btn.onclick = () => {
-        const ore = btn.getAttribute('data-ore');
-        this.withdrawOre(ore, 1);
-      };
-    });
-
-    body.querySelectorAll('.btn-withdraw-fill-ore').forEach(btn => {
-      btn.onclick = () => {
-        const ore = btn.getAttribute('data-ore');
-        this.withdrawFillOre(ore);
-      };
-    });
-
+    // Einzelaktionen Erze (nur Einlagern)
     body.querySelectorAll('.btn-deposit-ore').forEach(btn => {
       btn.onclick = () => {
         const ore = btn.getAttribute('data-ore');
@@ -1758,31 +1649,17 @@ export class BaseSystem {
       };
     });
 
-    // Einzelaktionen Waren (Einlagern / Auslagern)
-    body.querySelectorAll('.btn-withdraw-product').forEach(btn => {
-      btn.onclick = () => {
-        const prod = btn.getAttribute('data-product');
-        this.withdrawProduct(prod, 1);
-      };
-    });
-
-    body.querySelectorAll('.btn-withdraw-all-product').forEach(btn => {
-      btn.onclick = () => {
-        const prod = btn.getAttribute('data-product');
-        this.withdrawProduct(prod, 9999);
-      };
-    });
-
+    // Einzelaktionen Waren (nur Einlagern)
     body.querySelectorAll('.btn-deposit-product').forEach(btn => {
       btn.onclick = () => {
-        const prod = btn.getAttribute('data-product');
+        const prod = btn.getAttribute('data-prod');
         this.depositProduct(prod, 1);
       };
     });
 
     body.querySelectorAll('.btn-deposit-all-product').forEach(btn => {
       btn.onclick = () => {
-        const prod = btn.getAttribute('data-product');
+        const prod = btn.getAttribute('data-prod');
         this.depositProduct(prod, 9999);
       };
     });
@@ -1792,8 +1669,6 @@ export class BaseSystem {
     if (btnUpgrade) {
       btnUpgrade.onclick = () => this.upgradeDepot();
     }
-
-
   }
 
   depositOre(oreKey, count = 1) {
