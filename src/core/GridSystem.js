@@ -480,7 +480,7 @@ export class GridSystem {
   }
 
   updateViewport(camera, player) {
-    const margin = 3;
+    const margin = 10;
     const startCol = Math.floor(camera.worldView.x / TILE_SIZE) - margin;
     const endCol = Math.ceil((camera.worldView.x + camera.worldView.width) / TILE_SIZE) + margin;
 
@@ -493,8 +493,8 @@ export class GridSystem {
     const sensorRadTiles = player ? player.sensorRadius : 3.5;
     const sensorRadPx = sensorRadTiles * TILE_SIZE;
 
-    // Stempel für besuchte Position hinzufügen (STRIKT NUR UNTER DER ERDE: y >= 32)
-    if (player && player.gy >= 1 && pY >= 32) {
+    // Stempel für besuchte Position hinzufügen (STRIKT NUR UNTER DER ERDE: gy >= 0, pY >= 8)
+    if (player && player.gy >= 0 && pY >= 8) {
       if (this.lastStampX === null || Math.hypot(pX - this.lastStampX, pY - this.lastStampY) >= 12) {
         this.lastStampX = pX;
         this.lastStampY = pY;
@@ -589,20 +589,22 @@ export class GridSystem {
     }
 
     // ------------------------------------------------------------------
-    // FOG OF WAR: KREISRUNTE ERDE & WO MAN SCHON WAR BLEIBT HELL
-    // ------------------------------------------------------------------
-    // ------------------------------------------------------------------
     // FOG OF WAR: NUR UNTER DER ERDE (y >= 0) - NIEMALS IM HIMMEL!
+    // Großzügige Puffer (padX=350, padY=250), damit bei horizontaler Fahrt niemals Kanten oder Lücken entstehen
     // ------------------------------------------------------------------
     const camView = camera.worldView;
-    const worldW = Math.ceil(camView.width) + 8;
-    const worldX = Math.floor(camView.x) - 4;
-    const rawWorldY = Math.floor(camView.y) - 4;
-    const rawWorldH = Math.ceil(camView.height) + 8;
+    const padX = 350;
+    const padY = 250;
+
+    const worldX = Math.floor(camView.x) - padX;
+    const worldW = Math.ceil(camView.width) + padX * 2;
+
+    const rawWorldY = Math.floor(camView.y);
+    const rawWorldH = Math.ceil(camView.height);
 
     // Erdoberfläche ist bei y = 0. Fog existiert STRIKT nur für y >= 0!
-    const fogTopY = Math.max(0, rawWorldY);
-    const fogBottomY = rawWorldY + rawWorldH;
+    const fogTopY = Math.max(0, rawWorldY - padY);
+    const fogBottomY = rawWorldY + rawWorldH + padY;
     const fogH = Math.max(0, fogBottomY - fogTopY);
 
     if (fogH <= 0) {
@@ -611,12 +613,17 @@ export class GridSystem {
     } else {
       this.fogImage.setVisible(true);
 
-      if (this.fogTexture.width !== worldW || this.fogTexture.height !== fogH) {
-        this.fogTexture.setSize(worldW, fogH);
+      // Quantisiert auf 128px-Schritte, damit das Canvas nicht bei jeder Subpixel-Bewegung neu allokiert wird
+      const targetW = Math.ceil(worldW / 128) * 128;
+      const targetH = Math.ceil(fogH / 128) * 128;
+
+      if (this.fogTexture.width !== targetW || this.fogTexture.height !== targetH) {
+        this.fogTexture.setSize(targetW, targetH);
+        this.darkRockPattern = null; // Canvas resized -> Pattern muss neu erstellt werden!
       }
 
       this.fogImage.setPosition(worldX, fogTopY);
-      this.fogImage.setDisplaySize(worldW, fogH);
+      this.fogImage.setDisplaySize(targetW, targetH);
 
       const ctx = this.fogTexture.context;
 
@@ -625,31 +632,37 @@ export class GridSystem {
         this.darkRockPattern = ctx.createPattern(patCanvas, 'repeat');
       }
 
+      ctx.clearRect(0, 0, targetW, targetH);
+
       ctx.globalCompositeOperation = 'source-over';
       if (this.darkRockPattern && typeof DOMMatrix !== 'undefined') {
-        const mat = new DOMMatrix();
-        mat.translateSelf(-worldX, -fogTopY);
-        this.darkRockPattern.setTransform(mat);
-        ctx.fillStyle = this.darkRockPattern;
+        try {
+          const mat = new DOMMatrix();
+          mat.translateSelf(-worldX, -fogTopY);
+          this.darkRockPattern.setTransform(mat);
+          ctx.fillStyle = this.darkRockPattern;
+        } catch (err) {
+          ctx.fillStyle = '#070a10';
+        }
       } else {
         ctx.fillStyle = '#070a10';
       }
-      ctx.fillRect(0, 0, worldW, fogH);
+      ctx.fillRect(0, 0, targetW, targetH);
 
       // Licht kreisrund in die Dunkelheit stanzen
       ctx.globalCompositeOperation = 'destination-out';
       ctx.fillStyle = '#000000';
 
       // 1. Bereits erforschte Wegpunkte (nur unter der Erde y >= 0 stanzen)
-      const pad = sensorRadPx + 64;
+      const pad = sensorRadPx + 96;
       const minX = worldX - pad;
-      const maxX = worldX + worldW + pad;
+      const maxX = worldX + targetW + pad;
       const minY = fogTopY - pad;
       const maxY = fogBottomY + pad;
 
       for (let i = 0; i < this.exploredStamps.length; i++) {
         const s = this.exploredStamps[i];
-        if (s.y >= 32 && s.x >= minX && s.x <= maxX && s.y >= minY && s.y <= maxY) {
+        if (s.y >= 8 && s.x >= minX && s.x <= maxX && s.y >= minY && s.y <= maxY) {
           const cx = s.x - worldX;
           const cy = s.y - fogTopY;
           ctx.beginPath();
