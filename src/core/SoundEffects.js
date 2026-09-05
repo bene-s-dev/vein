@@ -235,6 +235,10 @@ class SoundManager {
     this._drillGear = gearOsc;
   }
 
+  stopDrill() {
+    this.stopDrilling();
+  }
+
   stopDrilling() {
     if (!this._drillRunning || !this.ctx) return;
     this._drillRunning = false;
@@ -398,6 +402,36 @@ class SoundManager {
 
   // Alias used in some Player.js calls
   playGemCollect(rarity = 1) { this.playOreCollect(rarity); }
+
+  // -----------------------------------------------------------------------
+  // UI Klick-Sound
+  // -----------------------------------------------------------------------
+  playClick() {
+    if (this.muted) return;
+    this.ensureContext();
+    if (!this.ctx) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(800, now);
+      osc.frequency.exponentialRampToValueAtTime(400, now + 0.04);
+
+      gain.gain.setValueAtTime(0.06, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.04);
+    } catch (e) {
+      // Ignore audio failure
+    }
+  }
 
   // -----------------------------------------------------------------------
   // Kauf- & Upgrade-Akkord

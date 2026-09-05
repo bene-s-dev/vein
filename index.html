@@ -248,9 +248,23 @@
     }
 
     /* Tactile 3D Buttons - Strict 32px Default Height */
-    button {
+    button, .btn-buy, .btn-action, .btn-3d-secondary, .btn-3d-danger, .btn-3d-success, .tab-btn, .depot-tab-btn, .driller-tab-btn, .guide-tab-btn {
       outline: none;
       -webkit-tap-highlight-color: transparent;
+      pointer-events: auto !important;
+      touch-action: manipulation !important;
+      cursor: pointer;
+    }
+
+    button:disabled, .btn-buy:disabled, .btn-action:disabled, .btn-3d-secondary:disabled, .btn-3d-danger:disabled, .btn-3d-success:disabled {
+      cursor: not-allowed !important;
+      opacity: 0.35 !important;
+      box-shadow: none !important;
+      transform: none !important;
+    }
+
+    button *, .btn-buy *, .btn-action *, .btn-3d-secondary *, .btn-3d-danger *, .btn-3d-success *, .tab-btn *, .depot-tab-btn *, .driller-tab-btn *, .guide-tab-btn * {
+      pointer-events: none;
     }
 
     .btn-action {
@@ -773,6 +787,8 @@
       justify-content: center;
       align-items: center;
       z-index: 200;
+      pointer-events: auto !important;
+      touch-action: pan-y !important;
     }
 
     .modal-window {
@@ -784,6 +800,8 @@
       padding: 22px 24px;
       box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
       position: relative;
+      pointer-events: auto !important;
+      touch-action: pan-y !important;
     }
 
     .modal-header {
@@ -813,6 +831,8 @@
       line-height: 1;
       padding: 4px;
       border-radius: 6px;
+      pointer-events: auto !important;
+      touch-action: manipulation !important;
     }
 
     .modal-close:hover {
@@ -827,6 +847,9 @@
       margin-bottom: 16px;
       max-height: 65vh;
       overflow-y: auto;
+      pointer-events: auto !important;
+      touch-action: pan-y !important;
+      -webkit-overflow-scrolling: touch;
     }
 
     .upgrade-list, .mission-list {
@@ -1111,7 +1134,7 @@
     <div id="hud-overlay">
       <!-- Left: Gauges & Level -->
       <div class="hud-card" id="card-gauges" style="gap: 8px;">
-        <div class="stat-cluster" id="hud-fuel-cluster" title="Driller-Status & Tank (Klick zum Öffnen)">
+        <div class="stat-cluster" id="hud-fuel-cluster" title="Bohrer & Tank (Klick zum Öffnen)">
           <div class="stat-row" style="gap: 4px;">
             <span id="hud-fuel-icon" style="display: inline-flex; align-items: center;"><i data-lucide="fuel" style="width: 14px; height: 14px;"></i></span>
             <span class="hud-value-badge" id="hud-fuel-text" style="color: #f8fafc;">100%</span>
@@ -1124,24 +1147,21 @@
           </div>
         </div>
 
-        <div class="stat-cluster" id="hud-hull-cluster" title="Driller-Status & Panzerung (Klick zum Öffnen)">
+        <div class="stat-cluster stat-cluster-compact" id="hud-hull-cluster" title="Bohrer & Hülle (Klick zum Öffnen)">
           <div class="stat-row" style="gap: 4px;">
             <span id="hud-hull-icon" style="display: inline-flex; align-items: center;"><i data-lucide="shield-cog" style="width: 14px; height: 14px;"></i></span>
-            <span class="hud-value-badge" id="hud-hull-text" style="color: #f8fafc;">100%</span>
-          </div>
-          <div class="bar-container" id="hud-hull-bar-container" style="position: relative;" title="Karosserie / Panzerung">
-            <div id="hud-hull-bar" class="bar-fill bar-hull"></div>
+            <span class="hud-value-badge" id="hud-hull-text" style="color: #10b981;">100%</span>
           </div>
         </div>
 
-        <div class="stat-cluster stat-cluster-compact" id="hud-cargo-cluster" title="Laderaum & Rohstoff-Inventar (Klick zum Öffnen)">
+        <div class="stat-cluster stat-cluster-compact" id="hud-cargo-cluster" title="Bohrer & Fracht (Klick zum Öffnen)">
           <div class="stat-row" style="gap: 4px;">
             <span id="hud-cargo-icon" style="display: inline-flex; align-items: center;"><i data-lucide="container" style="width: 14px; height: 14px;"></i></span>
             <span class="hud-value-badge" id="hud-cargo-text" style="color: #38bdf8;">0/10</span>
           </div>
         </div>
 
-        <div class="stat-cluster stat-cluster-compact" id="hud-level-cluster" title="Driller-Status & Karriere (Klick zum Öffnen)">
+        <div class="stat-cluster stat-cluster-compact" id="hud-level-cluster" title="Bohrer & Level (Klick zum Öffnen)">
           <div class="stat-row" style="gap: 4px;">
             <span id="hud-level-icon" style="display: inline-flex; align-items: center;"><i data-lucide="award" style="width: 14px; height: 14px;"></i></span>
             <span class="hud-value-badge rank-badge" id="hud-rank-name" style="color: #f8fafc;">1</span>

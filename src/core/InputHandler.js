@@ -107,6 +107,17 @@ export class InputHandler {
         return;
       }
 
+      // Wenn das Bohrfahrzeug berührt oder angetippt wurde, Driller-Menü öffnen und keinen Joystick starten
+      if (this.scene.player && this.scene.player.sprite) {
+        const pWorldX = pointer.worldX;
+        const pWorldY = pointer.worldY;
+        const dist = Math.hypot(pWorldX - this.scene.player.x, pWorldY - this.scene.player.y);
+        if (dist <= 36) {
+          this.scene.events.emit('open_driller_menu', 'cargo');
+          return;
+        }
+      }
+
       // Wenn ein interaktives Gebäude oder NPC angetippt wurde, dieses öffnen und keinen Joystick starten
       if (currentlyOver && currentlyOver.length > 0) {
         const hitBuildingOrNpc = currentlyOver.some(obj => obj && obj.input && obj.input.enabled);

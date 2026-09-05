@@ -4,9 +4,10 @@
  * Fahren nach oben, automatischem Auftanken in der Basis, XP- & Level-System.
  */
 
+import Phaser from 'phaser';
 import { TILE_SIZE, ORE_DATA } from './GridSystem.js';
 import { soundFx } from './SoundEffects.js';
-import { FACTORY_PRODUCTS } from './BaseSystem.js';
+import { FACTORY_PRODUCTS, getRefinedOreNetValue } from './BaseSystem.js';
 
 export const PLAYER_STATES = {
   IDLE: 'idle',
@@ -24,95 +25,139 @@ export const RANK_NAMES = [
   'Meister der Tiefe'
 ];
 
-export const BATTERY_TIERS = [
+export const TANK_TIERS = [
+  { tier: 1, name: 'Standard-Tank', maxFuel: 100, stat: '100 Liter', cost: 0, comp: null, level: 1, desc: 'Basis-Treibstofftank für kurze Bohrgänge.' },
+  { tier: 2, name: 'Kerosin-Tank Mk.II', maxFuel: 135, stat: '135 Liter (+35L)', cost: 180, comp: null, level: 1, desc: 'Erhöht Treibstoff auf 135 Liter und senkt Verbrauch um 12%.' },
+  { tier: 3, name: 'Spartriebwerk Mk.III', maxFuel: 180, stat: '180 Liter (+45L)', cost: 420, comp: null, level: 1, desc: 'Erhöht Treibstoff auf 180 Liter und spart 20% Kerosin.' },
+  { tier: 4, name: 'Dual-Injektor Mk.IV', maxFuel: 240, stat: '240 Liter (+60L)', cost: 950, comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 }, level: 2, desc: 'Verbessert Steigflug-Effizienz mit Hochdruck-Injektoren.' },
+  { tier: 5, name: 'Kompressions-Tank Mk.V', maxFuel: 320, stat: '320 Liter (+80L)', cost: 2000, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 }, level: 2, desc: 'Hochfeste Legierung erlaubt 320 Liter Treibstoffkapazität.' },
+  { tier: 6, name: 'Turbo-Booster Mk.VI', maxFuel: 420, stat: '420 Liter (+100L)', cost: 4200, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 2 }, level: 3, desc: 'Großer 420L Tank für tiefe Expeditionen.' },
+  { tier: 7, name: 'Fusions-Generator Mk.VII', maxFuel: 540, stat: '540 Liter (+120L)', cost: 8800, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 4, desc: 'Hocheffizienter Fusions-Antrieb mit 540 Litern Kapazität.' },
+  { tier: 8, name: 'Quanten-Ionen-Antrieb', maxFuel: 700, stat: '700 Liter (+160L)', cost: 17500, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 5, desc: 'Ultimativer 700L Quantenantrieb mit extrem sparsamen Düsen.' }
+];
+
+export const HULL_TIERS = [
   {
     tier: 1,
-    name: 'Blei-Säure Standard-Akku',
-    shortName: 'Blei-Säure',
-    chargeSpeed: 2.2, // Liter/Sekunde (sehr langsam)
-    stat: '2.2 L/s Tankspeed',
+    name: 'Leichtmetall-Gehäuse',
+    shortName: 'Leichtmetall',
+    maxHull: 100,
+    stat: '100 HP Schutz',
     cost: 0,
     comp: null,
     level: 1,
-    desc: 'Basis-Bleiakku. Sehr langsame Stromaufnahme an der Ladestation.'
+    desc: 'Basis-Gehäuse für normale Bohrungen in oberflächennahem Erdreich.'
   },
   {
     tier: 2,
-    name: 'NiMH Hochstrom-Paket Mk.II',
-    shortName: 'NiMH Mk.II',
-    chargeSpeed: 4.5,
-    stat: '4.5 L/s Tankspeed (+105%)',
-    cost: 160,
+    name: 'Kevlar-Verbundschutz Mk.II',
+    shortName: 'Kevlar Mk.II',
+    maxHull: 140,
+    stat: '140 HP (+40 HP)',
+    cost: 140,
     comp: null,
     level: 1,
-    desc: 'Höhere Leitfähigkeit und verbesserte Zyklen verdoppeln die Ladegeschwindigkeit.'
+    desc: 'Verstärkte Verbundstruktur gegen Stoß- und Reibungsverschleiß beim Bohren.'
   },
   {
     tier: 3,
-    name: 'Li-Ion Schnelllade-Zelle Mk.III',
-    shortName: 'Li-Ion Mk.III',
-    chargeSpeed: 8.0,
-    stat: '8.0 L/s Tankspeed (+78%)',
-    cost: 380,
+    name: 'Gehärtetes Stahl-Chassis Mk.III',
+    shortName: 'Stahl Mk.III',
+    maxHull: 190,
+    stat: '190 HP (+50 HP)',
+    cost: 330,
     comp: null,
     level: 1,
-    desc: 'Moderne Lithium-Ionen-Zellen mit BMS für zügiges Zwischenladen am Hangar.'
+    desc: 'Widerstandsfähiger Gehäuseschutz für tiefere Schiefer- und Granitschichten.'
   },
   {
     tier: 4,
-    name: 'LiFePO4 Industrie-Speicher Mk.IV',
-    shortName: 'LiFePO4 Mk.IV',
-    chargeSpeed: 13.0,
-    stat: '13.0 L/s Tankspeed (+62%)',
-    cost: 850,
-    comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 },
+    name: 'Titan-Panzergehäuse Mk.IV',
+    shortName: 'Titan Mk.IV',
+    maxHull: 260,
+    stat: '260 HP (+70 HP)',
+    cost: 790,
+    comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 },
     level: 2,
-    desc: 'Robuster Lithium-Eisenphosphat-Speicher mit aktiver Kühlung für hohen Ladestrom.'
+    desc: 'Widersteht hohem Gesteinsdruck und Reibungshitze.'
   },
   {
     tier: 5,
-    name: 'Festkörper-Batterie Mk.V',
-    shortName: 'Solid-State Mk.V',
-    chargeSpeed: 20.0,
-    stat: '20.0 L/s Tankspeed (+54%)',
-    cost: 1900,
-    comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 },
+    name: 'Magma-Hitzeschild Mk.V',
+    shortName: 'Hitzeschild Mk.V',
+    maxHull: 350,
+    stat: '350 HP (+90 HP)',
+    cost: 1700,
+    comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 2 },
     level: 2,
-    desc: 'Keramischer Festelektrolyt erlaubt rasante Stromaufnahme ohne Überhitzung.'
+    desc: 'Schützt das Gehäuse vor extremen Tiefentemperaturen und Erschütterungen.'
   },
   {
     tier: 6,
-    name: 'Graphen-Superkondensator Mk.VI',
-    shortName: 'Graphen Mk.VI',
-    chargeSpeed: 30.0,
-    stat: '30.0 L/s Tankspeed (+50%)',
-    cost: 3900,
-    comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 2 },
+    name: 'Schwere Verbundpanzerung Mk.VI',
+    shortName: 'Verbund Mk.VI',
+    maxHull: 470,
+    stat: '470 HP (+120 HP)',
+    cost: 3400,
+    comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 1 },
     level: 3,
-    desc: 'Graphen-Schichten speichern enorme Energiemengen in Sekundenbruchteilen.'
+    desc: 'Extrem schlagfester Case-Schutz für härtestes Basaltgestein.'
   },
   {
     tier: 7,
-    name: 'Quanten-Resonanz-Speicher Mk.VII',
-    shortName: 'Quanten Mk.VII',
-    chargeSpeed: 45.0,
-    stat: '45.0 L/s Tankspeed (+50%)',
-    cost: 8200,
-    comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 },
+    name: 'Kraftfeld-Deflektor Mk.VII',
+    shortName: 'Deflektor Mk.VII',
+    maxHull: 620,
+    stat: '620 HP (+150 HP)',
+    cost: 7300,
+    comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 1 },
     level: 4,
-    desc: 'Resonanzbasierter subatomarer Energiespeicher für Hochgeschwindigkeits-Ladung.'
+    desc: 'Aktives Energieschild fängt Reibungsenergie ab und stärkt das Gehäuse.'
   },
   {
     tier: 8,
-    name: 'Tachyonen-Kern Hyperzelle',
-    shortName: 'Tachyonen Mk.VIII',
-    chargeSpeed: 70.0,
-    stat: '70.0 L/s Tankspeed (+55%)',
-    cost: 16500,
+    name: 'Nanit-Matrix-Chassis Mk.VIII',
+    shortName: 'Nanit Mk.VIII',
+    maxHull: 800,
+    stat: '800 HP (+180 HP)',
+    cost: 15500,
     comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 },
     level: 5,
-    desc: 'Maximale Ladegeschwindigkeit mit Tachyonen-Technologie für fast sofortiges Volltanken.'
+    desc: 'Selbstreparierendes Naniten-Gehäuse für maximale Tiefen-Integrität.'
   }
+];
+
+export const ENGINE_TIERS = [
+  { tier: 1, name: 'Standard-Raupenfahrwerk', stat: '260ms / 120 px/s', moveDuration: 260, flightSpeed: 120, cost: 0, comp: null, level: 1, desc: 'Sicheres Basis-Fahrwerk für solide Schachtmanöver.' },
+  { tier: 2, name: 'Verstärkte Getriebe Mk.II', stat: '225ms / 138 px/s (+15%)', moveDuration: 225, flightSpeed: 138, cost: 190, comp: null, level: 1, desc: 'Kürzere Schaltzeiten beschleunigen Kriechgang und Steigflug.' },
+  { tier: 3, name: 'Hydraulik-Raupen Mk.III', stat: '195ms / 160 px/s (+16%)', moveDuration: 195, flightSpeed: 160, cost: 440, comp: null, level: 1, desc: 'Flüssigere Kettenbewegungen und mehr Schubdüsengeschwindigkeit.' },
+  { tier: 4, name: 'Hochdruck-Turbine Mk.IV', stat: '170ms / 185 px/s (+16%)', moveDuration: 170, flightSpeed: 185, cost: 980, comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 }, level: 2, desc: 'Kraftvoller Vortrieb im Schacht und schnellerer Aufstieg.' },
+  { tier: 5, name: 'Titan-Kettenantrieb Mk.V', stat: '145ms / 215 px/s (+16%)', moveDuration: 145, flightSpeed: 215, cost: 2100, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 }, level: 2, desc: 'Geringerer Rollwiderstand und kräftige Schwebetriebwerke.' },
+  { tier: 6, name: 'Vektor-Booster Mk.VI', stat: '125ms / 250 px/s (+16%)', moveDuration: 125, flightSpeed: 250, cost: 4300, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 2 }, level: 3, desc: 'Schnelle Manövrierfähigkeit im Gestein und hoher Schwebespeed.' },
+  { tier: 7, name: 'Magnet-Levitation Mk.VII', stat: '105ms / 290 px/s (+16%)', moveDuration: 105, flightSpeed: 290, cost: 8900, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 4, desc: 'Magnetschwebende Fahrwerkssegmente für rasantes Gleiten.' },
+  { tier: 8, name: 'Quanten-Gravitationsantrieb', stat: '90ms / 340 px/s (+17%)', moveDuration: 90, flightSpeed: 340, cost: 18000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 5, desc: 'Krümmt das Schwerefeld für blitzschnelle Fortbewegung.' }
+];
+
+export const CARGO_TIERS = [
+  { tier: 1, name: 'Standard-Ladebucht', maxCargo: 10, stat: '10 Erze', cost: 0, comp: null, level: 1, desc: 'Kompakter Laderaum für die ersten Bergbau-Expeditionen.' },
+  { tier: 2, name: 'Erweiterte Frachtbucht', maxCargo: 14, stat: '14 Erze (+4)', cost: 170, comp: null, level: 1, desc: 'Erweitert Ladeplätze auf 14 Erze für lukrativere Tauchgänge.' },
+  { tier: 3, name: 'Titan-Containermodul Mk.III', maxCargo: 20, stat: '20 Erze (+6)', cost: 400, comp: null, level: 1, desc: 'Großzügiger Frachtraum für 20 Erze.' },
+  { tier: 4, name: 'Struktur-Laderaum Mk.IV', maxCargo: 28, stat: '28 Erze (+8)', cost: 900, comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 }, level: 2, desc: 'Hydraulische Ladeklappen bieten Platz für 28 Erze.' },
+  { tier: 5, name: 'Molekular-Kompressor Mk.V', maxCargo: 38, stat: '38 Erze (+10)', cost: 1900, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 }, level: 2, desc: 'Hohe Packdichte erlaubt den Transport von 38 Erzen.' },
+  { tier: 6, name: 'Subraum-Boxen Mk.VI', maxCargo: 50, stat: '50 Erze (+12)', cost: 3900, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 2 }, level: 3, desc: 'Transportiert bis zu 50 Erze auf einen Schlag.' },
+  { tier: 7, name: 'Tiefsee-Depot Mk.VII', maxCargo: 65, stat: '65 Erze (+15)', cost: 8200, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 4, desc: 'Riesige Kapazität von 65 Plätzen für Edelsteine.' },
+  { tier: 8, name: 'Quanten-Frachtdepot Mk.VIII', maxCargo: 80, stat: '80 Erze (+15)', cost: 16500, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 5, desc: 'Gigantischer 80-Plätze-Frachtraum für maximale Gewinne.' }
+];
+
+export const SENSOR_TIERS = [
+  { tier: 1, name: 'Basis-Sonar', radius: 1.8, stat: '1.8 Kacheln', cost: 0, comp: null, level: 1, desc: 'Kompakter Sensor zur Erkennung naher Erzadern.' },
+  { tier: 2, name: 'Geo-Scanner Mk.II', radius: 2.4, stat: '2.4 Kacheln (+0.6)', cost: 140, comp: null, level: 1, desc: 'Vergrößert den kreisrunden Scan-Umkreis spürbar.' },
+  { tier: 3, name: 'Puls-Sonar Mk.III', radius: 3.0, stat: '3.0 Kacheln (+0.6)', cost: 340, comp: null, level: 1, desc: 'Erweitert den Erfassungsbereich auf 3.0 Kacheln.' },
+  { tier: 4, name: 'Spektral-Radar Mk.IV', radius: 3.7, stat: '3.7 Kacheln (+0.7)', cost: 780, comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 }, level: 2, desc: 'Schwenkbarer Pylon deckt Erze in 3.7 Kacheln Umkreis auf.' },
+  { tier: 5, name: 'Tiefen-Sensor Mk.V', radius: 4.5, stat: '4.5 Kacheln (+0.8)', cost: 1650, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 1 }, level: 2, desc: 'Optische Linse durchdringt dicke Gesteinsschichten bis 4.5 Kacheln.' },
+  { tier: 6, name: 'Sub-Terra-Scan Mk.VI', radius: 5.4, stat: '5.4 Kacheln (+0.9)', cost: 3400, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 3, desc: 'Großer Scanradius von 5.4 Kacheln für seltene Adern.' },
+  { tier: 7, name: 'Graviton-Array Mk.VII', radius: 6.4, stat: '6.4 Kacheln (+1.0)', cost: 7200, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 1 }, level: 4, desc: 'Erfasst 6.4 Kacheln im Umkreis auf einen Blick.' },
+  { tier: 8, name: 'Quanten-Resonator Mk.VIII', radius: 7.5, stat: '7.5 Kacheln (+1.1)', cost: 15200, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 5, desc: 'Elite-Scanbereich von 7.5 Kacheln erhellt riesige Höhlen.' }
 ];
 
 export class Player {
@@ -133,13 +178,22 @@ export class Player {
     this.sprite = scene.add.image(this.x, this.y, 'player_drill_right')
       .setDepth(10)
       .setOrigin(0.5, 0.5)
-      .setInteractive({ useHandCursor: true });
+      .setInteractive({
+        hitArea: new Phaser.Geom.Rectangle(-12, -12, 72, 72),
+        hitAreaCallback: Phaser.Geom.Rectangle.Contains,
+        useHandCursor: true
+      });
 
     // Klick oder Touch auf das Bohr-Fahrzeug öffnet das Driller-Menü (Fracht & Stats)
+    let lastDrillerClickTime = 0;
     this.sprite.on('pointerdown', (pointer) => {
-      if (pointer.event && pointer.event.stopPropagation) {
+      if (pointer && pointer.event && pointer.event.stopPropagation) {
         pointer.event.stopPropagation();
       }
+      const now = Date.now();
+      if (now - lastDrillerClickTime < 300) return;
+      lastDrillerClickTime = now;
+
       soundFx.playClick();
       this.scene.events.emit('open_driller_menu', 'cargo');
     });
@@ -308,7 +362,8 @@ export class Player {
 
   upgradeSensor(newTier, newRadius) {
     this.sensorTier = newTier;
-    this.sensorRadius = newRadius;
+    const tierData = SENSOR_TIERS[newTier - 1] || SENSOR_TIERS[0];
+    this.sensorRadius = newRadius || tierData.radius || 1.8;
     this.drawScanner();
   }
 
@@ -420,13 +475,57 @@ export class Player {
     }
   }
 
-  getBatteryData() {
-    const tier = Math.max(1, Math.min(BATTERY_TIERS.length, this.batteryTier || 1));
-    return BATTERY_TIERS[tier - 1];
+  getChargeSpeed() {
+    return 20; // Feste, angenehme Ladegeschwindigkeit am Hangar
   }
 
-  getChargeSpeed() {
-    return this.getBatteryData().chargeSpeed;
+  getTankData() {
+    const tier = Math.max(1, Math.min(TANK_TIERS.length, this.tankTier || 1));
+    return TANK_TIERS[tier - 1];
+  }
+
+  upgradeTank(tier) {
+    this.tankTier = tier;
+    const data = TANK_TIERS[tier - 1] || TANK_TIERS[0];
+    const prevMax = this.maxFuel || 100;
+    this.maxFuel = data.maxFuel;
+    const effs = [1.0, 1.12, 1.20, 1.28, 1.35, 1.42, 1.50, 1.60];
+    this.fuelEfficiency = effs[tier - 1] || 1.0;
+    this.fuel = Math.min(this.maxFuel, this.fuel + (this.maxFuel - prevMax));
+  }
+
+  getHullData() {
+    const tier = Math.max(1, Math.min(HULL_TIERS.length, this.hullTier || 1));
+    return HULL_TIERS[tier - 1];
+  }
+
+  upgradeHull(tier) {
+    this.hullTier = tier;
+    const data = HULL_TIERS[tier - 1] || HULL_TIERS[0];
+    const prevMax = this.maxHull || 100;
+    this.maxHull = data.maxHull;
+    this.hull = Math.min(this.maxHull, this.hull + (this.maxHull - prevMax));
+  }
+
+  getEngineData() {
+    const tier = Math.max(1, Math.min(ENGINE_TIERS.length, this.engineTier || 1));
+    return ENGINE_TIERS[tier - 1];
+  }
+
+  getCargoData() {
+    const tier = Math.max(1, Math.min(CARGO_TIERS.length, this.cargoTier || 1));
+    return CARGO_TIERS[tier - 1];
+  }
+
+  upgradeCargo(tier) {
+    this.cargoTier = tier;
+    const data = CARGO_TIERS[tier - 1] || CARGO_TIERS[0];
+    this.maxCargo = data.maxCargo || 10;
+  }
+
+  getSensorData() {
+    const tier = Math.max(1, Math.min(SENSOR_TIERS.length, this.sensorTier || 1));
+    return SENSOR_TIERS[tier - 1];
   }
 
   checkDocking(delta) {
@@ -807,7 +906,11 @@ export class Player {
     this.consumeFuel(0.6 * (delta / 1000));
 
     // Karosserie-Verschleiß beim Bohren (nur beim Bohren, nicht beim Fahren)
-    const hullWearPerSec = 1.5;
+    // Auf Level 1 besonders robust (nur ca. 0.35 HP/s statt 1.5 HP/s, mehr als 4x langsamer kaputt)
+    const baseWear = (this.level || 1) === 1 ? 0.35 : Math.max(0.4, 1.2 - ((this.level || 1) * 0.08));
+    // Höhere Gehäuseschutz-Stufen (hullTier) reduzieren Reibungsverschleiß zusätzlich
+    const tierReduction = Math.max(0.4, 1.0 - ((this.hullTier || 1) - 1) * 0.08);
+    const hullWearPerSec = baseWear * tierReduction;
     this.hull = Math.max(0, this.hull - hullWearPerSec * (delta / 1000));
     if (this.hull <= 0) {
       this.cancelDrilling();
@@ -1029,8 +1132,18 @@ export class Player {
     const count = Math.max(0, Math.min(available, amount));
     if (count <= 0) return 0;
     this.factoryProducts[productId] -= count;
-    const val = unitValue > 0 ? unitValue : (FACTORY_PRODUCTS[productId]?.value || 0);
-    const totalEarned = count * val;
+    let val = unitValue;
+    if (val <= 0) {
+      if (FACTORY_PRODUCTS[productId]) {
+        val = FACTORY_PRODUCTS[productId].value;
+      } else if (productId.startsWith('bar_')) {
+        const rawKey = productId.replace('bar_', '');
+        val = getRefinedOreNetValue(rawKey);
+      } else {
+        val = ORE_DATA[productId]?.value || 0;
+      }
+    }
+    const totalEarned = Math.round(count * val);
     this.cash += totalEarned;
     this.stats.totalCashEarned = (this.stats.totalCashEarned || 0) + totalEarned;
     return totalEarned;

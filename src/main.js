@@ -20,7 +20,10 @@ const config = {
     height: '100%'
   },
   input: {
-    activePointers: 3
+    activePointers: 3,
+    touch: {
+      capture: false
+    }
   },
   scene: [BootScene, MiningScene]
 };
@@ -28,12 +31,17 @@ const config = {
 import { refreshIcons } from './ui/IconHelper.js';
 
 function shieldUiElements() {
-  const elements = document.querySelectorAll('#hud-overlay, #building-modal, #btn-mobile-fly, #orientation-tip, #mission-tracker');
-  const events = ['pointerdown', 'pointerup', 'mousedown', 'mouseup', 'touchstart', 'touchend', 'click'];
+  // Verhindert das Durchklicken vom HUD auf den darunterliegenden Phaser-Canvas
+  const elements = document.querySelectorAll('#hud-overlay, #btn-mobile-fly, #orientation-tip, #mission-tracker');
+  const events = ['pointerdown', 'mousedown', 'touchstart'];
   
   elements.forEach((el) => {
     events.forEach((eventType) => {
       el.addEventListener(eventType, (e) => {
+        // Nur stoppen, wenn nicht direkt auf ein interaktives Steuerelement geklickt wird
+        if (e.target && e.target.closest && e.target.closest('button, input, select, textarea, .stat-cluster')) {
+          return;
+        }
         e.stopPropagation();
       });
     });
@@ -43,7 +51,7 @@ function shieldUiElements() {
 function initGame() {
   refreshIcons();
   shieldUiElements();
-  new Phaser.Game(config);
+  window.__game = new Phaser.Game(config);
 }
 
 if (document.readyState === 'loading') {

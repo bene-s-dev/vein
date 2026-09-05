@@ -8,8 +8,8 @@
 
 import { TILE_SIZE, ORE_DATA } from './GridSystem.js';
 import { soundFx } from './SoundEffects.js';
-import { icon, refreshIcons, COMPONENT_ICONS, oreIcon, ORE_COLORS } from '../ui/IconHelper.js';
-import { BATTERY_TIERS } from './Player.js';
+import { icon, refreshIcons, COMPONENT_ICONS, oreIcon, ORE_COLORS, REFINED_ORE_DATA, getRefinedOreName, refinedItemIcon, itemDisplayIcon } from '../ui/IconHelper.js';
+import { TANK_TIERS, HULL_TIERS, ENGINE_TIERS, CARGO_TIERS, SENSOR_TIERS } from './Player.js';
 
 // Dauer für das Einschmelzen einzelner Erze in Sekunden
 export const REFINERY_DURATIONS_SEC = {
@@ -142,12 +142,22 @@ export class BaseSystem {
     // Basis-Gebäude (Standard an der Oberfläche)
     this.buildings = [
       {
+        id: 'lab',
+        title: 'LABOR',
+        label: 'LABOR',
+        iconName: 'microscope',
+        spriteKey: 'building_lab',
+        gx: -9,
+        height: 72,
+        action: () => this.openLabModal()
+      },
+      {
         id: 'office',
         title: 'BÜRO',
         label: 'BÜRO',
         iconName: 'briefcase',
         spriteKey: 'building_office',
-        gx: 1,
+        gx: -3,
         height: 70,
         action: () => {
           if (this.scene.hud && this.scene.hud.missionsModal) {
@@ -161,7 +171,7 @@ export class BaseSystem {
         label: 'ERZBÖRSE',
         iconName: 'coins',
         spriteKey: 'building_market',
-        gx: 7,
+        gx: 3,
         height: 68,
         action: () => this.openMarketModal()
       },
@@ -171,7 +181,7 @@ export class BaseSystem {
         label: 'DEPOT',
         iconName: 'warehouse',
         spriteKey: 'building_depot',
-        gx: 11,
+        gx: 9,
         height: 70,
         action: () => this.openDepotModal()
       },
@@ -194,16 +204,6 @@ export class BaseSystem {
         gx: 26,
         height: 72,
         action: () => this.openFactoryModal()
-      },
-      {
-        id: 'lab',
-        title: 'LABOR',
-        label: 'LABOR',
-        iconName: 'microscope',
-        spriteKey: 'building_lab',
-        gx: 33,
-        height: 72,
-        action: () => this.openLabModal()
       }
     ];
 
@@ -216,7 +216,7 @@ export class BaseSystem {
         iconName: 'bot',
         desc: 'Startet autonome Bergbau-Drohnen, die periodisch Erze an die Oberfläche schaffen.',
         spriteKey: 'building_drone_hangar',
-        gx: -4,
+        gx: -16,
         height: 70,
         costCash: 650,
         costComp: { hydraulic_part: 1 },
@@ -232,7 +232,7 @@ export class BaseSystem {
         iconName: 'navigation',
         desc: 'Ermöglicht Rohrpost-Verkauf aus der Tiefe und Sofort-Warp zur tiefsten Schachtebene.',
         spriteKey: 'building_teleporter',
-        gx: 41,
+        gx: 34,
         height: 76,
         costCash: 1100,
         costComp: { hydraulic_part: 2, titan_alloy: 1 },
@@ -246,7 +246,7 @@ export class BaseSystem {
         iconName: 'zap',
         desc: 'Generiert passives Einkommen (+€35 alle 8s) und verdoppelt die Basis-Auftankgeschwindigkeit.',
         spriteKey: 'building_powerplant',
-        gx: 49,
+        gx: 42,
         height: 76,
         costCash: 1950,
         costComp: { titan_alloy: 2, laser_lens: 1 },
@@ -324,6 +324,12 @@ export class BaseSystem {
         if (pointer && pointer.event) {
           const target = pointer.event.target;
           if (target && target.closest && target.closest('#building-modal, .modal-backdrop, .modal-window, .hud-card, button, input')) {
+            return;
+          }
+        }
+        if (pointer && this.player && this.player.sprite) {
+          const pDist = Math.hypot(pointer.worldX - this.player.x, pointer.worldY - this.player.y);
+          if (pDist <= 28) {
             return;
           }
         }
@@ -422,7 +428,7 @@ export class BaseSystem {
   initSteinsammler() {
     // Steineforscher kommt nur manchmal und wartet dann am Hangar (gx: 17, direkt neben Hangar gx: 15)
     this.sammlerWaitX = 17 * TILE_SIZE;
-    this.sammlerSpawnX = 36 * TILE_SIZE; // Kommt von rechts gelaufen
+    this.sammlerSpawnX = 42 * TILE_SIZE; // Kommt von rechts gelaufen
     this.sammlerState = 'WAITING'; // Startet initial 40s am Hangar
     this.sammlerTimer = 40; // Sekunden bis zum Aufbruch
     this.sammlerAwayDuration = 60; // Sekunden bis zum nächsten Besuch
@@ -496,14 +502,6 @@ export class BaseSystem {
           this.closeModal();
           e.stopPropagation();
         }
-      });
-
-      // Verhindert das Durchklicken auf den Phaser-Canvas hinter dem Modal
-      const stopPropagation = (e) => {
-        e.stopPropagation();
-      };
-      ['pointerdown', 'pointerup', 'mousedown', 'mouseup', 'click', 'touchstart', 'touchend'].forEach((evt) => {
-        this.modalEl.addEventListener(evt, stopPropagation);
       });
     }
 
@@ -639,7 +637,15 @@ export class BaseSystem {
     }
     if (this.scene) {
       this.scene.isPaused = false;
+      if (this.scene.hud) {
+        this.scene.hud.isPauseMenuOpen = false;
+      }
     }
+  }
+
+  // Alias für Hangar / Werkstatt
+  openHangarModal() {
+    this.openDockModal();
   }
 
   // =========================================================
@@ -740,10 +746,34 @@ export class BaseSystem {
       fpListHtml = '<p style="color: #64748b; font-style: italic; margin: 10px 0; text-align: center; font-size: 12px;">Keine Fabrik-Waren auf Lager. Fertige Erzeugnisse in der FABRIK, um hier Spitzenpreise zu erzielen!</p>';
     } else {
       fpListHtml = '<div style="display: flex; flex-direction: column; gap: 8px; margin: 8px 0;">';
-      for (const [prodId, prodData] of Object.entries(FACTORY_PRODUCTS)) {
+      const allProductKeys = Array.from(new Set([
+        ...Object.keys(FACTORY_PRODUCTS),
+        ...Object.keys(fp)
+      ])).filter(k => (fp[k] || 0) > 0);
+
+      for (const prodId of allProductKeys) {
         const count = fp[prodId] || 0;
         if (count <= 0) continue;
-        const val = prodData.value;
+        const isBar = prodId.startsWith('bar_');
+        let prodName = '';
+        let val = 0;
+        let iconHtml = '';
+
+        if (isBar) {
+          const rawKey = prodId.replace('bar_', '');
+          prodName = getRefinedOreName(rawKey);
+          val = getRefinedOreNetValue(rawKey);
+          iconHtml = itemDisplayIcon(prodId, 16);
+        } else if (FACTORY_PRODUCTS[prodId]) {
+          prodName = FACTORY_PRODUCTS[prodId].name;
+          val = FACTORY_PRODUCTS[prodId].value;
+          iconHtml = icon(FACTORY_PRODUCTS[prodId].iconName, '', 15);
+        } else {
+          prodName = prodId;
+          val = 0;
+          iconHtml = icon('box', '', 15);
+        }
+
         const subtotal = count * val;
         totalFpValue += subtotal;
 
@@ -752,9 +782,9 @@ export class BaseSystem {
             <div style="display: flex; justify-content: space-between; align-items: center;">
               <div style="display: flex; align-items: center; gap: 8px;">
                 <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background: rgba(56,189,248,0.15); border-radius: 6px; color: #38bdf8;">
-                  ${icon(prodData.iconName, '', 15)}
+                  ${iconHtml}
                 </span>
-                <span style="font-weight: 700; color: #f8fafc; font-size: 13.5px;">${prodData.name}</span>
+                <span style="font-weight: 700; color: #f8fafc; font-size: 13.5px;">${prodName}</span>
                 <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); padding: 2px 8px; border-radius: 6px; font-size: 11px; color: #10b981; font-weight: 700;">Lager: ${count}x</span>
                 <span style="font-size: 11px; color: #94a3b8;">(€${val}/Stk)</span>
               </div>
@@ -801,16 +831,95 @@ export class BaseSystem {
       </div>
     `;
 
+    // Erze im Depot-Lager
+    let depotHtml = '';
+    const depotOres = this.depot?.ores || {};
+    let totalDepotValue = 0;
+    let totalDepotCount = 0;
+    for (const [ore, count] of Object.entries(depotOres)) {
+      if (count > 0 && ORE_DATA[ore]) {
+        totalDepotValue += ORE_DATA[ore].value * count;
+        totalDepotCount += count;
+      }
+    }
+
+    let depotListHtml = '';
+    if (totalDepotCount === 0) {
+      depotListHtml = '<p style="color: #64748b; font-style: italic; margin: 10px 0; text-align: center; font-size: 12px;">Aktuell keine Erze im Depot eingelagert.</p>';
+    } else {
+      depotListHtml = '<div style="display: flex; flex-direction: column; gap: 8px; margin: 8px 0; max-height: 240px; overflow-y: auto; padding-right: 4px;">';
+      for (const [ore, count] of Object.entries(depotOres)) {
+        if (count <= 0) continue;
+        const data = ORE_DATA[ore];
+        const val = data ? data.value : 0;
+        depotListHtml += `
+          <div class="market-depot-card" data-ore="${ore}" style="background: #141c2b; padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.07); display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-weight: 700; color: #f8fafc; font-size: 13.5px; display: inline-flex; align-items: center; gap: 6px;">${oreIcon(ore, 16)} ${data.name}</span>
+                <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); padding: 2px 8px; border-radius: 6px; font-size: 11px; color: #38bdf8; font-weight: 700;">Depot: ${count}x</span>
+                <span style="font-size: 11px; color: #94a3b8;">(€${val}/Stk)</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <span style="font-size: 11px; color: #94a3b8;">Erlös:</span>
+                <strong class="ore-subtotal" id="subtotal-depot-${ore}" style="color: #fbbf24; font-size: 14px;">+€${val * count}</strong>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 10px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 11.5px; color: #94a3b8; font-weight: 700;">Menge:</span>
+                <button class="btn-depot-qty-step btn-3d-secondary" data-ore="${ore}" data-step="-1" style="width: 32px; height: 32px; padding: 0; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 800; border-radius: 8px;">-</button>
+                <input type="number" class="input-depot-qty" id="qty-input-depot-${ore}" data-ore="${ore}" data-unit-val="${val}" data-max="${count}" min="1" max="${count}" value="${count}" style="width: 50px; height: 32px; padding: 0 4px; box-sizing: border-box; background: #090d16; border: 1px solid rgba(255,255,255,0.18); border-radius: 8px; color: #f8fafc; text-align: center; font-weight: 800; font-size: 13px; outline: none;">
+                <button class="btn-depot-qty-step btn-3d-secondary" data-ore="${ore}" data-step="1" style="width: 32px; height: 32px; padding: 0; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 800; border-radius: 8px;">+</button>
+                <button class="btn-depot-qty-quick btn-3d-secondary" data-ore="${ore}" data-set="1" style="height: 32px; padding: 0 10px; font-size: 11.5px; font-weight: 700; border-radius: 8px;">1x</button>
+                <button class="btn-depot-qty-quick btn-action" data-ore="${ore}" data-set="${count}" style="height: 32px; padding: 0 10px; font-size: 11.5px; font-weight: 700; border-radius: 8px;">Alle (${count})</button>
+              </div>
+
+              <button class="btn-sell-depot-market-custom btn-buy" data-ore="${ore}" style="height: 32px; padding: 0 14px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px;">
+                ${icon('coins', '', 14)}
+                <span id="btn-sell-depot-text-${ore}">${count}x Verkaufen</span>
+              </button>
+            </div>
+          </div>
+        `;
+      }
+      depotListHtml += '</div>';
+    }
+
+    depotHtml = `
+      <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 10px; padding: 12px; margin-top: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <strong style="color: #38bdf8; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
+            ${icon('warehouse', '', 15)} DEPOT-LAGER (${totalDepotCount} Erze)
+          </strong>
+          <span style="color: #fbbf24; font-size: 13px; font-weight: 700;">Wert: €${totalDepotValue.toLocaleString()}</span>
+        </div>
+        ${depotListHtml}
+        ${totalDepotCount > 0 ? `
+          <button id="btn-sell-all-depot-market" class="btn-buy btn-lg" style="width: 100%; margin-top: 6px;">
+            ${icon('coins', '', 15)} ALLE DEPOT-ERZE VERKAUFEN (+€${totalDepotValue.toLocaleString()})
+          </button>
+        ` : ''}
+      </div>
+    `;
+
     const content = `
       <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px;">
         <span style="font-size: 13px; color: var(--text-muted);">Frachtraum: <strong>${cargo.length} / ${this.player.maxCargo}</strong> Erzen</span>
-        <strong style="color: #fbbf24; font-size: 14px;">Gesamtwert: €${totalValue}</strong>
+        <strong style="color: #fbbf24; font-size: 14px;">Frachtwert: €${totalValue.toLocaleString()}</strong>
       </div>
       ${oreListHtml}
       <button id="btn-do-sell" class="btn-buy btn-lg" style="width: 100%; margin-top: 8px;" ${cargo.length === 0 ? 'disabled' : ''}>
-        ${icon('coins', '', 15)} GESAMTE ROHERZ-FRACHT VERKAUFEN (+€${totalValue})
+        ${icon('coins', '', 15)} GESAMTE BOHRER-FRACHT VERKAUFEN (+€${totalValue.toLocaleString()})
       </button>
+      ${depotHtml}
       ${factoryHtml}
+      <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
+        <button id="btn-market-close" class="btn-3d-secondary" style="height: 32px; font-size: 11.5px; font-weight: 700; padding: 0 16px;">
+          SCHLIESSEN
+        </button>
+      </div>
     `;
 
     this.openModal(`
@@ -820,7 +929,7 @@ export class BaseSystem {
       </div>
     `, content);
 
-    // Mengen-Aktualisierungshelfer (Erze)
+    // Mengen-Aktualisierungshelfer (Erze im Frachtraum)
     const updateOreQty = (ore, newQty) => {
       const input = document.getElementById(`qty-input-${ore}`);
       const subtotalEl = document.getElementById(`subtotal-${ore}`);
@@ -834,7 +943,7 @@ export class BaseSystem {
       if (btnSellText) btnSellText.innerText = `${clamped}x Verkaufen`;
     };
 
-    // Stepper Plus/Minus
+    // Stepper Plus/Minus (Frachtraum)
     const stepBtns = document.querySelectorAll('.btn-qty-step');
     stepBtns.forEach((btn) => {
       btn.onclick = () => {
@@ -847,7 +956,7 @@ export class BaseSystem {
       };
     });
 
-    // Quick Buttons (1x, Alle)
+    // Quick Buttons (1x, Alle) (Frachtraum)
     const quickBtns = document.querySelectorAll('.btn-qty-quick');
     quickBtns.forEach((btn) => {
       btn.onclick = () => {
@@ -857,7 +966,7 @@ export class BaseSystem {
       };
     });
 
-    // Direkte Tastatureingabe im Number-Input
+    // Direkte Tastatureingabe im Number-Input (Frachtraum)
     const qtyInputs = document.querySelectorAll('.input-ore-qty');
     qtyInputs.forEach((input) => {
       input.oninput = () => {
@@ -866,7 +975,7 @@ export class BaseSystem {
       };
     });
 
-    // Individueller Verkauf mit gewählter Stückzahl (Erze)
+    // Individueller Verkauf mit gewählter Stückzahl (Frachtraum)
     const sellCustomBtns = document.querySelectorAll('.btn-sell-custom');
     sellCustomBtns.forEach((btn) => {
       btn.onclick = () => {
@@ -881,6 +990,64 @@ export class BaseSystem {
         }
       };
     });
+
+    // Depot Mengen-Aktualisierungshelfer (Erzbörse)
+    const updateDepotOreQty = (ore, newQty) => {
+      const input = document.getElementById(`qty-input-depot-${ore}`);
+      const subtotalEl = document.getElementById(`subtotal-depot-${ore}`);
+      const btnSellText = document.getElementById(`btn-sell-depot-text-${ore}`);
+      if (!input || !subtotalEl) return;
+      const max = parseInt(input.getAttribute('data-max'), 10) || 1;
+      const val = parseInt(input.getAttribute('data-unit-val'), 10) || 0;
+      const clamped = Math.max(1, Math.min(max, parseInt(newQty, 10) || 1));
+      input.value = clamped;
+      subtotalEl.innerText = `+€${clamped * val}`;
+      if (btnSellText) btnSellText.innerText = `${clamped}x Verkaufen`;
+    };
+
+    document.querySelectorAll('.btn-depot-qty-step').forEach(btn => {
+      btn.onclick = () => {
+        const ore = btn.getAttribute('data-ore');
+        const step = parseInt(btn.getAttribute('data-step'), 10) || 0;
+        const input = document.getElementById(`qty-input-depot-${ore}`);
+        if (!input) return;
+        const cur = parseInt(input.value, 10) || 1;
+        updateDepotOreQty(ore, cur + step);
+      };
+    });
+
+    document.querySelectorAll('.btn-depot-qty-quick').forEach(btn => {
+      btn.onclick = () => {
+        const ore = btn.getAttribute('data-ore');
+        const setVal = parseInt(btn.getAttribute('data-set'), 10) || 1;
+        updateDepotOreQty(ore, setVal);
+      };
+    });
+
+    document.querySelectorAll('.input-depot-qty').forEach(input => {
+      input.oninput = () => {
+        const ore = input.getAttribute('data-ore');
+        updateDepotOreQty(ore, input.value);
+      };
+    });
+
+    document.querySelectorAll('.btn-sell-depot-market-custom').forEach(btn => {
+      btn.onclick = () => {
+        const ore = btn.getAttribute('data-ore');
+        const input = document.getElementById(`qty-input-depot-${ore}`);
+        const qty = input ? parseInt(input.value, 10) || 1 : 1;
+        this.sellDepotOre(ore, qty);
+        this.openMarketModal();
+      };
+    });
+
+    const btnSellAllDepotMarket = document.getElementById('btn-sell-all-depot-market');
+    if (btnSellAllDepotMarket) {
+      btnSellAllDepotMarket.onclick = () => {
+        this.sellAllDepotOres();
+        this.openMarketModal();
+      };
+    }
 
     // Fabrik-Produkte Mengenhelfer
     const updateFpQty = (prodId, newQty) => {
@@ -924,7 +1091,7 @@ export class BaseSystem {
       };
     });
 
-    // Einzelverkauf Fabrik-Produkt
+    // Einzelverkauf Fabrik-Produkt / Barren
     document.querySelectorAll('.btn-sell-fp-custom').forEach(btn => {
       btn.onclick = () => {
         const prodId = btn.getAttribute('data-prod');
@@ -934,18 +1101,21 @@ export class BaseSystem {
         if (earned > 0) {
           soundFx.playPurchase();
           this.openMarketModal();
-          this.scene.events.emit('notify', `${qty}x ${FACTORY_PRODUCTS[prodId]?.name || prodId} verkauft für +€${earned}!`);
+          const displayName = prodId.startsWith('bar_')
+            ? getRefinedOreName(prodId.replace('bar_', ''))
+            : (FACTORY_PRODUCTS[prodId]?.name || prodId);
+          this.scene.events.emit('notify', `${qty}x ${displayName} verkauft für +€${earned}!`);
         }
       };
     });
 
-    // Gesamtverkauf aller Fabrik-Waren
+    // Gesamtverkauf aller Fabrik- & Veredelungs-Waren
     const btnSellAllFp = document.getElementById('btn-sell-all-fp');
     if (btnSellAllFp) {
       btnSellAllFp.onclick = () => {
         let totalEarned = 0;
-        for (const [prodId, prodData] of Object.entries(FACTORY_PRODUCTS)) {
-          const qty = this.player.factoryProducts?.[prodId] || 0;
+        const fp = this.player.factoryProducts || {};
+        for (const [prodId, qty] of Object.entries(fp)) {
           if (qty > 0) {
             totalEarned += this.player.sellFactoryProduct(prodId, qty);
           }
@@ -953,7 +1123,7 @@ export class BaseSystem {
         if (totalEarned > 0) {
           soundFx.playPurchase();
           this.openMarketModal();
-          this.scene.events.emit('notify', `Alle Fabrik-Waren verkauft für +€${totalEarned}!`);
+          this.scene.events.emit('notify', `Alle Industrie- & Veredelungswaren verkauft für +€${totalEarned}!`);
         }
       };
     }
@@ -966,6 +1136,14 @@ export class BaseSystem {
         soundFx.playPurchase();
         this.openMarketModal();
         this.scene.events.emit('notify', `Fracht vollständig verkauft für +€${earnings}!`);
+      };
+    }
+
+    const btnMarketClose = document.getElementById('btn-market-close');
+    if (btnMarketClose) {
+      btnMarketClose.onclick = () => {
+        soundFx.playClick();
+        this.closeModal();
       };
     }
   }
@@ -993,7 +1171,14 @@ export class BaseSystem {
     }
     if (this.depot && this.depot.products) {
       for (const [k, c] of Object.entries(this.depot.products)) {
-        if (c > 0 && FACTORY_PRODUCTS[k]) val += FACTORY_PRODUCTS[k].value * c;
+        if (c > 0) {
+          if (FACTORY_PRODUCTS[k]) {
+            val += FACTORY_PRODUCTS[k].value * c;
+          } else if (k.startsWith('bar_')) {
+            const rawKey = k.replace('bar_', '');
+            val += getRefinedOreNetValue(rawKey) * c;
+          }
+        }
       }
     }
     return val;
@@ -1090,7 +1275,7 @@ export class BaseSystem {
     // Tabs
     const tabs = [
       { id: 'ores', label: 'Erze & Mineralien', icon: 'stone' },
-      { id: 'products', label: 'Fabrik-Erzeugnisse', icon: 'box' },
+      { id: 'products', label: 'Barren & Fabrik-Waren', icon: 'layers' },
       { id: 'upgrade', label: 'Depot-Ausbau', icon: 'wrench' }
     ];
 
@@ -1128,28 +1313,45 @@ export class BaseSystem {
     // Schnell-Aktionen (Bulk Transfer)
     let bulkActionsHtml = '';
     if (this.depot.currentTab === 'ores') {
+      const totalStoredOresCount = Object.values(this.depot.ores || {}).reduce((s, v) => s + v, 0);
+      const totalStoredOresValue = Object.entries(this.depot.ores || {}).reduce((s, [k, v]) => s + (ORE_DATA[k]?.value || 0) * v, 0);
+      const playerCargoLen = this.player.cargo ? this.player.cargo.length : 0;
+      const freeCargo = (this.player.maxCargo || 10) - playerCargoLen;
+
       bulkActionsHtml = `
         <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
-          <button id="btn-depot-all-ores" class="btn-action" style="height: 30px; font-size: 11px; padding: 0 12px; display: inline-flex; align-items: center; gap: 5px;">
-            ${icon('arrow-down-to-line', '', 12)}
-            <span>ALLE ERZE AUS LADERAUM EINLAGERN</span>
+          <button id="btn-depot-all-ores" class="btn-action" style="height: 32px; font-size: 11px; padding: 0 12px; display: inline-flex; align-items: center; gap: 5px;" ${playerCargoLen > 0 ? '' : 'disabled'}>
+            ${icon('arrow-down-to-line', '', 13)}
+            <span>ALLE AUS BOHRER EINLAGERN (${playerCargoLen})</span>
           </button>
-          <button id="btn-depot-all" class="btn-3d-secondary" style="height: 30px; font-size: 11px; padding: 0 12px; display: inline-flex; align-items: center; gap: 5px;">
-            ${icon('archive', '', 12)}
-            <span>ALLES EINLAGERN</span>
+          <button id="btn-depot-fill-cargo" class="btn-3d-secondary" style="height: 32px; font-size: 11px; padding: 0 12px; display: inline-flex; align-items: center; gap: 5px;" ${(totalStoredOresCount > 0 && freeCargo > 0) ? '' : 'disabled'}>
+            ${icon('arrow-up-from-line', '', 13)}
+            <span>BOHRER AUS DEPOT FÜLLEN (${freeCargo} frei)</span>
+          </button>
+          <button id="btn-depot-sell-all-ores" class="btn-buy" style="height: 32px; font-size: 11px; padding: 0 12px; display: inline-flex; align-items: center; gap: 5px;" ${totalStoredOresCount > 0 ? '' : 'disabled'}>
+            ${icon('coins', '', 13)}
+            <span>ALLE DEPOT-ERZE VERKAUFEN (+€${totalStoredOresValue.toLocaleString()})</span>
           </button>
         </div>
       `;
     } else if (this.depot.currentTab === 'products') {
+      const totalStoredProdCount = Object.values(this.depot.products || {}).reduce((s, v) => s + v, 0);
+      const totalStoredProdValue = Object.entries(this.depot.products || {}).reduce((s, [k, v]) => s + (FACTORY_PRODUCTS[k]?.value || 0) * v, 0);
+      const playerProdCount = Object.values(this.player.factoryProducts || {}).reduce((s, v) => s + v, 0);
+
       bulkActionsHtml = `
         <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
-          <button id="btn-depot-all-products" class="btn-action" style="height: 30px; font-size: 11px; padding: 0 12px; display: inline-flex; align-items: center; gap: 5px;">
-            ${icon('arrow-down-to-line', '', 12)}
-            <span>ALLE ERZEUGNISSE EINLAGERN</span>
+          <button id="btn-depot-all-products" class="btn-action" style="height: 32px; font-size: 11px; padding: 0 12px; display: inline-flex; align-items: center; gap: 5px;" ${playerProdCount > 0 ? '' : 'disabled'}>
+            ${icon('arrow-down-to-line', '', 13)}
+            <span>ALLE EIGENEN WAREN EINLAGERN (${playerProdCount})</span>
           </button>
-          <button id="btn-depot-all" class="btn-3d-secondary" style="height: 30px; font-size: 11px; padding: 0 12px; display: inline-flex; align-items: center; gap: 5px;">
-            ${icon('archive', '', 12)}
-            <span>ALLES EINLAGERN</span>
+          <button id="btn-depot-withdraw-all-products" class="btn-3d-secondary" style="height: 32px; font-size: 11px; padding: 0 12px; display: inline-flex; align-items: center; gap: 5px;" ${totalStoredProdCount > 0 ? '' : 'disabled'}>
+            ${icon('arrow-up-from-line', '', 13)}
+            <span>ALLE WAREN AUSLAGERN (${totalStoredProdCount})</span>
+          </button>
+          <button id="btn-depot-sell-all-products" class="btn-buy" style="height: 32px; font-size: 11px; padding: 0 12px; display: inline-flex; align-items: center; gap: 5px;" ${totalStoredProdCount > 0 ? '' : 'disabled'}>
+            ${icon('coins', '', 13)}
+            <span>ALLE DEPOT-WAREN VERKAUFEN (+€${totalStoredProdValue.toLocaleString()})</span>
           </button>
         </div>
       `;
@@ -1174,6 +1376,7 @@ export class BaseSystem {
 
             const canDeposit = inCargo > 0 && freeDepot > 0;
             const canWithdraw = inDepot > 0 && freeCargo > 0;
+            const canSell = inDepot > 0;
 
             return `
               <div style="
@@ -1211,20 +1414,33 @@ export class BaseSystem {
 
                   <!-- Aktionen -->
                   <div style="display: flex; align-items: center; gap: 4px;">
+                    <!-- Auslagern -->
                     <button class="btn-withdraw-ore btn-3d-secondary" data-ore="${key}" ${canWithdraw ? '' : 'disabled'} style="
-                      width: 30px; height: 28px; padding: 0; font-size: 12px; font-weight: 800; border-radius: 6px;
+                      height: 28px; padding: 0 7px; font-size: 11px; font-weight: 800; border-radius: 6px;
                       opacity: ${canWithdraw ? '1' : '0.35'}; cursor: ${canWithdraw ? 'pointer' : 'default'};
                     " title="1x in den Bohrer auslagern">-1</button>
 
-                    <button class="btn-deposit-ore btn-buy" data-ore="${key}" ${canDeposit ? '' : 'disabled'} style="
-                      width: 30px; height: 28px; padding: 0; font-size: 12px; font-weight: 800; border-radius: 6px;
+                    <button class="btn-withdraw-fill-ore btn-3d-secondary" data-ore="${key}" ${canWithdraw ? '' : 'disabled'} style="
+                      height: 28px; padding: 0 7px; font-size: 10px; font-weight: 700; border-radius: 6px;
+                      opacity: ${canWithdraw ? '1' : '0.35'}; cursor: ${canWithdraw ? 'pointer' : 'default'};
+                    " title="Bohrer-Laderaum mit diesem Erz füllen">Laden</button>
+
+                    <!-- Einlagern -->
+                    <button class="btn-deposit-ore btn-action" data-ore="${key}" ${canDeposit ? '' : 'disabled'} style="
+                      height: 28px; padding: 0 7px; font-size: 11px; font-weight: 800; border-radius: 6px;
                       opacity: ${canDeposit ? '1' : '0.35'}; cursor: ${canDeposit ? 'pointer' : 'default'};
                     " title="1x ins Depot einlagern">+1</button>
 
                     <button class="btn-deposit-all-ore btn-action" data-ore="${key}" ${canDeposit ? '' : 'disabled'} style="
-                      height: 28px; padding: 0 8px; font-size: 10.5px; font-weight: 800; border-radius: 6px;
+                      height: 28px; padding: 0 7px; font-size: 10px; font-weight: 800; border-radius: 6px;
                       opacity: ${canDeposit ? '1' : '0.35'}; cursor: ${canDeposit ? 'pointer' : 'default'};
-                    " title="Alle aus Bohrer einlagern">Alle</button>
+                    " title="Alle aus Bohrer ins Depot einlagern">+Alle</button>
+
+                    <!-- Direktverkauf aus Depot -->
+                    <button class="btn-sell-depot-ore btn-buy" data-ore="${key}" ${canSell ? '' : 'disabled'} style="
+                      height: 28px; padding: 0 8px; font-size: 10.5px; font-weight: 800; border-radius: 6px;
+                      opacity: ${canSell ? '1' : '0.35'}; cursor: ${canSell ? 'pointer' : 'default'};
+                    " title="1x direkt für €${data.value} verkaufen">€ Verkaufen</button>
                   </div>
                 </div>
               </div>
@@ -1234,17 +1450,48 @@ export class BaseSystem {
       `;
     } else if (this.depot.currentTab === 'products') {
       const freeDepot = capacity - totalStored;
-      const productEntries = Object.entries(FACTORY_PRODUCTS);
+
+      // 1. Alle veredelten Barren / Briketts / Kristalle
+      const refinedEntries = Object.entries(REFINED_ORE_DATA).map(([rawKey, rData]) => {
+        const key = rData.key;
+        const inDepot = this.depot.products?.[key] || 0;
+        const inPlayer = (playerProducts[key] || 0) + (this.player.cargo ? this.player.cargo.filter(c => c === key).length : 0);
+        const val = getRefinedOreNetValue(rawKey);
+        return {
+          key,
+          name: rData.name,
+          value: val,
+          desc: rData.desc,
+          inDepot,
+          inPlayer,
+          isBar: true
+        };
+      });
+
+      // 2. Industrielle Fabrik-Erzeugnisse
+      const factoryEntries = Object.entries(FACTORY_PRODUCTS).map(([key, prod]) => {
+        const inDepot = this.depot.products?.[key] || 0;
+        const inPlayer = playerProducts[key] || 0;
+        return {
+          key,
+          name: prod.name,
+          value: prod.value,
+          desc: prod.desc,
+          inDepot,
+          inPlayer,
+          isBar: false
+        };
+      });
+
+      const allProductItems = [...refinedEntries, ...factoryEntries];
 
       contentHtml = `
         ${bulkActionsHtml}
         <div style="display: flex; flex-direction: column; gap: 6px; max-height: 270px; overflow-y: auto; padding-right: 2px;">
-          ${productEntries.map(([key, prod]) => {
-            const inDepot = this.depot.products?.[key] || 0;
-            const inPlayer = playerProducts[key] || 0;
-
-            const canDeposit = inPlayer > 0 && freeDepot > 0;
-            const canWithdraw = inDepot > 0;
+          ${allProductItems.map(item => {
+            const canDeposit = item.inPlayer > 0 && freeDepot > 0;
+            const canWithdraw = item.inDepot > 0;
+            const canSell = item.inDepot > 0;
 
             return `
               <div style="
@@ -1258,40 +1505,50 @@ export class BaseSystem {
                 gap: 8px;
               ">
                 <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
-                  <div style="display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; background: rgba(0,0,0,0.35); border-radius: 6px; border: 1px solid rgba(255,255,255,0.06); color: #38bdf8;">
-                    ${icon('box', '', 15)}
+                  <div style="display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; background: rgba(0,0,0,0.35); border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
+                    ${itemDisplayIcon(item.key, 16)}
                   </div>
                   <div style="display: flex; flex-direction: column; min-width: 0;">
                     <span style="font-size: 13px; font-weight: 700; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                      ${prod.name}
+                      ${item.name}
                     </span>
                     <span style="font-size: 10px; color: #94a3b8;">
-                      Börsenwert: €${prod.value} • Fabrik-Werkstoff
+                      Börsenwert: €${item.value} • ${item.isBar ? 'Aus Schmelzofen' : 'Fabrik-Werkstoff'}
                     </span>
                   </div>
                 </div>
 
                 <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
                   <div style="display: flex; flex-direction: column; align-items: flex-end; font-size: 10.5px; font-weight: 700;">
-                    <span style="color: #38bdf8;">Depot: <strong style="color: #ffffff;">${inDepot}x</strong></span>
-                    <span style="color: #94a3b8;">Besitz: <strong style="color: #e2e8f0;">${inPlayer}x</strong></span>
+                    <span style="color: #38bdf8;">Depot: <strong style="color: #ffffff;">${item.inDepot}x</strong></span>
+                    <span style="color: #94a3b8;">Besitz: <strong style="color: #e2e8f0;">${item.inPlayer}x</strong></span>
                   </div>
 
                   <div style="display: flex; align-items: center; gap: 4px;">
-                    <button class="btn-withdraw-product btn-3d-secondary" data-product="${key}" ${canWithdraw ? '' : 'disabled'} style="
-                      width: 30px; height: 28px; padding: 0; font-size: 12px; font-weight: 800; border-radius: 6px;
+                    <button class="btn-withdraw-product btn-3d-secondary" data-product="${item.key}" ${canWithdraw ? '' : 'disabled'} style="
+                      height: 28px; padding: 0 7px; font-size: 11px; font-weight: 800; border-radius: 6px;
                       opacity: ${canWithdraw ? '1' : '0.35'}; cursor: ${canWithdraw ? 'pointer' : 'default'};
                     " title="1x aus dem Depot nehmen">-1</button>
 
-                    <button class="btn-deposit-product btn-buy" data-product="${key}" ${canDeposit ? '' : 'disabled'} style="
-                      width: 30px; height: 28px; padding: 0; font-size: 12px; font-weight: 800; border-radius: 6px;
+                    <button class="btn-withdraw-all-product btn-3d-secondary" data-product="${item.key}" ${canWithdraw ? '' : 'disabled'} style="
+                      height: 28px; padding: 0 7px; font-size: 10px; font-weight: 700; border-radius: 6px;
+                      opacity: ${canWithdraw ? '1' : '0.35'}; cursor: ${canWithdraw ? 'pointer' : 'default'};
+                    " title="Alle Einheiten aus dem Depot nehmen">-Alle</button>
+
+                    <button class="btn-deposit-product btn-action" data-product="${item.key}" ${canDeposit ? '' : 'disabled'} style="
+                      height: 28px; padding: 0 7px; font-size: 11px; font-weight: 800; border-radius: 6px;
                       opacity: ${canDeposit ? '1' : '0.35'}; cursor: ${canDeposit ? 'pointer' : 'default'};
                     " title="1x ins Depot legen">+1</button>
 
-                    <button class="btn-deposit-all-product btn-action" data-product="${key}" ${canDeposit ? '' : 'disabled'} style="
-                      height: 28px; padding: 0 8px; font-size: 10.5px; font-weight: 800; border-radius: 6px;
+                    <button class="btn-deposit-all-product btn-action" data-product="${item.key}" ${canDeposit ? '' : 'disabled'} style="
+                      height: 28px; padding: 0 7px; font-size: 10px; font-weight: 800; border-radius: 6px;
                       opacity: ${canDeposit ? '1' : '0.35'}; cursor: ${canDeposit ? 'pointer' : 'default'};
-                    " title="Alle einlagern">Alle</button>
+                    " title="Alle ins Depot legen">+Alle</button>
+
+                    <button class="btn-sell-depot-product btn-buy" data-product="${item.key}" ${canSell ? '' : 'disabled'} style="
+                      height: 28px; padding: 0 8px; font-size: 10.5px; font-weight: 800; border-radius: 6px;
+                      opacity: ${canSell ? '1' : '0.35'}; cursor: ${canSell ? 'pointer' : 'default'};
+                    " title="1x direkt für €${item.value} verkaufen">€ Verkaufen</button>
                   </div>
                 </div>
               </div>
@@ -1408,28 +1665,45 @@ export class BaseSystem {
       };
     });
 
-    // Bulk Aktionen
+    // Bulk Aktionen Erze
     const btnAllOres = body.querySelector('#btn-depot-all-ores');
     if (btnAllOres) btnAllOres.onclick = () => this.depositAllOres();
 
+    const btnFillCargo = body.querySelector('#btn-depot-fill-cargo');
+    if (btnFillCargo) btnFillCargo.onclick = () => this.fillCargoFromDepot();
+
+    const btnSellAllOres = body.querySelector('#btn-depot-sell-all-ores');
+    if (btnSellAllOres) btnSellAllOres.onclick = () => this.sellAllDepotOres();
+
+    // Bulk Aktionen Waren
     const btnAllProducts = body.querySelector('#btn-depot-all-products');
     if (btnAllProducts) btnAllProducts.onclick = () => this.depositAllProducts();
 
-    const btnAll = body.querySelector('#btn-depot-all');
-    if (btnAll) btnAll.onclick = () => this.depositAll();
+    const btnWithdrawAllProducts = body.querySelector('#btn-depot-withdraw-all-products');
+    if (btnWithdrawAllProducts) btnWithdrawAllProducts.onclick = () => this.withdrawAllProducts();
 
-    // Einlagern / Auslagern von Erzen
-    body.querySelectorAll('.btn-deposit-ore').forEach(btn => {
-      btn.onclick = () => {
-        const ore = btn.getAttribute('data-ore');
-        this.depositOre(ore, 1);
-      };
-    });
+    const btnSellAllProducts = body.querySelector('#btn-depot-sell-all-products');
+    if (btnSellAllProducts) btnSellAllProducts.onclick = () => this.sellAllDepotProducts();
 
+    // Einzelaktionen Erze
     body.querySelectorAll('.btn-withdraw-ore').forEach(btn => {
       btn.onclick = () => {
         const ore = btn.getAttribute('data-ore');
         this.withdrawOre(ore, 1);
+      };
+    });
+
+    body.querySelectorAll('.btn-withdraw-fill-ore').forEach(btn => {
+      btn.onclick = () => {
+        const ore = btn.getAttribute('data-ore');
+        this.withdrawFillOre(ore);
+      };
+    });
+
+    body.querySelectorAll('.btn-deposit-ore').forEach(btn => {
+      btn.onclick = () => {
+        const ore = btn.getAttribute('data-ore');
+        this.depositOre(ore, 1);
       };
     });
 
@@ -1440,14 +1714,14 @@ export class BaseSystem {
       };
     });
 
-    // Einlagern / Auslagern von Produkten
-    body.querySelectorAll('.btn-deposit-product').forEach(btn => {
+    body.querySelectorAll('.btn-sell-depot-ore').forEach(btn => {
       btn.onclick = () => {
-        const prod = btn.getAttribute('data-product');
-        this.depositProduct(prod, 1);
+        const ore = btn.getAttribute('data-ore');
+        this.sellDepotOre(ore, 1);
       };
     });
 
+    // Einzelaktionen Waren
     body.querySelectorAll('.btn-withdraw-product').forEach(btn => {
       btn.onclick = () => {
         const prod = btn.getAttribute('data-product');
@@ -1455,10 +1729,31 @@ export class BaseSystem {
       };
     });
 
+    body.querySelectorAll('.btn-withdraw-all-product').forEach(btn => {
+      btn.onclick = () => {
+        const prod = btn.getAttribute('data-product');
+        this.withdrawProduct(prod, 9999);
+      };
+    });
+
+    body.querySelectorAll('.btn-deposit-product').forEach(btn => {
+      btn.onclick = () => {
+        const prod = btn.getAttribute('data-product');
+        this.depositProduct(prod, 1);
+      };
+    });
+
     body.querySelectorAll('.btn-deposit-all-product').forEach(btn => {
       btn.onclick = () => {
         const prod = btn.getAttribute('data-product');
         this.depositProduct(prod, 9999);
+      };
+    });
+
+    body.querySelectorAll('.btn-sell-depot-product').forEach(btn => {
+      btn.onclick = () => {
+        const prod = btn.getAttribute('data-product');
+        this.sellDepotProduct(prod, 1);
       };
     });
 
@@ -1515,14 +1810,14 @@ export class BaseSystem {
 
   withdrawOre(oreKey, count = 1) {
     if (!this.depot.ores || (this.depot.ores[oreKey] || 0) <= 0) return;
-    const playerFreeCargo = (this.player.maxCargo || 10) - this.player.cargo.length;
+    const playerFreeCargo = (this.player.maxCargo || 10) - (this.player.cargo ? this.player.cargo.length : 0);
     if (playerFreeCargo <= 0) {
       this.scene.events.emit('notify', '⚠️ Bohrer-Laderaum ist voll!');
       return;
     }
 
     let withdrawn = 0;
-    while (withdrawn < count && withdrawn < playerFreeCargo && this.depot.ores[oreKey] > 0) {
+    while (withdrawn < count && (this.player.cargo.length < (this.player.maxCargo || 10)) && this.depot.ores[oreKey] > 0) {
       this.depot.ores[oreKey]--;
       this.player.cargo.push(oreKey);
       withdrawn++;
@@ -1535,22 +1830,130 @@ export class BaseSystem {
     }
   }
 
+  withdrawFillOre(oreKey) {
+    if (!this.depot.ores || (this.depot.ores[oreKey] || 0) <= 0) return;
+    const playerFreeCargo = (this.player.maxCargo || 10) - (this.player.cargo ? this.player.cargo.length : 0);
+    if (playerFreeCargo <= 0) {
+      this.scene.events.emit('notify', '⚠️ Bohrer-Laderaum ist bereits voll!');
+      return;
+    }
+
+    let moved = 0;
+    while (this.depot.ores[oreKey] > 0 && (this.player.cargo.length < (this.player.maxCargo || 10))) {
+      this.depot.ores[oreKey]--;
+      this.player.cargo.push(oreKey);
+      moved++;
+    }
+
+    if (moved > 0) {
+      soundFx.playClick();
+      if (this.scene.hud) this.scene.hud.update();
+      this.renderDepotModal();
+      this.scene.events.emit('notify', `🚜 ${moved}x ${ORE_DATA[oreKey]?.name || oreKey} in den Laderaum geladen!`);
+    }
+  }
+
+  fillCargoFromDepot() {
+    if (!this.depot.ores) return;
+    const playerFreeCargo = (this.player.maxCargo || 10) - (this.player.cargo ? this.player.cargo.length : 0);
+    if (playerFreeCargo <= 0) {
+      this.scene.events.emit('notify', '⚠️ Bohrer-Laderaum ist bereits voll!');
+      return;
+    }
+
+    let moved = 0;
+    for (const [oreKey, qty] of Object.entries(this.depot.ores)) {
+      while (this.depot.ores[oreKey] > 0 && (this.player.cargo.length < (this.player.maxCargo || 10))) {
+        this.depot.ores[oreKey]--;
+        this.player.cargo.push(oreKey);
+        moved++;
+      }
+      if (this.player.cargo.length >= (this.player.maxCargo || 10)) break;
+    }
+
+    if (moved > 0) {
+      soundFx.playClick();
+      if (this.scene.hud) this.scene.hud.update();
+      this.renderDepotModal();
+      this.scene.events.emit('notify', `🚜 ${moved}x Erze aus dem Depot in den Laderaum geladen!`);
+    } else {
+      this.scene.events.emit('notify', 'Keine Erze im Depot vorhanden.');
+    }
+  }
+
+  sellDepotOre(oreKey, count = 1) {
+    if (!this.depot.ores || (this.depot.ores[oreKey] || 0) <= 0) return;
+    const val = ORE_DATA[oreKey]?.value || 0;
+    const available = this.depot.ores[oreKey];
+    const toSell = Math.min(available, count);
+
+    this.depot.ores[oreKey] -= toSell;
+    const earned = val * toSell;
+    this.player.cash += earned;
+
+    soundFx.playPurchase();
+    if (this.scene.hud) this.scene.hud.update();
+    this.renderDepotModal();
+    this.scene.events.emit('notify', `💰 ${toSell}x ${ORE_DATA[oreKey]?.name || oreKey} aus Depot verkauft für +€${earned}!`);
+  }
+
+  sellAllDepotOres() {
+    if (!this.depot.ores) return;
+    let totalEarned = 0;
+    let totalCount = 0;
+
+    for (const [oreKey, qty] of Object.entries(this.depot.ores)) {
+      if (qty > 0) {
+        const val = ORE_DATA[oreKey]?.value || 0;
+        totalEarned += val * qty;
+        totalCount += qty;
+        this.depot.ores[oreKey] = 0;
+      }
+    }
+
+    if (totalCount > 0) {
+      this.player.cash += totalEarned;
+      soundFx.playPurchase();
+      if (this.scene.hud) this.scene.hud.update();
+      this.renderDepotModal();
+      this.scene.events.emit('notify', `💰 Alle ${totalCount} Depot-Erze verkauft für +€${totalEarned.toLocaleString()}!`);
+    } else {
+      this.scene.events.emit('notify', 'Keine Erze im Depot zum Verkaufen.');
+    }
+  }
+
   depositProduct(productKey, count = 1) {
     if (!this.depot.products) this.depot.products = {};
-    if (!this.player.factoryProducts || (this.player.factoryProducts[productKey] || 0) <= 0) return;
-
     const freeCapacity = (this.depot.capacity || 150) - this.getDepotTotalCount();
     if (freeCapacity <= 0) {
       this.scene.events.emit('notify', '⚠️ Depot ist voll! Baue die Lagerkapazität aus.');
       return;
     }
 
-    const available = this.player.factoryProducts[productKey] || 0;
-    const toMove = Math.min(available, count, freeCapacity);
-    if (toMove > 0) {
+    let moved = 0;
+    // 1. Aus player.factoryProducts
+    if (this.player.factoryProducts && (this.player.factoryProducts[productKey] || 0) > 0) {
+      const available = this.player.factoryProducts[productKey];
+      const toMove = Math.min(available, count, freeCapacity);
       this.player.factoryProducts[productKey] -= toMove;
       this.depot.products[productKey] = (this.depot.products[productKey] || 0) + toMove;
+      moved += toMove;
+    }
+
+    // 2. Aus player.cargo (falls dort als bar_* gelagert)
+    if (moved < count && moved < freeCapacity && this.player.cargo) {
+      for (let i = this.player.cargo.length - 1; i >= 0 && moved < count && moved < freeCapacity; i--) {
+        if (this.player.cargo[i] === productKey) {
+          this.player.cargo.splice(i, 1);
+          this.depot.products[productKey] = (this.depot.products[productKey] || 0) + 1;
+          moved++;
+        }
+      }
+    }
+
+    if (moved > 0) {
       soundFx.playClick();
+      if (this.scene.hud) this.scene.hud.update();
       this.renderDepotModal();
     }
   }
@@ -1565,7 +1968,78 @@ export class BaseSystem {
       this.depot.products[productKey] -= toMove;
       this.player.factoryProducts[productKey] = (this.player.factoryProducts[productKey] || 0) + toMove;
       soundFx.playClick();
+      if (this.scene.hud) this.scene.hud.update();
       this.renderDepotModal();
+    }
+  }
+
+  withdrawAllProducts() {
+    if (!this.depot.products) return;
+    if (!this.player.factoryProducts) this.player.factoryProducts = {};
+    let count = 0;
+    for (const [prodKey, qty] of Object.entries(this.depot.products)) {
+      if (qty > 0) {
+        this.player.factoryProducts[prodKey] = (this.player.factoryProducts[prodKey] || 0) + qty;
+        count += qty;
+        this.depot.products[prodKey] = 0;
+      }
+    }
+    if (count > 0) {
+      soundFx.playClick();
+      if (this.scene.hud) this.scene.hud.update();
+      this.renderDepotModal();
+      this.scene.events.emit('notify', `📦 ${count}x Waren ins persönliche Inventar übernommen!`);
+    }
+  }
+
+  sellDepotProduct(productKey, count = 1) {
+    if (!this.depot.products || (this.depot.products[productKey] || 0) <= 0) return;
+    let val = FACTORY_PRODUCTS[productKey]?.value || 0;
+    let name = FACTORY_PRODUCTS[productKey]?.name || productKey;
+    if (productKey.startsWith('bar_')) {
+      const rawKey = productKey.replace('bar_', '');
+      val = getRefinedOreNetValue(rawKey);
+      name = getRefinedOreName(rawKey);
+    }
+    const available = this.depot.products[productKey];
+    const toSell = Math.min(available, count);
+
+    this.depot.products[productKey] -= toSell;
+    const earned = val * toSell;
+    this.player.cash += earned;
+
+    soundFx.playPurchase();
+    if (this.scene.hud) this.scene.hud.update();
+    this.renderDepotModal();
+    this.scene.events.emit('notify', `💰 ${toSell}x ${name} verkauft für +€${earned.toLocaleString()}!`);
+  }
+
+  sellAllDepotProducts() {
+    if (!this.depot.products) return;
+    let totalEarned = 0;
+    let totalCount = 0;
+
+    for (const [prodKey, qty] of Object.entries(this.depot.products)) {
+      if (qty > 0) {
+        let val = FACTORY_PRODUCTS[prodKey]?.value || 0;
+        if (prodKey.startsWith('bar_')) {
+          const rawKey = prodKey.replace('bar_', '');
+          val = getRefinedOreNetValue(rawKey);
+        }
+        totalEarned += val * qty;
+        totalCount += qty;
+        this.depot.products[prodKey] = 0;
+      }
+    }
+
+    if (totalCount > 0) {
+      this.player.cash += totalEarned;
+      soundFx.playPurchase();
+      if (this.scene.hud) this.scene.hud.update();
+      this.renderDepotModal();
+      this.scene.events.emit('notify', `💰 Alle ${totalCount} Depot-Waren verkauft für +€${totalEarned.toLocaleString()}!`);
+    } else {
+      this.scene.events.emit('notify', 'Keine Waren im Depot zum Verkaufen.');
     }
   }
 
@@ -1734,11 +2208,12 @@ export class BaseSystem {
       }
     ];
 
-    // Cargo nach Erzen zählen
+    // Cargo & Depot nach Erzen zählen
     const cargoCounts = {};
     p.cargo.forEach((ore) => {
       cargoCounts[ore] = (cargoCounts[ore] || 0) + 1;
     });
+    const depotOres = this.depot?.ores || {};
 
     let questsHtml = '<div style="display: flex; flex-direction: column; gap: 10px; margin: 12px 0; max-height: 280px; overflow-y: auto; padding-right: 4px;">';
 
@@ -1746,10 +2221,12 @@ export class BaseSystem {
       let canFulfill = true;
       let reqsText = [];
       for (const [ore, needed] of Object.entries(q.reqs)) {
-        const have = cargoCounts[ore] || 0;
+        const haveCargo = cargoCounts[ore] || 0;
+        const haveDepot = depotOres[ore] || 0;
+        const totalHave = haveCargo + haveDepot;
         const oreName = ORE_DATA[ore]?.name || ore;
-        if (have < needed) canFulfill = false;
-        reqsText.push(`<span style="color: ${have >= needed ? '#10b981' : '#f87171'}; font-weight: 600;">${oreName}: ${have}/${needed}</span>`);
+        if (totalHave < needed) canFulfill = false;
+        reqsText.push(`<span style="color: ${totalHave >= needed ? '#10b981' : '#f87171'}; font-weight: 600;">${oreName}: ${totalHave}/${needed}</span>`);
       }
 
       questsHtml += `
@@ -1790,10 +2267,15 @@ export class BaseSystem {
 
     const content = `
       <p style="font-size: 12px; color: #94a3b8; margin-bottom: 10px;">
-        "Hallo Kollege! Ich analysiere geologische Besonderheiten im Gestein. Bring mir die gesuchten Erzproben, und ich überlasse dir wertvolle Spezial-Bauteile für deine Tech-Upgrades und Bauprojekte!"
+        "Hallo Kollege! Ich analysiere geologische Besonderheiten im Gestein. Bring mir die gesuchten Erzproben (aus Frachtraum oder Depot), und ich überlasse dir wertvolle Spezial-Bauteile für deine Tech-Upgrades und Bauprojekte!"
       </p>
       ${compHeader}
       ${questsHtml}
+      <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
+        <button id="btn-geologist-close" class="btn-3d-secondary" style="height: 32px; font-size: 11.5px; font-weight: 700; padding: 0 16px;">
+          SCHLIESSEN
+        </button>
+      </div>
     `;
 
     this.openModal(`
@@ -1803,6 +2285,14 @@ export class BaseSystem {
       </div>
     `, content);
 
+    const btnGeologistClose = document.getElementById('btn-geologist-close');
+    if (btnGeologistClose) {
+      btnGeologistClose.onclick = () => {
+        soundFx.playClick();
+        this.closeModal();
+      };
+    }
+
     // Abgabe Event Listener
     const claimBtns = document.querySelectorAll('.btn-claim-geologist');
     claimBtns.forEach((btn) => {
@@ -1811,9 +2301,19 @@ export class BaseSystem {
         const q = quests.find(item => item.id === qid);
         if (!q) return;
 
-        // Erze aus Frachtraum entfernen
+        // Erze aus Frachtraum und falls nötig aus Depot entnehmen
         for (const [ore, needed] of Object.entries(q.reqs)) {
-          p.sellSpecificOre(ore, needed);
+          let consumed = 0;
+          if (p.consumeOre) {
+            consumed = p.consumeOre(ore, needed);
+          } else {
+            p.sellSpecificOre(ore, needed);
+            consumed = needed;
+          }
+          const fromDepot = needed - consumed;
+          if (fromDepot > 0 && this.depot?.ores?.[ore]) {
+            this.depot.ores[ore] = Math.max(0, this.depot.ores[ore] - fromDepot);
+          }
         }
 
         // Belohnung gewähren
@@ -1837,40 +2337,22 @@ export class BaseSystem {
 
     const tracks = [
       {
-        id: 'battery',
-        title: 'AKKUSYSTEME / LADESPEED',
-        iconName: 'zap',
-        currentTier: p.batteryTier || 1,
-        maxTier: 8,
-        tiers: BATTERY_TIERS,
-        apply: (tier) => {
-          p.batteryTier = tier;
-        }
-      },
-      {
         id: 'tank',
-        title: 'TREIBSTOFF',
+        title: 'TREIBSTOFF-TANK',
         iconName: 'fuel',
         currentTier: p.tankTier || 1,
         maxTier: 8,
-        tiers: [
-          { tier: 1, name: 'Standard-Tank', stat: '100 Liter', cost: 0, comp: null, level: 1, desc: 'Basis-Treibstofftank für kurze Bohrgänge.' },
-          { tier: 2, name: 'Kerosin-Tank Mk.II', stat: '135 Liter (+35L)', cost: 180, comp: null, level: 1, desc: 'Erhöht Treibstoff auf 135 Liter und senkt Verbrauch um 12%.' },
-          { tier: 3, name: 'Spartriebwerk Mk.III', stat: '180 Liter (+45L)', cost: 420, comp: null, level: 1, desc: 'Erhöht Treibstoff auf 180 Liter und spart 20% Kerosin.' },
-          { tier: 4, name: 'Dual-Injektor Mk.IV', stat: '240 Liter (+60L)', cost: 950, comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 }, level: 2, desc: 'Verbessert Steigflug-Effizienz mit Hochdruck-Injektoren.' },
-          { tier: 5, name: 'Kompressions-Tank Mk.V', stat: '320 Liter (+80L)', cost: 2000, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 }, level: 2, desc: 'Hochfeste Legierung erlaubt 320 Liter Treibstoffkapazität.' },
-          { tier: 6, name: 'Turbo-Booster Mk.VI', stat: '420 Liter (+100L)', cost: 4200, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 2 }, level: 3, desc: 'Großer 420L Tank für tiefe Expeditionen.' },
-          { tier: 7, name: 'Fusions-Generator Mk.VII', stat: '540 Liter (+120L)', cost: 8800, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 4, desc: 'Hocheffizienter Fusions-Antrieb mit 540 Litern Kapazität.' },
-          { tier: 8, name: 'Quanten-Ionen-Antrieb', stat: '700 Liter (+160L)', cost: 17500, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 5, desc: 'Ultimativer 700L Quantenantrieb mit extrem sparsamen Düsen.' }
-        ],
-        apply: (tier) => {
-          p.tankTier = tier;
-          const fuels = [100, 135, 180, 240, 320, 420, 540, 700];
-          const effs = [1.0, 1.12, 1.20, 1.28, 1.35, 1.42, 1.50, 1.60];
-          p.maxFuel = fuels[tier - 1];
-          p.fuel = p.maxFuel;
-          p.fuelEfficiency = effs[tier - 1];
-        }
+        tiers: TANK_TIERS,
+        apply: (tier) => p.upgradeTank(tier)
+      },
+      {
+        id: 'hull',
+        title: 'GEHÄUSESCHUTZ / PANZERUNG',
+        iconName: 'shield-cog',
+        currentTier: p.hullTier || 1,
+        maxTier: 8,
+        tiers: HULL_TIERS,
+        apply: (tier) => p.upgradeHull(tier)
       },
       {
         id: 'drill',
@@ -1885,91 +2367,30 @@ export class BaseSystem {
       },
       {
         id: 'engine',
-        title: 'ANTRIEB & FLUG',
+        title: 'ANTRIEB & STEIGFLUG',
         iconName: 'zap',
         currentTier: p.engineTier || 1,
         maxTier: 8,
-        tiers: [
-          { tier: 1, name: 'Standard-Raupenfahrwerk', stat: '260ms / 120 px/s', cost: 0, comp: null, level: 1, desc: 'Sicheres Basis-Fahrwerk für solide Schachtmanöver.' },
-          { tier: 2, name: 'Verstärkte Getriebe Mk.II', stat: '160ms / 145 px/s (+18%)', cost: 190, comp: null, level: 1, desc: 'Kürzere Schaltzeiten beschleunigen Kriechgang und Steigflug.' },
-          { tier: 3, name: 'Hydraulik-Raupen Mk.III', stat: '142ms / 175 px/s (+22%)', cost: 440, comp: null, level: 1, desc: 'Flüssigere Kettenbewegungen und mehr Schubdüsengeschwindigkeit.' },
-          { tier: 4, name: 'Hochdruck-Turbine Mk.IV', stat: '126ms / 210 px/s (+25%)', cost: 980, comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 }, level: 2, desc: 'Kraftvoller Vortrieb im Schacht und schnellerer Aufstieg.' },
-          { tier: 5, name: 'Titan-Kettenantrieb Mk.V', stat: '112ms / 245 px/s (+25%)', cost: 2100, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 }, level: 2, desc: 'Geringerer Rollwiderstand und kräftige Schwebetriebwerke.' },
-          { tier: 6, name: 'Vektor-Booster Mk.VI', stat: '98ms / 280 px/s (+25%)', cost: 4300, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 2 }, level: 3, desc: 'Schnelle Manövrierfähigkeit im Gestein und hoher Schwebespeed.' },
-          { tier: 7, name: 'Magnet-Levitation Mk.VII', stat: '87ms / 310 px/s (+20%)', cost: 8900, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 4, desc: 'Magnetschwebende Fahrwerkssegmente für rasantes Gleiten.' },
-          { tier: 8, name: 'Quanten-Gravitationsantrieb', stat: '78ms / 340 px/s (+18%)', cost: 18000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 5, desc: 'Krümmt das Schwerefeld für blitzschnelle Fortbewegung.' }
-        ],
-        apply: (tier) => {
-          p.upgradeEngine(tier);
-        }
+        tiers: ENGINE_TIERS,
+        apply: (tier) => p.upgradeEngine(tier)
       },
       {
         id: 'cargo',
-        title: 'FRACHTRAUM',
+        title: 'FRACHTRAUM-KAPAZITÄT',
         iconName: 'container',
         currentTier: p.cargoTier || 1,
         maxTier: 8,
-        tiers: [
-          { tier: 1, name: 'Standard-Ladebucht', stat: '10 Erze', cost: 0, comp: null, level: 1, desc: 'Kompakter Laderaum für die ersten Bergbau-Expeditionen.' },
-          { tier: 2, name: 'Erweiterte Frachtbucht', stat: '14 Erze (+4)', cost: 170, comp: null, level: 1, desc: 'Erweitert Ladeplätze auf 14 Erze für lukrativere Tauchgänge.' },
-          { tier: 3, name: 'Titan-Containermodul Mk.III', stat: '20 Erze (+6)', cost: 400, comp: null, level: 1, desc: 'Großzügiger Frachtraum für 20 Erze.' },
-          { tier: 4, name: 'Struktur-Laderaum Mk.IV', stat: '28 Erze (+8)', cost: 900, comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 }, level: 2, desc: 'Hydraulische Ladeklappen bieten Platz für 28 Erze.' },
-          { tier: 5, name: 'Molekular-Kompressor Mk.V', stat: '38 Erze (+10)', cost: 1900, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 }, level: 2, desc: 'Hohe Packdichte erlaubt den Transport von 38 Erzen.' },
-          { tier: 6, name: 'Subraum-Boxen Mk.VI', stat: '50 Erze (+12)', cost: 3900, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 2 }, level: 3, desc: 'Transportiert bis zu 50 Erze auf einen Schlag.' },
-          { tier: 7, name: 'Tiefsee-Depot Mk.VII', stat: '65 Erze (+15)', cost: 8200, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 4, desc: 'Riesige Kapazität von 65 Plätzen für Edelsteine.' },
-          { tier: 8, name: 'Quanten-Frachtdepot Mk.VIII', stat: '80 Erze (+15)', cost: 16500, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 5, desc: 'Gigantischer 80-Plätze-Frachtraum für maximale Gewinne.' }
-        ],
-        apply: (tier) => {
-          p.cargoTier = tier;
-          const caps = [10, 14, 20, 28, 38, 50, 65, 80];
-          p.maxCargo = caps[tier - 1];
-        }
+        tiers: CARGO_TIERS,
+        apply: (tier) => p.upgradeCargo(tier)
       },
       {
         id: 'sensor',
-        title: 'GEO-SENSOR',
+        title: 'GEO-SENSOR & RADAR',
         iconName: 'radio',
         currentTier: p.sensorTier || 1,
         maxTier: 8,
-        tiers: [
-          { tier: 1, name: 'Basis-Sonar', stat: '1.8 Kacheln', cost: 0, comp: null, level: 1, desc: 'Kompakter Sensor zur Erkennung naher Erzadern.' },
-          { tier: 2, name: 'Geo-Scanner Mk.II', stat: '2.4 Kacheln (+0.6)', cost: 140, comp: null, level: 1, desc: 'Vergrößert den kreisrunden Scan-Umkreis spürbar.' },
-          { tier: 3, name: 'Puls-Sonar Mk.III', stat: '3.0 Kacheln (+0.6)', cost: 340, comp: null, level: 1, desc: 'Erweitert den Erfassungsbereich auf 3.0 Kacheln.' },
-          { tier: 4, name: 'Spektral-Radar Mk.IV', stat: '3.7 Kacheln (+0.7)', cost: 780, comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 }, level: 2, desc: 'Schwenkbarer Pylon deckt Erze in 3.7 Kacheln Umkreis auf.' },
-          { tier: 5, name: 'Tiefen-Sensor Mk.V', stat: '4.5 Kacheln (+0.8)', cost: 1650, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 1 }, level: 2, desc: 'Optische Linse durchdringt dicke Gesteinsschichten bis 4.5 Kacheln.' },
-          { tier: 6, name: 'Sub-Terra-Scan Mk.VI', stat: '5.4 Kacheln (+0.9)', cost: 3400, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 3, desc: 'Großer Scanradius von 5.4 Kacheln für seltene Adern.' },
-          { tier: 7, name: 'Graviton-Array Mk.VII', stat: '6.4 Kacheln (+1.0)', cost: 7200, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 1 }, level: 4, desc: 'Erfasst 6.4 Kacheln im Umkreis auf einen Blick.' },
-          { tier: 8, name: 'Quanten-Resonator Mk.VIII', stat: '7.5 Kacheln (+1.1)', cost: 15200, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 5, desc: 'Elite-Scanbereich von 7.5 Kacheln erhellt riesige Höhlen.' }
-        ],
-        apply: (tier) => {
-          p.sensorTier = tier;
-          const radii = [1.8, 2.4, 3.0, 3.7, 4.5, 5.4, 6.4, 7.5];
-          p.upgradeSensor(tier, radii[tier - 1]);
-        }
-      },
-      {
-        id: 'hull',
-        title: 'PANZERUNG',
-        iconName: 'shield-cog',
-        currentTier: p.hullTier || 1,
-        maxTier: 8,
-        tiers: [
-          { tier: 1, name: 'Leichtmetall-Rumpf', stat: '100 HP', cost: 0, comp: null, level: 1, desc: 'Basis-Struktur für normale Bohrungen.' },
-          { tier: 2, name: 'Kevlar-Verbundpanzer Mk.II', stat: '140 HP (+40)', cost: 140, comp: null, level: 1, desc: 'Schützt vor Erschütterungen und erhöht HP auf 140.' },
-          { tier: 3, name: 'Gehärteter Rumpf Mk.III', stat: '190 HP (+50)', cost: 330, comp: null, level: 1, desc: 'Robuste Panzerung mit 190 HP für mittlere Tiefen.' },
-          { tier: 4, name: 'Titan-Panzerung Mk.IV', stat: '260 HP (+70)', cost: 790, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 }, level: 2, desc: 'Widersteht hohem Druck in 260 HP Integrität.' },
-          { tier: 5, name: 'Magma-Hitzeschild Mk.V', stat: '350 HP (+90)', cost: 1700, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 2 }, level: 2, desc: 'Schützt vor extremen Temperaturen (350 HP).' },
-          { tier: 6, name: 'Schwere Verbundpanzerung Mk.VI', stat: '470 HP (+120)', cost: 3400, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 1 }, level: 3, desc: 'Extrem widerstandsfähige 470 HP Panzerung.' },
-          { tier: 7, name: 'Kraftfeld-Generator Mk.VII', stat: '620 HP (+150)', cost: 7300, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 1 }, level: 4, desc: 'Aktives Energieschild stärkt den Rumpf auf 620 HP.' },
-          { tier: 8, name: 'Nanit-Matrix Mk.VIII', stat: '800 HP (+180)', cost: 15500, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 5, desc: 'Spitzentechnologie mit 800 HP Naniten-Integrität.' }
-        ],
-        apply: (tier) => {
-          p.hullTier = tier;
-          const hulls = [100, 140, 190, 260, 350, 470, 620, 800];
-          const prevMax = p.maxHull;
-          p.maxHull = hulls[tier - 1];
-          p.hull += (p.maxHull - prevMax);
-        }
+        tiers: SENSOR_TIERS,
+        apply: (tier) => p.upgradeSensor(tier)
       }
     ];
 
@@ -2087,7 +2508,15 @@ export class BaseSystem {
     });
     cardsHtml += '</div>';
 
-    const fullContent = compHeader + cardsHtml;
+    const footerHtml = `
+      <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
+        <button id="btn-lab-close" class="btn-3d-secondary" style="height: 32px; font-size: 11.5px; font-weight: 700; padding: 0 16px;">
+          SCHLIESSEN
+        </button>
+      </div>
+    `;
+
+    const fullContent = compHeader + cardsHtml + footerHtml;
     this.openModal(`
       <div style="display: flex; align-items: center; gap: 8px;">
         ${icon('microscope', '', 18)}
@@ -2123,6 +2552,14 @@ export class BaseSystem {
         };
       }
     });
+
+    const btnLabClose = document.getElementById('btn-lab-close');
+    if (btnLabClose) {
+      btnLabClose.onclick = () => {
+        soundFx.playClick();
+        this.closeModal();
+      };
+    }
   }
 
   // =========================================================
@@ -2223,6 +2660,11 @@ export class BaseSystem {
           ${icon('container', '', 14)}
           <span>ALLE FUNDE INS FAHRZEUG ÜBERTRAGEN</span>
         </button>
+        <div style="display: flex; justify-content: flex-end; margin-top: 6px;">
+          <button id="btn-drone-close" class="btn-3d-secondary" style="height: 32px; font-size: 11.5px; font-weight: 700; padding: 0 16px;">
+            SCHLIESSEN
+          </button>
+        </div>
       </div>
     `;
 
@@ -2232,6 +2674,14 @@ export class BaseSystem {
         <span>DROHNEN-HANGAR</span>
       </div>
     `, content);
+
+    const btnDroneClose = document.getElementById('btn-drone-close');
+    if (btnDroneClose) {
+      btnDroneClose.onclick = () => {
+        soundFx.playClick();
+        this.closeModal();
+      };
+    }
 
     const btnCollect = document.getElementById('btn-collect-drone-ores');
     if (btnCollect) {
@@ -2283,6 +2733,12 @@ export class BaseSystem {
             ${maxDepth >= 5 ? `WARPEN (${maxDepth}m)` : 'TIEFE ZU GERING'}
           </button>
         </div>
+
+        <div style="display: flex; justify-content: flex-end; margin-top: 6px;">
+          <button id="btn-teleporter-close" class="btn-3d-secondary" style="height: 32px; font-size: 11.5px; font-weight: 700; padding: 0 16px;">
+            SCHLIESSEN
+          </button>
+        </div>
       </div>
     `;
 
@@ -2292,6 +2748,14 @@ export class BaseSystem {
         <span>TELEPORTER</span>
       </div>
     `, content);
+
+    const btnTeleporterClose = document.getElementById('btn-teleporter-close');
+    if (btnTeleporterClose) {
+      btnTeleporterClose.onclick = () => {
+        soundFx.playClick();
+        this.closeModal();
+      };
+    }
 
     const btnPipe = document.getElementById('btn-pipe-sell');
     if (btnPipe) {
@@ -2339,6 +2803,11 @@ export class BaseSystem {
         <div style="background: #141c2c; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px; font-size: 12px; color: #38bdf8;">
           Bonus-Effekt: Das Kraftwerk versorgt die Docking-Station mit Starkstrom (Verdoppelte Tank- und Reparatur-Geschwindigkeit)!
         </div>
+        <div style="display: flex; justify-content: flex-end; margin-top: 6px;">
+          <button id="btn-powerplant-close" class="btn-3d-secondary" style="height: 32px; font-size: 11.5px; font-weight: 700; padding: 0 16px;">
+            SCHLIESSEN
+          </button>
+        </div>
       </div>
     `;
 
@@ -2348,6 +2817,14 @@ export class BaseSystem {
         <span>KRAFTWERK</span>
       </div>
     `, content);
+
+    const btnPowerClose = document.getElementById('btn-powerplant-close');
+    if (btnPowerClose) {
+      btnPowerClose.onclick = () => {
+        soundFx.playClick();
+        this.closeModal();
+      };
+    }
   }
 
   // =========================================================
@@ -2371,100 +2848,281 @@ export class BaseSystem {
       sammlerInfo = `<div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Steineforscher unterwegs (Nächster Besuch in ca. ${Math.max(1, Math.ceil(this.sammlerTimer))}s)</div>`;
     }
 
-    // Akkusystem & Tankspeed (verschiedene Akkutypen für den Bohrer)
-    const curBattery = this.player.getBatteryData ? this.player.getBatteryData() : BATTERY_TIERS[0];
-    const curBatTier = this.player.batteryTier || 1;
-    const canUpgradeBattery = curBatTier < BATTERY_TIERS.length;
-    const nextBattery = canUpgradeBattery ? BATTERY_TIERS[curBatTier] : null;
+    // Helper für Bauteil- und Levelanforderungen
+    const checkAfford = (nextData) => {
+      if (!nextData) return false;
+      let compOk = true;
+      if (nextData.comp) {
+        const have = this.player.components[nextData.comp.key] || 0;
+        if (have < nextData.comp.count) compOk = false;
+      }
+      return this.player.cash >= nextData.cost && compOk && (this.player.level || 1) >= nextData.level;
+    };
 
-    let batCompAvailable = true;
-    if (nextBattery && nextBattery.comp) {
-      const have = this.player.components[nextBattery.comp.key] || 0;
-      if (have < nextBattery.comp.count) batCompAvailable = false;
-    }
-    const canAffordBattery = nextBattery && this.player.cash >= nextBattery.cost && batCompAvailable && this.player.level >= nextBattery.level;
+    const formatCompReq = (nextData) => {
+      if (!nextData || !nextData.comp) return '';
+      const have = this.player.components[nextData.comp.key] || 0;
+      const isMet = have >= nextData.comp.count;
+      const compIconName = COMPONENT_ICONS[nextData.comp.key] || 'box';
+      return ` &bull; <span style="color: ${isMet ? '#38bdf8' : '#f87171'}; font-weight: 600;">${icon(compIconName, '', 12)} ${nextData.comp.count}x ${nextData.comp.name} (${have}/${nextData.comp.count})</span>`;
+    };
 
-    const batterySection = `
-      <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); padding: 12px 14px; border-radius: 10px; display: flex; flex-direction: column; gap: 8px;">
+    const formatLevelReq = (nextData) => {
+      if (!nextData || (this.player.level || 1) >= nextData.level) return '';
+      return ` &bull; <span style="color: #f87171; font-weight: 600;">Ab Level ${nextData.level}</span>`;
+    };
+
+    // 1. Treibstoff-Tank
+    const curTankTier = this.player.tankTier || 1;
+    const curTankData = this.player.getTankData ? this.player.getTankData() : (TANK_TIERS[curTankTier - 1] || TANK_TIERS[0]);
+    const canUpgradeTank = curTankTier < TANK_TIERS.length;
+    const nextTankData = canUpgradeTank ? TANK_TIERS[curTankTier] : null;
+    const canAffordTank = checkAfford(nextTankData);
+
+    const tankSection = `
+      <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); padding: 10px 14px; border-radius: 10px; display: flex; flex-direction: column; gap: 6px;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <div>
             <strong style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #f8fafc;">
-              ${icon('zap', '', 14)} Akkusystem & Ladeelektronik
+              ${icon('fuel', '', 14)} Treibstoff-Tank
             </strong>
-            <div style="font-size: 11.5px; color: #94a3b8; margin-top: 2px;">
-              Akkutyp: <strong style="color: #38bdf8;">${curBattery.name} (${curBattery.stat})</strong>
+            <div style="font-size: 11.5px; color: #94a3b8; margin-top: 1px;">
+              Installiert: <strong style="color: #38bdf8;">${curTankData.name} (${curTankData.stat})</strong>
             </div>
           </div>
-          ${canUpgradeBattery ? `
-            <button id="btn-upgrade-battery-dock" class="btn-buy" style="height: 32px; padding: 0 14px; font-size: 11.5px; font-weight: 800;" ${canAffordBattery ? '' : 'disabled'}>
-              ${icon('zap', '', 13)} UPGRADE: €${nextBattery.cost}
+          ${canUpgradeTank ? `
+            <button id="btn-upgrade-tank-dock" class="btn-buy" style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 800;" ${canAffordTank ? '' : 'disabled'}>
+              ${icon('fuel', '', 12)} TANK VERBESSERN: €${nextTankData.cost}
             </button>
           ` : `
-            <span style="font-size: 11px; color: #10b981; font-weight: 700; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); padding: 4px 8px; border-radius: 6px;">
-              MAXIMALER AKKU
+            <span style="font-size: 11px; color: #10b981; font-weight: 700; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); padding: 3px 8px; border-radius: 6px;">
+              MAXIMALER TANK
             </span>
           `}
         </div>
-        ${canUpgradeBattery ? `
-          <div style="font-size: 11.5px; color: #94a3b8;">
-            Nächste Stufe: <strong style="color: #f8fafc;">${nextBattery.name}</strong> (${nextBattery.stat})
-            ${nextBattery.comp ? ` &bull; <span style="color: ${batCompAvailable ? '#38bdf8' : '#f87171'};">${nextBattery.comp.count}x ${nextBattery.comp.name}</span>` : ''}
-            ${this.player.level < nextBattery.level ? ` &bull; <span style="color: #f87171;">Ab Level ${nextBattery.level}</span>` : ''}
+        ${canUpgradeTank ? `
+          <div style="font-size: 11px; color: #94a3b8;">
+            Nächste Stufe: <strong style="color: #f8fafc;">${nextTankData.name}</strong> (${nextTankData.stat}) &bull; ${nextTankData.desc}
+            ${formatCompReq(nextTankData)}${formatLevelReq(nextTankData)}
           </div>
         ` : `
-          <div style="font-size: 11px; color: #10b981;">
-            Höchste Ladegeschwindigkeit am Hangar erreicht.
-          </div>
+          <div style="font-size: 11px; color: #10b981;">Höchste Treibstoffkapazität erreicht.</div>
         `}
       </div>
     `;
 
-    // Bohrkopf-Montage / Werkstatt
-    const curTier = this.player.drillTier || 1;
-    const resTier = this.player.researchedDrillTier || curTier;
-    const curDrillData = DRILL_DATA[curTier - 1] || DRILL_DATA[0];
-    const canMount = resTier > curTier;
-    const nextDrillData = canMount ? (DRILL_DATA[resTier - 1] || DRILL_DATA[0]) : null;
+    // 2. Gehäuseschutz & Karosserie (Case-Schutz)
+    const curHullTier = this.player.hullTier || 1;
+    const curHullData = this.player.getHullData ? this.player.getHullData() : (HULL_TIERS[curHullTier - 1] || HULL_TIERS[0]);
+    const canUpgradeHull = curHullTier < HULL_TIERS.length;
+    const nextHullData = canUpgradeHull ? HULL_TIERS[curHullTier] : null;
+    const canAffordHull = checkAfford(nextHullData);
+
+    const hullSection = `
+      <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); padding: 10px 14px; border-radius: 10px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <strong style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #f8fafc;">
+              ${icon('shield-cog', '', 14)} Gehäuseschutz (Case-Schutz)
+            </strong>
+            <div style="font-size: 11.5px; color: #94a3b8; margin-top: 1px;">
+              Installiert: <strong style="color: #10b981;">${curHullData.name} (${curHullData.stat})</strong>
+            </div>
+          </div>
+          ${canUpgradeHull ? `
+            <button id="btn-upgrade-hull-dock" class="btn-buy" style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 800;" ${canAffordHull ? '' : 'disabled'}>
+              ${icon('shield-cog', '', 12)} SCHUTZ VERBESSERN: €${nextHullData.cost}
+            </button>
+          ` : `
+            <span style="font-size: 11px; color: #10b981; font-weight: 700; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); padding: 3px 8px; border-radius: 6px;">
+              MAXIMALER CASE-SCHUTZ
+            </span>
+          `}
+        </div>
+        ${canUpgradeHull ? `
+          <div style="font-size: 11px; color: #94a3b8;">
+            Nächste Stufe: <strong style="color: #f8fafc;">${nextHullData.name}</strong> (${nextHullData.stat}) &bull; ${nextHullData.desc}
+            ${formatCompReq(nextHullData)}${formatLevelReq(nextHullData)}
+          </div>
+        ` : `
+          <div style="font-size: 11px; color: #10b981;">Höchste Panzerung erreicht. Maximaler Schutz vor Bohrabnutzung.</div>
+        `}
+      </div>
+    `;
+
+    // 3. Bohrkopf-Werkstatt (Montage erforschter Köpfe oder direktes Hangar-Upgrade)
+    const curDrillTier = this.player.drillTier || 1;
+    const resDrillTier = this.player.researchedDrillTier || curDrillTier;
+    const curDrillData = DRILL_DATA[curDrillTier - 1] || DRILL_DATA[0];
+    const canMount = resDrillTier > curDrillTier;
+    const mountDrillData = canMount ? (DRILL_DATA[resDrillTier - 1] || DRILL_DATA[0]) : null;
+    const canUpgradeDrill = curDrillTier < DRILL_DATA.length;
+    const nextDrillData = canUpgradeDrill ? DRILL_DATA[curDrillTier] : null;
+    const canAffordDrill = checkAfford(nextDrillData);
 
     const drillSection = `
-      <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); padding: 12px 14px; border-radius: 10px; display: flex; flex-direction: column; gap: 8px;">
+      <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); padding: 10px 14px; border-radius: 10px; display: flex; flex-direction: column; gap: 6px;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <div>
             <strong style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #f8fafc;">
               ${icon('pickaxe', '', 14)} Bohrkopf-Werkstatt
             </strong>
-            <div style="font-size: 11.5px; color: #94a3b8; margin-top: 2px;">
+            <div style="font-size: 11.5px; color: #94a3b8; margin-top: 1px;">
               Montiert: <strong style="color: #38bdf8;">${curDrillData.name} (${curDrillData.stat})</strong>
             </div>
           </div>
           ${canMount ? `
-            <button id="btn-mount-drill" class="btn-buy" style="height: 32px; padding: 0 14px; font-size: 11.5px; font-weight: 800;">
-              ${icon('wrench', '', 13)} BOHRKOPF MONTIEREN
+            <button id="btn-mount-drill-dock" class="btn-buy" style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 800; background: linear-gradient(135deg, #10b981, #059669);">
+              ${icon('wrench', '', 12)} BOHRKOPF MONTIEREN (KOSTENLOS)
+            </button>
+          ` : (canUpgradeDrill ? `
+            <button id="btn-upgrade-drill-dock" class="btn-buy" style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 800;" ${canAffordDrill ? '' : 'disabled'}>
+              ${icon('pickaxe', '', 12)} AUFRÜSTEN: €${nextDrillData.cost}
             </button>
           ` : `
-            <span style="font-size: 11px; color: #10b981; font-weight: 700; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); padding: 4px 8px; border-radius: 6px;">
-              AKTUELLSTE STUFE
+            <span style="font-size: 11px; color: #10b981; font-weight: 700; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); padding: 3px 8px; border-radius: 6px;">
+              MAXIMALER BOHRKOPF
+            </span>
+          `)}
+        </div>
+        ${canMount ? `
+          <div style="font-size: 11px; color: #fbbf24; background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.25); padding: 5px 8px; border-radius: 6px;">
+            Erforschter Bauplan bereit: <strong>${mountDrillData.name} (${mountDrillData.stat})</strong> im Hangar montieren!
+          </div>
+        ` : (canUpgradeDrill ? `
+          <div style="font-size: 11px; color: #94a3b8;">
+            Nächste Stufe: <strong style="color: #f8fafc;">${nextDrillData.name}</strong> (${nextDrillData.stat}) &bull; ${nextDrillData.desc}
+            ${formatCompReq(nextDrillData)}${formatLevelReq(nextDrillData)}
+          </div>
+        ` : `
+          <div style="font-size: 11px; color: #10b981;">Höchste Bohrleistung erreicht. Fräst mühelos durch jede Gesteinsschicht.</div>
+        `)}
+      </div>
+    `;
+
+    // 4. Antrieb & Steigflug
+    const curEngineTier = this.player.engineTier || 1;
+    const curEngineData = this.player.getEngineData ? this.player.getEngineData() : (ENGINE_TIERS[curEngineTier - 1] || ENGINE_TIERS[0]);
+    const canUpgradeEngine = curEngineTier < ENGINE_TIERS.length;
+    const nextEngineData = canUpgradeEngine ? ENGINE_TIERS[curEngineTier] : null;
+    const canAffordEngine = checkAfford(nextEngineData);
+
+    const engineSection = `
+      <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); padding: 10px 14px; border-radius: 10px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <strong style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #f8fafc;">
+              ${icon('zap', '', 14)} Antrieb & Steigflug
+            </strong>
+            <div style="font-size: 11.5px; color: #94a3b8; margin-top: 1px;">
+              Installiert: <strong style="color: #38bdf8;">${curEngineData.name} (${curEngineData.stat})</strong>
+            </div>
+          </div>
+          ${canUpgradeEngine ? `
+            <button id="btn-upgrade-engine-dock" class="btn-buy" style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 800;" ${canAffordEngine ? '' : 'disabled'}>
+              ${icon('zap', '', 12)} ANTRIEB VERBESSERN: €${nextEngineData.cost}
+            </button>
+          ` : `
+            <span style="font-size: 11px; color: #10b981; font-weight: 700; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); padding: 3px 8px; border-radius: 6px;">
+              MAXIMALER ANTRIEB
             </span>
           `}
         </div>
-        ${canMount ? `
-          <div style="font-size: 11.5px; color: #fbbf24; background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.25); padding: 6px 10px; border-radius: 6px;">
-            Erforschter Bauplan verfügbar: <strong>${nextDrillData.name} (${nextDrillData.stat})</strong> steht im Hangar zum Einbau bereit!
+        ${canUpgradeEngine ? `
+          <div style="font-size: 11px; color: #94a3b8;">
+            Nächste Stufe: <strong style="color: #f8fafc;">${nextEngineData.name}</strong> (${nextEngineData.stat}) &bull; ${nextEngineData.desc}
+            ${formatCompReq(nextEngineData)}${formatLevelReq(nextEngineData)}
           </div>
         ` : `
-          <div style="font-size: 11px; color: #94a3b8;">
-            Neue Bohrkopf-Baupläne müssen zuerst im <strong>LABOR</strong> entwickelt werden.
+          <div style="font-size: 11px; color: #10b981;">Höchste Triebwerksleistung installiert.</div>
+        `}
+      </div>
+    `;
+
+    // 5. Frachtraum-Kapazität
+    const curCargoTier = this.player.cargoTier || 1;
+    const curCargoData = this.player.getCargoData ? this.player.getCargoData() : (CARGO_TIERS[curCargoTier - 1] || CARGO_TIERS[0]);
+    const canUpgradeCargo = curCargoTier < CARGO_TIERS.length;
+    const nextCargoData = canUpgradeCargo ? CARGO_TIERS[curCargoTier] : null;
+    const canAffordCargo = checkAfford(nextCargoData);
+
+    const cargoSection = `
+      <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); padding: 10px 14px; border-radius: 10px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <strong style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #f8fafc;">
+              ${icon('container', '', 14)} Frachtraum-Kapazität
+            </strong>
+            <div style="font-size: 11.5px; color: #94a3b8; margin-top: 1px;">
+              Installiert: <strong style="color: #38bdf8;">${curCargoData.name} (${curCargoData.stat})</strong>
+            </div>
           </div>
+          ${canUpgradeCargo ? `
+            <button id="btn-upgrade-cargo-dock" class="btn-buy" style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 800;" ${canAffordCargo ? '' : 'disabled'}>
+              ${icon('container', '', 12)} KAPAZITÄT ERWEITERN: €${nextCargoData.cost}
+            </button>
+          ` : `
+            <span style="font-size: 11px; color: #10b981; font-weight: 700; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); padding: 3px 8px; border-radius: 6px;">
+              MAXIMALER FRACHTRAUM
+            </span>
+          `}
+        </div>
+        ${canUpgradeCargo ? `
+          <div style="font-size: 11px; color: #94a3b8;">
+            Nächste Stufe: <strong style="color: #f8fafc;">${nextCargoData.name}</strong> (${nextCargoData.stat}) &bull; ${nextCargoData.desc}
+            ${formatCompReq(nextCargoData)}${formatLevelReq(nextCargoData)}
+          </div>
+        ` : `
+          <div style="font-size: 11px; color: #10b981;">Höchste Frachtraumstufe erreicht.</div>
+        `}
+      </div>
+    `;
+
+    // 6. Geo-Sensor & Radar
+    const curSensorTier = this.player.sensorTier || 1;
+    const curSensorData = this.player.getSensorData ? this.player.getSensorData() : (SENSOR_TIERS[curSensorTier - 1] || SENSOR_TIERS[0]);
+    const canUpgradeSensor = curSensorTier < SENSOR_TIERS.length;
+    const nextSensorData = canUpgradeSensor ? SENSOR_TIERS[curSensorTier] : null;
+    const canAffordSensor = checkAfford(nextSensorData);
+
+    const sensorSection = `
+      <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); padding: 10px 14px; border-radius: 10px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <strong style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #f8fafc;">
+              ${icon('radio', '', 14)} Geo-Sensor & Radar
+            </strong>
+            <div style="font-size: 11.5px; color: #94a3b8; margin-top: 1px;">
+              Installiert: <strong style="color: #38bdf8;">${curSensorData.name} (${curSensorData.stat})</strong>
+            </div>
+          </div>
+          ${canUpgradeSensor ? `
+            <button id="btn-upgrade-sensor-dock" class="btn-buy" style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 800;" ${canAffordSensor ? '' : 'disabled'}>
+              ${icon('radio', '', 12)} SENSOR VERBESSERN: €${nextSensorData.cost}
+            </button>
+          ` : `
+            <span style="font-size: 11px; color: #10b981; font-weight: 700; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); padding: 3px 8px; border-radius: 6px;">
+              MAXIMALER SENSOR
+            </span>
+          `}
+        </div>
+        ${canUpgradeSensor ? `
+          <div style="font-size: 11px; color: #94a3b8;">
+            Nächste Stufe: <strong style="color: #f8fafc;">${nextSensorData.name}</strong> (${nextSensorData.stat}) &bull; ${nextSensorData.desc}
+            ${formatCompReq(nextSensorData)}${formatLevelReq(nextSensorData)}
+          </div>
+        ` : `
+          <div style="font-size: 11px; color: #10b981;">Höchste Scan-Reichweite aktiv.</div>
         `}
       </div>
     `;
 
     const content = `
-      <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: flex; flex-direction: column; gap: 10px; max-height: 520px; overflow-y: auto; padding-right: 4px;">
         <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); padding: 10px 14px; border-radius: 10px;">
           <div>
-            <strong style="display: inline-flex; align-items: center; gap: 5px;">${icon('fuel', '', 14)} Tank aufladen</strong>
-            <div style="font-size: 12px; color: #94a3b8;">Status: ${Math.round(this.player.fuel)} / ${this.player.maxFuel} L &bull; Tankspeed: <span style="color: #38bdf8; font-weight: 600;">${curBattery.chargeSpeed.toFixed(1)} L/s</span></div>
+            <strong style="display: inline-flex; align-items: center; gap: 5px;">${icon('fuel', '', 14)} Tank auffüllen</strong>
+            <div style="font-size: 12px; color: #94a3b8;">Status: ${Math.round(this.player.fuel)} / ${this.player.maxFuel} L</div>
           </div>
           <button id="btn-refuel-dock" class="btn-buy" style="height: 32px; padding: 0 14px; font-size: 11.5px;" ${fuelCost <= 0 ? 'disabled' : ''}>
             ${fuelCost <= 0 ? 'VOLLGETANKT' : `SOFORT: €${fuelCost}`}
@@ -2481,14 +3139,27 @@ export class BaseSystem {
           </button>
         </div>
 
-        ${batterySection}
-
-        ${drillSection}
-
         ${sammlerInfo}
 
-        <div style="font-size: 11px; color: #10b981;">
-          Tipp: Am Hangar schließt das Betankungskabel automatisch an und lädt deinen Akku kostenlos auf.
+        <div style="font-weight: 800; font-size: 12px; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; display: flex; align-items: center; gap: 6px;">
+          ${icon('wrench', '', 14)} Fahrzeug-Werkstatt (Aufrüstungen & Montage)
+        </div>
+
+        ${tankSection}
+        ${hullSection}
+        ${drillSection}
+        ${engineSection}
+        ${cargoSection}
+        ${sensorSection}
+
+        <div style="font-size: 11px; color: #10b981; margin-top: 4px;">
+          Tipp: Am Hangar schließt das Betankungskabel automatisch an und füllt deinen Treibstoff kostenlos auf.
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
+          <button id="btn-dock-close" class="btn-3d-secondary" style="height: 32px; font-size: 11.5px; font-weight: 700; padding: 0 16px;">
+            SCHLIESSEN
+          </button>
         </div>
       </div>
     `;
@@ -2504,32 +3175,6 @@ export class BaseSystem {
     if (btnTalkSammler) {
       btnTalkSammler.onclick = () => {
         this.openGeologistModal();
-      };
-    }
-
-    const btnUpgradeBattery = document.getElementById('btn-upgrade-battery-dock');
-    if (btnUpgradeBattery && canUpgradeBattery && nextBattery) {
-      btnUpgradeBattery.onclick = () => {
-        if (!canAffordBattery) return;
-        this.player.cash -= nextBattery.cost;
-        if (nextBattery.comp) {
-          this.player.components[nextBattery.comp.key] = (this.player.components[nextBattery.comp.key] || 0) - nextBattery.comp.count;
-        }
-        this.player.batteryTier = curBatTier + 1;
-        soundFx.playUpgrade();
-        this.scene.events.emit('notify', `Neuer Akkutyp installiert: ${nextBattery.name}! Tankspeed: ${nextBattery.chargeSpeed} L/s`);
-        this.openDockModal();
-      };
-    }
-
-    const btnMountDrill = document.getElementById('btn-mount-drill');
-    if (btnMountDrill && nextDrillData) {
-      btnMountDrill.onclick = () => {
-        this.player.drillTier = resTier;
-        this.player.drillPower = DRILL_DPS[resTier - 1];
-        soundFx.playUpgrade();
-        this.openDockModal();
-        this.scene.events.emit('notify', `${nextDrillData.name} erfolgreich montiert!`);
       };
     }
 
@@ -2560,6 +3205,148 @@ export class BaseSystem {
         soundFx.playPurchase();
         this.openDockModal();
         this.scene.events.emit('notify', 'Rumpf vollständig repariert!');
+      };
+    }
+
+    // 1. Tank-Upgrade
+    const btnUpgradeTank = document.getElementById('btn-upgrade-tank-dock');
+    if (btnUpgradeTank && canUpgradeTank && nextTankData) {
+      btnUpgradeTank.onclick = () => {
+        if (!canAffordTank) return;
+        this.player.cash -= nextTankData.cost;
+        if (nextTankData.comp) {
+          this.player.components[nextTankData.comp.key] = (this.player.components[nextTankData.comp.key] || 0) - nextTankData.comp.count;
+        }
+        if (this.player.upgradeTank) {
+          this.player.upgradeTank(curTankTier + 1);
+        } else {
+          this.player.tankTier = curTankTier + 1;
+          this.player.maxFuel = nextTankData.maxFuel;
+        }
+        soundFx.playUpgrade();
+        this.scene.events.emit('notify', `Treibstoff-Tank vergrößert: ${nextTankData.name} (${nextTankData.maxFuel} L)!`);
+        this.openDockModal();
+      };
+    }
+
+    // 2. Gehäuseschutz-Upgrade
+    const btnUpgradeHull = document.getElementById('btn-upgrade-hull-dock');
+    if (btnUpgradeHull && canUpgradeHull && nextHullData) {
+      btnUpgradeHull.onclick = () => {
+        if (!canAffordHull) return;
+        this.player.cash -= nextHullData.cost;
+        if (nextHullData.comp) {
+          this.player.components[nextHullData.comp.key] = (this.player.components[nextHullData.comp.key] || 0) - nextHullData.comp.count;
+        }
+        if (this.player.upgradeHull) {
+          this.player.upgradeHull(curHullTier + 1);
+        } else {
+          this.player.hullTier = curHullTier + 1;
+          this.player.maxHull = nextHullData.maxHull;
+          this.player.hull = this.player.maxHull;
+        }
+        soundFx.playUpgrade();
+        this.scene.events.emit('notify', `Case-Schutz verbessert: ${nextHullData.name} (${nextHullData.maxHull} HP)!`);
+        this.openDockModal();
+      };
+    }
+
+    // 3. Bohrkopf-Montage (kostenlos falls im Labor erforscht)
+    const btnMountDrill = document.getElementById('btn-mount-drill-dock');
+    if (btnMountDrill && mountDrillData) {
+      btnMountDrill.onclick = () => {
+        this.player.drillTier = resDrillTier;
+        this.player.drillPower = DRILL_DPS[resDrillTier - 1];
+        soundFx.playUpgrade();
+        this.openDockModal();
+        this.scene.events.emit('notify', `${mountDrillData.name} erfolgreich montiert!`);
+      };
+    }
+
+    // 3b. Bohrkopf direkt im Hangar aufrüsten & montieren
+    const btnUpgradeDrill = document.getElementById('btn-upgrade-drill-dock');
+    if (btnUpgradeDrill && canUpgradeDrill && nextDrillData) {
+      btnUpgradeDrill.onclick = () => {
+        if (!canAffordDrill) return;
+        this.player.cash -= nextDrillData.cost;
+        if (nextDrillData.comp) {
+          this.player.components[nextDrillData.comp.key] = (this.player.components[nextDrillData.comp.key] || 0) - nextDrillData.comp.count;
+        }
+        this.player.researchedDrillTier = Math.max(this.player.researchedDrillTier || 1, curDrillTier + 1);
+        this.player.drillTier = curDrillTier + 1;
+        this.player.drillPower = DRILL_DPS[curDrillTier];
+        soundFx.playUpgrade();
+        this.scene.events.emit('notify', `${nextDrillData.name} montiert & verbessert (${nextDrillData.stat})!`);
+        this.openDockModal();
+      };
+    }
+
+    // 4. Antrieb-Upgrade
+    const btnUpgradeEngine = document.getElementById('btn-upgrade-engine-dock');
+    if (btnUpgradeEngine && canUpgradeEngine && nextEngineData) {
+      btnUpgradeEngine.onclick = () => {
+        if (!canAffordEngine) return;
+        this.player.cash -= nextEngineData.cost;
+        if (nextEngineData.comp) {
+          this.player.components[nextEngineData.comp.key] = (this.player.components[nextEngineData.comp.key] || 0) - nextEngineData.comp.count;
+        }
+        if (this.player.upgradeEngine) {
+          this.player.upgradeEngine(curEngineTier + 1);
+        } else {
+          this.player.engineTier = curEngineTier + 1;
+        }
+        soundFx.playUpgrade();
+        this.scene.events.emit('notify', `Antrieb verbessert: ${nextEngineData.name} (${nextEngineData.stat})!`);
+        this.openDockModal();
+      };
+    }
+
+    // 5. Frachtraum-Upgrade
+    const btnUpgradeCargo = document.getElementById('btn-upgrade-cargo-dock');
+    if (btnUpgradeCargo && canUpgradeCargo && nextCargoData) {
+      btnUpgradeCargo.onclick = () => {
+        if (!canAffordCargo) return;
+        this.player.cash -= nextCargoData.cost;
+        if (nextCargoData.comp) {
+          this.player.components[nextCargoData.comp.key] = (this.player.components[nextCargoData.comp.key] || 0) - nextCargoData.comp.count;
+        }
+        if (this.player.upgradeCargo) {
+          this.player.upgradeCargo(curCargoTier + 1);
+        } else {
+          this.player.cargoTier = curCargoTier + 1;
+          this.player.maxCargo = nextCargoData.maxCargo;
+        }
+        soundFx.playUpgrade();
+        this.scene.events.emit('notify', `Frachtraum vergrößert: ${nextCargoData.name} (${nextCargoData.stat})!`);
+        this.openDockModal();
+      };
+    }
+
+    // 6. Sensor-Upgrade
+    const btnUpgradeSensor = document.getElementById('btn-upgrade-sensor-dock');
+    if (btnUpgradeSensor && canUpgradeSensor && nextSensorData) {
+      btnUpgradeSensor.onclick = () => {
+        if (!canAffordSensor) return;
+        this.player.cash -= nextSensorData.cost;
+        if (nextSensorData.comp) {
+          this.player.components[nextSensorData.comp.key] = (this.player.components[nextSensorData.comp.key] || 0) - nextSensorData.comp.count;
+        }
+        if (this.player.upgradeSensor) {
+          this.player.upgradeSensor(curSensorTier + 1);
+        } else {
+          this.player.sensorTier = curSensorTier + 1;
+        }
+        soundFx.playUpgrade();
+        this.scene.events.emit('notify', `Geo-Sensor aufgerüstet: ${nextSensorData.name} (${nextSensorData.stat})!`);
+        this.openDockModal();
+      };
+    }
+
+    const btnDockClose = document.getElementById('btn-dock-close');
+    if (btnDockClose) {
+      btnDockClose.onclick = () => {
+        soundFx.playClick();
+        this.closeModal();
       };
     }
   }
@@ -2961,50 +3748,70 @@ export class BaseSystem {
       </div>
     `;
 
-    // 5. Frachtraum / Rohstoff-Schmelze
+    // 5. Frachtraum & Depot / Rohstoff-Schmelze
+    const totalCargoOres = cargo.length;
+    const totalDepotOres = Object.values(this.depot?.ores || {}).reduce((s, v) => s + v, 0);
+    const totalAvailableOres = totalCargoOres + totalDepotOres;
+
     html += `
       <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
           <strong style="color: #38bdf8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 6px;">
             ${icon('container', '', 14)}
-            Roherz-Schmelzofen (Frachtraum: ${cargo.length}/${this.player.maxCargo} Erze)
+            Roherz-Schmelzofen (Fracht: ${totalCargoOres}/${this.player.maxCargo} · Depot: ${totalDepotOres})
           </strong>
+          <span style="font-size: 11px; color: #94a3b8;">Ofen akzeptiert Erze aus Fracht & Depot</span>
         </div>
     `;
 
-    if (cargo.length === 0) {
+    if (totalAvailableOres === 0) {
       html += `
         <div style="color: #64748b; font-size: 12px; text-align: center; padding: 10px 0;">
-          Dein Frachtraum ist aktuell leer. Baue unter Tage Erze ab, um sie hier einzuschmelzen.
+          Keine Erze im Frachtraum oder Depot vorhanden. Baue unter Tage Erze ab, um sie hier einzuschmelzen.
         </div>
       `;
     } else {
-      // Button: Alle Erze in den Ofen geben
       html += `
-        <button id="btn-deposit-all-cargo" class="btn-action btn-lg" style="width: 100%;">
-          ${icon('flame', '', 15)}
-          <span>ALLE ${cargo.length} ERZE IN DEN SCHMELZOFEN GEBEN</span>
-        </button>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          ${totalCargoOres > 0 ? `
+            <button id="btn-deposit-all-cargo" class="btn-action" style="flex: 1; height: 32px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 5px;">
+              ${icon('flame', '', 14)}
+              <span>ALLE FRACHT-ERZE IN OFEN (${totalCargoOres})</span>
+            </button>
+          ` : ''}
+          ${totalDepotOres > 0 ? `
+            <button id="btn-deposit-all-depot" class="btn-buy" style="flex: 1; height: 32px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 5px;">
+              ${icon('warehouse', '', 14)}
+              <span>ALLE DEPOT-ERZE IN OFEN (${totalDepotOres})</span>
+            </button>
+          ` : ''}
+        </div>
       `;
 
+      const allOreKeys = Object.keys(ORE_DATA).filter(k => (cargoCounts[k] || 0) > 0 || (this.depot?.ores?.[k] || 0) > 0);
+
       html += `<div style="display: flex; flex-direction: column; gap: 6px;">`;
-      for (const [oreKey, count] of Object.entries(cargoCounts)) {
+      for (const oreKey of allOreKeys) {
         const oreName = ORE_DATA[oreKey]?.name || oreKey;
+        const refinedName = getRefinedOreName(oreKey);
         const durSec = REFINERY_DURATIONS_SEC[oreKey] || Math.max(10, Math.round((ORE_DATA[oreKey]?.value || 25) * 0.35));
         const netVal = getRefinedOreNetValue(oreKey);
+        const inCargo = cargoCounts[oreKey] || 0;
+        const inDepot = this.depot?.ores?.[oreKey] || 0;
+        const totalThisOre = inCargo + inDepot;
 
         html += `
           <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 6px 10px;">
             <div style="display: flex; align-items: center; gap: 6px;">
-              ${oreIcon(oreKey, 14)}
+              ${itemDisplayIcon(oreKey, 16)}
               <div>
-                <strong style="color: #f8fafc; font-size: 12.5px;">${oreName}</strong>
-                <span style="color: #94a3b8; font-size: 11px; margin-left: 6px;">(${count}x Vorrat) · ${durSec}s/Stk · +€${netVal}/Barren</span>
+                <strong style="color: #f8fafc; font-size: 12.5px;">${oreName} <span style="color: #64748b;">➔</span> <span style="color: #fbbf24;">${refinedName}</span></strong>
+                <span style="color: #94a3b8; font-size: 11px; margin-left: 6px;">(${inCargo}x Fracht + ${inDepot}x Depot) · ${durSec}s/Stk · Wert: €${netVal}</span>
               </div>
             </div>
             <div style="display: flex; gap: 6px; align-items: center;">
               <button class="btn-deposit-one btn-3d-secondary" data-ore="${oreKey}" style="height: 32px; padding: 0 10px; font-size: 11px; font-weight: 700; border-radius: 8px;">+1 in Ofen</button>
-              <button class="btn-deposit-all-type btn-action" data-ore="${oreKey}" style="height: 32px; padding: 0 10px; font-size: 11px; font-weight: 700; border-radius: 8px;">Alle (${count})</button>
+              <button class="btn-deposit-all-type btn-action" data-ore="${oreKey}" style="height: 32px; padding: 0 10px; font-size: 11px; font-weight: 700; border-radius: 8px;">Alle (${totalThisOre})</button>
             </div>
           </div>
         `;
@@ -3013,6 +3820,10 @@ export class BaseSystem {
     }
 
     html += `
+        <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
+          <button id="btn-refinery-close" class="btn-3d-secondary" style="height: 32px; font-size: 11.5px; font-weight: 700; padding: 0 16px;">
+            SCHLIESSEN
+          </button>
         </div>
       </div>
     `;
@@ -3042,6 +3853,13 @@ export class BaseSystem {
       };
     }
 
+    const btnDepositAllDepot = document.getElementById('btn-deposit-all-depot');
+    if (btnDepositAllDepot) {
+      btnDepositAllDepot.onclick = () => {
+        this.depositAllDepotToRefinery();
+      };
+    }
+
     container.querySelectorAll('.btn-craft-product').forEach(btn => {
       btn.onclick = () => {
         const prodId = btn.getAttribute('data-prod');
@@ -3062,6 +3880,14 @@ export class BaseSystem {
         this.depositOreToRefinery(oreKey, 9999);
       };
     });
+
+    const btnRefineryClose = document.getElementById('btn-refinery-close');
+    if (btnRefineryClose) {
+      btnRefineryClose.onclick = () => {
+        soundFx.playClick();
+        this.closeModal();
+      };
+    }
   }
 
   craftFactoryProduct(productId) {
@@ -3117,14 +3943,38 @@ export class BaseSystem {
   transferFinishedToStorage() {
     if (this.refinery.finished.length === 0) return;
     if (!this.player.factoryProducts) this.player.factoryProducts = {};
+    if (!this.depot) {
+      this.depot = { ores: {}, products: {}, capacity: 150, tier: 1, currentTab: 'ores' };
+    }
+    if (!this.depot.ores) this.depot.ores = {};
+    if (!this.depot.products) this.depot.products = {};
 
     let prodTransferred = 0;
+    let oreTransferred = 0;
     let oreCashGained = 0;
+
+    const depotCap = this.depot.capacity || 150;
+    let currentDepotCount = this.getDepotTotalCount();
 
     this.refinery.finished.forEach(item => {
       if (item.isProduct && item.productId) {
-        this.player.factoryProducts[item.productId] = (this.player.factoryProducts[item.productId] || 0) + 1;
+        if (currentDepotCount < depotCap) {
+          this.depot.products[item.productId] = (this.depot.products[item.productId] || 0) + 1;
+          currentDepotCount++;
+        } else {
+          this.player.factoryProducts[item.productId] = (this.player.factoryProducts[item.productId] || 0) + 1;
+        }
         prodTransferred++;
+      } else if (item.ore) {
+        const barKey = 'bar_' + item.ore;
+        if (currentDepotCount < depotCap) {
+          this.depot.products[barKey] = (this.depot.products[barKey] || 0) + 1;
+          currentDepotCount++;
+          oreTransferred++;
+        } else {
+          this.player.factoryProducts[barKey] = (this.player.factoryProducts[barKey] || 0) + 1;
+          oreTransferred++;
+        }
       } else {
         this.player.cash += item.value;
         oreCashGained += item.value;
@@ -3138,18 +3988,21 @@ export class BaseSystem {
     if (this.scene.hud) this.scene.hud.update();
 
     let msg = '';
-    if (prodTransferred > 0 && oreCashGained > 0) {
-      msg = `${prodTransferred}x Waren ins Lager übernommen & Barren für +€${oreCashGained} verkauft!`;
+    if (oreTransferred > 0 && prodTransferred > 0) {
+      msg = `📦 ${oreTransferred}x Barren/Briketts & ${prodTransferred}x Waren sicher ins Depot eingelagert!`;
+    } else if (oreTransferred > 0) {
+      msg = `📦 ${oreTransferred}x veredelte Barren/Briketts sicher ins Depot eingelagert!`;
     } else if (prodTransferred > 0) {
-      msg = `${prodTransferred}x Fabrik-Waren ins Lager übernommen! Verkaufe sie an der Erzbörse.`;
-    } else {
-      msg = `Barren für +€${oreCashGained} verkauft!`;
+      msg = `📦 ${prodTransferred}x Fabrik-Waren sicher ins Depot eingelagert!`;
+    } else if (oreCashGained > 0) {
+      msg = `Lager voll: Barren für +€${oreCashGained} verkauft!`;
     }
     this.scene.events.emit('notify', msg);
   }
 
   depositOreToRefinery(oreKey, count = 1) {
     let moved = 0;
+    // 1. Zuerst aus Frachtraum
     for (let i = this.player.cargo.length - 1; i >= 0 && moved < count; i--) {
       if (this.player.cargo[i] === oreKey) {
         this.player.cargo.splice(i, 1);
@@ -3158,7 +4011,26 @@ export class BaseSystem {
         this.refinery.queue.push({
           id: `q_${Date.now()}_${Math.random().toString(36).substr(2, 7)}`,
           ore: oreKey,
-          name: ORE_DATA[oreKey]?.name || oreKey,
+          name: getRefinedOreName(oreKey),
+          durationMs,
+          remainingMs: durationMs,
+          value: netVal
+        });
+        moved++;
+      }
+    }
+
+    // 2. Falls noch nötig: aus Depot entnehmen
+    if (moved < count && this.depot?.ores?.[oreKey] > 0) {
+      const takeFromDepot = Math.min(count - moved, this.depot.ores[oreKey]);
+      this.depot.ores[oreKey] -= takeFromDepot;
+      for (let k = 0; k < takeFromDepot; k++) {
+        const durationMs = getRefinerySmeltDurationMs(oreKey);
+        const netVal = getRefinedOreNetValue(oreKey);
+        this.refinery.queue.push({
+          id: `q_${Date.now()}_${Math.random().toString(36).substr(2, 7)}`,
+          ore: oreKey,
+          name: getRefinedOreName(oreKey),
           durationMs,
           remainingMs: durationMs,
           value: netVal
@@ -3171,7 +4043,7 @@ export class BaseSystem {
       soundFx.playFurnace();
       this.renderRefineryModalBody();
       if (this.scene.hud) this.scene.hud.update();
-      this.scene.events.emit('notify', `${moved}x ${ORE_DATA[oreKey]?.name || oreKey} in den Schmelzofen gegeben.`);
+      this.scene.events.emit('notify', `${moved}x ${ORE_DATA[oreKey]?.name || oreKey} wird zu ${getRefinedOreName(oreKey)} veredelt.`);
     }
   }
 
@@ -3185,7 +4057,7 @@ export class BaseSystem {
       this.refinery.queue.push({
         id: `q_${Date.now()}_${Math.random().toString(36).substr(2, 7)}`,
         ore: oreKey,
-        name: ORE_DATA[oreKey]?.name || oreKey,
+        name: getRefinedOreName(oreKey),
         durationMs,
         remainingMs: durationMs,
         value: netVal
@@ -3196,7 +4068,39 @@ export class BaseSystem {
     soundFx.playFurnace();
     this.renderRefineryModalBody();
     if (this.scene.hud) this.scene.hud.update();
-    this.scene.events.emit('notify', `${total} Erze in den Schmelzofen gegeben!`);
+    this.scene.events.emit('notify', `${total} Erze aus dem Frachtraum in den Schmelzofen gegeben!`);
+  }
+
+  depositAllDepotToRefinery() {
+    if (!this.depot?.ores) return;
+    let count = 0;
+    for (const [oreKey, qty] of Object.entries(this.depot.ores)) {
+      if (qty > 0) {
+        for (let i = 0; i < qty; i++) {
+          const durationMs = getRefinerySmeltDurationMs(oreKey);
+          const netVal = getRefinedOreNetValue(oreKey);
+          this.refinery.queue.push({
+            id: `q_${Date.now()}_${Math.random().toString(36).substr(2, 7)}`,
+            ore: oreKey,
+            name: getRefinedOreName(oreKey),
+            durationMs,
+            remainingMs: durationMs,
+            value: netVal
+          });
+          count++;
+        }
+        this.depot.ores[oreKey] = 0;
+      }
+    }
+
+    if (count > 0) {
+      soundFx.playFurnace();
+      this.renderRefineryModalBody();
+      if (this.scene.hud) this.scene.hud.update();
+      this.scene.events.emit('notify', `📦 ${count} Erze aus dem Depot in den Schmelzofen gegeben!`);
+    } else {
+      this.scene.events.emit('notify', 'Keine Erze im Depot vorhanden.');
+    }
   }
 
   collectRefinedIngots() {

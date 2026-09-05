@@ -129,37 +129,46 @@ export class HUD {
     this.cargoCluster = document.getElementById('hud-cargo-cluster');
     this.levelCluster = document.getElementById('hud-level-cluster');
 
+    let lastDrillerModalOpen = 0;
     const handleOpenDriller = (tab, e) => {
       if (e) {
-        e.stopPropagation();
-        if (e.preventDefault) e.preventDefault();
+        if (e.stopPropagation) e.stopPropagation();
       }
+      const now = Date.now();
+      if (now - lastDrillerModalOpen < 300) return;
+      lastDrillerModalOpen = now;
+
       soundFx.playClick();
       this.openDrillerModal(tab);
     };
 
-    if (this.fuelCluster) {
-      this.fuelCluster.onclick = (e) => handleOpenDriller('specs', e);
-    }
-    if (this.hullCluster) {
-      this.hullCluster.onclick = (e) => handleOpenDriller('specs', e);
-    }
-    if (this.cargoCluster) {
-      this.cargoCluster.onclick = (e) => handleOpenDriller('cargo', e);
-    }
-    if (this.levelCluster) {
-      this.levelCluster.onclick = (e) => handleOpenDriller('history', e);
-    }
+    const attachClusterEvents = (el, tab) => {
+      if (!el) return;
+      el.style.cursor = 'pointer';
+      ['pointerdown', 'click'].forEach((evt) => {
+        el.addEventListener(evt, (e) => handleOpenDriller(tab, e));
+      });
+    };
+
+    attachClusterEvents(this.fuelCluster, 'specs');
+    attachClusterEvents(this.hullCluster, 'specs');
+    attachClusterEvents(this.cargoCluster, 'cargo');
+    attachClusterEvents(this.levelCluster, 'history');
+
     if (this.cardGauges) {
-      this.cardGauges.onclick = (e) => {
-        if (e.target === this.cardGauges) {
+      this.cardGauges.style.cursor = 'pointer';
+      ['pointerdown', 'click'].forEach((evt) => {
+        this.cardGauges.addEventListener(evt, (e) => {
           handleOpenDriller('cargo', e);
-        }
-      };
+        });
+      });
     }
 
     // Event aus dem Spiel (z. B. Klick/Touch auf den Driller)
     this.scene.events.on('open_driller_menu', (tab) => {
+      const now = Date.now();
+      if (now - lastDrillerModalOpen < 300) return;
+      lastDrillerModalOpen = now;
       this.openDrillerModal(tab || 'cargo');
     });
 
@@ -202,8 +211,11 @@ export class HUD {
   }
 
   openDrillerModal(tab = 'cargo') {
-    if (!this.drillerModal.baseSystem && this.scene.baseSystem) {
+    if (this.scene && this.scene.baseSystem) {
       this.drillerModal.baseSystem = this.scene.baseSystem;
+    }
+    if (this.scene && this.scene.player) {
+      this.drillerModal.player = this.scene.player;
     }
     this.drillerModal.open(tab);
   }
@@ -232,8 +244,7 @@ export class HUD {
       <div style="display: flex; flex-direction: column; gap: 14px; text-align: center; align-items: center;">
         <div style="
           background: rgba(15, 23, 42, 0.85);
-          border: 1.5px solid #38bdf8;
-          box-shadow: 0 0 24px rgba(56, 189, 248, 0.35);
+          border: 1px solid rgba(56, 189, 248, 0.25);
           border-radius: 12px;
           padding: 18px 20px;
           width: 100%;
@@ -260,7 +271,7 @@ export class HUD {
         </div>
 
         <button id="btn-discovery-ok" class="btn-buy" style="height: 32px; padding: 0 28px; font-size: 12.5px; font-weight: 800;">
-          VERSTANDEN (OK)
+          OK
         </button>
       </div>
     `;
@@ -327,23 +338,20 @@ export class HUD {
       this.cardGauges?.classList.remove('fuel-warning');
     }
 
-    // Karosserie / Rumpfintegrität
+    // Karosserie / Rumpfintegrität (Reine Prozent-Anzeige)
     const hullPercent = Math.max(0, Math.min(100, (this.player.hull / this.player.maxHull) * 100));
-    if (this.hullBar) {
-      this.hullBar.style.width = `${hullPercent}%`;
-      if (hullPercent <= 20) {
-        this.hullBar.style.background = '#ef4444';
-      } else if (hullPercent <= 45) {
-        this.hullBar.style.background = '#f59e0b';
-      } else {
-        this.hullBar.style.background = '#10b981';
-      }
-    }
     if (this.hullText) {
       this.hullText.innerText = `${Math.round(hullPercent)}%`;
+      if (hullPercent <= 20) {
+        this.hullText.style.color = '#ef4444';
+      } else if (hullPercent <= 45) {
+        this.hullText.style.color = '#f59e0b';
+      } else {
+        this.hullText.style.color = '#10b981';
+      }
     }
-    if (this.hullBarContainer) {
-      this.hullBarContainer.title = `Karosserie: ${Math.round(hullPercent)}% (${Math.round(this.player.hull)}/${this.player.maxHull} HP)`;
+    if (this.hullCluster) {
+      this.hullCluster.title = `Driller-Status & Panzerung: ${Math.round(hullPercent)}% (${Math.round(this.player.hull)}/${this.player.maxHull} HP) - Klick zum Öffnen`;
     }
 
     if (hullPercent <= 20) {
@@ -826,7 +834,7 @@ export class HUD {
           </div>
           <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 9px; padding: 10px 12px;">
             <div style="font-size: 12px; font-weight: 700; color: #34d399; margin-bottom: 2px;">🔧 Hangar (Crawler-Werkstatt)</div>
-            <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">Tuning deines Bohrers, Tanks, Akku-Ladegeschwindigkeit, Frachtraums und Rumpfes. Automatisches Auftanken per Ladekabel an der Plattform.</div>
+            <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">Tuning deines Bohrers, Treibstoff-Tanks, Frachtraums, Antriebs und Gehäuseschutzes. Automatisches Auftanken per Tankkabel an der Plattform.</div>
           </div>
           <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 9px; padding: 10px 12px;">
             <div style="font-size: 12px; font-weight: 700; color: #fb923c; margin-bottom: 2px;">🔥 Fabrik & Raffinerie</div>
@@ -869,8 +877,8 @@ export class HUD {
       contentHtml = `
         <div style="display: flex; flex-direction: column; gap: 8px;">
           <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 9px; padding: 10px 12px;">
-            <div style="font-size: 12px; font-weight: 700; color: #10b981; margin-bottom: 2px;">⚡ Ladestation & Tankspeed</div>
-            <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">Parke auf der Hangar-Plattform an der Oberfläche – das Tankkabel dockt automatisch an. Mit Akku-Upgrades lädst du bis zu 30x schneller auf!</div>
+            <div style="font-size: 12px; font-weight: 700; color: #10b981; margin-bottom: 2px;">⛽ Treibstoff & Betankung</div>
+            <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">Parke auf der Hangar-Plattform an der Oberfläche – das Tankkabel dockt automatisch an und füllt deinen Treibstoff kostenlos auf.</div>
           </div>
           <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 9px; padding: 10px 12px;">
             <div style="font-size: 12px; font-weight: 700; color: #38bdf8; margin-bottom: 2px;">🚀 Jetpack-Nutzung</div>

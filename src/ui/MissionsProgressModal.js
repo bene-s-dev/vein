@@ -24,8 +24,22 @@ export class MissionsProgressModal {
   }
 
   open(initialTab = 'active') {
+    if (!this.baseSystem && this.scene && this.scene.baseSystem) {
+      this.baseSystem = this.scene.baseSystem;
+    }
     this.currentTab = initialTab;
     this.render();
+  }
+
+  close() {
+    notifyModalClosed();
+    const modalEl = document.getElementById('building-modal');
+    if (modalEl) {
+      modalEl.style.display = 'none';
+    }
+    if (this.scene) {
+      this.scene.isPaused = false;
+    }
   }
 
   render() {
@@ -100,6 +114,11 @@ export class MissionsProgressModal {
         ${tabNavHtml}
         <div id="modal-tab-content">
           ${contentHtml}
+        </div>
+        <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
+          <button id="btn-missions-close" class="btn-3d-secondary" style="height: 32px; font-size: 11.5px; font-weight: 700; padding: 0 16px;">
+            SCHLIESSEN
+          </button>
         </div>
       </div>
     `;
@@ -514,11 +533,12 @@ export class MissionsProgressModal {
     p.cargo.forEach(ore => {
       cargoCounts[ore] = (cargoCounts[ore] || 0) + 1;
     });
+    const depotOres = (this.baseSystem?.depot?.ores) || (this.scene?.baseSystem?.depot?.ores) || {};
 
     return `
       <div style="display: flex; flex-direction: column; gap: 10px;">
         <p style="font-size: 12px; color: #94a3b8;">
-          Der Steineforscher analysiert Erzproben für geologische Studien. Gib gesuchte Erze ab, um seltene High-Tech-Bauteile für deine Tech-Upgrades zu erhalten!
+          Der Steineforscher analysiert Erzproben für geologische Studien. Gib gesuchte Erze ab (aus Frachtraum & Depot), um seltene High-Tech-Bauteile für deine Tech-Upgrades zu erhalten!
         </p>
 
         ${compInventoryHtml}
@@ -528,10 +548,12 @@ export class MissionsProgressModal {
             let canFulfill = true;
             const reqsText = [];
             for (const [ore, needed] of Object.entries(q.reqs)) {
-              const have = cargoCounts[ore] || 0;
+              const haveCargo = cargoCounts[ore] || 0;
+              const haveDepot = depotOres[ore] || 0;
+              const totalHave = haveCargo + haveDepot;
               const oreName = ORE_DATA[ore]?.name || ore;
-              if (have < needed) canFulfill = false;
-              reqsText.push(`<span style="color: ${have >= needed ? '#10b981' : '#f87171'}; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">${oreIcon(ore, 12)} ${oreName}: ${have}/${needed}</span>`);
+              if (totalHave < needed) canFulfill = false;
+              reqsText.push(`<span style="color: ${totalHave >= needed ? '#10b981' : '#f87171'}; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">${oreIcon(ore, 12)} ${oreName}: ${totalHave}/${needed}</span>`);
             }
 
             return `
@@ -672,6 +694,7 @@ export class MissionsProgressModal {
     const btnClaim = bodyEl.querySelector('#btn-claim-in-modal');
     if (btnClaim) {
       btnClaim.onclick = () => {
+        soundFx.playClick();
         this.missionSystem.claimReward();
         this.render();
       };
@@ -681,17 +704,38 @@ export class MissionsProgressModal {
     const btnReroll = bodyEl.querySelector('#btn-reroll-mission');
     if (btnReroll) {
       btnReroll.onclick = () => {
+        soundFx.playClick();
         this.missionSystem.assignNewMission();
         this.render();
       };
     }
 
-    // Weiterleitung zu Auftrags-Pool (Tab 1)
-    const btnGoPool = bodyEl.querySelector('#btn-go-pool');
-    if (btnGoPool) {
-      btnGoPool.onclick = () => {
+    // Button wenn kein Auftrag aktiv ist (Tab 1)
+    const btnSelectNext = bodyEl.querySelector('#btn-select-next-mission');
+    if (btnSelectNext) {
+      btnSelectNext.onclick = () => {
+        soundFx.playClick();
         this.currentTab = 'pool';
         this.render();
+      };
+    }
+
+    // Weiterleitung zu Auftrags-Pool (Tab 1)
+    const goPoolBtns = bodyEl.querySelectorAll('#btn-go-pool, .btn-go-pool');
+    goPoolBtns.forEach(btn => {
+      btn.onclick = () => {
+        soundFx.playClick();
+        this.currentTab = 'pool';
+        this.render();
+      };
+    });
+
+    // Schließen-Button im Modal-Footer
+    const btnClose = bodyEl.querySelector('#btn-missions-close');
+    if (btnClose) {
+      btnClose.onclick = () => {
+        soundFx.playClick();
+        this.close();
       };
     }
 
@@ -729,9 +773,18 @@ export class MissionsProgressModal {
         const q = quests.find(item => item.id === qid);
         if (!q) return;
 
-        // Erze aus Cargo entfernen
+        const depotOres = (this.baseSystem?.depot?.ores) || (this.scene?.baseSystem?.depot?.ores) || {};
+
+        // Erze aus Cargo und falls nötig aus Depot entnehmen
         for (const [ore, needed] of Object.entries(q.reqs)) {
-          this.player.sellSpecificOre(ore, needed);
+          let consumed = 0;
+          if (this.player.consumeOre) {
+            consumed = this.player.consumeOre(ore, needed);
+          }
+          const fromDepot = needed - consumed;
+          if (fromDepot > 0 && depotOres[ore]) {
+            depotOres[ore] = Math.max(0, depotOres[ore] - fromDepot);
+          }
         }
 
         // Belohnung
