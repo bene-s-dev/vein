@@ -123,44 +123,22 @@ export class HUD {
     this.levelRight = document.getElementById('hud-level-right');
     this.returnWarn = document.getElementById('hud-return-warn');
 
-    // Obere linke HUD-Cluster (Tank, Hülle, Fracht, Level) für Klick/Touch-Interaktion
-    this.fuelCluster = document.getElementById('hud-fuel-cluster');
-    this.hullCluster = document.getElementById('hud-hull-cluster');
-    this.cargoCluster = document.getElementById('hud-cargo-cluster');
-    this.levelCluster = document.getElementById('hud-level-cluster');
-
+    // Oberes linkes Bohrer-Status-Widget (Tank, Hülle, Fracht) als ein einheitliches klick-/tippbares Element
     let lastDrillerModalOpen = 0;
-    const handleOpenDriller = (tab, e) => {
-      if (e) {
-        if (e.stopPropagation) e.stopPropagation();
-      }
+    const handleOpenDriller = (e) => {
+      if (e && e.stopPropagation) e.stopPropagation();
       const now = Date.now();
       if (now - lastDrillerModalOpen < 300) return;
       lastDrillerModalOpen = now;
 
       soundFx.playClick();
-      this.openDrillerModal(tab);
+      this.openDrillerModal('cargo');
     };
-
-    const attachClusterEvents = (el, tab) => {
-      if (!el) return;
-      el.style.cursor = 'pointer';
-      ['pointerdown', 'click'].forEach((evt) => {
-        el.addEventListener(evt, (e) => handleOpenDriller(tab, e));
-      });
-    };
-
-    attachClusterEvents(this.fuelCluster, 'specs');
-    attachClusterEvents(this.hullCluster, 'specs');
-    attachClusterEvents(this.cargoCluster, 'cargo');
-    attachClusterEvents(this.levelCluster, 'history');
 
     if (this.cardGauges) {
       this.cardGauges.style.cursor = 'pointer';
       ['pointerdown', 'click'].forEach((evt) => {
-        this.cardGauges.addEventListener(evt, (e) => {
-          handleOpenDriller('cargo', e);
-        });
+        this.cardGauges.addEventListener(evt, handleOpenDriller);
       });
     }
 
@@ -825,7 +803,7 @@ export class HUD {
       contentHtml = `
         <div style="display: flex; flex-direction: column; gap: 8px;">
           <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 9px; padding: 10px 12px;">
-            <div style="font-size: 12px; font-weight: 700; color: #38bdf8; margin-bottom: 2px;">📁 Büro (Expeditionen)</div>
+            <div style="font-size: 12px; font-weight: 700; color: #38bdf8; margin-bottom: 2px; display: flex; align-items: center; gap: 5px;">${icon('laptop-minimal', '', 14)} Büro</div>
             <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">Auftragszentrale. Erfülle Missionen (z. B. Erze abbauen oder Ziel-Tiefen erreichen) für hohes Extra-Guthaben und Level-Aufstiege.</div>
           </div>
           <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 9px; padding: 10px 12px;">

@@ -26,14 +26,14 @@ export const RANK_NAMES = [
 ];
 
 export const TANK_TIERS = [
-  { tier: 1, name: 'Standard-Tank', maxFuel: 100, stat: '100 Liter', cost: 0, comp: null, level: 1, desc: 'Basis-Treibstofftank für kurze Bohrgänge.' },
-  { tier: 2, name: 'Kerosin-Tank Mk.II', maxFuel: 135, stat: '135 Liter (+35L)', cost: 180, comp: null, level: 1, desc: 'Erhöht Treibstoff auf 135 Liter und senkt Verbrauch um 12%.' },
-  { tier: 3, name: 'Spartriebwerk Mk.III', maxFuel: 180, stat: '180 Liter (+45L)', cost: 420, comp: null, level: 1, desc: 'Erhöht Treibstoff auf 180 Liter und spart 20% Kerosin.' },
-  { tier: 4, name: 'Dual-Injektor Mk.IV', maxFuel: 240, stat: '240 Liter (+60L)', cost: 950, comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 }, level: 2, desc: 'Verbessert Steigflug-Effizienz mit Hochdruck-Injektoren.' },
-  { tier: 5, name: 'Kompressions-Tank Mk.V', maxFuel: 320, stat: '320 Liter (+80L)', cost: 2000, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 }, level: 2, desc: 'Hochfeste Legierung erlaubt 320 Liter Treibstoffkapazität.' },
-  { tier: 6, name: 'Turbo-Booster Mk.VI', maxFuel: 420, stat: '420 Liter (+100L)', cost: 4200, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 2 }, level: 3, desc: 'Großer 420L Tank für tiefe Expeditionen.' },
-  { tier: 7, name: 'Fusions-Generator Mk.VII', maxFuel: 540, stat: '540 Liter (+120L)', cost: 8800, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 4, desc: 'Hocheffizienter Fusions-Antrieb mit 540 Litern Kapazität.' },
-  { tier: 8, name: 'Quanten-Ionen-Antrieb', maxFuel: 700, stat: '700 Liter (+160L)', cost: 17500, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 5, desc: 'Ultimativer 700L Quantenantrieb mit extrem sparsamen Düsen.' }
+  { tier: 1, name: 'Standard-Tank', maxFuel: 100, stat: '100 L', cost: 0, comp: null, level: 1, desc: 'Basis-Treibstofftank für kurze Bohrgänge.' },
+  { tier: 2, name: 'Kerosin-Tank Mk.II', maxFuel: 135, stat: '135 L', cost: 180, comp: null, level: 1, desc: 'Erhöht Treibstoff auf 135 Liter und senkt Verbrauch um 12%.' },
+  { tier: 3, name: 'Spartriebwerk Mk.III', maxFuel: 180, stat: '180 L', cost: 420, comp: null, level: 1, desc: 'Erhöht Treibstoff auf 180 Liter und spart 20% Kerosin.' },
+  { tier: 4, name: 'Dual-Injektor Mk.IV', maxFuel: 240, stat: '240 L', cost: 950, comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 }, level: 2, desc: 'Verbessert Steigflug-Effizienz mit Hochdruck-Injektoren.' },
+  { tier: 5, name: 'Kompressions-Tank Mk.V', maxFuel: 320, stat: '320 L', cost: 2000, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 }, level: 2, desc: 'Hochfeste Legierung erlaubt 320 Liter Treibstoffkapazität.' },
+  { tier: 6, name: 'Turbo-Booster Mk.VI', maxFuel: 420, stat: '420 L', cost: 4200, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 2 }, level: 3, desc: 'Großer 420L Tank für tiefe Expeditionen.' },
+  { tier: 7, name: 'Fusions-Generator Mk.VII', maxFuel: 540, stat: '540 L', cost: 8800, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 4, desc: 'Hocheffizienter Fusions-Antrieb mit 540 Litern Kapazität.' },
+  { tier: 8, name: 'Quanten-Ionen-Antrieb', maxFuel: 700, stat: '700 L', cost: 17500, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 5, desc: 'Ultimativer 700L Quantenantrieb mit extrem sparsamen Düsen.' }
 ];
 
 export const HULL_TIERS = [
@@ -42,7 +42,7 @@ export const HULL_TIERS = [
     name: 'Leichtmetall-Gehäuse',
     shortName: 'Leichtmetall',
     maxHull: 100,
-    stat: '100 HP Schutz',
+    stat: '100 HP',
     cost: 0,
     comp: null,
     level: 1,
@@ -53,7 +53,7 @@ export const HULL_TIERS = [
     name: 'Kevlar-Verbundschutz Mk.II',
     shortName: 'Kevlar Mk.II',
     maxHull: 140,
-    stat: '140 HP (+40 HP)',
+    stat: '140 HP',
     cost: 140,
     comp: null,
     level: 1,
@@ -64,7 +64,7 @@ export const HULL_TIERS = [
     name: 'Gehärtetes Stahl-Chassis Mk.III',
     shortName: 'Stahl Mk.III',
     maxHull: 190,
-    stat: '190 HP (+50 HP)',
+    stat: '190 HP',
     cost: 330,
     comp: null,
     level: 1,
@@ -75,7 +75,7 @@ export const HULL_TIERS = [
     name: 'Titan-Panzergehäuse Mk.IV',
     shortName: 'Titan Mk.IV',
     maxHull: 260,
-    stat: '260 HP (+70 HP)',
+    stat: '260 HP',
     cost: 790,
     comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 },
     level: 2,
@@ -86,7 +86,7 @@ export const HULL_TIERS = [
     name: 'Magma-Hitzeschild Mk.V',
     shortName: 'Hitzeschild Mk.V',
     maxHull: 350,
-    stat: '350 HP (+90 HP)',
+    stat: '350 HP',
     cost: 1700,
     comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 2 },
     level: 2,
@@ -97,7 +97,7 @@ export const HULL_TIERS = [
     name: 'Schwere Verbundpanzerung Mk.VI',
     shortName: 'Verbund Mk.VI',
     maxHull: 470,
-    stat: '470 HP (+120 HP)',
+    stat: '470 HP',
     cost: 3400,
     comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 1 },
     level: 3,
@@ -108,7 +108,7 @@ export const HULL_TIERS = [
     name: 'Kraftfeld-Deflektor Mk.VII',
     shortName: 'Deflektor Mk.VII',
     maxHull: 620,
-    stat: '620 HP (+150 HP)',
+    stat: '620 HP',
     cost: 7300,
     comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 1 },
     level: 4,
@@ -119,7 +119,7 @@ export const HULL_TIERS = [
     name: 'Nanit-Matrix-Chassis Mk.VIII',
     shortName: 'Nanit Mk.VIII',
     maxHull: 800,
-    stat: '800 HP (+180 HP)',
+    stat: '800 HP',
     cost: 15500,
     comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 },
     level: 5,
@@ -128,36 +128,36 @@ export const HULL_TIERS = [
 ];
 
 export const ENGINE_TIERS = [
-  { tier: 1, name: 'Standard-Raupenfahrwerk', stat: '260ms / 120 px/s', moveDuration: 260, flightSpeed: 120, cost: 0, comp: null, level: 1, desc: 'Sicheres Basis-Fahrwerk für solide Schachtmanöver.' },
-  { tier: 2, name: 'Verstärkte Getriebe Mk.II', stat: '225ms / 138 px/s (+15%)', moveDuration: 225, flightSpeed: 138, cost: 190, comp: null, level: 1, desc: 'Kürzere Schaltzeiten beschleunigen Kriechgang und Steigflug.' },
-  { tier: 3, name: 'Hydraulik-Raupen Mk.III', stat: '195ms / 160 px/s (+16%)', moveDuration: 195, flightSpeed: 160, cost: 440, comp: null, level: 1, desc: 'Flüssigere Kettenbewegungen und mehr Schubdüsengeschwindigkeit.' },
-  { tier: 4, name: 'Hochdruck-Turbine Mk.IV', stat: '170ms / 185 px/s (+16%)', moveDuration: 170, flightSpeed: 185, cost: 980, comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 }, level: 2, desc: 'Kraftvoller Vortrieb im Schacht und schnellerer Aufstieg.' },
-  { tier: 5, name: 'Titan-Kettenantrieb Mk.V', stat: '145ms / 215 px/s (+16%)', moveDuration: 145, flightSpeed: 215, cost: 2100, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 }, level: 2, desc: 'Geringerer Rollwiderstand und kräftige Schwebetriebwerke.' },
-  { tier: 6, name: 'Vektor-Booster Mk.VI', stat: '125ms / 250 px/s (+16%)', moveDuration: 125, flightSpeed: 250, cost: 4300, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 2 }, level: 3, desc: 'Schnelle Manövrierfähigkeit im Gestein und hoher Schwebespeed.' },
-  { tier: 7, name: 'Magnet-Levitation Mk.VII', stat: '105ms / 290 px/s (+16%)', moveDuration: 105, flightSpeed: 290, cost: 8900, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 4, desc: 'Magnetschwebende Fahrwerkssegmente für rasantes Gleiten.' },
-  { tier: 8, name: 'Quanten-Gravitationsantrieb', stat: '90ms / 340 px/s (+17%)', moveDuration: 90, flightSpeed: 340, cost: 18000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 5, desc: 'Krümmt das Schwerefeld für blitzschnelle Fortbewegung.' }
+  { tier: 1, name: 'Standard-Raupenfahrwerk', stat: '120 px/s', moveDuration: 260, flightSpeed: 120, cost: 0, comp: null, level: 1, desc: 'Sicheres Basis-Fahrwerk für solide Schachtmanöver.' },
+  { tier: 2, name: 'Verstärkte Getriebe Mk.II', stat: '138 px/s', moveDuration: 225, flightSpeed: 138, cost: 190, comp: null, level: 1, desc: 'Kürzere Schaltzeiten beschleunigen Kriechgang und Steigflug.' },
+  { tier: 3, name: 'Hydraulik-Raupen Mk.III', stat: '160 px/s', moveDuration: 195, flightSpeed: 160, cost: 440, comp: null, level: 1, desc: 'Flüssigere Kettenbewegungen und mehr Schubdüsengeschwindigkeit.' },
+  { tier: 4, name: 'Hochdruck-Turbine Mk.IV', stat: '185 px/s', moveDuration: 170, flightSpeed: 185, cost: 980, comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 }, level: 2, desc: 'Kraftvoller Vortrieb im Schacht und schnellerer Aufstieg.' },
+  { tier: 5, name: 'Titan-Kettenantrieb Mk.V', stat: '215 px/s', moveDuration: 145, flightSpeed: 215, cost: 2100, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 }, level: 2, desc: 'Geringerer Rollwiderstand und kräftige Schwebetriebwerke.' },
+  { tier: 6, name: 'Vektor-Booster Mk.VI', stat: '250 px/s', moveDuration: 125, flightSpeed: 250, cost: 4300, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 2 }, level: 3, desc: 'Schnelle Manövrierfähigkeit im Gestein und hoher Schwebespeed.' },
+  { tier: 7, name: 'Magnet-Levitation Mk.VII', stat: '290 px/s', moveDuration: 105, flightSpeed: 290, cost: 8900, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 4, desc: 'Magnetschwebende Fahrwerkssegmente für rasantes Gleiten.' },
+  { tier: 8, name: 'Quanten-Gravitationsantrieb', stat: '340 px/s', moveDuration: 90, flightSpeed: 340, cost: 18000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 5, desc: 'Krümmt das Schwerefeld für blitzschnelle Fortbewegung.' }
 ];
 
 export const CARGO_TIERS = [
-  { tier: 1, name: 'Standard-Ladebucht', maxCargo: 10, stat: '10 Erze', cost: 0, comp: null, level: 1, desc: 'Kompakter Laderaum für die ersten Bergbau-Expeditionen.' },
-  { tier: 2, name: 'Erweiterte Frachtbucht', maxCargo: 14, stat: '14 Erze (+4)', cost: 170, comp: null, level: 1, desc: 'Erweitert Ladeplätze auf 14 Erze für lukrativere Tauchgänge.' },
-  { tier: 3, name: 'Titan-Containermodul Mk.III', maxCargo: 20, stat: '20 Erze (+6)', cost: 400, comp: null, level: 1, desc: 'Großzügiger Frachtraum für 20 Erze.' },
-  { tier: 4, name: 'Struktur-Laderaum Mk.IV', maxCargo: 28, stat: '28 Erze (+8)', cost: 900, comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 }, level: 2, desc: 'Hydraulische Ladeklappen bieten Platz für 28 Erze.' },
-  { tier: 5, name: 'Molekular-Kompressor Mk.V', maxCargo: 38, stat: '38 Erze (+10)', cost: 1900, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 }, level: 2, desc: 'Hohe Packdichte erlaubt den Transport von 38 Erzen.' },
-  { tier: 6, name: 'Subraum-Boxen Mk.VI', maxCargo: 50, stat: '50 Erze (+12)', cost: 3900, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 2 }, level: 3, desc: 'Transportiert bis zu 50 Erze auf einen Schlag.' },
-  { tier: 7, name: 'Tiefsee-Depot Mk.VII', maxCargo: 65, stat: '65 Erze (+15)', cost: 8200, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 4, desc: 'Riesige Kapazität von 65 Plätzen für Edelsteine.' },
-  { tier: 8, name: 'Quanten-Frachtdepot Mk.VIII', maxCargo: 80, stat: '80 Erze (+15)', cost: 16500, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 5, desc: 'Gigantischer 80-Plätze-Frachtraum für maximale Gewinne.' }
+  { tier: 1, name: 'Standard-Ladebucht', maxCargo: 10, stat: '10 Plätze', cost: 0, comp: null, level: 1, desc: 'Kompakter Laderaum für die ersten Bergbau-Expeditionen.' },
+  { tier: 2, name: 'Erweiterte Frachtbucht', maxCargo: 14, stat: '14 Plätze', cost: 170, comp: null, level: 1, desc: 'Erweitert Ladeplätze auf 14 Erze für lukrativere Tauchgänge.' },
+  { tier: 3, name: 'Titan-Containermodul Mk.III', maxCargo: 20, stat: '20 Plätze', cost: 400, comp: null, level: 1, desc: 'Großzügiger Frachtraum für 20 Erze.' },
+  { tier: 4, name: 'Struktur-Laderaum Mk.IV', maxCargo: 28, stat: '28 Plätze', cost: 900, comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 }, level: 2, desc: 'Hydraulische Ladeklappen bieten Platz für 28 Erze.' },
+  { tier: 5, name: 'Molekular-Kompressor Mk.V', maxCargo: 38, stat: '38 Plätze', cost: 1900, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 }, level: 2, desc: 'Hohe Packdichte erlaubt den Transport von 38 Erzen.' },
+  { tier: 6, name: 'Subraum-Boxen Mk.VI', maxCargo: 50, stat: '50 Plätze', cost: 3900, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 2 }, level: 3, desc: 'Transportiert bis zu 50 Erze auf einen Schlag.' },
+  { tier: 7, name: 'Tiefsee-Depot Mk.VII', maxCargo: 65, stat: '65 Plätze', cost: 8200, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 4, desc: 'Riesige Kapazität von 65 Plätzen für Edelsteine.' },
+  { tier: 8, name: 'Quanten-Frachtdepot Mk.VIII', maxCargo: 80, stat: '80 Plätze', cost: 16500, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 5, desc: 'Gigantischer 80-Plätze-Frachtraum für maximale Gewinne.' }
 ];
 
 export const SENSOR_TIERS = [
   { tier: 1, name: 'Basis-Sonar', radius: 1.8, stat: '1.8 Kacheln', cost: 0, comp: null, level: 1, desc: 'Kompakter Sensor zur Erkennung naher Erzadern.' },
-  { tier: 2, name: 'Geo-Scanner Mk.II', radius: 2.4, stat: '2.4 Kacheln (+0.6)', cost: 140, comp: null, level: 1, desc: 'Vergrößert den kreisrunden Scan-Umkreis spürbar.' },
-  { tier: 3, name: 'Puls-Sonar Mk.III', radius: 3.0, stat: '3.0 Kacheln (+0.6)', cost: 340, comp: null, level: 1, desc: 'Erweitert den Erfassungsbereich auf 3.0 Kacheln.' },
-  { tier: 4, name: 'Spektral-Radar Mk.IV', radius: 3.7, stat: '3.7 Kacheln (+0.7)', cost: 780, comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 }, level: 2, desc: 'Schwenkbarer Pylon deckt Erze in 3.7 Kacheln Umkreis auf.' },
-  { tier: 5, name: 'Tiefen-Sensor Mk.V', radius: 4.5, stat: '4.5 Kacheln (+0.8)', cost: 1650, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 1 }, level: 2, desc: 'Optische Linse durchdringt dicke Gesteinsschichten bis 4.5 Kacheln.' },
-  { tier: 6, name: 'Sub-Terra-Scan Mk.VI', radius: 5.4, stat: '5.4 Kacheln (+0.9)', cost: 3400, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 3, desc: 'Großer Scanradius von 5.4 Kacheln für seltene Adern.' },
-  { tier: 7, name: 'Graviton-Array Mk.VII', radius: 6.4, stat: '6.4 Kacheln (+1.0)', cost: 7200, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 1 }, level: 4, desc: 'Erfasst 6.4 Kacheln im Umkreis auf einen Blick.' },
-  { tier: 8, name: 'Quanten-Resonator Mk.VIII', radius: 7.5, stat: '7.5 Kacheln (+1.1)', cost: 15200, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 5, desc: 'Elite-Scanbereich von 7.5 Kacheln erhellt riesige Höhlen.' }
+  { tier: 2, name: 'Geo-Scanner Mk.II', radius: 2.4, stat: '2.4 Kacheln', cost: 140, comp: null, level: 1, desc: 'Vergrößert den kreisrunden Scan-Umkreis spürbar.' },
+  { tier: 3, name: 'Puls-Sonar Mk.III', radius: 3.0, stat: '3.0 Kacheln', cost: 340, comp: null, level: 1, desc: 'Erweitert den Erfassungsbereich auf 3.0 Kacheln.' },
+  { tier: 4, name: 'Spektral-Radar Mk.IV', radius: 3.7, stat: '3.7 Kacheln', cost: 780, comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 }, level: 2, desc: 'Schwenkbarer Pylon deckt Erze in 3.7 Kacheln Umkreis auf.' },
+  { tier: 5, name: 'Tiefen-Sensor Mk.V', radius: 4.5, stat: '4.5 Kacheln', cost: 1650, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 1 }, level: 2, desc: 'Optische Linse durchdringt dicke Gesteinsschichten bis 4.5 Kacheln.' },
+  { tier: 6, name: 'Sub-Terra-Scan Mk.VI', radius: 5.4, stat: '5.4 Kacheln', cost: 3400, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 3, desc: 'Großer Scanradius von 5.4 Kacheln für seltene Adern.' },
+  { tier: 7, name: 'Graviton-Array Mk.VII', radius: 6.4, stat: '6.4 Kacheln', cost: 7200, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 1 }, level: 4, desc: 'Erfasst 6.4 Kacheln im Umkreis auf einen Blick.' },
+  { tier: 8, name: 'Quanten-Resonator Mk.VIII', radius: 7.5, stat: '7.5 Kacheln', cost: 15200, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 5, desc: 'Elite-Scanbereich von 7.5 Kacheln erhellt riesige Höhlen.' }
 ];
 
 export class Player {
@@ -202,8 +202,8 @@ export class Player {
     this.drillFrame = 0;
     this.drillAnimTimer = 0;
 
-    // Set aller bisher entdeckten Erze (für Entdeckungs-Popup)
-    this.discoveredOres = new Set();
+    // Set aller bisher entdeckten Erze (Kohle ist als Start-Brennstoff von Beginn an bekannt)
+    this.discoveredOres = new Set(['coal']);
 
     // Dynamischer Scheinwerfer (Über der Erde komplett unsichtbar)
     this.headlight = scene.add.circle(this.x, this.y, 64, 0xfffbeb, 0.08)
@@ -270,8 +270,28 @@ export class Player {
     // Visueller Sensor-Umkreis: Graphics-Objekt, das strikt nur unter der Erde (y >= 0) gezeichnet wird
     this.scannerGraphics = scene.add.graphics().setDepth(8);
 
-    // Ladekabel / Betankungsstrahl
+    // Ladekabel / Betankungsstrahl (mit eigenem Auslegerarm)
     this.refuelBeam = scene.add.graphics().setDepth(12);
+
+    // Roboterarm für Chassis-Reparatur am Hangar
+    this.repairArm = scene.add.graphics().setDepth(13);
+
+    // Sanfte kinematische Roboterarme am Hangar (gleitende Bewegung statt Springen)
+    this.repairArmState = {
+      curTipX: 15 * TILE_SIZE + 32 - 8,
+      curTipY: -30 + 20,
+      curMidX: 15 * TILE_SIZE + 32 - 16,
+      curMidY: -30 + 8,
+      activeWeight: 0 // 0 = geparkt, 1 = voll am Fahrzeug
+    };
+
+    this.fuelArmState = {
+      curTipX: 15 * TILE_SIZE - 36 + 6,
+      curTipY: -28 + 20,
+      curMidX: 15 * TILE_SIZE - 36 + 14,
+      curMidY: -28 + 8,
+      activeWeight: 0 // 0 = geparkt, 1 = voll am Fahrzeug
+    };
 
     // Spiel-Statistiken
     this.stats = {
@@ -475,8 +495,16 @@ export class Player {
     }
   }
 
+  get cash() {
+    return this._cash !== undefined ? this._cash : 10;
+  }
+
+  set cash(val) {
+    this._cash = Math.max(0, Math.round(Number(val) || 0));
+  }
+
   getChargeSpeed() {
-    return 20; // Feste, angenehme Ladegeschwindigkeit am Hangar
+    return 5; // Verlängerte, ruhige Betankungszeit am Hangar (~20s für 100L)
   }
 
   getTankData() {
@@ -532,90 +560,350 @@ export class Player {
     // Sobald sich der Spieler an der Oberfläche befindet (gy <= -1)
     const isAtSurface = (this.gy <= -1);
     const isNearHangar = isAtSurface && (this.gx >= 13 && this.gx <= 17);
+    const isVehicleStationary = (this.state !== PLAYER_STATES.MOVING && this.state !== PLAYER_STATES.FLYING);
+    const isParkedAtHangar = isNearHangar && isVehicleStationary;
 
     if (isAtSurface) {
       if (!this.isDocked) {
         this.isDocked = true;
       }
 
-      // Rumpfreparatur an der Basis nahe dem Hangar
-      if (isNearHangar && this.hull < this.maxHull) {
-        this.hull = Math.min(this.maxHull, this.hull + (delta / 1000) * 8);
+      // Rumpfreparatur: Verlängerte, sorgfältige Schweißzeit (4 HP/s = ~25s für 100 HP)
+      const isRepairReady = isParkedAtHangar && this.repairArmState && this.repairArmState.activeWeight > 0.8;
+      if (isRepairReady && this.hull < this.maxHull) {
+        this.hull = Math.min(this.maxHull, this.hull + (delta / 1000) * 4);
+        if (this.hull >= this.maxHull - 0.05) {
+          this.hull = this.maxHull;
+        }
       }
 
-      // Betankung über Kabel an der Hangar-Tanksäule mit wählbarem Akkutyp (ganz langsam bei Stufe 1)
+      // Betankung über Kabel: Verlängerte Betankungszeit (7 L/s = ~14s für 100L)
+      const isFuelReady = isParkedAtHangar && this.fuelArmState && this.fuelArmState.activeWeight > 0.8;
       const chargeSpeed = this.getChargeSpeed();
-      const isActivelyRefueling = isNearHangar && (this.fuel < this.maxFuel);
-      if (isActivelyRefueling) {
+      if (isFuelReady && this.fuel < this.maxFuel) {
         this.fuel = Math.min(this.maxFuel, this.fuel + (delta / 1000) * chargeSpeed);
-      }
-
-      // Realistisches, durchhängendes Betankungskabel vom Hangar
-      if (isNearHangar && this.refuelBeam) {
-        this.refuelBeam.clear();
-
-        // Hangar Tanksäule (liegt links an der Hangar-Bucht bei x=444, y=-26)
-        const pumpX = 15 * TILE_SIZE - 36;
-        const pumpY = -26;
-
-        // Fahrzeug-Tankanschluss
-        const portX = this.sprite.x + (this.sprite.x >= pumpX ? -12 : 12);
-        const portY = this.sprite.y - 4;
-
-        // Natürlicher Schwerkraft-Durchhang nach unten
-        const dist = Math.hypot(portX - pumpX, portY - pumpY);
-        const sag = Math.min(22, 6 + dist * 0.18);
-        const cp1X = pumpX + (portX > pumpX ? 12 : -12);
-        const cp1Y = Math.max(pumpY, portY) + sag;
-        const cp2X = portX - (portX > pumpX ? 12 : -12);
-        const cp2Y = Math.max(pumpY, portY) + sag;
-
-        // 1. Äußere dicke Gummi-Kabelhülle (dunkles Industrie-Kabel, 3.5px)
-        this.refuelBeam.lineStyle(3.5, 0x090d16, 0.95);
-        this.refuelBeam.beginPath();
-        this.refuelBeam.moveTo(pumpX, pumpY);
-        for (let t = 0.05; t <= 1.0; t += 0.05) {
-          const u = 1 - t;
-          const qx = u*u*u*pumpX + 3*u*u*t*cp1X + 3*u*t*t*cp2X + t*t*t*portX;
-          const qy = u*u*u*pumpY + 3*u*u*t*cp1Y + 3*u*t*t*cp2Y + t*t*t*portY;
-          this.refuelBeam.lineTo(qx, qy);
+        if (this.fuel >= this.maxFuel - 0.05) {
+          this.fuel = this.maxFuel;
         }
-        this.refuelBeam.strokePath();
-
-        // 2. Innere Kraftstoffader (bernstein beim Tanken, cyan wenn 100% voll)
-        const hoseColor = isActivelyRefueling ? 0xf59e0b : 0x0284c7;
-        this.refuelBeam.lineStyle(1.8, hoseColor, 0.95);
-        this.refuelBeam.beginPath();
-        this.refuelBeam.moveTo(pumpX, pumpY);
-        for (let t = 0.05; t <= 1.0; t += 0.05) {
-          const u = 1 - t;
-          const qx = u*u*u*pumpX + 3*u*u*t*cp1X + 3*u*t*t*cp2X + t*t*t*portX;
-          const qy = u*u*u*pumpY + 3*u*u*t*cp1Y + 3*u*t*t*cp2Y + t*t*t*portY;
-          this.refuelBeam.lineTo(qx, qy);
-        }
-        this.refuelBeam.strokePath();
-
-        // 3. Robuste Metall-Kupplungen & Status-LED
-        this.refuelBeam.fillStyle(0x475569, 1);
-        this.refuelBeam.fillRect(pumpX - 2, pumpY - 3, 4, 6);
-
-        this.refuelBeam.fillStyle(0x334155, 1);
-        this.refuelBeam.fillRect(portX - 2, portY - 2, 4, 4);
-
-        // LED-Statusleuchte (Grün pulsierend beim Laden, Türkis wenn voll)
-        const ledColor = isActivelyRefueling ? 0x10b981 : 0x38bdf8;
-        this.refuelBeam.fillStyle(ledColor, 1);
-        this.refuelBeam.fillCircle(portX, portY, 2);
-      } else if (this.refuelBeam) {
-        this.refuelBeam.clear();
       }
     } else {
       if (this.isDocked) {
         this.isDocked = false;
       }
-      if (this.refuelBeam) {
-        this.refuelBeam.clear();
+    }
+
+    // Beide Roboterarme fahren nur aus, solange das Fahrzeug am Hangar STEHT und die jeweilige Aufgabe noch ansteht.
+    // Sobald das Auto weiterfährt ODER die Aufgabe erledigt ist (Tank voll / Bohrer ganz),
+    // fahren die Arme sofort einzeln zur Parkposition ein, anstatt dem Auto hinterherzugehen!
+    const shouldDeployFuel = isParkedAtHangar && (this.fuel < this.maxFuel);
+    const shouldDeployRepair = isParkedAtHangar && (this.hull < this.maxHull);
+
+    this.updateFuelArm(shouldDeployFuel, delta);
+    this.updateRepairArm(shouldDeployRepair, delta);
+  }
+
+  updateFuelArm(shouldDeploy, delta) {
+    if (!this.refuelBeam) return;
+    this.refuelBeam.clear();
+
+    const now = Date.now();
+    const dt = Math.min(0.05, (delta || 16) / 1000);
+
+    // Tanksäulen-Sockel an der Hangar-Bucht links (x=444, y=-28)
+    const pumpBaseX = 15 * TILE_SIZE - 36;
+    const pumpBaseY = -28;
+
+    if (!this.fuelArmState) {
+      this.fuelArmState = {
+        curTipX: pumpBaseX + 6,
+        curTipY: pumpBaseY + 18,
+        curMidX: pumpBaseX + 14,
+        curMidY: pumpBaseY + 8,
+        activeWeight: 0
+      };
+    }
+
+    // Park-Position an der Tanksäule (Arm sauber angeklappt)
+    const parkTipX = pumpBaseX + 6;
+    const parkTipY = pumpBaseY + 18;
+    const parkMidX = pumpBaseX + 14;
+    const parkMidY = pumpBaseY + 8;
+
+    // Zielposition: Wenn aktiv am Fahrzeug (strikt auf die Hangar-Bucht begrenzt),
+    // andernfalls direkt die Park-Position (kein Nachziehen beim Wegfahren des Autos!)
+    let targetTipX, targetTipY, targetMidX, targetMidY;
+
+    if (shouldDeploy) {
+      const clampedVehX = Phaser.Math.Clamp(this.sprite.x, 15 * TILE_SIZE - 20, 15 * TILE_SIZE + 20);
+      const clampedVehY = Phaser.Math.Clamp(this.sprite.y, -32, -4);
+      const portX = clampedVehX - 12;
+      const portY = clampedVehY - 4;
+
+      targetTipX = portX;
+      targetTipY = portY;
+      targetMidX = (pumpBaseX + portX) / 2 - 4;
+      targetMidY = Math.min(pumpBaseY, portY) - 14;
+
+      this.fuelArmState.activeWeight = Phaser.Math.Linear(this.fuelArmState.activeWeight, 1.0, dt * 2.2);
+    } else {
+      // Wenn Tank voll oder Auto weiterfährt: Sofort zur Parkposition zurückfahren!
+      targetTipX = parkTipX;
+      targetTipY = parkTipY;
+      targetMidX = parkMidX;
+      targetMidY = parkMidY;
+
+      this.fuelArmState.activeWeight = Phaser.Math.Linear(this.fuelArmState.activeWeight, 0.0, dt * 2.8);
+    }
+
+    // Sanftes Nachführen der Gelenke (kinematisches Nachziehen, kein Springen oder Strecken)
+    this.fuelArmState.curTipX = Phaser.Math.Linear(this.fuelArmState.curTipX, targetTipX, dt * 3.8);
+    this.fuelArmState.curTipY = Phaser.Math.Linear(this.fuelArmState.curTipY, targetTipY, dt * 3.8);
+    this.fuelArmState.curMidX = Phaser.Math.Linear(this.fuelArmState.curMidX, targetMidX, dt * 3.8);
+    this.fuelArmState.curMidY = Phaser.Math.Linear(this.fuelArmState.curMidY, targetMidY, dt * 3.8);
+
+    const curTipX = this.fuelArmState.curTipX;
+    const curTipY = this.fuelArmState.curTipY;
+    const curMidX = this.fuelArmState.curMidX;
+    const curMidY = this.fuelArmState.curMidY;
+
+    const isConnected = this.fuelArmState.activeWeight > 0.8;
+    const isActivelyRefueling = isConnected && shouldDeploy && (this.fuel < this.maxFuel);
+
+    // 2. Sockel & Drehscheibe an der Tanksäule
+    this.refuelBeam.fillStyle(0x1e293b, 1);
+    this.refuelBeam.fillRect(pumpBaseX - 5, pumpBaseY - 4, 10, 8);
+    this.refuelBeam.fillStyle(0xd97706, 1); // Industrie-Orange für Treibstofftechnik
+    this.refuelBeam.fillCircle(pumpBaseX, pumpBaseY, 3.5);
+
+    // 3. Ausleger-Segment 1 (von Säule zu Kniegelenk)
+    this.refuelBeam.lineStyle(3.6, 0x334155, 1);
+    this.refuelBeam.beginPath();
+    this.refuelBeam.moveTo(pumpBaseX, pumpBaseY);
+    this.refuelBeam.lineTo(curMidX, curMidY);
+    this.refuelBeam.strokePath();
+
+    // Hydraulik-Akzentlinie auf Ausleger
+    this.refuelBeam.lineStyle(1.4, 0x94a3b8, 0.9);
+    this.refuelBeam.beginPath();
+    this.refuelBeam.moveTo(pumpBaseX, pumpBaseY);
+    this.refuelBeam.lineTo(curMidX, curMidY);
+    this.refuelBeam.strokePath();
+
+    // 4. Knie-Gelenk
+    this.refuelBeam.fillStyle(0x0f172a, 1);
+    this.refuelBeam.fillCircle(curMidX, curMidY, 3.5);
+    this.refuelBeam.fillStyle(isConnected ? 0x0284c7 : 0x64748b, 1);
+    this.refuelBeam.fillCircle(curMidX, curMidY, 1.8);
+
+    // 5. Ausleger-Segment 2 (vom Kniegelenk zum Düsenkopf)
+    this.refuelBeam.lineStyle(2.8, 0x475569, 1);
+    this.refuelBeam.beginPath();
+    this.refuelBeam.moveTo(curMidX, curMidY);
+    this.refuelBeam.lineTo(curTipX, curTipY);
+    this.refuelBeam.strokePath();
+
+    // Teleskopzylinder-Akzent
+    this.refuelBeam.lineStyle(1.2, 0xe2e8f0, 0.85);
+    this.refuelBeam.beginPath();
+    this.refuelBeam.moveTo(curMidX, curMidY);
+    this.refuelBeam.lineTo(curTipX, curTipY);
+    this.refuelBeam.strokePath();
+
+    // 6. Durchhängendes Betankungskabel (gehalten vom Auslegerarm)
+    const cableDist = Math.hypot(curTipX - pumpBaseX, curTipY - pumpBaseY);
+    const sag = Math.min(18, 4 + cableDist * 0.14);
+    const cp1X = pumpBaseX + (curTipX - pumpBaseX) * 0.35;
+    const cp1Y = Math.max(pumpBaseY, curTipY) + sag;
+    const cp2X = pumpBaseX + (curTipX - pumpBaseX) * 0.70;
+    const cp2Y = Math.max(pumpBaseY, curTipY) + sag;
+
+    // Äußerer robuster Gummimantel
+    this.refuelBeam.lineStyle(3.4, 0x090d16, 0.95);
+    this.refuelBeam.beginPath();
+    this.refuelBeam.moveTo(pumpBaseX, pumpBaseY);
+    for (let t = 0.05; t <= 1.0; t += 0.05) {
+      const u = 1 - t;
+      const qx = u*u*u*pumpBaseX + 3*u*u*t*cp1X + 3*u*t*t*cp2X + t*t*t*curTipX;
+      const qy = u*u*u*pumpBaseY + 3*u*u*t*cp1Y + 3*u*t*t*cp2Y + t*t*t*curTipY;
+      this.refuelBeam.lineTo(qx, qy);
+    }
+    this.refuelBeam.strokePath();
+
+    // Betankungskabel-Ader (konstante Industriefarbe, keine Farbänderung beim Tanken)
+    const hoseColor = 0x334155;
+    this.refuelBeam.lineStyle(1.8, hoseColor, 0.95);
+    this.refuelBeam.beginPath();
+    this.refuelBeam.moveTo(pumpBaseX, pumpBaseY);
+    for (let t = 0.05; t <= 1.0; t += 0.05) {
+      const u = 1 - t;
+      const qx = u*u*u*pumpBaseX + 3*u*u*t*cp1X + 3*u*t*t*cp2X + t*t*t*curTipX;
+      const qy = u*u*u*pumpBaseY + 3*u*u*t*cp1Y + 3*u*t*t*cp2Y + t*t*t*curTipY;
+      this.refuelBeam.lineTo(qx, qy);
+    }
+    this.refuelBeam.strokePath();
+
+    // 7. Betankungsdüse & Haltekopf am Ende des Arms
+    this.refuelBeam.fillStyle(0x1e293b, 1);
+    this.refuelBeam.fillRect(curTipX - 3, curTipY - 3, 6, 6);
+    this.refuelBeam.fillStyle(0x475569, 1);
+    this.refuelBeam.fillRect(curTipX - 2, curTipY - 2, 4, 4);
+
+    // Status-LED an der Düse: Grün blinkend beim Tanken, Grün statisch beim Abkoppeln/Voll, Blau im Standby
+    const ledColor = isActivelyRefueling ? 0x10b981 : (this.fuelArmState.activeWeight > 0.15 ? 0x38bdf8 : 0x0284c7);
+    const ledAlpha = isActivelyRefueling ? (0.6 + 0.4 * Math.sin(now * 0.008)) : (0.4 + 0.3 * Math.sin(now * 0.003));
+    this.refuelBeam.fillStyle(ledColor, ledAlpha);
+    this.refuelBeam.fillCircle(curTipX, curTipY, 2.0);
+  }
+
+  updateRepairArm(shouldDeploy, delta) {
+    if (!this.repairArm) return;
+    this.repairArm.clear();
+
+    const now = Date.now();
+    const dt = Math.min(0.05, (delta || 16) / 1000);
+
+    // Roboterarm-Sockel an der Hangar-Überdachung rechts (x=512, y=-30)
+    const armBaseX = 15 * TILE_SIZE + 32;
+    const armBaseY = -30;
+
+    if (!this.repairArmState) {
+      this.repairArmState = {
+        curTipX: armBaseX - 8,
+        curTipY: armBaseY + 20,
+        curMidX: armBaseX - 16,
+        curMidY: armBaseY + 8,
+        activeWeight: 0
+      };
+    }
+
+    // 1. Sanfte Gewichtsannäherung (0 = geparkt am Dach, 1 = am Bohrer-Chassis)
+    // Sobald die Hülle 100% repariert ist (shouldDeploy = false), fährt der Arm sanft wieder ein
+    const targetWeight = shouldDeploy ? 1.0 : 0.0;
+    this.repairArmState.activeWeight = Phaser.Math.Linear(
+      this.repairArmState.activeWeight,
+      targetWeight,
+      dt * 1.8
+    );
+
+    // Park-Position am Hangar-Dach (Arm sauber eingeklappt)
+    const parkTipX = armBaseX - 8;
+    const parkTipY = armBaseY + 20;
+    const parkMidX = armBaseX - 16;
+    const parkMidY = armBaseY + 8;
+
+    // Zielposition: Wenn aktiv am Fahrzeug (strikt auf die Hangar-Bucht begrenzt),
+    // andernfalls direkt die Park-Position (kein Nachziehen beim Wegfahren des Autos!)
+    let targetTipX, targetTipY, targetMidX, targetMidY;
+
+    const isConnected = this.repairArmState.activeWeight > 0.8;
+    const isRepairing = isConnected && shouldDeploy && (this.hull < this.maxHull);
+
+    if (shouldDeploy) {
+      const clampedVehX = Phaser.Math.Clamp(this.sprite.x, 15 * TILE_SIZE - 20, 15 * TILE_SIZE + 20);
+      const clampedVehY = Phaser.Math.Clamp(this.sprite.y, -32, -4);
+      const sweepX = isRepairing ? Math.sin(now * 0.007) * 8 : 0;
+      const workTipX = clampedVehX + sweepX;
+      const workTipY = clampedVehY - 10;
+
+      targetTipX = workTipX;
+      targetTipY = workTipY;
+      targetMidX = (armBaseX + workTipX) / 2 + 5;
+      targetMidY = Math.min(armBaseY, workTipY) - 15;
+
+      this.repairArmState.activeWeight = Phaser.Math.Linear(this.repairArmState.activeWeight, 1.0, dt * 2.2);
+    } else {
+      // Wenn Hülle repariert oder Auto weiterfährt: Sofort zur Parkposition zurückfahren!
+      targetTipX = parkTipX;
+      targetTipY = parkTipY;
+      targetMidX = parkMidX;
+      targetMidY = parkMidY;
+
+      this.repairArmState.activeWeight = Phaser.Math.Linear(this.repairArmState.activeWeight, 0.0, dt * 2.8);
+    }
+
+    // Sanftes Nachführen der Gelenke (kinematisches Nachziehen, kein Springen oder Strecken)
+    this.repairArmState.curTipX = Phaser.Math.Linear(this.repairArmState.curTipX, targetTipX, dt * 3.8);
+    this.repairArmState.curTipY = Phaser.Math.Linear(this.repairArmState.curTipY, targetTipY, dt * 3.8);
+    this.repairArmState.curMidX = Phaser.Math.Linear(this.repairArmState.curMidX, targetMidX, dt * 3.8);
+    this.repairArmState.curMidY = Phaser.Math.Linear(this.repairArmState.curMidY, targetMidY, dt * 3.8);
+
+    const curTipX = this.repairArmState.curTipX;
+    const curTipY = this.repairArmState.curTipY;
+    const curMidX = this.repairArmState.curMidX;
+    const curMidY = this.repairArmState.curMidY;
+
+    // 2. Sockel & Drehscheibe an der Hangar-Überdachung
+    this.repairArm.fillStyle(0x1e293b, 1);
+    this.repairArm.fillRect(armBaseX - 5, armBaseY - 4, 10, 7);
+    this.repairArm.fillStyle(0x0284c7, 1);
+    this.repairArm.fillCircle(armBaseX, armBaseY, 3.5);
+
+    // 3. Segment 1: Hauptausleger (Arm von Basis zu Gelenk)
+    this.repairArm.lineStyle(3.5, 0x334155, 1);
+    this.repairArm.beginPath();
+    this.repairArm.moveTo(armBaseX, armBaseY);
+    this.repairArm.lineTo(curMidX, curMidY);
+    this.repairArm.strokePath();
+
+    // Warnstreifen / Farb-Akzent auf Hauptausleger
+    this.repairArm.lineStyle(1.6, 0xf59e0b, 0.9);
+    this.repairArm.beginPath();
+    this.repairArm.moveTo(armBaseX, armBaseY);
+    this.repairArm.lineTo(curMidX, curMidY);
+    this.repairArm.strokePath();
+
+    // 4. Ellbogen-Gelenk
+    this.repairArm.fillStyle(0x0f172a, 1);
+    this.repairArm.fillCircle(curMidX, curMidY, 3.5);
+    this.repairArm.fillStyle(isRepairing ? 0x38bdf8 : isConnected ? 0x10b981 : 0x64748b, 1);
+    this.repairArm.fillCircle(curMidX, curMidY, 1.8);
+
+    // 5. Segment 2: Unterarm (vom Gelenk zum Schweißkopf)
+    this.repairArm.lineStyle(2.8, 0x475569, 1);
+    this.repairArm.beginPath();
+    this.repairArm.moveTo(curMidX, curMidY);
+    this.repairArm.lineTo(curTipX, curTipY);
+    this.repairArm.strokePath();
+
+    // Hydraulikzylinder-Akzent
+    this.repairArm.lineStyle(1.2, 0xe2e8f0, 0.85);
+    this.repairArm.beginPath();
+    this.repairArm.moveTo(curMidX, curMidY);
+    this.repairArm.lineTo(curTipX, curTipY);
+    this.repairArm.strokePath();
+
+    // 6. Schweißkopf / Werkzeugdüse
+    this.repairArm.fillStyle(0x1e293b, 1);
+    this.repairArm.fillRect(curTipX - 2, curTipY - 3, 4, 5);
+
+    // 7. Effekte: Schweißlichtbogen & Funken nur beim tatsächlichen Schweißen vor Ort
+    if (isRepairing) {
+      const sparkSize = 2.5 + Math.random() * 2.5;
+      this.repairArm.fillStyle(0x38bdf8, 0.85);
+      this.repairArm.fillCircle(curTipX, curTipY, sparkSize);
+
+      this.repairArm.fillStyle(0xffffff, 1);
+      this.repairArm.fillCircle(curTipX, curTipY, 1.4);
+
+      // Winzige Funken
+      this.repairArm.lineStyle(1, 0xfacc15, 0.9);
+      for (let s = 0; s < 3; s++) {
+        const rx = (Math.random() - 0.5) * 10;
+        const ry = (Math.random() - 0.5) * 8;
+        this.repairArm.beginPath();
+        this.repairArm.moveTo(curTipX, curTipY);
+        this.repairArm.lineTo(curTipX + rx, curTipY + ry);
+        this.repairArm.strokePath();
       }
+    } else if (this.repairArmState.activeWeight > 0.15) {
+      // Beim Zurückfahren / Fertig: Grüne Erfolgs-LED
+      this.repairArm.fillStyle(0x10b981, 1);
+      this.repairArm.fillCircle(curTipX, curTipY, 1.6);
+    } else {
+      // Inaktiv / Standby: Dezentes Pulsieren der Bereitschafts-LED
+      const pulse = 0.4 + 0.3 * Math.sin(now * 0.003);
+      this.repairArm.fillStyle(0x0284c7, pulse);
+      this.repairArm.fillCircle(curTipX, curTipY, 1.4);
     }
   }
 
@@ -1005,6 +1293,24 @@ export class Player {
       this.discoveredOres.add(oreType);
       this.scene.events.emit('ore_discovered', oreType);
     }
+  }
+
+  isOreDiscovered(oreKey) {
+    if (!this.discoveredOres) this.discoveredOres = new Set(['coal']);
+    if (this.discoveredOres.has(oreKey)) return true;
+    if (this.cargo && this.cargo.includes(oreKey)) {
+      this.discoveredOres.add(oreKey);
+      return true;
+    }
+    if (this.scene?.baseSystem?.depot?.ores?.[oreKey] > 0) {
+      this.discoveredOres.add(oreKey);
+      return true;
+    }
+    if (this.stats?.totalOresMined?.[oreKey] > 0) {
+      this.discoveredOres.add(oreKey);
+      return true;
+    }
+    return false;
   }
 
   checkDepthProgress() {

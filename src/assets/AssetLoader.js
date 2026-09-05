@@ -1,3 +1,5 @@
+import { ORE_COLORS, ORE_FILL_COLORS } from '../ui/IconHelper.js';
+
 /**
  * AssetLoader.js
  * Clean Material Design Ästhetik:
@@ -263,41 +265,41 @@ export class AssetLoader {
     });
 
     // =======================================================
-    // 2. ERZ-FACETTEN (SAUBER, KONTRASTREICH, KONSISTENTE MINERAL-PALETTE)
+    // 2. ERZ-FACETTEN (1:1 FARBLICH ABGESTIMMT AUF DIE MENÜ-STONE-ICONS)
     // =======================================================
-    const ores = [
-      { id: 'ore_coal', color: '#181e29', highlight: '#475569' },
-      { id: 'ore_copper', color: '#b45309', highlight: '#f59e0b' },
-      { id: 'ore_iron', color: '#94a3b8', highlight: '#f8fafc' },
-      { id: 'ore_tin', color: '#64748b', highlight: '#cbd5e1' },
-      { id: 'ore_silver', color: '#cbd5e1', highlight: '#ffffff' },
-      { id: 'ore_gold', color: '#d97706', highlight: '#fef08a' },
-      { id: 'ore_emerald', color: '#059669', highlight: '#6ee7b7' },
-      { id: 'ore_sapphire', color: '#1d4ed8', highlight: '#60a5fa' },
-      { id: 'ore_ruby', color: '#dc2626', highlight: '#fca5a5' },
-      { id: 'ore_diamond', color: '#0284c7', highlight: '#bae6fd' },
-      { id: 'ore_titanium', color: '#4f46e5', highlight: '#a5b4fc' },
-      { id: 'ore_platinum', color: '#e2e8f0', highlight: '#ffffff' },
-      { id: 'ore_uranium', color: '#65a30d', highlight: '#bef264' },
-      { id: 'ore_obsidian_gem', color: '#7e22ce', highlight: '#d8b4fe' },
-      { id: 'ore_dark_matter', color: '#312e81', highlight: '#818cf8' }
+    const oreKeys = [
+      'coal', 'copper', 'iron', 'tin', 'silver',
+      'gold', 'emerald', 'sapphire', 'ruby', 'diamond',
+      'titanium', 'platinum', 'uranium', 'obsidian_gem', 'dark_matter'
     ];
 
-    ores.forEach(({ id, color, highlight }) => {
-      createTexture(id, TILE_SIZE, TILE_SIZE, (ctx) => {
-        // Kristallflächen
-        ctx.fillStyle = color;
-        ctx.fillRect(6, 7, 7, 7);
-        ctx.fillRect(18, 16, 8, 8);
-        ctx.fillRect(9, 21, 6, 6);
-        ctx.fillRect(20, 6, 6, 5);
+    oreKeys.forEach(key => {
+      const color = ORE_FILL_COLORS[key] || '#334155';
+      const highlight = ORE_COLORS[key] || '#94a3b8';
 
-        // Subtile Lichtkante
+      createTexture(`ore_${key}`, TILE_SIZE, TILE_SIZE, (ctx) => {
+        // Kristallflächen (Satte Grundfarbe der Menü-Stone-Icons)
+        ctx.fillStyle = color;
+        ctx.fillRect(5, 6, 8, 8);
+        ctx.fillRect(17, 15, 9, 9);
+        ctx.fillRect(8, 20, 7, 7);
+        ctx.fillRect(19, 5, 7, 6);
+
+        // Strahlende Lichtkante & Konturfacetten (Leuchtender Stone-Kontur-Akzent aus den Menüs)
         ctx.fillStyle = highlight;
-        ctx.fillRect(7, 8, 3, 3);
-        ctx.fillRect(19, 17, 4, 3);
-        ctx.fillRect(10, 22, 2, 2);
-        ctx.fillRect(21, 7, 2, 2);
+        ctx.fillRect(6, 7, 4, 3);
+        ctx.fillRect(18, 16, 5, 4);
+        ctx.fillRect(9, 21, 3, 3);
+        ctx.fillRect(20, 6, 3, 3);
+
+        // Funkelnder Glanzpunkt
+        ctx.fillStyle = '#ffffff';
+        ctx.globalAlpha = 0.55;
+        ctx.fillRect(7, 8, 1, 1);
+        ctx.fillRect(19, 17, 2, 1);
+        ctx.fillRect(10, 22, 1, 1);
+        ctx.fillRect(21, 7, 1, 1);
+        ctx.globalAlpha = 1.0;
       });
     });
 

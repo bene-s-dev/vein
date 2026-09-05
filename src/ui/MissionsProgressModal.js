@@ -50,8 +50,8 @@ export class MissionsProgressModal {
 
     titleEl.innerHTML = `
       <div style="display: flex; align-items: center; gap: 8px;">
-        ${icon('briefcase', '', 18)}
-        <span>AUFTRAGS-BÜRO</span>
+        ${icon('laptop-minimal', '', 18)}
+        <span>BÜRO</span>
       </div>
     `;
 
@@ -114,11 +114,6 @@ export class MissionsProgressModal {
         ${tabNavHtml}
         <div id="modal-tab-content">
           ${contentHtml}
-        </div>
-        <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
-          <button id="btn-missions-close" class="btn-3d-secondary" style="height: 32px; font-size: 11.5px; font-weight: 700; padding: 0 16px;">
-            SCHLIESSEN
-          </button>
         </div>
       </div>
     `;
@@ -185,10 +180,10 @@ export class MissionsProgressModal {
             </div>
             <div style="display: flex; gap: 8px; align-items: center;">
               <span style="background: rgba(251, 191, 36, 0.15); border: 1px solid rgba(251, 191, 36, 0.3); color: #fbbf24; font-weight: 800; font-size: 12px; padding: 4px 10px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
-                ${icon('coins', '', 13)} +€${mission.rewardCash}
+                ${icon('coins', '', 13)} €${mission.rewardCash}
               </span>
               <span style="background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.3); color: #c084fc; font-weight: 800; font-size: 12px; padding: 4px 10px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
-                ${icon('award', '', 13)} +${mission.rewardXp} XP
+                ${icon('award', '', 13)} ${mission.rewardXp} XP
               </span>
             </div>
           </div>
@@ -236,7 +231,7 @@ export class MissionsProgressModal {
               ${isDone ? 'background: linear-gradient(180deg, #10b981 0%, #059669 100%); border-color: #34d399; border-bottom: 3px solid #047857; color: #ffffff;' : ''}
             " ${isDone ? '' : 'disabled'}>
               ${icon('check-circle', '', 14)}
-              <span>${isDone ? `BELOHNUNG EINZIEHEN (+€${mission.rewardCash})` : 'IN BEARBEITUNG'}</span>
+              <span>${isDone ? 'Belohnung abholen' : 'In Arbeit'}</span>
             </button>
           </div>
         </div>
@@ -276,31 +271,31 @@ export class MissionsProgressModal {
       {
         level: 1,
         title: 'Novize',
-        desc: 'Humus- und Erdschicht (0-50m). Abbau von Kohle und Kupfer.',
+        desc: 'Humus- und Erdschicht (0-50m). Einstieg in den Schacht-Bergbau.',
         perks: 'Zugang zu Basis-Upgrades und Erzbörse'
       },
       {
         level: 2,
         title: 'Schürfer',
-        desc: 'Schiefer- und Felsschicht (50-180m). Abbau von Eisenerz und Zinn.',
+        desc: curLevel >= 2 ? 'Schiefer- und Felsschicht (50-180m). Härtere Gesteinsformationen.' : 'Schiefer- und Felsschicht (50-180m). Unbekannte Gesteinsschichten.',
         perks: 'Hydraulik-Zylinder und Titan-Legierung montierbar'
       },
       {
         level: 3,
         title: 'Tiefen-Geologe',
-        desc: 'Dichte Granitschicht (180-480m). Silber-, Gold- und Smaragd-Adern.',
+        desc: curLevel >= 3 ? 'Dichte Granitschicht (180-480m). Wertvolle Minerale & Adern.' : 'Dichte Granitschicht (180-480m). Unbekannte Tiefenadern.',
         perks: 'Kristall-Fokuslinsen und Plasmabrenner freigeschaltet'
       },
       {
         level: 4,
         title: 'Kern-Ingenieur',
-        desc: 'Obsidian- und Basaltzone (480-950m). Saphir, Rubin und Diamant-Kristalle.',
+        desc: curLevel >= 4 ? 'Obsidian- und Basaltzone (480-950m). Magmatische Hochdruck-Zone.' : 'Obsidian- und Basaltzone (480-950m). Extreme Tiefenregion.',
         perks: 'Quanten-Steuerkerne und Teleporter-Warp aktivierbar'
       },
       {
         level: 5,
         title: 'Meister der Tiefe',
-        desc: 'Urgestein und Tiefenkern (950-1.600m+). Titan, Platin, Uran und Dunkelmaterie.',
+        desc: curLevel >= 5 ? 'Urgestein und Tiefenkern (950-1.600m+). Tiefste Erdkruste.' : 'Urgestein und Tiefenkern (950-1.600m+). Der unberührte Erdkern.',
         perks: 'Antimaterie-Bohrer und Maximale Frachtkapazität'
       }
     ];
@@ -379,13 +374,24 @@ export class MissionsProgressModal {
     const curLevel = this.player.level || 1;
     const activeId = this.missionSystem.activeMission ? this.missionSystem.activeMission.id : null;
 
+    const visibleMissions = MISSION_POOL.filter(m => {
+      if (m.type === 'COLLECT_ORE' && !this.player.isOreDiscovered(m.targetOre)) {
+        return false;
+      }
+      return true;
+    });
+
     return `
       <div style="display: flex; flex-direction: column; gap: 10px;">
         <p style="font-size: 12px; color: #94a3b8;">
           Wähle einen Bergbau-Auftrag aus. Aufträge mit höherer Stufe erfordern tiefere Vorstöße, bieten aber massive Geld- und XP-Prämien.
         </p>
         <div style="display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; padding-right: 4px;">
-          ${MISSION_POOL.map(m => {
+          ${visibleMissions.length === 0 ? `
+            <div style="text-align: center; padding: 24px 16px; color: #94a3b8; font-size: 12px; background: rgba(15,23,42,0.5); border-radius: 10px; border: 1px dashed rgba(255,255,255,0.1);">
+              Keine weiteren Aufträge verfügbar. Erkunde tiefere Schichten, um neue Erze und Aufträge freizuschalten!
+            </div>
+          ` : visibleMissions.map(m => {
             const isCurrent = activeId === m.id;
             const isLocked = curLevel < m.minLevel;
 
@@ -404,10 +410,10 @@ export class MissionsProgressModal {
                   </div>
                   <div style="display: flex; gap: 6px; align-items: center;">
                     <span style="color: #fbbf24; font-weight: 700; font-size: 11.5px; display: inline-flex; align-items: center; gap: 3px;">
-                      ${icon('coins', '', 12)} +€${m.rewardCash}
+                      ${icon('coins', '', 12)} €${m.rewardCash}
                     </span>
                     <span style="color: #c084fc; font-weight: 700; font-size: 11.5px; display: inline-flex; align-items: center; gap: 3px;">
-                      ${icon('award', '', 12)} +${m.rewardXp} XP
+                      ${icon('award', '', 12)} ${m.rewardXp} XP
                     </span>
                   </div>
                 </div>
@@ -424,8 +430,9 @@ export class MissionsProgressModal {
                     ` : isLocked ? `
                       <button class="btn-3d-secondary" disabled style="height: 32px; box-sizing: border-box; padding: 0 12px; font-size: 11px;">Gesperrt</button>
                     ` : `
-                      <button class="btn-select-mission btn-buy" data-mid="${m.id}" style="height: 32px; box-sizing: border-box; padding: 0 14px; font-size: 11.5px; font-weight: 800;">
-                        Auftrag annehmen
+                      <button class="btn-select-mission btn-buy" data-mid="${m.id}" style="height: 30px; box-sizing: border-box; padding: 0 12px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">
+                        ${icon('check', '', 12)}
+                        <span>Annehmen</span>
                       </button>
                     `}
                   </div>
@@ -535,6 +542,8 @@ export class MissionsProgressModal {
     });
     const depotOres = (this.baseSystem?.depot?.ores) || (this.scene?.baseSystem?.depot?.ores) || {};
 
+    const visibleQuests = quests.filter(q => Object.keys(q.reqs).every(ore => p.isOreDiscovered(ore)));
+
     return `
       <div style="display: flex; flex-direction: column; gap: 10px;">
         <p style="font-size: 12px; color: #94a3b8;">
@@ -544,17 +553,26 @@ export class MissionsProgressModal {
         ${compInventoryHtml}
 
         <div style="display: flex; flex-direction: column; gap: 8px; max-height: 250px; overflow-y: auto; padding-right: 4px;">
-          ${quests.map(q => {
+          ${visibleQuests.length === 0 ? `
+            <div style="text-align: center; padding: 24px 16px; color: #94a3b8; font-size: 12px; background: rgba(15,23,42,0.5); border-radius: 10px; border: 1px dashed rgba(255,255,255,0.1);">
+              <div style="font-weight: 700; color: #f8fafc; font-size: 13px; margin-bottom: 4px;">Keine Proben-Aufträge verfügbar</div>
+              Erkunde tiefere Schichten und entdecke neue Erze, um Forschungsaufträge freizuschalten!
+            </div>
+          ` : visibleQuests.map(q => {
             let canFulfill = true;
-            const reqsText = [];
-            for (const [ore, needed] of Object.entries(q.reqs)) {
+            const reqBadges = Object.entries(q.reqs).map(([ore, needed]) => {
               const haveCargo = cargoCounts[ore] || 0;
               const haveDepot = depotOres[ore] || 0;
               const totalHave = haveCargo + haveDepot;
               const oreName = ORE_DATA[ore]?.name || ore;
               if (totalHave < needed) canFulfill = false;
-              reqsText.push(`<span style="color: ${totalHave >= needed ? '#10b981' : '#f87171'}; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">${oreIcon(ore, 12)} ${oreName}: ${totalHave}/${needed}</span>`);
-            }
+              const isMet = totalHave >= needed;
+              return `
+                <span style="background: rgba(15, 23, 42, 0.8); border: 1px solid ${isMet ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}; color: ${isMet ? '#10b981' : '#f87171'}; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+                  ${oreIcon(ore, 12)} ${oreName} (${totalHave}/${needed})
+                </span>
+              `;
+            }).join('');
 
             return `
               <div style="
@@ -562,24 +580,32 @@ export class MissionsProgressModal {
                 border: 1px solid ${canFulfill ? '#10b981' : 'rgba(255,255,255,0.08)'};
                 border-radius: 8px;
                 padding: 10px 12px;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
               ">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
                   <strong style="color: #f8fafc; font-size: 12.5px;">${q.title}</strong>
                   <span style="font-size: 11px; color: #94a3b8;">${q.depthHint}</span>
                 </div>
-                <div style="font-size: 11.5px; margin-bottom: 6px;">
-                  Benötigt: ${reqsText.join(', ')}
+                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                  ${reqBadges}
                 </div>
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                  <div style="display: flex; align-items: center; gap: 8px; font-size: 11.5px;">
-                    <span style="color: #38bdf8; font-weight: bold; display: inline-flex; align-items: center; gap: 4px;">
-                      ${icon(q.rewardComp.iconName, '', 13)} +1 ${q.rewardComp.name}
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 2px;">
+                  <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                    <span style="background: rgba(192, 132, 252, 0.12); border: 1px solid rgba(192, 132, 252, 0.3); color: #c084fc; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+                      ${icon(q.rewardComp.iconName, '', 11)} 1x ${q.rewardComp.name}
                     </span>
-                    <span style="color: #fbbf24; font-weight: bold;">+€${q.rewardCash}</span>
-                    <span style="color: #c084fc; font-weight: bold;">+${q.rewardXp} XP</span>
+                    <span style="background: rgba(251, 191, 36, 0.12); border: 1px solid rgba(251, 191, 36, 0.3); color: #fbbf24; font-weight: 800; font-size: 11.5px; padding: 2px 8px; border-radius: 6px;">
+                      €${q.rewardCash}
+                    </span>
+                    <span style="background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.3); color: #a855f7; font-weight: 800; font-size: 11.5px; padding: 2px 8px; border-radius: 6px;">
+                      ${q.rewardXp} XP
+                    </span>
                   </div>
-                  <button class="btn-claim-geologist-modal btn-buy" data-qid="${q.id}" ${canFulfill ? '' : 'disabled'} style="height: 32px; box-sizing: border-box; padding: 0 14px; font-size: 11.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center;">
-                    ${canFulfill ? 'Erze abgeben' : 'Erze fehlen'}
+                  <button class="btn-claim-geologist-modal btn-buy" data-qid="${q.id}" ${canFulfill ? '' : 'disabled'} style="height: 30px; box-sizing: border-box; padding: 0 12px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">
+                    ${icon('check', '', 12)}
+                    <span>Abgeben</span>
                   </button>
                 </div>
               </div>
@@ -668,13 +694,13 @@ export class MissionsProgressModal {
           </div>
         </div>
 
-        <!-- Geförderte Erze Statistik -->
+        <!-- Geförderte Erze Statistik (nur bisher entdeckte Steine) -->
         <div style="background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px;">
           <div style="font-size: 12px; font-weight: 700; color: #fbbf24; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
-            ${icon('gem', '', 13)} Geförderte Bodenschätze (Insgesamt)
+            ${icon('gem', '', 13)} Geförderte Bodenschätze (Bisher entdeckt)
           </div>
           <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; font-size: 11px;">
-            ${Object.entries(ORE_DATA).map(([key, data]) => {
+            ${Object.entries(ORE_DATA).filter(([key]) => p.isOreDiscovered(key)).map(([key, data]) => {
               const count = (stats.totalOresMined && stats.totalOresMined[key]) || 0;
               return `
                 <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.25); padding: 4px 6px; border-radius: 4px;">
@@ -730,14 +756,6 @@ export class MissionsProgressModal {
       };
     });
 
-    // Schließen-Button im Modal-Footer
-    const btnClose = bodyEl.querySelector('#btn-missions-close');
-    if (btnClose) {
-      btnClose.onclick = () => {
-        soundFx.playClick();
-        this.close();
-      };
-    }
 
     // Auftrag aus Pool annehmen (Tab 3)
     const selectBtns = bodyEl.querySelectorAll('.btn-select-mission');

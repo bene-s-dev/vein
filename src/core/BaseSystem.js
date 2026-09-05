@@ -11,30 +11,30 @@ import { soundFx } from './SoundEffects.js';
 import { icon, refreshIcons, COMPONENT_ICONS, oreIcon, ORE_COLORS, REFINED_ORE_DATA, getRefinedOreName, refinedItemIcon, itemDisplayIcon } from '../ui/IconHelper.js';
 import { TANK_TIERS, HULL_TIERS, ENGINE_TIERS, CARGO_TIERS, SENSOR_TIERS } from './Player.js';
 
-// Dauer für das Einschmelzen einzelner Erze in Sekunden
+// Dauer für das Einschmelzen einzelner Erze in Sekunden (verlängert für spürbaren Fortschritt)
 export const REFINERY_DURATIONS_SEC = {
-  coal: 10,          // 10s
-  copper: 16,        // 16s
-  iron: 26,          // 26s
-  tin: 36,           // 36s
-  silver: 50,        // 50s
-  gold: 75,          // 1m 15s
-  emerald: 105,      // 1m 45s
-  sapphire: 135,     // 2m 15s
-  ruby: 170,         // 2m 50s
-  diamond: 210,      // 3m 30s
-  titanium: 260,     // 4m 20s
-  platinum: 320,     // 5m 20s
-  uranium: 400,      // 6m 40s
-  obsidian_gem: 500, // 8m 20s
-  dark_matter: 650   // 10m 50s
+  coal: 20,          // 20s (vorher 10s)
+  copper: 35,        // 35s (vorher 16s)
+  iron: 55,          // 55s (vorher 26s)
+  tin: 75,           // 1m 15s (vorher 36s)
+  silver: 110,       // 1m 50s (vorher 50s)
+  gold: 160,         // 2m 40s (vorher 75s)
+  emerald: 220,      // 3m 40s (vorher 1m 45s)
+  sapphire: 280,     // 4m 40s (vorher 2m 15s)
+  ruby: 360,         // 6m (vorher 2m 50s)
+  diamond: 450,      // 7m 30s (vorher 3m 30s)
+  titanium: 550,     // 9m 10s (vorher 4m 20s)
+  platinum: 680,     // 11m 20s (vorher 5m 20s)
+  uranium: 850,      // 14m 10s (vorher 6m 40s)
+  obsidian_gem: 1100,// 18m 20s (vorher 8m 20s)
+  dark_matter: 1400  // 23m 20s (vorher 10m 50s)
 };
 
 export function getRefinerySmeltDurationMs(oreKey) {
   const sec = REFINERY_DURATIONS_SEC[oreKey];
   if (sec) return sec * 1000;
   const val = ORE_DATA[oreKey]?.value || 25;
-  return Math.max(10, Math.round(val * 0.35)) * 1000;
+  return Math.max(20, Math.round(val * 0.70)) * 1000;
 }
 
 let lastModalCloseTimestamp = 0;
@@ -64,35 +64,38 @@ export function getRefinedOreNetValue(oreKey) {
 // Bohrkopf-Stufen & DPS (Entwicklung im Labor -> Montage im Hangar)
 export const DRILL_TIERS = [
   { tier: 1, name: 'Stahl-Bohrkopf', stat: '34 DPS', cost: 0, comp: null, level: 1, desc: 'Solider Bohrkopf für Humus & lockere Erde (ca. 2.5s pro Block).' },
-  { tier: 2, name: 'Wolframkarbid-Spitze', stat: '45 DPS (+32%)', cost: 220, comp: null, level: 1, desc: 'Fräst spürbar flüssiger durch Erde (ca. 1.9s) und Schiefer.' },
-  { tier: 3, name: 'Gehärteter Meißel Mk.III', stat: '60 DPS (+33%)', cost: 480, comp: null, level: 1, desc: 'Schneidet zügig durch Stein und zerbröckelt Fels.' },
-  { tier: 4, name: 'Titan-Diamant-Kopf Mk.IV', stat: '82 DPS (+37%)', cost: 1050, comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 }, level: 2, desc: 'Hydraulisch verstärkte Fräse zermalmt harte Granitadern.' },
-  { tier: 5, name: 'Hochdruck-Fräse Mk.V', stat: '115 DPS (+40%)', cost: 2200, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 }, level: 2, desc: 'Panzerung und Zahnkränze fräsen mühelos durch Granit und Basalt.' },
-  { tier: 6, name: 'Plasma-Schneidbrenner Mk.VI', stat: '165 DPS (+43%)', cost: 4500, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 1 }, level: 3, desc: 'Fokussierter Plasmastrahl schmilzt Obsidian-Gestein.' },
-  { tier: 7, name: 'Laser-Kavitationsmeißel Mk.VII', stat: '240 DPS (+45%)', cost: 9200, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 4, desc: 'Höchste Schneidleistung für schwerste Tiefenerze.' },
-  { tier: 8, name: 'Antimaterie-Bohrer Mk.VIII', stat: '350 DPS (+46%)', cost: 18500, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 5, desc: 'Ultimativer Bohrkopf. Fräst durch den Tiefenkern wie Butter.' }
+  { tier: 2, name: 'Wolframkarbid-Spitze', stat: '45 DPS', cost: 220, comp: null, level: 1, desc: 'Fräst spürbar flüssiger durch Erde (ca. 1.9s) und Schiefer.' },
+  { tier: 3, name: 'Gehärteter Meißel Mk.III', stat: '60 DPS', cost: 480, comp: null, level: 1, desc: 'Schneidet zügig durch Stein und zerbröckelt Fels.' },
+  { tier: 4, name: 'Titan-Diamant-Kopf Mk.IV', stat: '82 DPS', cost: 1050, comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 }, level: 2, desc: 'Hydraulisch verstärkte Fräse zermalmt harte Granitadern.' },
+  { tier: 5, name: 'Hochdruck-Fräse Mk.V', stat: '115 DPS', cost: 2200, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 }, level: 2, desc: 'Panzerung und Zahnkränze fräsen mühelos durch Granit und Basalt.' },
+  { tier: 6, name: 'Plasma-Schneidbrenner Mk.VI', stat: '165 DPS', cost: 4500, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 1 }, level: 3, desc: 'Fokussierter Plasmastrahl schmilzt Obsidian-Gestein.' },
+  { tier: 7, name: 'Laser-Kavitationsmeißel Mk.VII', stat: '240 DPS', cost: 9200, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 4, desc: 'Höchste Schneidleistung für schwerste Tiefenerze.' },
+  { tier: 8, name: 'Antimaterie-Bohrer Mk.VIII', stat: '350 DPS', cost: 18500, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 5, desc: 'Ultimativer Bohrkopf. Fräst durch den Tiefenkern wie Butter.' }
 ];
 export const DRILL_DPS = [34, 45, 60, 82, 115, 165, 240, 350];
 export const DRILL_DATA = DRILL_TIERS;
 
 // Fabrik-Produkte (Industrielle Werkstoffe mit hohem Börsenwert)
+// Jedes Produkt benötigt zusätzlich 2x Kohle als Prozesshitze/Brennstoff
 export const FACTORY_PRODUCTS = {
   steel_beam: {
     id: 'steel_beam',
     name: 'Stahlträger',
     desc: 'Hochbelastbarer Baustahl für Schachtgerüste und Industrie.',
-    iconName: 'anvil',
-    recipe: { coal: 2, iron: 2 },
-    durationSec: 15,
+    iconName: 'circle-pile',
+    recipe: { iron: 2, coal: 2 }, // 2x Eisen + 2x Kohle Material
+    fuelCoal: 2,
+    durationSec: 45,
     value: 260
   },
   bronze_ingot: {
     id: 'bronze_ingot',
     name: 'Bronze-Barren',
     desc: 'Widerstandsfähige Legierung für korrosionsfreie Maschinenteile.',
-    iconName: 'box',
+    iconName: 'layers',
     recipe: { copper: 2, tin: 2 },
-    durationSec: 20,
+    fuelCoal: 2,
+    durationSec: 60,
     value: 390
   },
   circuit_board: {
@@ -101,7 +104,8 @@ export const FACTORY_PRODUCTS = {
     desc: 'Hochintegrierte Leiterplatte für Steuerungen und Navigationssysteme.',
     iconName: 'cpu',
     recipe: { copper: 2, silver: 1, gold: 1 },
-    durationSec: 45,
+    fuelCoal: 2,
+    durationSec: 120,
     value: 920
   },
   polished_gem: {
@@ -110,7 +114,8 @@ export const FACTORY_PRODUCTS = {
     desc: 'Präzisionsgeschliffener Edelstein für Optik und Luxusmärkte.',
     iconName: 'gem',
     recipe: { emerald: 1, ruby: 1 },
-    durationSec: 75,
+    fuelCoal: 2,
+    durationSec: 200,
     value: 3600
   },
   titan_plate: {
@@ -119,7 +124,8 @@ export const FACTORY_PRODUCTS = {
     desc: 'Hitzebeständige Panzerplatte für Tiefsee- und Hochdruckrümpfe.',
     iconName: 'shield',
     recipe: { titanium: 2, diamond: 1 },
-    durationSec: 120,
+    fuelCoal: 2,
+    durationSec: 320,
     value: 9400
   },
   fusion_rod: {
@@ -128,7 +134,8 @@ export const FACTORY_PRODUCTS = {
     desc: 'Hochenergetischer Nuklear-Brennstab für Fusionsreaktoren.',
     iconName: 'zap',
     recipe: { uranium: 2, platinum: 1 },
-    durationSec: 180,
+    fuelCoal: 2,
+    durationSec: 480,
     value: 24500
   }
 };
@@ -155,7 +162,7 @@ export class BaseSystem {
         id: 'office',
         title: 'BÜRO',
         label: 'BÜRO',
-        iconName: 'briefcase',
+        iconName: 'laptop-minimal',
         spriteKey: 'building_office',
         gx: -3,
         height: 70,
@@ -275,7 +282,7 @@ export class BaseSystem {
     this.depot = {
       ores: {},        // { coal: 0, copper: 0, ... }
       products: {},    // { steel_beam: 0, ... }
-      capacity: 150,   // Max Gesamtkapazität für Erze + Produkte
+      capacity: 10,    // Stufe 1: 10 Lagerplätze
       tier: 1,
       currentTab: 'ores' // 'ores' | 'products' | 'upgrade'
     };
@@ -622,6 +629,9 @@ export class BaseSystem {
     this.modalBodyEl.innerHTML = contentHtml;
     this.modalEl.style.display = 'flex';
     refreshIcons(this.modalEl);
+    if (this.scene && this.scene.hud) {
+      this.scene.hud.update();
+    }
   }
 
   closeModal() {
@@ -674,12 +684,11 @@ export class BaseSystem {
             <div style="display: flex; justify-content: space-between; align-items: center;">
               <div style="display: flex; align-items: center; gap: 8px;">
                 <span style="font-weight: 700; color: #f8fafc; font-size: 13.5px; display: inline-flex; align-items: center; gap: 6px;">${oreIcon(ore, 16)} ${data.name}</span>
-                <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); padding: 2px 8px; border-radius: 6px; font-size: 11px; color: #38bdf8; font-weight: 700;">Vorrat: ${count}</span>
+                <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); padding: 2px 8px; border-radius: 6px; font-size: 11px; color: #38bdf8; font-weight: 700;">${count}x</span>
                 <span style="font-size: 11px; color: #94a3b8;">(€${val}/Stk)</span>
               </div>
               <div style="display: flex; align-items: center; gap: 4px;">
-                <span style="font-size: 11px; color: #94a3b8;">Erlös:</span>
-                <strong class="ore-subtotal" id="subtotal-${ore}" style="color: #fbbf24; font-size: 14px;">+€${val * count}</strong>
+                <strong class="ore-subtotal" id="subtotal-${ore}" style="color: #fbbf24; font-size: 13.5px; font-weight: 800;">€${val * count}</strong>
               </div>
             </div>
 
@@ -726,7 +735,7 @@ export class BaseSystem {
                 display: inline-flex; align-items: center; justify-content: center; gap: 6px;
               ">
                 ${icon('coins', '', 14)}
-                <span id="btn-sell-text-${ore}">${count}x Verkaufen</span>
+                <span id="btn-sell-text-${ore}">Verkaufen</span>
               </button>
             </div>
           </div>
@@ -735,24 +744,28 @@ export class BaseSystem {
       oreListHtml += '</div>';
     }
 
-    // Fabrik-Produkte (Industrielle Güter)
+    // Fabrik-Produkte & Barren (aus Bohrer-Inventar und Depot-Lager)
     let factoryHtml = '';
     const fp = this.player.factoryProducts || {};
-    const hasAnyFp = Object.values(fp).some(v => v > 0);
+    const dp = this.depot?.products || {};
+    const allProductKeys = Array.from(new Set([
+      ...Object.keys(FACTORY_PRODUCTS),
+      ...Object.keys(fp),
+      ...Object.keys(dp)
+    ])).filter(k => ((fp[k] || 0) + (dp[k] || 0)) > 0);
+
+    const hasAnyFp = allProductKeys.length > 0;
     let totalFpValue = 0;
 
     let fpListHtml = '';
     if (!hasAnyFp) {
-      fpListHtml = '<p style="color: #64748b; font-style: italic; margin: 10px 0; text-align: center; font-size: 12px;">Keine Fabrik-Waren auf Lager. Fertige Erzeugnisse in der FABRIK, um hier Spitzenpreise zu erzielen!</p>';
+      fpListHtml = '<p style="color: #64748b; font-style: italic; margin: 10px 0; text-align: center; font-size: 12px;">Keine Fabrik-Waren oder Barren auf Lager. Fertige Erzeugnisse in der FABRIK, um hier Spitzenpreise zu erzielen!</p>';
     } else {
       fpListHtml = '<div style="display: flex; flex-direction: column; gap: 8px; margin: 8px 0;">';
-      const allProductKeys = Array.from(new Set([
-        ...Object.keys(FACTORY_PRODUCTS),
-        ...Object.keys(fp)
-      ])).filter(k => (fp[k] || 0) > 0);
-
       for (const prodId of allProductKeys) {
-        const count = fp[prodId] || 0;
+        const pCount = fp[prodId] || 0;
+        const dCount = dp[prodId] || 0;
+        const count = pCount + dCount;
         if (count <= 0) continue;
         const isBar = prodId.startsWith('bar_');
         let prodName = '';
@@ -767,11 +780,11 @@ export class BaseSystem {
         } else if (FACTORY_PRODUCTS[prodId]) {
           prodName = FACTORY_PRODUCTS[prodId].name;
           val = FACTORY_PRODUCTS[prodId].value;
-          iconHtml = icon(FACTORY_PRODUCTS[prodId].iconName, '', 15);
+          iconHtml = itemDisplayIcon(prodId, 16);
         } else {
           prodName = prodId;
           val = 0;
-          iconHtml = icon('box', '', 15);
+          iconHtml = itemDisplayIcon(prodId, 16);
         }
 
         const subtotal = count * val;
@@ -785,12 +798,11 @@ export class BaseSystem {
                   ${iconHtml}
                 </span>
                 <span style="font-weight: 700; color: #f8fafc; font-size: 13.5px;">${prodName}</span>
-                <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); padding: 2px 8px; border-radius: 6px; font-size: 11px; color: #10b981; font-weight: 700;">Lager: ${count}x</span>
+                <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); padding: 2px 8px; border-radius: 6px; font-size: 11px; color: #10b981; font-weight: 700;">${count}x</span>
                 <span style="font-size: 11px; color: #94a3b8;">(€${val}/Stk)</span>
               </div>
               <div style="display: flex; align-items: center; gap: 4px;">
-                <span style="font-size: 11px; color: #94a3b8;">Erlös:</span>
-                <strong class="fp-subtotal" id="subtotal-fp-${prodId}" style="color: #fbbf24; font-size: 14px;">+€${subtotal}</strong>
+                <strong class="fp-subtotal" id="subtotal-fp-${prodId}" style="color: #fbbf24; font-size: 13.5px; font-weight: 800;">€${subtotal}</strong>
               </div>
             </div>
 
@@ -805,7 +817,7 @@ export class BaseSystem {
               </div>
               <button class="btn-sell-fp-custom btn-buy" data-prod="${prodId}" style="height: 32px; padding: 0 14px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px;">
                 ${icon('coins', '', 14)}
-                <span id="btn-sell-fp-text-${prodId}">${count}x Verkaufen</span>
+                <span id="btn-sell-fp-text-${prodId}">Verkaufen</span>
               </button>
             </div>
           </div>
@@ -818,14 +830,14 @@ export class BaseSystem {
       <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; margin-top: 14px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
           <strong style="color: #38bdf8; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
-            ${icon('container', '', 15)} FABRIK-ERZEUGNISSE (INDUSTRIE-WAREN)
+            ${icon('container', '', 15)} FABRIK-ERZEUGNISSE
           </strong>
           <span style="color: #fbbf24; font-size: 13px; font-weight: 700;">Warenwert: €${totalFpValue}</span>
         </div>
         ${fpListHtml}
         ${hasAnyFp ? `
           <button id="btn-sell-all-fp" class="btn-buy btn-lg" style="width: 100%; margin-top: 6px;">
-            ${icon('coins', '', 15)} ALLE FABRIK-WAREN VERKAUFEN (+€${totalFpValue})
+            ${icon('coins', '', 15)} Fabrik-Waren verkaufen (€${totalFpValue})
           </button>
         ` : ''}
       </div>
@@ -857,12 +869,11 @@ export class BaseSystem {
             <div style="display: flex; justify-content: space-between; align-items: center;">
               <div style="display: flex; align-items: center; gap: 8px;">
                 <span style="font-weight: 700; color: #f8fafc; font-size: 13.5px; display: inline-flex; align-items: center; gap: 6px;">${oreIcon(ore, 16)} ${data.name}</span>
-                <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); padding: 2px 8px; border-radius: 6px; font-size: 11px; color: #38bdf8; font-weight: 700;">Depot: ${count}x</span>
+                <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); padding: 2px 8px; border-radius: 6px; font-size: 11px; color: #38bdf8; font-weight: 700;">${count}x</span>
                 <span style="font-size: 11px; color: #94a3b8;">(€${val}/Stk)</span>
               </div>
               <div style="display: flex; align-items: center; gap: 4px;">
-                <span style="font-size: 11px; color: #94a3b8;">Erlös:</span>
-                <strong class="ore-subtotal" id="subtotal-depot-${ore}" style="color: #fbbf24; font-size: 14px;">+€${val * count}</strong>
+                <strong class="ore-subtotal" id="subtotal-depot-${ore}" style="color: #fbbf24; font-size: 13.5px; font-weight: 800;">€${val * count}</strong>
               </div>
             </div>
 
@@ -878,7 +889,7 @@ export class BaseSystem {
 
               <button class="btn-sell-depot-market-custom btn-buy" data-ore="${ore}" style="height: 32px; padding: 0 14px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px;">
                 ${icon('coins', '', 14)}
-                <span id="btn-sell-depot-text-${ore}">${count}x Verkaufen</span>
+                <span id="btn-sell-depot-text-${ore}">Verkaufen</span>
               </button>
             </div>
           </div>
@@ -898,7 +909,7 @@ export class BaseSystem {
         ${depotListHtml}
         ${totalDepotCount > 0 ? `
           <button id="btn-sell-all-depot-market" class="btn-buy btn-lg" style="width: 100%; margin-top: 6px;">
-            ${icon('coins', '', 15)} ALLE DEPOT-ERZE VERKAUFEN (+€${totalDepotValue.toLocaleString()})
+            ${icon('coins', '', 15)} Depot-Erze verkaufen (€${totalDepotValue.toLocaleString()})
           </button>
         ` : ''}
       </div>
@@ -911,15 +922,10 @@ export class BaseSystem {
       </div>
       ${oreListHtml}
       <button id="btn-do-sell" class="btn-buy btn-lg" style="width: 100%; margin-top: 8px;" ${cargo.length === 0 ? 'disabled' : ''}>
-        ${icon('coins', '', 15)} GESAMTE BOHRER-FRACHT VERKAUFEN (+€${totalValue.toLocaleString()})
+        ${icon('coins', '', 15)} Fracht verkaufen (€${totalValue.toLocaleString()})
       </button>
       ${depotHtml}
       ${factoryHtml}
-      <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
-        <button id="btn-market-close" class="btn-3d-secondary" style="height: 32px; font-size: 11.5px; font-weight: 700; padding: 0 16px;">
-          SCHLIESSEN
-        </button>
-      </div>
     `;
 
     this.openModal(`
@@ -939,8 +945,8 @@ export class BaseSystem {
       const val = parseInt(input.getAttribute('data-unit-val'), 10) || 0;
       const clamped = Math.max(1, Math.min(max, parseInt(newQty, 10) || 1));
       input.value = clamped;
-      subtotalEl.innerText = `+€${clamped * val}`;
-      if (btnSellText) btnSellText.innerText = `${clamped}x Verkaufen`;
+      subtotalEl.innerText = `€${(clamped * val).toLocaleString()}`;
+      if (btnSellText) btnSellText.innerText = 'Verkaufen';
     };
 
     // Stepper Plus/Minus (Frachtraum)
@@ -1001,8 +1007,8 @@ export class BaseSystem {
       const val = parseInt(input.getAttribute('data-unit-val'), 10) || 0;
       const clamped = Math.max(1, Math.min(max, parseInt(newQty, 10) || 1));
       input.value = clamped;
-      subtotalEl.innerText = `+€${clamped * val}`;
-      if (btnSellText) btnSellText.innerText = `${clamped}x Verkaufen`;
+      subtotalEl.innerText = `€${(clamped * val).toLocaleString()}`;
+      if (btnSellText) btnSellText.innerText = 'Verkaufen';
     };
 
     document.querySelectorAll('.btn-depot-qty-step').forEach(btn => {
@@ -1059,8 +1065,8 @@ export class BaseSystem {
       const val = parseInt(input.getAttribute('data-unit-val'), 10) || 0;
       const clamped = Math.max(1, Math.min(max, parseInt(newQty, 10) || 1));
       input.value = clamped;
-      subtotalEl.innerText = `+€${clamped * val}`;
-      if (btnSellText) btnSellText.innerText = `${clamped}x Verkaufen`;
+      subtotalEl.innerText = `€${(clamped * val).toLocaleString()}`;
+      if (btnSellText) btnSellText.innerText = 'Verkaufen';
     };
 
     // Fabrik Stepper
@@ -1091,20 +1097,20 @@ export class BaseSystem {
       };
     });
 
-    // Einzelverkauf Fabrik-Produkt / Barren
+    // Einzelverkauf Fabrik-Produkt / Barren (aus Inventar & Depot)
     document.querySelectorAll('.btn-sell-fp-custom').forEach(btn => {
       btn.onclick = () => {
         const prodId = btn.getAttribute('data-prod');
         const input = document.getElementById(`qty-input-fp-${prodId}`);
         const qty = input ? parseInt(input.value, 10) || 1 : 1;
-        const earned = this.player.sellFactoryProduct(prodId, qty);
+        const earned = this.sellMarketProductFromPlayerOrDepot(prodId, qty);
         if (earned > 0) {
           soundFx.playPurchase();
           this.openMarketModal();
           const displayName = prodId.startsWith('bar_')
             ? getRefinedOreName(prodId.replace('bar_', ''))
             : (FACTORY_PRODUCTS[prodId]?.name || prodId);
-          this.scene.events.emit('notify', `${qty}x ${displayName} verkauft für +€${earned}!`);
+          this.scene.events.emit('notify', `${qty}x ${displayName} verkauft für +€${earned.toLocaleString()}!`);
         }
       };
     });
@@ -1114,16 +1120,21 @@ export class BaseSystem {
     if (btnSellAllFp) {
       btnSellAllFp.onclick = () => {
         let totalEarned = 0;
-        const fp = this.player.factoryProducts || {};
-        for (const [prodId, qty] of Object.entries(fp)) {
-          if (qty > 0) {
-            totalEarned += this.player.sellFactoryProduct(prodId, qty);
+        const allKeys = Array.from(new Set([
+          ...Object.keys(FACTORY_PRODUCTS),
+          ...Object.keys(this.player.factoryProducts || {}),
+          ...Object.keys(this.depot?.products || {})
+        ]));
+        for (const prodId of allKeys) {
+          const avail = (this.player.factoryProducts?.[prodId] || 0) + (this.depot?.products?.[prodId] || 0);
+          if (avail > 0) {
+            totalEarned += this.sellMarketProductFromPlayerOrDepot(prodId, avail);
           }
         }
         if (totalEarned > 0) {
           soundFx.playPurchase();
           this.openMarketModal();
-          this.scene.events.emit('notify', `Alle Industrie- & Veredelungswaren verkauft für +€${totalEarned}!`);
+          this.scene.events.emit('notify', `Alle Industrie- & Veredelungswaren verkauft für +€${totalEarned.toLocaleString()}!`);
         }
       };
     }
@@ -1138,14 +1149,44 @@ export class BaseSystem {
         this.scene.events.emit('notify', `Fracht vollständig verkauft für +€${earnings}!`);
       };
     }
+  }
 
-    const btnMarketClose = document.getElementById('btn-market-close');
-    if (btnMarketClose) {
-      btnMarketClose.onclick = () => {
-        soundFx.playClick();
-        this.closeModal();
-      };
+  sellMarketProductFromPlayerOrDepot(prodId, count = 1) {
+    if (!this.player.factoryProducts) this.player.factoryProducts = {};
+    if (!this.depot) this.depot = {};
+    if (!this.depot.products) this.depot.products = {};
+
+    const inPlayer = this.player.factoryProducts[prodId] || 0;
+    const inDepot = this.depot.products[prodId] || 0;
+    const totalAvail = inPlayer + inDepot;
+    const toSell = Math.max(0, Math.min(totalAvail, count));
+    if (toSell <= 0) return 0;
+
+    const fromPlayer = Math.min(inPlayer, toSell);
+    const fromDepot = toSell - fromPlayer;
+
+    if (fromPlayer > 0) {
+      this.player.factoryProducts[prodId] = inPlayer - fromPlayer;
     }
+    if (fromDepot > 0) {
+      this.depot.products[prodId] = inDepot - fromDepot;
+    }
+
+    let val = 0;
+    if (FACTORY_PRODUCTS[prodId]) {
+      val = FACTORY_PRODUCTS[prodId].value;
+    } else if (prodId.startsWith('bar_')) {
+      const rawKey = prodId.replace('bar_', '');
+      val = getRefinedOreNetValue(rawKey);
+    } else {
+      val = ORE_DATA[prodId]?.value || 0;
+    }
+
+    const earned = Math.round(toSell * val);
+    this.player.cash += earned;
+    this.player.stats.totalCashEarned = (this.player.stats.totalCashEarned || 0) + earned;
+    if (this.scene.hud) this.scene.hud.update();
+    return earned;
   }
 
   // =========================================================
@@ -1188,7 +1229,7 @@ export class BaseSystem {
     return {
       ores: { ...(this.depot?.ores || {}) },
       products: { ...(this.depot?.products || {}) },
-      capacity: this.depot?.capacity || 150,
+      capacity: this.depot?.capacity || 10,
       tier: this.depot?.tier || 1
     };
   }
@@ -1198,15 +1239,29 @@ export class BaseSystem {
     if (!this.depot) this.depot = {};
     this.depot.ores = { ...(data.ores || {}) };
     this.depot.products = { ...(data.products || {}) };
-    this.depot.capacity = data.capacity || 150;
     this.depot.tier = data.tier || 1;
+
+    const DEPOT_TIERS = [
+      { tier: 1, capacity: 10 },
+      { tier: 2, capacity: 25 },
+      { tier: 3, capacity: 60 },
+      { tier: 4, capacity: 150 },
+      { tier: 5, capacity: 400 },
+      { tier: 6, capacity: 1000 }
+    ];
+    const tierInfo = DEPOT_TIERS.find(t => t.tier === this.depot.tier) || DEPOT_TIERS[0];
+    if (!data.capacity || (this.depot.tier === 1 && data.capacity === 150)) {
+      this.depot.capacity = tierInfo.capacity;
+    } else {
+      this.depot.capacity = data.capacity;
+    }
     this.depot.currentTab = 'ores';
   }
 
   openDepotModal(initialTab = 'ores') {
     this.isDepotModalOpen = true;
     if (!this.depot) {
-      this.depot = { ores: {}, products: {}, capacity: 150, tier: 1, currentTab: 'ores' };
+      this.depot = { ores: {}, products: {}, capacity: 10, tier: 1, currentTab: 'ores' };
     }
     this.depot.currentTab = initialTab;
     this.renderDepotModal();
@@ -1223,7 +1278,7 @@ export class BaseSystem {
     `;
 
     const totalStored = this.getDepotTotalCount();
-    const capacity = this.depot.capacity || 150;
+    const capacity = this.depot.capacity || 10;
     const occPct = Math.min(100, Math.round((totalStored / capacity) * 100));
     const isFull = totalStored >= capacity;
     const totalVal = this.getDepotTotalValue();
@@ -1314,44 +1369,34 @@ export class BaseSystem {
     let bulkActionsHtml = '';
     if (this.depot.currentTab === 'ores') {
       const totalStoredOresCount = Object.values(this.depot.ores || {}).reduce((s, v) => s + v, 0);
-      const totalStoredOresValue = Object.entries(this.depot.ores || {}).reduce((s, [k, v]) => s + (ORE_DATA[k]?.value || 0) * v, 0);
       const playerCargoLen = this.player.cargo ? this.player.cargo.length : 0;
       const freeCargo = (this.player.maxCargo || 10) - playerCargoLen;
 
       bulkActionsHtml = `
         <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
-          <button id="btn-depot-all-ores" class="btn-action" style="height: 32px; font-size: 11px; padding: 0 12px; display: inline-flex; align-items: center; gap: 5px;" ${playerCargoLen > 0 ? '' : 'disabled'}>
+          <button id="btn-depot-all-ores" class="btn-action" style="height: 32px; font-size: 11.5px; padding: 0 12px; display: inline-flex; align-items: center; gap: 5px;" ${playerCargoLen > 0 ? '' : 'disabled'}>
             ${icon('arrow-down-to-line', '', 13)}
-            <span>ALLE AUS BOHRER EINLAGERN (${playerCargoLen})</span>
+            <span>Einlagern (${playerCargoLen})</span>
           </button>
-          <button id="btn-depot-fill-cargo" class="btn-3d-secondary" style="height: 32px; font-size: 11px; padding: 0 12px; display: inline-flex; align-items: center; gap: 5px;" ${(totalStoredOresCount > 0 && freeCargo > 0) ? '' : 'disabled'}>
+          <button id="btn-depot-fill-cargo" class="btn-3d-secondary" style="height: 32px; font-size: 11.5px; padding: 0 12px; display: inline-flex; align-items: center; gap: 5px;" ${(totalStoredOresCount > 0 && freeCargo > 0) ? '' : 'disabled'}>
             ${icon('arrow-up-from-line', '', 13)}
-            <span>BOHRER AUS DEPOT FÜLLEN (${freeCargo} frei)</span>
-          </button>
-          <button id="btn-depot-sell-all-ores" class="btn-buy" style="height: 32px; font-size: 11px; padding: 0 12px; display: inline-flex; align-items: center; gap: 5px;" ${totalStoredOresCount > 0 ? '' : 'disabled'}>
-            ${icon('coins', '', 13)}
-            <span>ALLE DEPOT-ERZE VERKAUFEN (+€${totalStoredOresValue.toLocaleString()})</span>
+            <span>Auffüllen (${freeCargo})</span>
           </button>
         </div>
       `;
     } else if (this.depot.currentTab === 'products') {
       const totalStoredProdCount = Object.values(this.depot.products || {}).reduce((s, v) => s + v, 0);
-      const totalStoredProdValue = Object.entries(this.depot.products || {}).reduce((s, [k, v]) => s + (FACTORY_PRODUCTS[k]?.value || 0) * v, 0);
       const playerProdCount = Object.values(this.player.factoryProducts || {}).reduce((s, v) => s + v, 0);
 
       bulkActionsHtml = `
         <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
-          <button id="btn-depot-all-products" class="btn-action" style="height: 32px; font-size: 11px; padding: 0 12px; display: inline-flex; align-items: center; gap: 5px;" ${playerProdCount > 0 ? '' : 'disabled'}>
+          <button id="btn-depot-all-products" class="btn-action" style="height: 32px; font-size: 11.5px; padding: 0 12px; display: inline-flex; align-items: center; gap: 5px;" ${playerProdCount > 0 ? '' : 'disabled'}>
             ${icon('arrow-down-to-line', '', 13)}
-            <span>ALLE EIGENEN WAREN EINLAGERN (${playerProdCount})</span>
+            <span>Einlagern (${playerProdCount})</span>
           </button>
-          <button id="btn-depot-withdraw-all-products" class="btn-3d-secondary" style="height: 32px; font-size: 11px; padding: 0 12px; display: inline-flex; align-items: center; gap: 5px;" ${totalStoredProdCount > 0 ? '' : 'disabled'}>
+          <button id="btn-depot-withdraw-all-products" class="btn-3d-secondary" style="height: 32px; font-size: 11.5px; padding: 0 12px; display: inline-flex; align-items: center; gap: 5px;" ${totalStoredProdCount > 0 ? '' : 'disabled'}>
             ${icon('arrow-up-from-line', '', 13)}
-            <span>ALLE WAREN AUSLAGERN (${totalStoredProdCount})</span>
-          </button>
-          <button id="btn-depot-sell-all-products" class="btn-buy" style="height: 32px; font-size: 11px; padding: 0 12px; display: inline-flex; align-items: center; gap: 5px;" ${totalStoredProdCount > 0 ? '' : 'disabled'}>
-            ${icon('coins', '', 13)}
-            <span>ALLE DEPOT-WAREN VERKAUFEN (+€${totalStoredProdValue.toLocaleString()})</span>
+            <span>Auslagern (${totalStoredProdCount})</span>
           </button>
         </div>
       `;
@@ -1361,7 +1406,11 @@ export class BaseSystem {
     let contentHtml = '';
 
     if (this.depot.currentTab === 'ores') {
-      const oreEntries = Object.keys(ORE_DATA);
+      const oreEntries = Object.keys(ORE_DATA).filter(key => {
+        const inDepot = this.depot.ores?.[key] || 0;
+        const inCargo = cargoOreCounts[key] || 0;
+        return this.player.isOreDiscovered(key) || inDepot > 0 || inCargo > 0;
+      });
       const freeDepot = capacity - totalStored;
       const playerCargoLength = this.player.cargo ? this.player.cargo.length : 0;
       const freeCargo = (this.player.maxCargo || 10) - playerCargoLength;
@@ -1369,14 +1418,17 @@ export class BaseSystem {
       contentHtml = `
         ${bulkActionsHtml}
         <div style="display: flex; flex-direction: column; gap: 6px; max-height: 270px; overflow-y: auto; padding-right: 2px;">
-          ${oreEntries.map(key => {
+          ${oreEntries.length === 0 ? `
+            <div style="text-align: center; padding: 24px 16px; color: #94a3b8; font-size: 12px; background: rgba(15,23,42,0.5); border-radius: 10px; border: 1px dashed rgba(255,255,255,0.1);">
+              Noch keine Erze entdeckt. Baue im Schacht Rohstoffe ab, um sie hier einzulagern!
+            </div>
+          ` : oreEntries.map(key => {
             const data = ORE_DATA[key];
             const inDepot = this.depot.ores?.[key] || 0;
             const inCargo = cargoOreCounts[key] || 0;
 
             const canDeposit = inCargo > 0 && freeDepot > 0;
             const canWithdraw = inDepot > 0 && freeCargo > 0;
-            const canSell = inDepot > 0;
 
             return `
               <div style="
@@ -1391,7 +1443,7 @@ export class BaseSystem {
               ">
                 <!-- Info links -->
                 <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
-                  <div style="display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; background: rgba(0,0,0,0.35); border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
+                  <div style="display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; min-width: 28px; min-height: 28px; max-width: 28px; max-height: 28px; flex-shrink: 0; aspect-ratio: 1 / 1; box-sizing: border-box; background: rgba(0,0,0,0.4); border-radius: 6px; border: 1px solid rgba(255,255,255,0.08);">
                     ${oreIcon(key, 16)}
                   </div>
                   <div style="display: flex; flex-direction: column; min-width: 0;">
@@ -1412,35 +1464,25 @@ export class BaseSystem {
                     <span style="color: #94a3b8;">Bohrer: <strong style="color: #e2e8f0;">${inCargo}x</strong></span>
                   </div>
 
-                  <!-- Aktionen -->
+                  <!-- Aktionen (Nur Ein-/Auslagern, kein Verkauf) -->
                   <div style="display: flex; align-items: center; gap: 4px;">
                     <!-- Auslagern -->
                     <button class="btn-withdraw-ore btn-3d-secondary" data-ore="${key}" ${canWithdraw ? '' : 'disabled'} style="
                       height: 28px; padding: 0 7px; font-size: 11px; font-weight: 800; border-radius: 6px;
                       opacity: ${canWithdraw ? '1' : '0.35'}; cursor: ${canWithdraw ? 'pointer' : 'default'};
-                    " title="1x in den Bohrer auslagern">-1</button>
-
-                    <button class="btn-withdraw-fill-ore btn-3d-secondary" data-ore="${key}" ${canWithdraw ? '' : 'disabled'} style="
-                      height: 28px; padding: 0 7px; font-size: 10px; font-weight: 700; border-radius: 6px;
-                      opacity: ${canWithdraw ? '1' : '0.35'}; cursor: ${canWithdraw ? 'pointer' : 'default'};
-                    " title="Bohrer-Laderaum mit diesem Erz füllen">Laden</button>
+                    " title="1x in Bohrer laden">-1</button>
 
                     <!-- Einlagern -->
-                    <button class="btn-deposit-ore btn-action" data-ore="${key}" ${canDeposit ? '' : 'disabled'} style="
+                    <button class="btn-deposit-ore btn-3d-secondary" data-ore="${key}" ${canDeposit ? '' : 'disabled'} style="
                       height: 28px; padding: 0 7px; font-size: 11px; font-weight: 800; border-radius: 6px;
                       opacity: ${canDeposit ? '1' : '0.35'}; cursor: ${canDeposit ? 'pointer' : 'default'};
                     " title="1x ins Depot einlagern">+1</button>
 
+                    <!-- Alle einlagern dieser Sorte -->
                     <button class="btn-deposit-all-ore btn-action" data-ore="${key}" ${canDeposit ? '' : 'disabled'} style="
-                      height: 28px; padding: 0 7px; font-size: 10px; font-weight: 800; border-radius: 6px;
+                      height: 28px; padding: 0 8px; font-size: 10.5px; font-weight: 700; border-radius: 6px;
                       opacity: ${canDeposit ? '1' : '0.35'}; cursor: ${canDeposit ? 'pointer' : 'default'};
-                    " title="Alle aus Bohrer ins Depot einlagern">+Alle</button>
-
-                    <!-- Direktverkauf aus Depot -->
-                    <button class="btn-sell-depot-ore btn-buy" data-ore="${key}" ${canSell ? '' : 'disabled'} style="
-                      height: 28px; padding: 0 8px; font-size: 10.5px; font-weight: 800; border-radius: 6px;
-                      opacity: ${canSell ? '1' : '0.35'}; cursor: ${canSell ? 'pointer' : 'default'};
-                    " title="1x direkt für €${data.value} verkaufen">€ Verkaufen</button>
+                    " title="Alle dieser Erzsorte aus Bohrer ins Depot">Alle (${inCargo})</button>
                   </div>
                 </div>
               </div>
@@ -1451,37 +1493,51 @@ export class BaseSystem {
     } else if (this.depot.currentTab === 'products') {
       const freeDepot = capacity - totalStored;
 
-      // 1. Alle veredelten Barren / Briketts / Kristalle
-      const refinedEntries = Object.entries(REFINED_ORE_DATA).map(([rawKey, rData]) => {
-        const key = rData.key;
-        const inDepot = this.depot.products?.[key] || 0;
-        const inPlayer = (playerProducts[key] || 0) + (this.player.cargo ? this.player.cargo.filter(c => c === key).length : 0);
-        const val = getRefinedOreNetValue(rawKey);
-        return {
-          key,
-          name: rData.name,
-          value: val,
-          desc: rData.desc,
-          inDepot,
-          inPlayer,
-          isBar: true
-        };
-      });
+      // 1. Alle veredelten Barren / Briketts / Kristalle (nur bereits entdeckte Steine oder Bestand > 0)
+      const refinedEntries = Object.entries(REFINED_ORE_DATA)
+        .filter(([rawKey, rData]) => {
+          const inDepot = this.depot.products?.[rData.key] || 0;
+          const inCargo = this.player.cargo ? this.player.cargo.filter(c => c === rData.key).length : 0;
+          const inPlayer = (playerProducts[rData.key] || 0) + inCargo;
+          return this.player.isOreDiscovered(rawKey) || inDepot > 0 || inPlayer > 0;
+        })
+        .map(([rawKey, rData]) => {
+          const key = rData.key;
+          const inDepot = this.depot.products?.[key] || 0;
+          const inPlayer = (playerProducts[key] || 0) + (this.player.cargo ? this.player.cargo.filter(c => c === key).length : 0);
+          const val = getRefinedOreNetValue(rawKey);
+          return {
+            key,
+            name: rData.name,
+            value: val,
+            desc: rData.desc,
+            inDepot,
+            inPlayer,
+            isBar: true
+          };
+        });
 
-      // 2. Industrielle Fabrik-Erzeugnisse
-      const factoryEntries = Object.entries(FACTORY_PRODUCTS).map(([key, prod]) => {
-        const inDepot = this.depot.products?.[key] || 0;
-        const inPlayer = playerProducts[key] || 0;
-        return {
-          key,
-          name: prod.name,
-          value: prod.value,
-          desc: prod.desc,
-          inDepot,
-          inPlayer,
-          isBar: false
-        };
-      });
+      // 2. Industrielle Fabrik-Erzeugnisse (nur wenn alle Zutaten entdeckt oder Bestand > 0)
+      const factoryEntries = Object.entries(FACTORY_PRODUCTS)
+        .filter(([key, prod]) => {
+          const inDepot = this.depot.products?.[key] || 0;
+          const inPlayer = playerProducts[key] || 0;
+          const allIngredientsDiscovered = Object.keys(prod.recipe).every(ore => this.player.isOreDiscovered(ore));
+          return allIngredientsDiscovered || inDepot > 0 || inPlayer > 0;
+        })
+        .map(([key, prod]) => {
+          const inDepot = this.depot.products?.[key] || 0;
+          const inPlayer = playerProducts[key] || 0;
+          return {
+            key,
+            name: prod.name,
+            value: prod.value,
+            desc: prod.desc,
+            inDepot,
+            inPlayer,
+            isBar: false
+          };
+        });
 
       const allProductItems = [...refinedEntries, ...factoryEntries];
 
@@ -1491,7 +1547,6 @@ export class BaseSystem {
           ${allProductItems.map(item => {
             const canDeposit = item.inPlayer > 0 && freeDepot > 0;
             const canWithdraw = item.inDepot > 0;
-            const canSell = item.inDepot > 0;
 
             return `
               <div style="
@@ -1504,8 +1559,9 @@ export class BaseSystem {
                 justify-content: space-between;
                 gap: 8px;
               ">
+                <!-- Links: Icon & Name -->
                 <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
-                  <div style="display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; background: rgba(0,0,0,0.35); border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
+                  <div style="display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; min-width: 28px; min-height: 28px; max-width: 28px; max-height: 28px; flex-shrink: 0; aspect-ratio: 1 / 1; box-sizing: border-box; background: rgba(0,0,0,0.4); border-radius: 6px; border: 1px solid rgba(255,255,255,0.08);">
                     ${itemDisplayIcon(item.key, 16)}
                   </div>
                   <div style="display: flex; flex-direction: column; min-width: 0;">
@@ -1513,42 +1569,38 @@ export class BaseSystem {
                       ${item.name}
                     </span>
                     <span style="font-size: 10px; color: #94a3b8;">
-                      Börsenwert: €${item.value} • ${item.isBar ? 'Aus Schmelzofen' : 'Fabrik-Werkstoff'}
+                      Börsenwert: €${item.value}
                     </span>
                   </div>
                 </div>
 
+                <!-- Rechts: Bestände & Stepper -->
                 <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+                  <!-- Bestände -->
                   <div style="display: flex; flex-direction: column; align-items: flex-end; font-size: 10.5px; font-weight: 700;">
-                    <span style="color: #38bdf8;">Depot: <strong style="color: #ffffff;">${item.inDepot}x</strong></span>
-                    <span style="color: #94a3b8;">Besitz: <strong style="color: #e2e8f0;">${item.inPlayer}x</strong></span>
+                    <span style="color: #10b981;">Depot: <strong style="color: #ffffff;">${item.inDepot}x</strong></span>
+                    <span style="color: #94a3b8;">Bohrer: <strong style="color: #e2e8f0;">${item.inPlayer}x</strong></span>
                   </div>
 
+                  <!-- Aktionen -->
                   <div style="display: flex; align-items: center; gap: 4px;">
-                    <button class="btn-withdraw-product btn-3d-secondary" data-product="${item.key}" ${canWithdraw ? '' : 'disabled'} style="
+                    <!-- Auslagern -->
+                    <button class="btn-withdraw-product btn-3d-secondary" data-prod="${item.key}" ${canWithdraw ? '' : 'disabled'} style="
                       height: 28px; padding: 0 7px; font-size: 11px; font-weight: 800; border-radius: 6px;
                       opacity: ${canWithdraw ? '1' : '0.35'}; cursor: ${canWithdraw ? 'pointer' : 'default'};
-                    " title="1x aus dem Depot nehmen">-1</button>
+                    " title="1x in Bohrer laden">-1</button>
 
-                    <button class="btn-withdraw-all-product btn-3d-secondary" data-product="${item.key}" ${canWithdraw ? '' : 'disabled'} style="
-                      height: 28px; padding: 0 7px; font-size: 10px; font-weight: 700; border-radius: 6px;
-                      opacity: ${canWithdraw ? '1' : '0.35'}; cursor: ${canWithdraw ? 'pointer' : 'default'};
-                    " title="Alle Einheiten aus dem Depot nehmen">-Alle</button>
-
-                    <button class="btn-deposit-product btn-action" data-product="${item.key}" ${canDeposit ? '' : 'disabled'} style="
+                    <!-- Einlagern -->
+                    <button class="btn-deposit-product btn-3d-secondary" data-prod="${item.key}" ${canDeposit ? '' : 'disabled'} style="
                       height: 28px; padding: 0 7px; font-size: 11px; font-weight: 800; border-radius: 6px;
                       opacity: ${canDeposit ? '1' : '0.35'}; cursor: ${canDeposit ? 'pointer' : 'default'};
-                    " title="1x ins Depot legen">+1</button>
+                    " title="1x ins Depot einlagern">+1</button>
 
-                    <button class="btn-deposit-all-product btn-action" data-product="${item.key}" ${canDeposit ? '' : 'disabled'} style="
-                      height: 28px; padding: 0 7px; font-size: 10px; font-weight: 800; border-radius: 6px;
+                    <!-- Alle einlagern -->
+                    <button class="btn-deposit-all-product btn-action" data-prod="${item.key}" ${canDeposit ? '' : 'disabled'} style="
+                      height: 28px; padding: 0 8px; font-size: 10.5px; font-weight: 700; border-radius: 6px;
                       opacity: ${canDeposit ? '1' : '0.35'}; cursor: ${canDeposit ? 'pointer' : 'default'};
-                    " title="Alle ins Depot legen">+Alle</button>
-
-                    <button class="btn-sell-depot-product btn-buy" data-product="${item.key}" ${canSell ? '' : 'disabled'} style="
-                      height: 28px; padding: 0 8px; font-size: 10.5px; font-weight: 800; border-radius: 6px;
-                      opacity: ${canSell ? '1' : '0.35'}; cursor: ${canSell ? 'pointer' : 'default'};
-                    " title="1x direkt für €${item.value} verkaufen">€ Verkaufen</button>
+                    " title="Alle aus Bohrer ins Depot">Alle (${item.inPlayer})</button>
                   </div>
                 </div>
               </div>
@@ -1558,56 +1610,72 @@ export class BaseSystem {
       `;
     } else if (this.depot.currentTab === 'upgrade') {
       const DEPOT_TIERS = [
-        { tier: 1, capacity: 150, costCash: 0, label: 'Standard-Depot' },
-        { tier: 2, capacity: 350, costCash: 1200, label: 'Erweiterte Hochregale' },
-        { tier: 3, capacity: 750, costCash: 3800, costComp: { hydraulic_part: 2 }, compName: '2x Hydraulikzylinder', label: 'Automatisierte Förderbrücke' },
-        { tier: 4, capacity: 1500, costCash: 9500, costComp: { titan_alloy: 2 }, compName: '2x Titan-Legierung', label: 'Schwergut-Containerterminal' },
-        { tier: 5, capacity: 3000, costCash: 24000, costComp: { quantum_chip: 2 }, compName: '2x Quanten-Steuerkern', label: 'Quanten-Kompressionslager' }
+        { tier: 1, capacity: 10, costCash: 0, label: 'Kompaktes Lagerfach' },
+        { tier: 2, capacity: 25, costCash: 250, label: 'Erweitertes Regallager' },
+        { tier: 3, capacity: 60, costCash: 800, costComp: { hydraulic_part: 1 }, compName: '1x Hydraulikzylinder', label: 'Automatisierte Förderbrücke' },
+        { tier: 4, capacity: 150, costCash: 2200, costComp: { titan_alloy: 1 }, compName: '1x Titan-Legierung', label: 'Schwergut-Containerterminal' },
+        { tier: 5, capacity: 400, costCash: 6500, costComp: { titan_alloy: 2 }, compName: '2x Titan-Legierung', label: 'Industrie-Großlager' },
+        { tier: 6, capacity: 1000, costCash: 16000, costComp: { quantum_chip: 2 }, compName: '2x Quanten-Steuerkern', label: 'Quanten-Kompressionslager' }
       ];
 
       const currentTier = this.depot.tier || 1;
       const nextTierData = DEPOT_TIERS.find(t => t.tier === currentTier + 1);
 
+      let canAffordDepotComp = true;
+      if (nextTierData && nextTierData.costComp) {
+        for (const [compKey, need] of Object.entries(nextTierData.costComp)) {
+          if ((this.player.components[compKey] || 0) < need) canAffordDepotComp = false;
+        }
+      }
+      const canAffordDepot = nextTierData && (this.player.cash >= nextTierData.costCash) && canAffordDepotComp;
+
       contentHtml = `
         <div style="display: flex; flex-direction: column; gap: 10px;">
-          <div style="background: #141c2b; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 6px;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 13px; font-weight: 700; color: #f8fafc;">Aktuelle Ausbaustufe: Stufe ${currentTier}</span>
-              <span style="color: #38bdf8; font-weight: 800; font-size: 13px;">${capacity} Lagerplätze</span>
-            </div>
-            <p style="font-size: 11.5px; color: #94a3b8; margin: 0; line-height: 1.4;">
-              Erweitere die Lagerkapazität des Depots, um riesige Mengen an Erzen für Fabrik-Aufträge und künftige Expeditionen vorzuhalten.
-            </p>
+          <div style="background: #141c2b; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 13px; font-weight: 700; color: #f8fafc;">Stufe ${currentTier}</span>
+            <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-weight: 800; font-size: 12px; padding: 2px 8px; border-radius: 6px;">${capacity} Plätze</span>
           </div>
 
           ${nextTierData ? `
-            <div style="background: rgba(56, 189, 248, 0.08); border: 1.5px solid #38bdf8; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+            <div style="background: rgba(56, 189, 248, 0.08); border: 1.5px solid #38bdf8; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px;">
               <div style="display: flex; justify-content: space-between; align-items: center;">
                 <span style="font-size: 13.5px; font-weight: 800; color: #ffffff;">Stufe ${nextTierData.tier}: ${nextTierData.label}</span>
-                <span style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; font-weight: 800; font-size: 11px; padding: 2px 8px; border-radius: 6px;">
-                  +${nextTierData.capacity - capacity} Plätze (${nextTierData.capacity} gesamt)
+                <span style="background: rgba(56, 189, 248, 0.2); border: 1px solid rgba(56, 189, 248, 0.35); color: #38bdf8; font-weight: 800; font-size: 12px; padding: 2px 8px; border-radius: 6px;">
+                  ${nextTierData.capacity} Plätze
                 </span>
               </div>
 
-              <div style="display: flex; align-items: center; gap: 12px; font-size: 12px; font-weight: 700; flex-wrap: wrap;">
-                <span style="color: ${this.player.cash >= nextTierData.costCash ? '#fbbf24' : '#ef4444'};">
-                  Kosten: €${nextTierData.costCash.toLocaleString()}
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span style="background: rgba(251, 191, 36, 0.12); border: 1px solid ${this.player.cash >= nextTierData.costCash ? 'rgba(251, 191, 36, 0.3)' : 'rgba(239, 68, 68, 0.4)'}; color: ${this.player.cash >= nextTierData.costCash ? '#fbbf24' : '#ef4444'}; font-weight: 800; font-size: 11.5px; padding: 3px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+                  ${icon('coins', '', 12)} €${nextTierData.costCash.toLocaleString()}
                 </span>
-                ${nextTierData.compName ? `
-                  <span style="color: #c084fc;">
-                    Bauteile: ${nextTierData.compName}
-                  </span>
-                ` : ''}
+                ${nextTierData.costComp ? Object.entries(nextTierData.costComp).map(([compKey, need]) => {
+                  const have = this.player.components[compKey] || 0;
+                  const isMet = have >= need;
+                  const compIconName = COMPONENT_ICONS[compKey] || 'box';
+                  const compNames = {
+                    hydraulic_part: 'Hydraulik-Zylinder',
+                    titan_alloy: 'Titan-Legierung',
+                    laser_lens: 'Kristall-Fokuslinse',
+                    quantum_chip: 'Quanten-Steuerkern'
+                  };
+                  const cName = compNames[compKey] || compKey;
+                  return `
+                    <span style="background: rgba(192, 132, 252, 0.12); border: 1px solid ${isMet ? 'rgba(192, 132, 252, 0.3)' : 'rgba(239, 68, 68, 0.4)'}; color: ${isMet ? '#c084fc' : '#ef4444'}; font-weight: 700; font-size: 11.5px; padding: 3px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+                      ${icon(compIconName, '', 12)} ${need}x ${cName} (${have}/${need})
+                    </span>
+                  `;
+                }).join('') : ''}
               </div>
 
-              <button id="btn-depot-upgrade" class="btn-buy" style="height: 34px; font-size: 12px; font-weight: 800; margin-top: 4px;">
+              <button id="btn-depot-upgrade" class="btn-buy" style="height: 34px; font-size: 12px; font-weight: 800; margin-top: 2px;" ${canAffordDepot ? '' : 'disabled'}>
                 ${icon('wrench', '', 14)}
-                <span>JETZT AUSBAUEN (+${nextTierData.capacity - capacity} KAPAZITÄT)</span>
+                <span>Ausbauen</span>
               </button>
             </div>
           ` : `
             <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; border-radius: 10px; padding: 14px; text-align: center; color: #10b981; font-weight: 800; font-size: 13px;">
-              MAXIMALE AUSBAUSTUFE ERREICHT (3.000 PLÄTZE)
+              MAXIMALER AUSBAU (1.000 PLÄTZE)
             </div>
           `}
         </div>
@@ -1615,25 +1683,6 @@ export class BaseSystem {
     }
 
     // Modal-Fußzeile
-    const footerHtml = `
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; flex-wrap: wrap; gap: 8px;">
-        <div style="display: flex; gap: 6px;">
-          <button id="btn-depot-to-market" class="btn-action" style="height: 32px; font-size: 11px; font-weight: 700; padding: 0 12px; display: inline-flex; align-items: center; gap: 5px;">
-            ${icon('coins', '', 12)}
-            <span>ZUR ERZ-BÖRSE</span>
-          </button>
-          <button id="btn-depot-to-factory" class="btn-action" style="height: 32px; font-size: 11px; font-weight: 700; padding: 0 12px; display: inline-flex; align-items: center; gap: 5px;">
-            ${icon('factory', '', 12)}
-            <span>ZUR FABRIK</span>
-          </button>
-        </div>
-
-        <button id="btn-depot-close" class="btn-3d-secondary" style="height: 32px; font-size: 11.5px; font-weight: 700; padding: 0 16px;">
-          SCHLIESSEN
-        </button>
-      </div>
-    `;
-
     this.modalBodyEl.innerHTML = `
       <div style="display: flex; flex-direction: column;">
         ${headerHtml}
@@ -1641,7 +1690,6 @@ export class BaseSystem {
         <div id="depot-tab-content">
           ${contentHtml}
         </div>
-        ${footerHtml}
       </div>
     `;
 
@@ -1672,8 +1720,6 @@ export class BaseSystem {
     const btnFillCargo = body.querySelector('#btn-depot-fill-cargo');
     if (btnFillCargo) btnFillCargo.onclick = () => this.fillCargoFromDepot();
 
-    const btnSellAllOres = body.querySelector('#btn-depot-sell-all-ores');
-    if (btnSellAllOres) btnSellAllOres.onclick = () => this.sellAllDepotOres();
 
     // Bulk Aktionen Waren
     const btnAllProducts = body.querySelector('#btn-depot-all-products');
@@ -1682,10 +1728,8 @@ export class BaseSystem {
     const btnWithdrawAllProducts = body.querySelector('#btn-depot-withdraw-all-products');
     if (btnWithdrawAllProducts) btnWithdrawAllProducts.onclick = () => this.withdrawAllProducts();
 
-    const btnSellAllProducts = body.querySelector('#btn-depot-sell-all-products');
-    if (btnSellAllProducts) btnSellAllProducts.onclick = () => this.sellAllDepotProducts();
 
-    // Einzelaktionen Erze
+    // Einzelaktionen Erze (Einlagern / Auslagern)
     body.querySelectorAll('.btn-withdraw-ore').forEach(btn => {
       btn.onclick = () => {
         const ore = btn.getAttribute('data-ore');
@@ -1714,14 +1758,7 @@ export class BaseSystem {
       };
     });
 
-    body.querySelectorAll('.btn-sell-depot-ore').forEach(btn => {
-      btn.onclick = () => {
-        const ore = btn.getAttribute('data-ore');
-        this.sellDepotOre(ore, 1);
-      };
-    });
-
-    // Einzelaktionen Waren
+    // Einzelaktionen Waren (Einlagern / Auslagern)
     body.querySelectorAll('.btn-withdraw-product').forEach(btn => {
       btn.onclick = () => {
         const prod = btn.getAttribute('data-product');
@@ -1750,43 +1787,18 @@ export class BaseSystem {
       };
     });
 
-    body.querySelectorAll('.btn-sell-depot-product').forEach(btn => {
-      btn.onclick = () => {
-        const prod = btn.getAttribute('data-product');
-        this.sellDepotProduct(prod, 1);
-      };
-    });
-
     // Ausbau
     const btnUpgrade = body.querySelector('#btn-depot-upgrade');
     if (btnUpgrade) {
       btnUpgrade.onclick = () => this.upgradeDepot();
     }
 
-    // Navigation & Schließen
-    const btnClose = body.querySelector('#btn-depot-close');
-    if (btnClose) btnClose.onclick = () => this.closeModal();
 
-    const btnToMarket = body.querySelector('#btn-depot-to-market');
-    if (btnToMarket) {
-      btnToMarket.onclick = () => {
-        soundFx.playClick();
-        this.openMarketModal();
-      };
-    }
-
-    const btnToFactory = body.querySelector('#btn-depot-to-factory');
-    if (btnToFactory) {
-      btnToFactory.onclick = () => {
-        soundFx.playClick();
-        this.openFactoryModal();
-      };
-    }
   }
 
   depositOre(oreKey, count = 1) {
     if (!this.depot.ores) this.depot.ores = {};
-    const freeCapacity = (this.depot.capacity || 150) - this.getDepotTotalCount();
+    const freeCapacity = (this.depot.capacity || 10) - this.getDepotTotalCount();
     if (freeCapacity <= 0) {
       this.scene.events.emit('notify', '⚠️ Depot ist voll! Baue die Lagerkapazität aus.');
       return;
@@ -1924,7 +1936,7 @@ export class BaseSystem {
 
   depositProduct(productKey, count = 1) {
     if (!this.depot.products) this.depot.products = {};
-    const freeCapacity = (this.depot.capacity || 150) - this.getDepotTotalCount();
+    const freeCapacity = (this.depot.capacity || 10) - this.getDepotTotalCount();
     if (freeCapacity <= 0) {
       this.scene.events.emit('notify', '⚠️ Depot ist voll! Baue die Lagerkapazität aus.');
       return;
@@ -2045,7 +2057,7 @@ export class BaseSystem {
 
   depositAllOres() {
     if (!this.depot.ores) this.depot.ores = {};
-    const freeCapacity = (this.depot.capacity || 150) - this.getDepotTotalCount();
+    const freeCapacity = (this.depot.capacity || 10) - this.getDepotTotalCount();
     if (freeCapacity <= 0) {
       this.scene.events.emit('notify', '⚠️ Depot ist voll! Baue die Lagerkapazität aus.');
       return;
@@ -2074,7 +2086,7 @@ export class BaseSystem {
 
   depositAllProducts() {
     if (!this.depot.products) this.depot.products = {};
-    const freeCapacity = (this.depot.capacity || 150) - this.getDepotTotalCount();
+    const freeCapacity = (this.depot.capacity || 10) - this.getDepotTotalCount();
     if (freeCapacity <= 0) {
       this.scene.events.emit('notify', '⚠️ Depot ist voll! Baue die Lagerkapazität aus.');
       return;
@@ -2106,11 +2118,12 @@ export class BaseSystem {
 
   upgradeDepot() {
     const DEPOT_TIERS = [
-      { tier: 1, capacity: 150, costCash: 0 },
-      { tier: 2, capacity: 350, costCash: 1200 },
-      { tier: 3, capacity: 750, costCash: 3800, costComp: { hydraulic_part: 2 } },
-      { tier: 4, capacity: 1500, costCash: 9500, costComp: { titan_alloy: 2 } },
-      { tier: 5, capacity: 3000, costCash: 24000, costComp: { quantum_chip: 2 } }
+      { tier: 1, capacity: 10, costCash: 0 },
+      { tier: 2, capacity: 25, costCash: 250 },
+      { tier: 3, capacity: 60, costCash: 800, costComp: { hydraulic_part: 1 } },
+      { tier: 4, capacity: 150, costCash: 2200, costComp: { titan_alloy: 1 } },
+      { tier: 5, capacity: 400, costCash: 6500, costComp: { titan_alloy: 2 } },
+      { tier: 6, capacity: 1000, costCash: 16000, costComp: { quantum_chip: 2 } }
     ];
 
     const currentTier = this.depot.tier || 1;
@@ -2217,42 +2230,61 @@ export class BaseSystem {
 
     let questsHtml = '<div style="display: flex; flex-direction: column; gap: 10px; margin: 12px 0; max-height: 280px; overflow-y: auto; padding-right: 4px;">';
 
-    quests.forEach((q) => {
-      let canFulfill = true;
-      let reqsText = [];
-      for (const [ore, needed] of Object.entries(q.reqs)) {
-        const haveCargo = cargoCounts[ore] || 0;
-        const haveDepot = depotOres[ore] || 0;
-        const totalHave = haveCargo + haveDepot;
-        const oreName = ORE_DATA[ore]?.name || ore;
-        if (totalHave < needed) canFulfill = false;
-        reqsText.push(`<span style="color: ${totalHave >= needed ? '#10b981' : '#f87171'}; font-weight: 600;">${oreName}: ${totalHave}/${needed}</span>`);
-      }
+    const visibleQuests = quests.filter(q => Object.keys(q.reqs).every(ore => p.isOreDiscovered(ore)));
 
+    if (visibleQuests.length === 0) {
       questsHtml += `
-        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid ${canFulfill ? '#10b981' : 'rgba(255,255,255,0.08)'}; border-radius: 10px; padding: 12px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <strong style="color: #f8fafc; font-size: 13px;">${q.title}</strong>
-            <span style="font-size: 11px; color: #94a3b8;">${q.depthHint}</span>
-          </div>
-          <div style="display: flex; gap: 12px; margin-bottom: 8px; font-size: 12px;">
-            Benötigt: ${reqsText.join(', ')}
-          </div>
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div style="display: flex; align-items: center; gap: 8px; font-size: 12px;">
-              <span style="color: #38bdf8; font-weight: bold; display: inline-flex; align-items: center; gap: 4px;">
-                ${icon(q.rewardComp.iconName, '', 14)} +1 ${q.rewardComp.name}
-              </span>
-              <span style="color: #fbbf24; font-weight: bold;">+€${q.rewardCash}</span>
-              <span style="color: #c084fc; font-weight: bold;">+${q.rewardXp} XP</span>
-            </div>
-            <button class="btn-claim-geologist btn-buy" data-qid="${q.id}" ${canFulfill ? '' : 'disabled'} style="height: 32px; padding: 0 14px; font-size: 11.5px; font-weight: 700;">
-              ${canFulfill ? 'Erze abgeben' : 'Erze fehlen'}
-            </button>
-          </div>
+        <div style="text-align: center; padding: 20px 16px; color: #94a3b8; font-size: 12px; background: rgba(15,23,42,0.5); border-radius: 10px; border: 1px dashed rgba(255,255,255,0.1);">
+          Erkunde tiefere Gesteinsschichten, um neue Proben-Aufträge freizuschalten.
         </div>
       `;
-    });
+    } else {
+      visibleQuests.forEach((q) => {
+        let canFulfill = true;
+        const reqBadges = Object.entries(q.reqs).map(([ore, needed]) => {
+          const haveCargo = cargoCounts[ore] || 0;
+          const haveDepot = depotOres[ore] || 0;
+          const totalHave = haveCargo + haveDepot;
+          const oreName = ORE_DATA[ore]?.name || ore;
+          if (totalHave < needed) canFulfill = false;
+          const isMet = totalHave >= needed;
+          return `
+            <span style="background: rgba(15, 23, 42, 0.8); border: 1px solid ${isMet ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}; color: ${isMet ? '#10b981' : '#f87171'}; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+              ${oreIcon(ore, 12)} ${oreName} (${totalHave}/${needed})
+            </span>
+          `;
+        }).join('');
+
+        questsHtml += `
+          <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid ${canFulfill ? '#10b981' : 'rgba(255,255,255,0.08)'}; border-radius: 10px; padding: 10px 14px; display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <strong style="color: #f8fafc; font-size: 13px;">${q.title}</strong>
+              <span style="font-size: 11px; color: #94a3b8;">${q.depthHint}</span>
+            </div>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+              ${reqBadges}
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 2px;">
+              <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                <span style="background: rgba(192, 132, 252, 0.12); border: 1px solid rgba(192, 132, 252, 0.3); color: #c084fc; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+                  ${icon(q.rewardComp.iconName, '', 11)} 1x ${q.rewardComp.name}
+                </span>
+                <span style="background: rgba(251, 191, 36, 0.12); border: 1px solid rgba(251, 191, 36, 0.3); color: #fbbf24; font-weight: 800; font-size: 11.5px; padding: 2px 8px; border-radius: 6px;">
+                  €${q.rewardCash}
+                </span>
+                <span style="background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.3); color: #a855f7; font-weight: 800; font-size: 11.5px; padding: 2px 8px; border-radius: 6px;">
+                  ${q.rewardXp} XP
+                </span>
+              </div>
+              <button class="btn-claim-geologist btn-buy" data-qid="${q.id}" ${canFulfill ? '' : 'disabled'} style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">
+                ${icon('check', '', 12)}
+                <span>Abgeben</span>
+              </button>
+            </div>
+          </div>
+        `;
+      });
+    }
     questsHtml += '</div>';
 
     // Komponenten-Inventar des Spielers
@@ -2266,16 +2298,8 @@ export class BaseSystem {
     `;
 
     const content = `
-      <p style="font-size: 12px; color: #94a3b8; margin-bottom: 10px;">
-        "Hallo Kollege! Ich analysiere geologische Besonderheiten im Gestein. Bring mir die gesuchten Erzproben (aus Frachtraum oder Depot), und ich überlasse dir wertvolle Spezial-Bauteile für deine Tech-Upgrades und Bauprojekte!"
-      </p>
       ${compHeader}
       ${questsHtml}
-      <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
-        <button id="btn-geologist-close" class="btn-3d-secondary" style="height: 32px; font-size: 11.5px; font-weight: 700; padding: 0 16px;">
-          SCHLIESSEN
-        </button>
-      </div>
     `;
 
     this.openModal(`
@@ -2285,13 +2309,7 @@ export class BaseSystem {
       </div>
     `, content);
 
-    const btnGeologistClose = document.getElementById('btn-geologist-close');
-    if (btnGeologistClose) {
-      btnGeologistClose.onclick = () => {
-        soundFx.playClick();
-        this.closeModal();
-      };
-    }
+
 
     // Abgabe Event Listener
     const claimBtns = document.querySelectorAll('.btn-claim-geologist');
@@ -2398,10 +2416,10 @@ export class BaseSystem {
     const comps = p.components;
     const compHeader = `
       <div style="background: rgba(15,23,42,0.85); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-around; font-size: 12px; margin-bottom: 12px; flex-wrap: wrap; gap: 6px;">
-        <span style="display: inline-flex; align-items: center; gap: 4px;">${icon('cog', '', 13)} Hydraulik: <strong style="color: #38bdf8;">${comps.hydraulic_part || 0}</strong></span>
-        <span style="display: inline-flex; align-items: center; gap: 4px;">${icon('shield-check', '', 13)} Titan: <strong style="color: #38bdf8;">${comps.titan_alloy || 0}</strong></span>
-        <span style="display: inline-flex; align-items: center; gap: 4px;">${icon('disc', '', 13)} Linse: <strong style="color: #38bdf8;">${comps.laser_lens || 0}</strong></span>
-        <span style="display: inline-flex; align-items: center; gap: 4px;">${icon('atom', '', 13)} Quanten-Kern: <strong style="color: #38bdf8;">${comps.quantum_chip || 0}</strong></span>
+        <span style="display: inline-flex; align-items: center; gap: 4px;">${icon('cog', '', 13)} Hydraulik-Zylinder: <strong style="color: #38bdf8;">${comps.hydraulic_part || 0}</strong></span>
+        <span style="display: inline-flex; align-items: center; gap: 4px;">${icon('shield-check', '', 13)} Titan-Legierung: <strong style="color: #38bdf8;">${comps.titan_alloy || 0}</strong></span>
+        <span style="display: inline-flex; align-items: center; gap: 4px;">${icon('disc', '', 13)} Kristall-Fokuslinse: <strong style="color: #38bdf8;">${comps.laser_lens || 0}</strong></span>
+        <span style="display: inline-flex; align-items: center; gap: 4px;">${icon('atom', '', 13)} Quanten-Steuerkern: <strong style="color: #38bdf8;">${comps.quantum_chip || 0}</strong></span>
       </div>
     `;
 
@@ -2445,45 +2463,74 @@ export class BaseSystem {
         const canAffordCash = p.cash >= nextTier.cost;
 
         let canAffordComp = true;
-        let compText = '';
         if (nextTier.comp) {
           const haveComp = p.components[nextTier.comp.key] || 0;
           if (haveComp < nextTier.comp.count) canAffordComp = false;
-          const compIconName = COMPONENT_ICONS[nextTier.comp.key] || 'box';
-          compText = `<span style="color: ${haveComp >= nextTier.comp.count ? '#10b981' : '#f87171'}; font-weight: 700; margin-left: 6px; display: inline-flex; align-items: center; gap: 4px;">+ ${icon(compIconName, '', 12)} ${nextTier.comp.count}x ${nextTier.comp.name} (${haveComp}/${nextTier.comp.count})</span>`;
         }
 
         const canBuy = isLevelMet && canAffordCash && canAffordComp;
-        const isDrill = track.id === 'drill';
+        const compIconName = nextTier.comp ? (COMPONENT_ICONS[nextTier.comp.key] || 'box') : 'box';
+        const haveComp = nextTier.comp ? (p.components[nextTier.comp.key] || 0) : 0;
+        const compBadge = nextTier.comp ? `
+          <span style="background: rgba(192, 132, 252, 0.12); border: 1px solid ${haveComp >= nextTier.comp.count ? 'rgba(192, 132, 252, 0.3)' : 'rgba(239, 68, 68, 0.4)'}; color: ${haveComp >= nextTier.comp.count ? '#c084fc' : '#ef4444'}; font-weight: 700; font-size: 11px; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;">
+            ${icon(compIconName, '', 12)} ${nextTier.comp.count}x ${nextTier.comp.name} (${haveComp}/${nextTier.comp.count})
+          </span>
+        ` : '';
+
+        const levelBadge = !isLevelMet ? `
+          <span style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; font-weight: 700; font-size: 11px; padding: 2px 6px; border-radius: 4px; white-space: nowrap;">
+            Lv. ${nextTier.level}
+          </span>
+        ` : '';
+
+        const costBadge = `
+          <span style="background: rgba(251, 191, 36, 0.12); border: 1px solid ${canAffordCash ? 'rgba(251, 191, 36, 0.3)' : 'rgba(239, 68, 68, 0.4)'}; color: ${canAffordCash ? '#fbbf24' : '#ef4444'}; font-weight: 800; font-size: 11.5px; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; gap: 3px; width: 100%; box-sizing: border-box; white-space: nowrap;">
+            ${icon('coins', '', 11)} €${nextTier.cost}
+          </span>
+        `;
 
         actionHtml = `
-          <div class="cat-action-row" style="margin-top: 8px; display: flex; justify-content: space-between; align-items: center; background: rgba(15,23,42,0.6); padding: 10px 12px; border-radius: 8px;">
-            <div class="cat-next-desc" style="display: flex; flex-direction: column; gap: 3px;">
-              <div>
-                <strong style="color: #f8fafc; font-size: 13px;">${nextTier.name} <span style="color: #38bdf8; font-weight: 600; font-size: 12px; margin-left: 4px;">(${nextTier.stat})</span></strong>
-                ${compText}
-              </div>
-              <span style="font-size: 11px; color: #94a3b8;">${nextTier.desc}</span>
-              ${isDrill ? `<span style="font-size: 11px; color: #38bdf8;">Hinweis: Nach Erforschung muss der Bohrkopf im HANGAR montiert werden.</span>` : ''}
-              ${!canAffordComp && nextTier.comp ? `<span style="font-size: 11px; color: #fbbf24;">Tipp: Bauteil beim Steineforscher erhältlich!</span>` : ''}
+          <div class="cat-action-row" style="margin-top: 8px; display: flex; align-items: center; background: rgba(15,23,42,0.6); padding: 8px 12px; border-radius: 8px; gap: 10px; box-sizing: border-box;">
+            <!-- Spalte 1: Modul-Name (200px) -->
+            <div style="width: 200px; min-width: 200px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              <strong style="color: #f8fafc; font-size: 13px;">${nextTier.name}</strong>
             </div>
-            <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
-              ${!isLevelMet ? `<span class="badge-level-req">Lvl ${nextTier.level}</span>` : ''}
-              <button class="btn-buy" id="btn-buy-track-${track.id}" ${canBuy ? '' : 'disabled'} style="height: 32px; padding: 0 14px; font-weight: 800; color: ${canBuy ? '#091220' : '#94a3b8'};">
-                ${isDrill ? 'Bauplan' : 'Stufe'} ${nextTier.tier}: €${nextTier.cost}
+
+            <!-- Spalte 2: Stat (100px) -->
+            <div style="width: 100px; min-width: 100px; flex-shrink: 0;">
+              <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-weight: 700; font-size: 11.5px; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; white-space: nowrap;">
+                ${nextTier.stat}
+              </span>
+            </div>
+
+            <!-- Spalte 3: Spezialbauteile & Level (flex: 1, rechtsbündig) -->
+            <div style="flex: 1; min-width: 0; display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
+              ${levelBadge}
+              ${compBadge}
+            </div>
+
+            <!-- Spalte 4: Preis (90px) -->
+            <div style="width: 90px; min-width: 90px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+              ${costBadge}
+            </div>
+
+            <!-- Spalte 5: Button (110px) -->
+            <div style="width: 110px; min-width: 110px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end;">
+              <button class="btn-buy" id="btn-buy-track-${track.id}" ${canBuy ? '' : 'disabled'} style="width: 100%; height: 30px; padding: 0 10px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+                ${icon('cpu', '', 12)}
+                <span>Erforschen</span>
               </button>
             </div>
           </div>
         `;
       } else {
         actionHtml = `
-          <div class="cat-action-row" style="margin-top: 8px; display: flex; justify-content: space-between; align-items: center; background: rgba(15,23,42,0.6); padding: 10px 12px; border-radius: 8px;">
-            <div class="cat-next-desc">
-              <strong style="color: #10b981; display: inline-flex; align-items: center; gap: 6px;">${icon('award', '', 14)} Maximale Ausbaustufe installiert</strong>
-              <div style="font-size: 11px; color: #94a3b8;">Höchste Technologieklasse erreicht. Keine weiteren Upgrades nötig.</div>
+          <div class="cat-action-row" style="margin-top: 8px; display: flex; align-items: center; background: rgba(15,23,42,0.6); padding: 8px 12px; border-radius: 8px; gap: 10px; box-sizing: border-box;">
+            <div style="flex: 1; display: flex; align-items: center; gap: 6px;">
+              <strong style="color: #10b981; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px;">${icon('award', '', 14)} Vollständig erforscht</strong>
             </div>
-            <div class="cat-max-badge">
-              <span>MAX STUFE ${track.maxTier}</span>
+            <div style="width: 110px; min-width: 110px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end;">
+              <span style="font-size: 11px; color: #10b981; font-weight: 700; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); padding: 3px 8px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box;">MAX</span>
             </div>
           </div>
         `;
@@ -2508,15 +2555,7 @@ export class BaseSystem {
     });
     cardsHtml += '</div>';
 
-    const footerHtml = `
-      <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
-        <button id="btn-lab-close" class="btn-3d-secondary" style="height: 32px; font-size: 11.5px; font-weight: 700; padding: 0 16px;">
-          SCHLIESSEN
-        </button>
-      </div>
-    `;
-
-    const fullContent = compHeader + cardsHtml + footerHtml;
+    const fullContent = compHeader + cardsHtml;
     this.openModal(`
       <div style="display: flex; align-items: center; gap: 8px;">
         ${icon('microscope', '', 18)}
@@ -2553,13 +2592,7 @@ export class BaseSystem {
       }
     });
 
-    const btnLabClose = document.getElementById('btn-lab-close');
-    if (btnLabClose) {
-      btnLabClose.onclick = () => {
-        soundFx.playClick();
-        this.closeModal();
-      };
-    }
+
   }
 
   // =========================================================
@@ -2660,11 +2693,6 @@ export class BaseSystem {
           ${icon('container', '', 14)}
           <span>ALLE FUNDE INS FAHRZEUG ÜBERTRAGEN</span>
         </button>
-        <div style="display: flex; justify-content: flex-end; margin-top: 6px;">
-          <button id="btn-drone-close" class="btn-3d-secondary" style="height: 32px; font-size: 11.5px; font-weight: 700; padding: 0 16px;">
-            SCHLIESSEN
-          </button>
-        </div>
       </div>
     `;
 
@@ -2675,13 +2703,7 @@ export class BaseSystem {
       </div>
     `, content);
 
-    const btnDroneClose = document.getElementById('btn-drone-close');
-    if (btnDroneClose) {
-      btnDroneClose.onclick = () => {
-        soundFx.playClick();
-        this.closeModal();
-      };
-    }
+
 
     const btnCollect = document.getElementById('btn-collect-drone-ores');
     if (btnCollect) {
@@ -2733,12 +2755,6 @@ export class BaseSystem {
             ${maxDepth >= 5 ? `WARPEN (${maxDepth}m)` : 'TIEFE ZU GERING'}
           </button>
         </div>
-
-        <div style="display: flex; justify-content: flex-end; margin-top: 6px;">
-          <button id="btn-teleporter-close" class="btn-3d-secondary" style="height: 32px; font-size: 11.5px; font-weight: 700; padding: 0 16px;">
-            SCHLIESSEN
-          </button>
-        </div>
       </div>
     `;
 
@@ -2749,13 +2765,7 @@ export class BaseSystem {
       </div>
     `, content);
 
-    const btnTeleporterClose = document.getElementById('btn-teleporter-close');
-    if (btnTeleporterClose) {
-      btnTeleporterClose.onclick = () => {
-        soundFx.playClick();
-        this.closeModal();
-      };
-    }
+
 
     const btnPipe = document.getElementById('btn-pipe-sell');
     if (btnPipe) {
@@ -2803,11 +2813,6 @@ export class BaseSystem {
         <div style="background: #141c2c; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px; font-size: 12px; color: #38bdf8;">
           Bonus-Effekt: Das Kraftwerk versorgt die Docking-Station mit Starkstrom (Verdoppelte Tank- und Reparatur-Geschwindigkeit)!
         </div>
-        <div style="display: flex; justify-content: flex-end; margin-top: 6px;">
-          <button id="btn-powerplant-close" class="btn-3d-secondary" style="height: 32px; font-size: 11.5px; font-weight: 700; padding: 0 16px;">
-            SCHLIESSEN
-          </button>
-        </div>
       </div>
     `;
 
@@ -2818,13 +2823,7 @@ export class BaseSystem {
       </div>
     `, content);
 
-    const btnPowerClose = document.getElementById('btn-powerplant-close');
-    if (btnPowerClose) {
-      btnPowerClose.onclick = () => {
-        soundFx.playClick();
-        this.closeModal();
-      };
-    }
+
   }
 
   // =========================================================
@@ -2839,7 +2838,6 @@ export class BaseSystem {
       sammlerInfo = `
         <div style="background: rgba(16,185,129,0.15); border: 1px solid #10b981; border-radius: 10px; padding: 10px 12px; font-size: 12px; display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
           <span style="color: #10b981; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">${icon('microscope', '', 14)} Steineforscher wartet am Hangar! (${Math.ceil(this.sammlerTimer)}s)</span>
-          <button id="btn-talk-sammler-dock" class="btn-buy" style="height: 32px; padding: 0 12px; font-size: 11.5px;">AUFTRÄGE ÖFFNEN</button>
         </div>
       `;
     } else if (this.sammlerState === 'WALKING_IN') {
@@ -2879,76 +2877,12 @@ export class BaseSystem {
     const nextTankData = canUpgradeTank ? TANK_TIERS[curTankTier] : null;
     const canAffordTank = checkAfford(nextTankData);
 
-    const tankSection = `
-      <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); padding: 10px 14px; border-radius: 10px; display: flex; flex-direction: column; gap: 6px;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <div>
-            <strong style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #f8fafc;">
-              ${icon('fuel', '', 14)} Treibstoff-Tank
-            </strong>
-            <div style="font-size: 11.5px; color: #94a3b8; margin-top: 1px;">
-              Installiert: <strong style="color: #38bdf8;">${curTankData.name} (${curTankData.stat})</strong>
-            </div>
-          </div>
-          ${canUpgradeTank ? `
-            <button id="btn-upgrade-tank-dock" class="btn-buy" style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 800;" ${canAffordTank ? '' : 'disabled'}>
-              ${icon('fuel', '', 12)} TANK VERBESSERN: €${nextTankData.cost}
-            </button>
-          ` : `
-            <span style="font-size: 11px; color: #10b981; font-weight: 700; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); padding: 3px 8px; border-radius: 6px;">
-              MAXIMALER TANK
-            </span>
-          `}
-        </div>
-        ${canUpgradeTank ? `
-          <div style="font-size: 11px; color: #94a3b8;">
-            Nächste Stufe: <strong style="color: #f8fafc;">${nextTankData.name}</strong> (${nextTankData.stat}) &bull; ${nextTankData.desc}
-            ${formatCompReq(nextTankData)}${formatLevelReq(nextTankData)}
-          </div>
-        ` : `
-          <div style="font-size: 11px; color: #10b981;">Höchste Treibstoffkapazität erreicht.</div>
-        `}
-      </div>
-    `;
-
     // 2. Gehäuseschutz & Karosserie (Case-Schutz)
     const curHullTier = this.player.hullTier || 1;
     const curHullData = this.player.getHullData ? this.player.getHullData() : (HULL_TIERS[curHullTier - 1] || HULL_TIERS[0]);
     const canUpgradeHull = curHullTier < HULL_TIERS.length;
     const nextHullData = canUpgradeHull ? HULL_TIERS[curHullTier] : null;
     const canAffordHull = checkAfford(nextHullData);
-
-    const hullSection = `
-      <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); padding: 10px 14px; border-radius: 10px; display: flex; flex-direction: column; gap: 6px;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <div>
-            <strong style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #f8fafc;">
-              ${icon('shield-cog', '', 14)} Gehäuseschutz (Case-Schutz)
-            </strong>
-            <div style="font-size: 11.5px; color: #94a3b8; margin-top: 1px;">
-              Installiert: <strong style="color: #10b981;">${curHullData.name} (${curHullData.stat})</strong>
-            </div>
-          </div>
-          ${canUpgradeHull ? `
-            <button id="btn-upgrade-hull-dock" class="btn-buy" style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 800;" ${canAffordHull ? '' : 'disabled'}>
-              ${icon('shield-cog', '', 12)} SCHUTZ VERBESSERN: €${nextHullData.cost}
-            </button>
-          ` : `
-            <span style="font-size: 11px; color: #10b981; font-weight: 700; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); padding: 3px 8px; border-radius: 6px;">
-              MAXIMALER CASE-SCHUTZ
-            </span>
-          `}
-        </div>
-        ${canUpgradeHull ? `
-          <div style="font-size: 11px; color: #94a3b8;">
-            Nächste Stufe: <strong style="color: #f8fafc;">${nextHullData.name}</strong> (${nextHullData.stat}) &bull; ${nextHullData.desc}
-            ${formatCompReq(nextHullData)}${formatLevelReq(nextHullData)}
-          </div>
-        ` : `
-          <div style="font-size: 11px; color: #10b981;">Höchste Panzerung erreicht. Maximaler Schutz vor Bohrabnutzung.</div>
-        `}
-      </div>
-    `;
 
     // 3. Bohrkopf-Werkstatt (Montage erforschter Köpfe oder direktes Hangar-Upgrade)
     const curDrillTier = this.player.drillTier || 1;
@@ -2960,84 +2894,12 @@ export class BaseSystem {
     const nextDrillData = canUpgradeDrill ? DRILL_DATA[curDrillTier] : null;
     const canAffordDrill = checkAfford(nextDrillData);
 
-    const drillSection = `
-      <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); padding: 10px 14px; border-radius: 10px; display: flex; flex-direction: column; gap: 6px;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <div>
-            <strong style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #f8fafc;">
-              ${icon('pickaxe', '', 14)} Bohrkopf-Werkstatt
-            </strong>
-            <div style="font-size: 11.5px; color: #94a3b8; margin-top: 1px;">
-              Montiert: <strong style="color: #38bdf8;">${curDrillData.name} (${curDrillData.stat})</strong>
-            </div>
-          </div>
-          ${canMount ? `
-            <button id="btn-mount-drill-dock" class="btn-buy" style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 800; background: linear-gradient(135deg, #10b981, #059669);">
-              ${icon('wrench', '', 12)} BOHRKOPF MONTIEREN (KOSTENLOS)
-            </button>
-          ` : (canUpgradeDrill ? `
-            <button id="btn-upgrade-drill-dock" class="btn-buy" style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 800;" ${canAffordDrill ? '' : 'disabled'}>
-              ${icon('pickaxe', '', 12)} AUFRÜSTEN: €${nextDrillData.cost}
-            </button>
-          ` : `
-            <span style="font-size: 11px; color: #10b981; font-weight: 700; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); padding: 3px 8px; border-radius: 6px;">
-              MAXIMALER BOHRKOPF
-            </span>
-          `)}
-        </div>
-        ${canMount ? `
-          <div style="font-size: 11px; color: #fbbf24; background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.25); padding: 5px 8px; border-radius: 6px;">
-            Erforschter Bauplan bereit: <strong>${mountDrillData.name} (${mountDrillData.stat})</strong> im Hangar montieren!
-          </div>
-        ` : (canUpgradeDrill ? `
-          <div style="font-size: 11px; color: #94a3b8;">
-            Nächste Stufe: <strong style="color: #f8fafc;">${nextDrillData.name}</strong> (${nextDrillData.stat}) &bull; ${nextDrillData.desc}
-            ${formatCompReq(nextDrillData)}${formatLevelReq(nextDrillData)}
-          </div>
-        ` : `
-          <div style="font-size: 11px; color: #10b981;">Höchste Bohrleistung erreicht. Fräst mühelos durch jede Gesteinsschicht.</div>
-        `)}
-      </div>
-    `;
-
     // 4. Antrieb & Steigflug
     const curEngineTier = this.player.engineTier || 1;
     const curEngineData = this.player.getEngineData ? this.player.getEngineData() : (ENGINE_TIERS[curEngineTier - 1] || ENGINE_TIERS[0]);
     const canUpgradeEngine = curEngineTier < ENGINE_TIERS.length;
     const nextEngineData = canUpgradeEngine ? ENGINE_TIERS[curEngineTier] : null;
     const canAffordEngine = checkAfford(nextEngineData);
-
-    const engineSection = `
-      <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); padding: 10px 14px; border-radius: 10px; display: flex; flex-direction: column; gap: 6px;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <div>
-            <strong style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #f8fafc;">
-              ${icon('zap', '', 14)} Antrieb & Steigflug
-            </strong>
-            <div style="font-size: 11.5px; color: #94a3b8; margin-top: 1px;">
-              Installiert: <strong style="color: #38bdf8;">${curEngineData.name} (${curEngineData.stat})</strong>
-            </div>
-          </div>
-          ${canUpgradeEngine ? `
-            <button id="btn-upgrade-engine-dock" class="btn-buy" style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 800;" ${canAffordEngine ? '' : 'disabled'}>
-              ${icon('zap', '', 12)} ANTRIEB VERBESSERN: €${nextEngineData.cost}
-            </button>
-          ` : `
-            <span style="font-size: 11px; color: #10b981; font-weight: 700; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); padding: 3px 8px; border-radius: 6px;">
-              MAXIMALER ANTRIEB
-            </span>
-          `}
-        </div>
-        ${canUpgradeEngine ? `
-          <div style="font-size: 11px; color: #94a3b8;">
-            Nächste Stufe: <strong style="color: #f8fafc;">${nextEngineData.name}</strong> (${nextEngineData.stat}) &bull; ${nextEngineData.desc}
-            ${formatCompReq(nextEngineData)}${formatLevelReq(nextEngineData)}
-          </div>
-        ` : `
-          <div style="font-size: 11px; color: #10b981;">Höchste Triebwerksleistung installiert.</div>
-        `}
-      </div>
-    `;
 
     // 5. Frachtraum-Kapazität
     const curCargoTier = this.player.cargoTier || 1;
@@ -3046,38 +2908,6 @@ export class BaseSystem {
     const nextCargoData = canUpgradeCargo ? CARGO_TIERS[curCargoTier] : null;
     const canAffordCargo = checkAfford(nextCargoData);
 
-    const cargoSection = `
-      <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); padding: 10px 14px; border-radius: 10px; display: flex; flex-direction: column; gap: 6px;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <div>
-            <strong style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #f8fafc;">
-              ${icon('container', '', 14)} Frachtraum-Kapazität
-            </strong>
-            <div style="font-size: 11.5px; color: #94a3b8; margin-top: 1px;">
-              Installiert: <strong style="color: #38bdf8;">${curCargoData.name} (${curCargoData.stat})</strong>
-            </div>
-          </div>
-          ${canUpgradeCargo ? `
-            <button id="btn-upgrade-cargo-dock" class="btn-buy" style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 800;" ${canAffordCargo ? '' : 'disabled'}>
-              ${icon('container', '', 12)} KAPAZITÄT ERWEITERN: €${nextCargoData.cost}
-            </button>
-          ` : `
-            <span style="font-size: 11px; color: #10b981; font-weight: 700; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); padding: 3px 8px; border-radius: 6px;">
-              MAXIMALER FRACHTRAUM
-            </span>
-          `}
-        </div>
-        ${canUpgradeCargo ? `
-          <div style="font-size: 11px; color: #94a3b8;">
-            Nächste Stufe: <strong style="color: #f8fafc;">${nextCargoData.name}</strong> (${nextCargoData.stat}) &bull; ${nextCargoData.desc}
-            ${formatCompReq(nextCargoData)}${formatLevelReq(nextCargoData)}
-          </div>
-        ` : `
-          <div style="font-size: 11px; color: #10b981;">Höchste Frachtraumstufe erreicht.</div>
-        `}
-      </div>
-    `;
-
     // 6. Geo-Sensor & Radar
     const curSensorTier = this.player.sensorTier || 1;
     const curSensorData = this.player.getSensorData ? this.player.getSensorData() : (SENSOR_TIERS[curSensorTier - 1] || SENSOR_TIERS[0]);
@@ -3085,64 +2915,222 @@ export class BaseSystem {
     const nextSensorData = canUpgradeSensor ? SENSOR_TIERS[curSensorTier] : null;
     const canAffordSensor = checkAfford(nextSensorData);
 
-    const sensorSection = `
-      <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); padding: 10px 14px; border-radius: 10px; display: flex; flex-direction: column; gap: 6px;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <div>
-            <strong style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #f8fafc;">
-              ${icon('radio', '', 14)} Geo-Sensor & Radar
-            </strong>
-            <div style="font-size: 11.5px; color: #94a3b8; margin-top: 1px;">
-              Installiert: <strong style="color: #38bdf8;">${curSensorData.name} (${curSensorData.stat})</strong>
-            </div>
-          </div>
-          ${canUpgradeSensor ? `
-            <button id="btn-upgrade-sensor-dock" class="btn-buy" style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 800;" ${canAffordSensor ? '' : 'disabled'}>
-              ${icon('radio', '', 12)} SENSOR VERBESSERN: €${nextSensorData.cost}
-            </button>
-          ` : `
-            <span style="font-size: 11px; color: #10b981; font-weight: 700; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); padding: 3px 8px; border-radius: 6px;">
-              MAXIMALER SENSOR
+    const renderDockCard = (cfg) => {
+      const { id, iconName, title, curData, canUpgrade, nextData, canAfford, specialAction } = cfg;
+
+      let compBadgeHtml = '';
+      let levelBadgeHtml = '';
+      let costBadgeHtml = '';
+      let actionBtnHtml = '';
+
+      if (specialAction) {
+        actionBtnHtml = specialAction;
+      } else if (canUpgrade && nextData) {
+        const isLevelMet = (this.player.level || 1) >= nextData.level;
+        if (nextData.comp) {
+          const have = this.player.components[nextData.comp.key] || 0;
+          const isMet = have >= nextData.comp.count;
+          const compIconName = COMPONENT_ICONS[nextData.comp.key] || 'box';
+          compBadgeHtml = `
+            <span style="background: rgba(192, 132, 252, 0.12); border: 1px solid ${isMet ? 'rgba(192, 132, 252, 0.3)' : 'rgba(239, 68, 68, 0.4)'}; color: ${isMet ? '#c084fc' : '#ef4444'}; font-weight: 700; font-size: 11px; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;">
+              ${icon(compIconName, '', 12)} ${nextData.comp.count}x ${nextData.comp.name} (${have}/${nextData.comp.count})
             </span>
-          `}
-        </div>
-        ${canUpgradeSensor ? `
-          <div style="font-size: 11px; color: #94a3b8;">
-            Nächste Stufe: <strong style="color: #f8fafc;">${nextSensorData.name}</strong> (${nextSensorData.stat}) &bull; ${nextSensorData.desc}
-            ${formatCompReq(nextSensorData)}${formatLevelReq(nextSensorData)}
+          `;
+        }
+
+        if (!isLevelMet) {
+          levelBadgeHtml = `
+            <span style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; font-weight: 700; font-size: 11px; padding: 2px 6px; border-radius: 4px; white-space: nowrap;">
+              Lv. ${nextData.level}
+            </span>
+          `;
+        }
+
+        const isCashMet = this.player.cash >= nextData.cost;
+        costBadgeHtml = `
+          <span style="background: rgba(251, 191, 36, 0.12); border: 1px solid ${isCashMet ? 'rgba(251, 191, 36, 0.3)' : 'rgba(239, 68, 68, 0.4)'}; color: ${isCashMet ? '#fbbf24' : '#ef4444'}; font-weight: 800; font-size: 11.5px; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; gap: 3px; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
+            ${icon('coins', '', 11)} €${nextData.cost}
+          </span>
+        `;
+
+        actionBtnHtml = `
+          <button id="${id}" class="btn-buy" style="width: 100%; height: 30px; padding: 0 10px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 4px;" ${canAfford ? '' : 'disabled'}>
+            ${icon('wrench', '', 12)}
+            <span>Aufrüsten</span>
+          </button>
+        `;
+      } else {
+        actionBtnHtml = `
+          <span style="font-size: 11px; color: #10b981; font-weight: 700; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); padding: 3px 8px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box;">
+            Maximal
+          </span>
+        `;
+      }
+
+      const statText = canUpgrade && nextData
+        ? `${curData.stat} ➔ ${nextData.stat}`
+        : `${curData.stat}`;
+
+      return `
+        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); padding: 10px 14px; border-radius: 10px; display: flex; align-items: center; gap: 10px; box-sizing: border-box;">
+          <!-- Spalte 1: Modul Titel (135px) -->
+          <div style="width: 135px; min-width: 135px; flex-shrink: 0;">
+            <strong style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #f8fafc; white-space: nowrap;">
+              ${icon(iconName, '', 14)} ${title}
+            </strong>
           </div>
-        ` : `
-          <div style="font-size: 11px; color: #10b981;">Höchste Scan-Reichweite aktiv.</div>
-        `}
-      </div>
-    `;
+
+          <!-- Spalte 2: Stat-Fortschritt (175px) -->
+          <div style="width: 175px; min-width: 175px; flex-shrink: 0;">
+            <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-weight: 700; font-size: 11.5px; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
+              ${statText}
+            </span>
+          </div>
+
+          <!-- Spalte 3: Spezialbauteile & Level (flex: 1, rechtsbündig) -->
+          <div style="flex: 1; min-width: 0; display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
+            ${levelBadgeHtml}
+            ${compBadgeHtml}
+          </div>
+
+          <!-- Spalte 4: Preis-Badge (90px) -->
+          <div style="width: 90px; min-width: 90px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+            ${costBadgeHtml}
+          </div>
+
+          <!-- Spalte 5: Button (110px) -->
+          <div style="width: 110px; min-width: 110px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end;">
+            ${actionBtnHtml}
+          </div>
+        </div>
+      `;
+    };
+
+    const tankSection = renderDockCard({
+      id: 'btn-upgrade-tank-dock',
+      iconName: 'fuel',
+      title: 'Tank',
+      curData: curTankData,
+      canUpgrade: canUpgradeTank,
+      nextData: nextTankData,
+      canAfford: canAffordTank
+    });
+
+    const hullSection = renderDockCard({
+      id: 'btn-upgrade-hull-dock',
+      iconName: 'shield-cog',
+      title: 'Hülle',
+      curData: curHullData,
+      canUpgrade: canUpgradeHull,
+      nextData: nextHullData,
+      canAfford: canAffordHull
+    });
+
+    const drillSection = renderDockCard({
+      id: 'btn-upgrade-drill-dock',
+      iconName: 'pickaxe',
+      title: 'Bohrkopf',
+      curData: curDrillData,
+      canUpgrade: canUpgradeDrill,
+      nextData: nextDrillData,
+      canAfford: canAffordDrill,
+      specialAction: canMount ? `
+        <button id="btn-mount-drill-dock" class="btn-buy" style="width: 100%; height: 30px; padding: 0 10px; font-size: 11px; font-weight: 800; background: linear-gradient(135deg, #10b981, #059669); display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+          ${icon('wrench', '', 12)} Montieren
+        </button>
+      ` : null
+    });
+
+    const engineSection = renderDockCard({
+      id: 'btn-upgrade-engine-dock',
+      iconName: 'zap',
+      title: 'Antrieb',
+      curData: curEngineData,
+      canUpgrade: canUpgradeEngine,
+      nextData: nextEngineData,
+      canAfford: canAffordEngine
+    });
+
+    const cargoSection = renderDockCard({
+      id: 'btn-upgrade-cargo-dock',
+      iconName: 'container',
+      title: 'Frachtraum',
+      curData: curCargoData,
+      canUpgrade: canUpgradeCargo,
+      nextData: nextCargoData,
+      canAfford: canAffordCargo
+    });
+
+    const sensorSection = renderDockCard({
+      id: 'btn-upgrade-sensor-dock',
+      iconName: 'radio',
+      title: 'Radar-Sensor',
+      curData: curSensorData,
+      canUpgrade: canUpgradeSensor,
+      nextData: nextSensorData,
+      canAfford: canAffordSensor
+    });
 
     const content = `
-      <div style="display: flex; flex-direction: column; gap: 10px; max-height: 520px; overflow-y: auto; padding-right: 4px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); padding: 10px 14px; border-radius: 10px;">
-          <div>
-            <strong style="display: inline-flex; align-items: center; gap: 5px;">${icon('fuel', '', 14)} Tank auffüllen</strong>
-            <div style="font-size: 12px; color: #94a3b8;">Status: ${Math.round(this.player.fuel)} / ${this.player.maxFuel} L</div>
+      <div style="display: flex; flex-direction: column; gap: 8px; max-height: 520px; overflow-y: auto; padding-right: 4px;">
+        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); padding: 10px 14px; border-radius: 10px; display: flex; align-items: center; gap: 10px; box-sizing: border-box;">
+          <div style="width: 135px; min-width: 135px; flex-shrink: 0;">
+            <strong style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #f8fafc; white-space: nowrap;">
+              ${icon('fuel', '', 14)} Tank
+            </strong>
           </div>
-          <button id="btn-refuel-dock" class="btn-buy" style="height: 32px; padding: 0 14px; font-size: 11.5px;" ${fuelCost <= 0 ? 'disabled' : ''}>
-            ${fuelCost <= 0 ? 'VOLLGETANKT' : `SOFORT: €${fuelCost}`}
-          </button>
+          <div style="width: 175px; min-width: 175px; flex-shrink: 0;">
+            <span style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); color: #f59e0b; font-weight: 800; font-size: 11.5px; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
+              ${Math.round(this.player.fuel)} / ${this.player.maxFuel} L
+            </span>
+          </div>
+          <div style="flex: 1; min-width: 0;"></div>
+          <div style="width: 90px; min-width: 90px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+            ${fuelCost > 0 ? `
+              <span style="background: rgba(251, 191, 36, 0.12); border: 1px solid rgba(251, 191, 36, 0.3); color: #fbbf24; font-weight: 800; font-size: 11.5px; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; gap: 3px; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
+                ${icon('coins', '', 11)} €${fuelCost}
+              </span>
+            ` : ''}
+          </div>
+          <div style="width: 110px; min-width: 110px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end;">
+            <button id="btn-refuel-dock" class="btn-buy" style="width: 100%; height: 30px; padding: 0 10px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 4px;" ${fuelCost <= 0 || this.player.cash < fuelCost ? 'disabled' : ''}>
+              ${icon('fuel', '', 12)}
+              <span>${fuelCost <= 0 ? 'Voll' : 'Tanken'}</span>
+            </button>
+          </div>
         </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); padding: 10px 14px; border-radius: 10px;">
-          <div>
-            <strong style="display: inline-flex; align-items: center; gap: 5px;">${icon('shield', '', 14)} Rumpf reparieren</strong>
-            <div style="font-size: 12px; color: #94a3b8;">Status: ${Math.round(this.player.hull)} / ${this.player.maxHull} HP</div>
+        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); padding: 10px 14px; border-radius: 10px; display: flex; align-items: center; gap: 10px; box-sizing: border-box;">
+          <div style="width: 135px; min-width: 135px; flex-shrink: 0;">
+            <strong style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #f8fafc; white-space: nowrap;">
+              ${icon('shield', '', 14)} Hülle
+            </strong>
           </div>
-          <button id="btn-repair-dock" class="btn-buy" style="height: 32px; padding: 0 14px; font-size: 11.5px;" ${repairCost <= 0 ? 'disabled' : ''}>
-            ${repairCost <= 0 ? 'UNBESCHÄDIGT' : `SOFORT: €${repairCost}`}
-          </button>
+          <div style="width: 175px; min-width: 175px; flex-shrink: 0;">
+            <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981; font-weight: 800; font-size: 11.5px; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
+              ${Math.round(this.player.hull)} / ${this.player.maxHull} HP
+            </span>
+          </div>
+          <div style="flex: 1; min-width: 0;"></div>
+          <div style="width: 90px; min-width: 90px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+            ${repairCost > 0 ? `
+              <span style="background: rgba(251, 191, 36, 0.12); border: 1px solid rgba(251, 191, 36, 0.3); color: #fbbf24; font-weight: 800; font-size: 11.5px; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; gap: 3px; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
+                ${icon('coins', '', 11)} €${repairCost}
+              </span>
+            ` : ''}
+          </div>
+          <div style="width: 110px; min-width: 110px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end;">
+            <button id="btn-repair-dock" class="btn-buy" style="width: 100%; height: 30px; padding: 0 10px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 4px;" ${repairCost <= 0 || this.player.cash < repairCost ? 'disabled' : ''}>
+              ${icon('shield', '', 12)}
+              <span>${repairCost <= 0 ? 'Intakt' : 'Reparieren'}</span>
+            </button>
+          </div>
         </div>
 
         ${sammlerInfo}
 
-        <div style="font-weight: 800; font-size: 12px; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; display: flex; align-items: center; gap: 6px;">
-          ${icon('wrench', '', 14)} Fahrzeug-Werkstatt (Aufrüstungen & Montage)
+        <div style="font-weight: 800; font-size: 12px; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 6px; display: flex; align-items: center; gap: 6px;">
+          ${icon('wrench', '', 14)} Modul-Aufrüstung
         </div>
 
         ${tankSection}
@@ -3151,16 +3139,6 @@ export class BaseSystem {
         ${engineSection}
         ${cargoSection}
         ${sensorSection}
-
-        <div style="font-size: 11px; color: #10b981; margin-top: 4px;">
-          Tipp: Am Hangar schließt das Betankungskabel automatisch an und füllt deinen Treibstoff kostenlos auf.
-        </div>
-
-        <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
-          <button id="btn-dock-close" class="btn-3d-secondary" style="height: 32px; font-size: 11.5px; font-weight: 700; padding: 0 16px;">
-            SCHLIESSEN
-          </button>
-        </div>
       </div>
     `;
 
@@ -3171,12 +3149,6 @@ export class BaseSystem {
       </div>
     `, content);
 
-    const btnTalkSammler = document.getElementById('btn-talk-sammler-dock');
-    if (btnTalkSammler) {
-      btnTalkSammler.onclick = () => {
-        this.openGeologistModal();
-      };
-    }
 
     const btnFuel = document.getElementById('btn-refuel-dock');
     if (btnFuel) {
@@ -3342,13 +3314,7 @@ export class BaseSystem {
       };
     }
 
-    const btnDockClose = document.getElementById('btn-dock-close');
-    if (btnDockClose) {
-      btnDockClose.onclick = () => {
-        soundFx.playClick();
-        this.closeModal();
-      };
-    }
+
   }
 
   // =========================================================
@@ -3361,21 +3327,45 @@ export class BaseSystem {
 
     if (elapsedMs <= 0 || this.refinery.queue.length === 0) return 0;
 
-    let remainingElapsed = elapsedMs;
     let finishedCount = 0;
 
-    while (remainingElapsed > 0 && this.refinery.queue.length > 0) {
-      const current = this.refinery.queue[0];
-      if (remainingElapsed >= current.remainingMs) {
-        remainingElapsed -= current.remainingMs;
-        const completed = this.refinery.queue.shift();
-        completed.remainingMs = 0;
-        completed.finishedAt = now - remainingElapsed;
-        this.refinery.finished.push(completed);
+    // 1. Schmelzofen-Linie (Erze -> Barren)
+    let remSmelt = elapsedMs;
+    while (remSmelt > 0) {
+      const currentSmelt = this.refinery.queue.find(item => !item.isProduct);
+      if (!currentSmelt) break;
+
+      if (remSmelt >= currentSmelt.remainingMs) {
+        remSmelt -= currentSmelt.remainingMs;
+        const idx = this.refinery.queue.indexOf(currentSmelt);
+        this.refinery.queue.splice(idx, 1);
+        currentSmelt.remainingMs = 0;
+        currentSmelt.finishedAt = now - remSmelt;
+        this.refinery.finished.push(currentSmelt);
         finishedCount++;
       } else {
-        current.remainingMs -= remainingElapsed;
-        remainingElapsed = 0;
+        currentSmelt.remainingMs -= remSmelt;
+        remSmelt = 0;
+      }
+    }
+
+    // 2. Industrie-Fertigungslinie (Produkte)
+    let remCraft = elapsedMs;
+    while (remCraft > 0) {
+      const currentCraft = this.refinery.queue.find(item => item.isProduct);
+      if (!currentCraft) break;
+
+      if (remCraft >= currentCraft.remainingMs) {
+        remCraft -= currentCraft.remainingMs;
+        const idx = this.refinery.queue.indexOf(currentCraft);
+        this.refinery.queue.splice(idx, 1);
+        currentCraft.remainingMs = 0;
+        currentCraft.finishedAt = now - remCraft;
+        this.refinery.finished.push(currentCraft);
+        finishedCount++;
+      } else {
+        currentCraft.remainingMs -= remCraft;
+        remCraft = 0;
       }
     }
 
@@ -3496,30 +3486,23 @@ export class BaseSystem {
 
   updateRefineryLiveTimers() {
     const queue = this.refinery.queue;
-    if (queue.length === 0) return;
+    const currentSmelt = queue.find(item => !item.isProduct);
+    const currentCraft = queue.find(item => item.isProduct);
 
-    const current = queue[0];
-    const pct = Math.min(100, Math.max(0, Math.round(((current.durationMs - current.remainingMs) / current.durationMs) * 100)));
-    const totalQueueMs = queue.reduce((sum, item) => sum + item.remainingMs, 0);
-
-    const timerEl = document.getElementById('refinery-current-timer');
-    if (timerEl) {
-      timerEl.textContent = this.formatRefineryClock(current.remainingMs);
+    if (currentSmelt) {
+      const pct = Math.min(100, Math.max(0, Math.round(((currentSmelt.durationMs - currentSmelt.remainingMs) / currentSmelt.durationMs) * 100)));
+      const timerEl = document.getElementById('smelt-timer');
+      if (timerEl) timerEl.textContent = this.formatRefineryClock(currentSmelt.remainingMs);
+      const fillEl = document.getElementById('smelt-progress-fill');
+      if (fillEl) fillEl.style.width = `${pct}%`;
     }
 
-    const fillEl = document.getElementById('refinery-progress-fill');
-    if (fillEl) {
-      fillEl.style.width = `${pct}%`;
-    }
-
-    const pctEl = document.getElementById('refinery-progress-pct');
-    if (pctEl) {
-      pctEl.textContent = `${pct}%`;
-    }
-
-    const totalEl = document.getElementById('refinery-total-queue-time');
-    if (totalEl) {
-      totalEl.textContent = `Gesamtlaufzeit: ${this.formatRefineryTime(totalQueueMs)}`;
+    if (currentCraft) {
+      const pct = Math.min(100, Math.max(0, Math.round(((currentCraft.durationMs - currentCraft.remainingMs) / currentCraft.durationMs) * 100)));
+      const timerEl = document.getElementById('craft-timer');
+      if (timerEl) timerEl.textContent = this.formatRefineryClock(currentCraft.remainingMs);
+      const fillEl = document.getElementById('craft-progress-fill');
+      if (fillEl) fillEl.style.width = `${pct}%`;
     }
   }
 
@@ -3531,216 +3514,255 @@ export class BaseSystem {
     const finished = this.refinery.finished;
     const cargo = this.player.cargo || [];
 
-    // Frachtzähler für Rezepte
     const cargoCounts = {};
     cargo.forEach(ore => {
       cargoCounts[ore] = (cargoCounts[ore] || 0) + 1;
     });
 
-    const isProducing = queue.length > 0;
-    const current = isProducing ? queue[0] : null;
-    const pct = current ? Math.min(100, Math.max(0, Math.round(((current.durationMs - current.remainingMs) / current.durationMs) * 100))) : 0;
-    const totalQueueMs = queue.reduce((sum, item) => sum + item.remainingMs, 0);
-    const totalGain = finished.reduce((sum, item) => sum + item.value, 0);
+    const availableCoal = (cargoCounts['coal'] || 0) + (this.depot?.ores?.['coal'] || 0);
 
-    // Warteschlangen-Chips
-    let queueChipsHtml = '';
-    if (queue.length > 1) {
-      const nextItems = queue.slice(1, 5);
-      const chips = nextItems.map(item => `
-        <span style="background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-size: 10px; color: #cbd5e1;">
-          ${item.name}
-        </span>
-      `).join('');
-      const more = queue.length - 1 - nextItems.length;
-      queueChipsHtml = `
-        <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px;">
-          ${chips}
-          ${more > 0 ? `<span style="font-size: 10px; color: #94a3b8;">+${more}</span>` : ''}
-        </div>
-      `;
-    }
+    // Aufteilung in 2 getrennte Produktionslinien
+    const smeltQueue = queue.filter(item => !item.isProduct);
+    const craftQueue = queue.filter(item => item.isProduct);
+    const finishedSmelt = finished.filter(item => !item.isProduct);
+    const finishedCraft = finished.filter(item => item.isProduct);
 
-    // 1. VISUALISIERTE FABRIKSTRECKE (Trichter -> Förderband/Pfeile -> Ofen/Maschine -> Förderband -> Ausgang)
+    const currentSmelt = smeltQueue[0] || null;
+    const currentCraft = craftQueue[0] || null;
+    const isSmelting = !!currentSmelt;
+    const isCrafting = !!currentCraft;
+
+    const pctSmelt = currentSmelt ? Math.min(100, Math.max(0, Math.round(((currentSmelt.durationMs - currentSmelt.remainingMs) / currentSmelt.durationMs) * 100))) : 0;
+    const pctCraft = currentCraft ? Math.min(100, Math.max(0, Math.round(((currentCraft.durationMs - currentCraft.remainingMs) / currentCraft.durationMs) * 100))) : 0;
+
     let html = `
       <div style="display: flex; flex-direction: column; gap: 12px; max-height: 520px; overflow-y: auto; padding-right: 4px;">
 
-        <div style="background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(10, 15, 26, 0.98) 100%); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 14px; position: relative;">
-          <!-- Status-Header der Fertigungsstrecke -->
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: ${isProducing ? '#10b981' : '#64748b'}; box-shadow: 0 0 8px ${isProducing ? '#10b981' : 'transparent'};"></span>
-              <strong style="color: #f8fafc; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase;">
-                PRODUKTIONSSTRECKE ${isProducing ? '<span style="color: #fb923c; font-size: 11px;">(IN BETRIEB)</span>' : '<span style="color: #64748b; font-size: 11px;">(BEREIT)</span>'}
-              </strong>
-            </div>
-            ${isProducing ? `
-              <span id="refinery-total-queue-time" style="font-size: 11.5px; color: #fbbf24; font-weight: 700;">
-                Gesamtlaufzeit: ${this.formatRefineryTime(totalQueueMs)}
-              </span>
-            ` : `
-              <span style="font-size: 11px; color: #64748b;">Bereit für Rohstoffe</span>
-            `}
-          </div>
-
-          <!-- 3 Stationen mit Förderband-Pfeilen -->
-          <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
-
-            <!-- 1. STATION: ZUFUHR / EINFÜLL-TRICHTER -->
-            <div style="flex: 1; min-width: 0; height: 86px; box-sizing: border-box; background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; justify-content: space-between;">
-              <div style="display: flex; align-items: center; gap: 5px; white-space: nowrap;">
-                <span style="color: #38bdf8; flex-shrink: 0;">${icon('container', '', 13)}</span>
-                <strong style="font-size: 11px; color: #94a3b8; text-transform: uppercase; white-space: nowrap;">1. Zufuhr</strong>
+        <!-- 1. ZWEI VISUELLE PRODUKTIONSLINIEN (SCHMELZE & FERTIGUNG) -->
+        <div style="background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(10, 15, 26, 0.98) 100%); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px;">
+          
+          <!-- LINIE 1: SCHMELZOFEN (ROHERZ-SCHMELZE) -->
+          <div style="background: rgba(30, 41, 59, 0.35); border: 1px solid ${isSmelting ? 'rgba(249, 115, 22, 0.45)' : 'rgba(255,255,255,0.06)'}; border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px;">
+            <!-- Header mit Ofen-Brennstoffverbrauch -->
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: ${isSmelting ? '#f97316' : '#64748b'}; box-shadow: 0 0 6px ${isSmelting ? '#f97316' : 'transparent'};"></span>
+                <strong style="color: #f8fafc; font-size: 11px; letter-spacing: 0.5px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 4px;">
+                  ${icon('flame', '', 12)} SCHMELZOFEN
+                </strong>
+                ${smeltQueue.length > 1 ? `<span style="font-size: 10px; color: #94a3b8; background: rgba(0,0,0,0.35); padding: 1px 5px; border-radius: 4px;">+${smeltQueue.length - 1}</span>` : ''}
               </div>
-              <div style="font-size: 13px; font-weight: 700; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                ${queue.length > 0 ? `${queue.length} Auftrag${queue.length > 1 ? 'e' : ''}` : 'Trichter leer'}
-              </div>
-              <div style="font-size: 10.5px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                ${queue.length === 0 ? 'Erze einwerfen' : (queue.length === 1 ? 'Keine Folgeware' : `+${queue.length - 1} wartend`)}
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3); color: #fbbf24; font-size: 10.5px; font-weight: 700; padding: 1px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+                  ${icon('flame', '', 11)} 1x Kohle Brennstoff <strong style="color: ${availableCoal >= 1 ? '#10b981' : '#f87171'}; font-size: 10px;">(${availableCoal}x)</strong>
+                </span>
               </div>
             </div>
 
-            <!-- PFEIL 1 (Förderband zur Maschine) -->
-            <div style="display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 18px;">
-              <div class="conveyor-arrow ${isProducing ? 'running' : ''}">▶▶</div>
-            </div>
+            <!-- Visuelle 3-Stationen-Strecke -->
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+              <!-- 1. Zufuhr -->
+              <div style="width: 72px; height: 44px; box-sizing: border-box; background: rgba(15,23,42,0.65); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;">
+                <span style="color: #38bdf8;">${icon('container', '', 12)}</span>
+                <span style="font-size: 10px; font-weight: 700; color: ${smeltQueue.length > 0 ? '#38bdf8' : '#64748b'};">${smeltQueue.length > 0 ? `${smeltQueue.length} Erze` : 'Leer'}</span>
+              </div>
 
-            <!-- 2. STATION: HOCHOFEN & FERTIGUNGS-MASCHINE -->
-            <div class="${isProducing ? 'furnace-active' : ''}" style="flex: 1.6; min-width: 0; height: 86px; box-sizing: border-box; background: ${isProducing ? 'rgba(234, 88, 12, 0.1)' : 'rgba(30, 41, 59, 0.4)'}; border: 1px solid ${isProducing ? '#ea580c' : 'rgba(255,255,255,0.08)'}; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; justify-content: space-between;">
-              <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
-                <div style="display: flex; align-items: center; gap: 5px; white-space: nowrap; min-width: 0;">
-                  <span class="${isProducing ? 'flame-anim' : ''}" style="color: ${isProducing ? '#f97316' : '#64748b'}; flex-shrink: 0;">${icon('flame', '', 13)}</span>
-                  <strong style="font-size: 11px; color: ${isProducing ? '#fb923c' : '#94a3b8'}; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">2. Hochofen</strong>
+              <!-- Förderpfeile -->
+              <div style="flex-shrink: 0; width: 14px; text-align: center;">
+                <div class="conveyor-arrow ${isSmelting ? 'running' : ''}" style="font-size: 10px;">▶▶</div>
+              </div>
+
+              <!-- 2. Ofen -->
+              <div class="${isSmelting ? 'furnace-active' : ''}" style="flex: 1.5; min-width: 0; height: 44px; box-sizing: border-box; background: ${isSmelting ? 'rgba(234, 88, 12, 0.12)' : 'rgba(15,23,42,0.5)'}; border: 1px solid ${isSmelting ? 'rgba(249, 115, 22, 0.4)' : 'rgba(255,255,255,0.06)'}; border-radius: 8px; padding: 4px 10px; display: flex; flex-direction: column; justify-content: center; gap: 4px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
+                  <span style="font-size: 11px; font-weight: 700; color: ${isSmelting ? '#f8fafc' : '#64748b'}; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    ${isSmelting ? `${itemDisplayIcon('bar_' + currentSmelt.ore, 13)} ${currentSmelt.name}` : `${icon('power', '', 11)} Bereit`}
+                  </span>
+                  <span id="smelt-timer" style="font-size: 10.5px; font-weight: 700; color: ${isSmelting ? '#fbbf24' : '#64748b'}; font-variant-numeric: tabular-nums; flex-shrink: 0;">
+                    ${isSmelting ? this.formatRefineryClock(currentSmelt.remainingMs) : '00:00'}
+                  </span>
                 </div>
-                <span id="refinery-current-timer" style="font-size: 11px; font-weight: 700; color: ${isProducing ? '#f8fafc' : '#64748b'}; background: rgba(0,0,0,0.35); padding: 1px 6px; border-radius: 4px; font-variant-numeric: tabular-nums; flex-shrink: 0;">
-                  ${isProducing ? this.formatRefineryClock(current.remainingMs) : '00:00'}
-                </span>
+                <div style="width: 100%; height: 6px; background: #090d16; border-radius: 3px; overflow: hidden;">
+                  <div id="smelt-progress-fill" style="width: ${pctSmelt}%; height: 100%; background: linear-gradient(90deg, #ea580c 0%, #f59e0b 100%); transition: width 0.15s linear;"></div>
+                </div>
               </div>
 
-              <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
-                <span style="font-size: 12px; font-weight: 700; color: ${isProducing ? '#f8fafc' : '#64748b'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                  ${isProducing ? current.name : 'Bereit'}
-                </span>
-                ${isProducing ? `<span style="color: #fbbf24; font-weight: 700; font-size: 11.5px; white-space: nowrap; flex-shrink: 0;">+€${current.value}</span>` : ''}
+              <!-- Förderpfeile -->
+              <div style="flex-shrink: 0; width: 14px; text-align: center;">
+                <div class="conveyor-arrow ${isSmelting ? 'running' : ''}" style="font-size: 10px;">▶▶</div>
               </div>
 
-              <div style="width: 100%; height: 12px; background: #090d16; border: 1px solid ${isProducing ? 'rgba(249, 115, 22, 0.4)' : 'rgba(255,255,255,0.08)'}; border-radius: 6px; overflow: hidden; position: relative;">
-                <div id="refinery-progress-fill" style="width: ${pct}%; height: 100%; background: linear-gradient(90deg, #ea580c 0%, #f59e0b 100%); transition: width 0.15s linear;"></div>
-                <span id="refinery-progress-pct" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 8.5px; font-weight: 800; color: #ffffff; text-shadow: 0 1px 2px rgba(0,0,0,0.9); line-height: 1;">${pct}%</span>
+              <!-- 3. Ausgang -->
+              <div style="width: 72px; height: 44px; box-sizing: border-box; background: ${finishedSmelt.length > 0 ? 'rgba(16, 185, 129, 0.12)' : 'rgba(15,23,42,0.65)'}; border: 1px solid ${finishedSmelt.length > 0 ? 'rgba(16, 185, 129, 0.4)' : 'rgba(255,255,255,0.06)'}; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;">
+                <span style="color: ${finishedSmelt.length > 0 ? '#34d399' : '#64748b'};">${icon('check-circle', '', 12)}</span>
+                <span style="font-size: 10px; font-weight: 700; color: ${finishedSmelt.length > 0 ? '#34d399' : '#64748b'};">${finishedSmelt.length > 0 ? `${finishedSmelt.length} Barren` : 'Leer'}</span>
               </div>
             </div>
-
-            <!-- PFEIL 2 (Förderband zum Warenausgang) -->
-            <div style="display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 18px;">
-              <div class="conveyor-arrow ${isProducing ? 'running' : ''}">▶▶</div>
-            </div>
-
-            <!-- 3. STATION: WARENAUSGANG / KÜHLLAGER -->
-            <div style="flex: 1; min-width: 0; height: 86px; box-sizing: border-box; background: ${finished.length > 0 ? 'rgba(16, 185, 129, 0.12)' : 'rgba(30, 41, 59, 0.4)'}; border: 1px solid ${finished.length > 0 ? '#10b981' : 'rgba(255,255,255,0.08)'}; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; justify-content: space-between;">
-              <div style="display: flex; align-items: center; gap: 5px; white-space: nowrap;">
-                <span style="color: ${finished.length > 0 ? '#34d399' : '#64748b'}; flex-shrink: 0;">${icon('check-circle', '', 13)}</span>
-                <strong style="font-size: 11px; color: ${finished.length > 0 ? '#34d399' : '#94a3b8'}; text-transform: uppercase; white-space: nowrap;">3. Ausgang</strong>
-              </div>
-              <div style="font-size: 13px; font-weight: 700; color: ${finished.length > 0 ? '#a7f3d0' : '#64748b'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                ${finished.length > 0 ? `${finished.length} Fertig` : 'Lager leer'}
-              </div>
-              <div style="font-size: 10.5px; font-weight: 700; color: ${finished.length > 0 ? '#fbbf24' : '#64748b'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                ${finished.length > 0 ? `+€${totalGain} Erlös` : '0 Barren'}
-              </div>
-            </div>
-
           </div>
+
+          <!-- LINIE 2: INDUSTRIE-FERTIGUNG (MONTAGELINIE) -->
+          <div style="background: rgba(30, 41, 59, 0.35); border: 1px solid ${isCrafting ? 'rgba(56, 189, 248, 0.45)' : 'rgba(255,255,255,0.06)'}; border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px;">
+            <!-- Header mit Fertigungs-Brennstoffverbrauch -->
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: ${isCrafting ? '#38bdf8' : '#64748b'}; box-shadow: 0 0 6px ${isCrafting ? '#38bdf8' : 'transparent'};"></span>
+                <strong style="color: #f8fafc; font-size: 11px; letter-spacing: 0.5px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 4px;">
+                  ${icon('anvil', '', 12)} INDUSTRIE-FERTIGUNG
+                </strong>
+                ${craftQueue.length > 1 ? `<span style="font-size: 10px; color: #94a3b8; background: rgba(0,0,0,0.35); padding: 1px 5px; border-radius: 4px;">+${craftQueue.length - 1}</span>` : ''}
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3); color: #fbbf24; font-size: 10.5px; font-weight: 700; padding: 1px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+                  ${icon('flame', '', 11)} 2x Kohle Brennstoff <strong style="color: ${availableCoal >= 2 ? '#10b981' : '#f87171'}; font-size: 10px;">(${availableCoal}x)</strong>
+                </span>
+              </div>
+            </div>
+
+            <!-- Visuelle 3-Stationen-Strecke -->
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+              <!-- 1. Zufuhr -->
+              <div style="width: 72px; height: 44px; box-sizing: border-box; background: rgba(15,23,42,0.65); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;">
+                <span style="color: #38bdf8;">${icon('container', '', 12)}</span>
+                <span style="font-size: 10px; font-weight: 700; color: ${craftQueue.length > 0 ? '#38bdf8' : '#64748b'};">${craftQueue.length > 0 ? `${craftQueue.length} Aufträge` : 'Leer'}</span>
+              </div>
+
+              <!-- Förderpfeile -->
+              <div style="flex-shrink: 0; width: 14px; text-align: center;">
+                <div class="conveyor-arrow ${isCrafting ? 'running' : ''}" style="font-size: 10px;">▶▶</div>
+              </div>
+
+              <!-- 2. Montage -->
+              <div style="flex: 1.5; min-width: 0; height: 44px; box-sizing: border-box; background: ${isCrafting ? 'rgba(56, 189, 248, 0.12)' : 'rgba(15,23,42,0.5)'}; border: 1px solid ${isCrafting ? 'rgba(56, 189, 248, 0.4)' : 'rgba(255,255,255,0.06)'}; border-radius: 8px; padding: 4px 10px; display: flex; flex-direction: column; justify-content: center; gap: 4px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
+                  <span style="font-size: 11px; font-weight: 700; color: ${isCrafting ? '#f8fafc' : '#64748b'}; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    ${isCrafting ? `${itemDisplayIcon(currentCraft.productId, 13)} ${currentCraft.name}` : `${icon('power', '', 11)} Bereit`}
+                  </span>
+                  <span id="craft-timer" style="font-size: 10.5px; font-weight: 700; color: ${isCrafting ? '#38bdf8' : '#64748b'}; font-variant-numeric: tabular-nums; flex-shrink: 0;">
+                    ${isCrafting ? this.formatRefineryClock(currentCraft.remainingMs) : '00:00'}
+                  </span>
+                </div>
+                <div style="width: 100%; height: 6px; background: #090d16; border-radius: 3px; overflow: hidden;">
+                  <div id="craft-progress-fill" style="width: ${pctCraft}%; height: 100%; background: linear-gradient(90deg, #0284c7 0%, #38bdf8 100%); transition: width 0.15s linear;"></div>
+                </div>
+              </div>
+
+              <!-- Förderpfeile -->
+              <div style="flex-shrink: 0; width: 14px; text-align: center;">
+                <div class="conveyor-arrow ${isCrafting ? 'running' : ''}" style="font-size: 10px;">▶▶</div>
+              </div>
+
+              <!-- 3. Ausgang -->
+              <div style="width: 72px; height: 44px; box-sizing: border-box; background: ${finishedCraft.length > 0 ? 'rgba(16, 185, 129, 0.12)' : 'rgba(15,23,42,0.65)'}; border: 1px solid ${finishedCraft.length > 0 ? 'rgba(16, 185, 129, 0.4)' : 'rgba(255,255,255,0.06)'}; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;">
+                <span style="color: ${finishedCraft.length > 0 ? '#34d399' : '#64748b'};">${icon('award', '', 12)}</span>
+                <span style="font-size: 10px; font-weight: 700; color: ${finishedCraft.length > 0 ? '#34d399' : '#64748b'};">${finishedCraft.length > 0 ? `${finishedCraft.length} Waren` : 'Leer'}</span>
+              </div>
+            </div>
+          </div>
+
         </div>
     `;
 
-    // 3. Fertige Waren (Abholung / Einlagern / Verkauf)
+    // 2. Fertige Waren (Abholung / Einlagern)
     if (finished.length > 0) {
-      const totalGain = finished.reduce((sum, item) => sum + item.value, 0);
-
       const grouped = {};
       finished.forEach(item => {
-        if (!grouped[item.name]) grouped[item.name] = { count: 0, value: 0, isProduct: item.isProduct, productId: item.productId };
+        const itemKey = item.isProduct ? item.productId : ('bar_' + item.ore);
+        if (!grouped[item.name]) grouped[item.name] = { count: 0, value: 0, itemKey };
         grouped[item.name].count++;
         grouped[item.name].value += item.value;
       });
 
       const finishedBadges = Object.entries(grouped).map(([name, data]) => `
-        <span style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.5); padding: 3px 8px; border-radius: 6px; font-size: 11.5px; color: #a7f3d0; font-weight: 700;">
-          ${data.count}x ${name} (+€${data.value})
+        <span style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.5); padding: 3px 8px; border-radius: 6px; font-size: 11.5px; color: #a7f3d0; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+          ${itemDisplayIcon(data.itemKey, 13)}
+          <span>${data.count}x ${name} (+€${data.value})</span>
         </span>
       `).join('');
 
       html += `
-        <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.45); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px; box-sizing: border-box; width: 100%;">
+        <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.45); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; width: 100%;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <strong style="color: #34d399; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
-              ${icon('check-circle', '', 15)}
+            <strong style="color: #34d399; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px;">
+              ${icon('check-circle', '', 14)}
               Fertiggestellt (${finished.length === 1 ? '1 Einheit' : `${finished.length} Einheiten`})
             </strong>
-            <strong style="color: #fbbf24; font-size: 14px; font-variant-numeric: tabular-nums;">+€${totalGain}</strong>
           </div>
 
           <div style="display: flex; flex-wrap: wrap; gap: 6px;">
             ${finishedBadges}
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; box-sizing: border-box;">
-            <button id="btn-transfer-to-storage" class="btn-buy" style="height: 34px; font-size: 11.5px; font-weight: 700; padding: 0 10px; width: 100%; box-sizing: border-box; justify-content: center;">
-              ${icon('container', '', 14)}
-              <span>Ins Lager</span>
-            </button>
-            <button id="btn-collect-refined" class="btn-action" style="height: 34px; font-size: 11.5px; font-weight: 700; padding: 0 10px; width: 100%; box-sizing: border-box; justify-content: center;">
-              ${icon('coins', '', 14)}
-              <span>Verkaufen (+€${totalGain})</span>
-            </button>
-          </div>
+          <button id="btn-transfer-to-storage" class="btn-buy" style="height: 34px; font-size: 11.5px; font-weight: 700; padding: 0 14px; width: 100%; justify-content: center; display: inline-flex; align-items: center; gap: 6px;">
+            ${icon('container', '', 14)}
+            <span>Waren ins Lager übernehmen</span>
+          </button>
         </div>
       `;
     }
 
-    // 4. INDUSTRIE-FERTIGUNG (Neue Produkte aus Erzen herstellen)
+    // 3. INDUSTRIE-FERTIGUNG (Neue Produkte aus Erzen herstellen - Brennstoff wird beim Ofen oben gezeigt!)
+    const visibleFactoryProducts = Object.entries(FACTORY_PRODUCTS).filter(([prodId, prod]) => {
+      return Object.keys(prod.recipe).every(ore => this.player.isOreDiscovered(ore));
+    });
+
     html += `
       <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <strong style="color: #38bdf8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 6px;">
             ${icon('anvil', '', 14)}
-            Industrie-Fertigung (Waren für Erzbörse herstellen)
+            Industrie-Fertigung (Baupläne & Waren)
           </strong>
         </div>
         <div style="display: flex; flex-direction: column; gap: 8px;">
     `;
 
-    for (const [prodId, prod] of Object.entries(FACTORY_PRODUCTS)) {
-      let canCraft = true;
-      const ingBadges = Object.entries(prod.recipe).map(([ore, need]) => {
-        const inCargo = cargoCounts[ore] || 0;
-        const inDepot = this.depot?.ores?.[ore] || 0;
-        const have = inCargo + inDepot;
-        if (have < need) canCraft = false;
-        const oreName = ORE_DATA[ore]?.name || ore;
-        const depotText = inDepot > 0 ? ` (${inCargo}+${inDepot} Depot)` : ` (${have}/${need})`;
-        return `<span style="color: ${have >= need ? '#10b981' : '#f87171'}; font-size: 11px; font-weight: 700; background: rgba(0,0,0,0.35); padding: 2px 6px; border-radius: 4px; border: 1px solid ${have >= need ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}; display: inline-flex; align-items: center; gap: 4px;">${oreIcon(ore, 12)} ${need}x ${oreName}${depotText}</span>`;
-      }).join(' ');
-
+    if (visibleFactoryProducts.length === 0) {
       html += `
-        <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 8px 10px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-          <div style="display: flex; flex-direction: column; gap: 3px;">
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <span style="color: #38bdf8;">${icon(prod.iconName, '', 14)}</span>
-              <strong style="color: #f8fafc; font-size: 12.5px;">${prod.name}</strong>
-              <span style="color: #fbbf24; font-size: 11.5px; font-weight: 700;">+€${prod.value}</span>
-              <span style="color: #94a3b8; font-size: 11px;">(${prod.durationSec}s)</span>
-            </div>
-            <div style="font-size: 11px; color: #94a3b8;">${prod.desc}</div>
-            <div style="display: flex; gap: 4px; margin-top: 2px; flex-wrap: wrap;">
-              ${ingBadges}
-            </div>
-          </div>
-          <button class="btn-craft-product btn-buy" data-prod="${prodId}" ${canCraft ? '' : 'disabled'} style="height: 32px; padding: 0 12px; font-size: 11px; font-weight: 800; flex-shrink: 0;">
-            ${icon('hammer', '', 13)} HERSTELLEN
-          </button>
+        <div style="text-align: center; padding: 16px; color: #94a3b8; font-size: 11.5px; background: rgba(0,0,0,0.25); border-radius: 8px;">
+          Keine Industrie-Rezepte verfügbar. Entdecke neue Erzadern im Schacht, um Fertigungspläne freizuschalten!
         </div>
       `;
+    } else {
+      for (const [prodId, prod] of visibleFactoryProducts) {
+        let canCraft = true;
+        const ingBadges = Object.entries(prod.recipe).map(([ore, need]) => {
+          const inCargo = cargoCounts[ore] || 0;
+          const inDepot = this.depot?.ores?.[ore] || 0;
+          const have = inCargo + inDepot;
+          if (have < need) canCraft = false;
+          const oreName = ORE_DATA[ore]?.name || ore;
+          const isMet = have >= need;
+          return `<span style="background: ${isMet ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'}; border: 1px solid ${isMet ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'}; color: ${isMet ? '#34d399' : '#f87171'}; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">${itemDisplayIcon(ore, 13)} ${need}x ${oreName} <span style="font-size: 9.5px; opacity: 0.85;">(${have}/${need})</span></span>`;
+        }).join(' ');
+
+        // Prüfung: Reicht die Kohle für den Ofen-Brennstoff (2x) + eventuelle Rezept-Kohle?
+        const recipeCoal = prod.recipe['coal'] || 0;
+        const totalCoalNeeded = recipeCoal + (prod.fuelCoal || 2);
+        if (availableCoal < totalCoalNeeded) canCraft = false;
+
+        html += `
+          <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;">
+              <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.25); border-radius: 8px; flex-shrink: 0; color: #38bdf8;">
+                ${itemDisplayIcon(prodId, 18)}
+              </span>
+              <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0;">
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <strong style="color: #f8fafc; font-size: 13px;">${prod.name}</strong>
+                  <span style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.35); padding: 1px 7px; border-radius: 6px; font-size: 11px; color: #fbbf24; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">${icon('coins', '', 11)} €${prod.value}</span>
+                  <span style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); padding: 1px 6px; border-radius: 6px; font-size: 10.5px; color: #94a3b8; font-weight: 600; display: inline-flex; align-items: center; gap: 3px;">${icon('clock', '', 10)} ${prod.durationSec}s</span>
+                </div>
+                <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                  ${ingBadges}
+                </div>
+              </div>
+            </div>
+            <button class="btn-craft-product btn-buy" data-prod="${prodId}" ${canCraft ? '' : 'disabled'} style="height: 32px; padding: 0 14px; font-size: 11.5px; font-weight: 700; flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px;">
+              ${icon('hammer', '', 13)} Herstellen
+            </button>
+          </div>
+        `;
+      }
     }
 
     html += `
@@ -3748,7 +3770,7 @@ export class BaseSystem {
       </div>
     `;
 
-    // 5. Frachtraum & Depot / Rohstoff-Schmelze
+    // 4. ROHERZ-SCHMELZOFEN (Einschmelzen einzelner Erze)
     const totalCargoOres = cargo.length;
     const totalDepotOres = Object.values(this.depot?.ores || {}).reduce((s, v) => s + v, 0);
     const totalAvailableOres = totalCargoOres + totalDepotOres;
@@ -3760,7 +3782,6 @@ export class BaseSystem {
             ${icon('container', '', 14)}
             Roherz-Schmelzofen (Fracht: ${totalCargoOres}/${this.player.maxCargo} · Depot: ${totalDepotOres})
           </strong>
-          <span style="font-size: 11px; color: #94a3b8;">Ofen akzeptiert Erze aus Fracht & Depot</span>
         </div>
     `;
 
@@ -3774,44 +3795,55 @@ export class BaseSystem {
       html += `
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
           ${totalCargoOres > 0 ? `
-            <button id="btn-deposit-all-cargo" class="btn-action" style="flex: 1; height: 32px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 5px;">
+            <button id="btn-deposit-all-cargo" class="btn-action" ${availableCoal > 0 ? '' : 'disabled'} style="flex: 1; height: 32px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 5px;">
               ${icon('flame', '', 14)}
-              <span>ALLE FRACHT-ERZE IN OFEN (${totalCargoOres})</span>
+              <span>Fracht schmelzen (${totalCargoOres})</span>
             </button>
           ` : ''}
           ${totalDepotOres > 0 ? `
-            <button id="btn-deposit-all-depot" class="btn-buy" style="flex: 1; height: 32px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 5px;">
+            <button id="btn-deposit-all-depot" class="btn-buy" ${availableCoal > 0 ? '' : 'disabled'} style="flex: 1; height: 32px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 5px;">
               ${icon('warehouse', '', 14)}
-              <span>ALLE DEPOT-ERZE IN OFEN (${totalDepotOres})</span>
+              <span>Depot schmelzen (${totalDepotOres})</span>
             </button>
           ` : ''}
         </div>
       `;
 
-      const allOreKeys = Object.keys(ORE_DATA).filter(k => (cargoCounts[k] || 0) > 0 || (this.depot?.ores?.[k] || 0) > 0);
+      const allOreKeys = Object.keys(ORE_DATA).filter(k => this.player.isOreDiscovered(k) && ((cargoCounts[k] || 0) > 0 || (this.depot?.ores?.[k] || 0) > 0));
 
       html += `<div style="display: flex; flex-direction: column; gap: 6px;">`;
       for (const oreKey of allOreKeys) {
         const oreName = ORE_DATA[oreKey]?.name || oreKey;
         const refinedName = getRefinedOreName(oreKey);
-        const durSec = REFINERY_DURATIONS_SEC[oreKey] || Math.max(10, Math.round((ORE_DATA[oreKey]?.value || 25) * 0.35));
+        const durSec = REFINERY_DURATIONS_SEC[oreKey] || Math.max(20, Math.round((ORE_DATA[oreKey]?.value || 25) * 0.70));
         const netVal = getRefinedOreNetValue(oreKey);
         const inCargo = cargoCounts[oreKey] || 0;
         const inDepot = this.depot?.ores?.[oreKey] || 0;
         const totalThisOre = inCargo + inDepot;
 
+        const canAffordFuel = (oreKey === 'coal') ? (availableCoal >= 2) : (availableCoal >= 1);
+        const canSmeltThis = canAffordFuel && totalThisOre > 0;
+
         html += `
-          <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 6px 10px;">
-            <div style="display: flex; align-items: center; gap: 6px;">
-              ${itemDisplayIcon(oreKey, 16)}
+          <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 8px 10px; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.25); border-radius: 8px; flex-shrink: 0;">
+                ${itemDisplayIcon(oreKey, 18)}
+              </span>
               <div>
-                <strong style="color: #f8fafc; font-size: 12.5px;">${oreName} <span style="color: #64748b;">➔</span> <span style="color: #fbbf24;">${refinedName}</span></strong>
-                <span style="color: #94a3b8; font-size: 11px; margin-left: 6px;">(${inCargo}x Fracht + ${inDepot}x Depot) · ${durSec}s/Stk · Wert: €${netVal}</span>
+                <strong style="color: #f8fafc; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px;">
+                  ${oreName} <span style="color: #64748b; font-size: 11px;">➔</span> <span style="color: #fbbf24; display: inline-flex; align-items: center; gap: 4px;">${itemDisplayIcon('bar_' + oreKey, 14)} ${refinedName}</span>
+                </strong>
+                <div style="display: flex; gap: 6px; align-items: center; margin-top: 2px;">
+                  <span style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); padding: 1px 6px; border-radius: 5px; font-size: 10px; color: #94a3b8; font-weight: 600;">${totalThisOre}x (${inCargo}F + ${inDepot}D)</span>
+                  <span style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); padding: 1px 6px; border-radius: 5px; font-size: 10px; color: #94a3b8; font-weight: 600; display: inline-flex; align-items: center; gap: 3px;">${icon('clock', '', 9)} ${durSec}s</span>
+                  <span style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); padding: 1px 6px; border-radius: 5px; font-size: 10px; color: #fbbf24; font-weight: 700;">€${netVal}</span>
+                </div>
               </div>
             </div>
             <div style="display: flex; gap: 6px; align-items: center;">
-              <button class="btn-deposit-one btn-3d-secondary" data-ore="${oreKey}" style="height: 32px; padding: 0 10px; font-size: 11px; font-weight: 700; border-radius: 8px;">+1 in Ofen</button>
-              <button class="btn-deposit-all-type btn-action" data-ore="${oreKey}" style="height: 32px; padding: 0 10px; font-size: 11px; font-weight: 700; border-radius: 8px;">Alle (${totalThisOre})</button>
+              <button class="btn-deposit-one btn-3d-secondary" data-ore="${oreKey}" ${canSmeltThis ? '' : 'disabled'} style="height: 30px; padding: 0 10px; font-size: 11px; font-weight: 700; border-radius: 6px;">+1</button>
+              <button class="btn-deposit-all-type btn-action" data-ore="${oreKey}" ${canSmeltThis ? '' : 'disabled'} style="height: 30px; padding: 0 10px; font-size: 11px; font-weight: 700; border-radius: 6px;">Alle (${totalThisOre})</button>
             </div>
           </div>
         `;
@@ -3820,10 +3852,6 @@ export class BaseSystem {
     }
 
     html += `
-        <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
-          <button id="btn-refinery-close" class="btn-3d-secondary" style="height: 32px; font-size: 11.5px; font-weight: 700; padding: 0 16px;">
-            SCHLIESSEN
-          </button>
         </div>
       </div>
     `;
@@ -3881,46 +3909,61 @@ export class BaseSystem {
       };
     });
 
-    const btnRefineryClose = document.getElementById('btn-refinery-close');
-    if (btnRefineryClose) {
-      btnRefineryClose.onclick = () => {
-        soundFx.playClick();
-        this.closeModal();
-      };
+
+  }
+
+  consumeSingleOre(oreKey) {
+    const cargoIdx = this.player.cargo.indexOf(oreKey);
+    if (cargoIdx !== -1) {
+      this.player.cargo.splice(cargoIdx, 1);
+      return true;
     }
+    if (this.depot?.ores?.[oreKey] > 0) {
+      this.depot.ores[oreKey]--;
+      return true;
+    }
+    return false;
   }
 
   craftFactoryProduct(productId) {
     const prod = FACTORY_PRODUCTS[productId];
     if (!prod) return;
 
-    // Check cargo + depot requirements
     const cargoCounts = {};
     this.player.cargo.forEach(ore => {
       cargoCounts[ore] = (cargoCounts[ore] || 0) + 1;
     });
 
+    const availableCoal = (cargoCounts['coal'] || 0) + (this.depot?.ores?.['coal'] || 0);
+    const fuelNeeded = prod.fuelCoal || 2;
+    const recipeCoal = prod.recipe['coal'] || 0;
+    const totalCoalNeeded = recipeCoal + fuelNeeded;
+
+    if (availableCoal < totalCoalNeeded) {
+      this.scene.events.emit('notify', `Nicht genug Kohle! Die Fertigungslinie benötigt ${fuelNeeded}x Kohle als Brennstoff.`);
+      return;
+    }
+
     for (const [ore, needed] of Object.entries(prod.recipe)) {
+      if (ore === 'coal') continue;
       const inCargo = cargoCounts[ore] || 0;
       const inDepot = this.depot?.ores?.[ore] || 0;
       if (inCargo + inDepot < needed) {
-        this.scene.events.emit('notify', `Nicht genug ${ORE_DATA[ore]?.name || ore} (Fracht & Depot)!`);
+        this.scene.events.emit('notify', `Nicht genug ${ORE_DATA[ore]?.name || ore}!`);
         return;
       }
     }
 
-    // Deduct ores: first from cargo, then remaining from depot
+    // 1. Rezept-Materialien verbrauchen
     for (const [ore, needed] of Object.entries(prod.recipe)) {
-      const inCargo = cargoCounts[ore] || 0;
-      const fromCargo = Math.min(inCargo, needed);
-      const fromDepot = needed - fromCargo;
+      for (let i = 0; i < needed; i++) {
+        this.consumeSingleOre(ore);
+      }
+    }
 
-      if (fromCargo > 0) {
-        this.player.consumeOre(ore, fromCargo);
-      }
-      if (fromDepot > 0 && this.depot?.ores?.[ore]) {
-        this.depot.ores[ore] = Math.max(0, this.depot.ores[ore] - fromDepot);
-      }
+    // 2. Ofen-Brennstoff verbrauchen (2x Kohle)
+    for (let i = 0; i < fuelNeeded; i++) {
+      this.consumeSingleOre('coal');
     }
 
     const durationMs = prod.durationSec * 1000;
@@ -3944,16 +3987,15 @@ export class BaseSystem {
     if (this.refinery.finished.length === 0) return;
     if (!this.player.factoryProducts) this.player.factoryProducts = {};
     if (!this.depot) {
-      this.depot = { ores: {}, products: {}, capacity: 150, tier: 1, currentTab: 'ores' };
+      this.depot = { ores: {}, products: {}, capacity: 10, tier: 1, currentTab: 'ores' };
     }
     if (!this.depot.ores) this.depot.ores = {};
     if (!this.depot.products) this.depot.products = {};
 
     let prodTransferred = 0;
     let oreTransferred = 0;
-    let oreCashGained = 0;
 
-    const depotCap = this.depot.capacity || 150;
+    const depotCap = this.depot.capacity || 10;
     let currentDepotCount = this.getDepotTotalCount();
 
     this.refinery.finished.forEach(item => {
@@ -3961,23 +4003,14 @@ export class BaseSystem {
         if (currentDepotCount < depotCap) {
           this.depot.products[item.productId] = (this.depot.products[item.productId] || 0) + 1;
           currentDepotCount++;
+          prodTransferred++;
         } else {
           this.player.factoryProducts[item.productId] = (this.player.factoryProducts[item.productId] || 0) + 1;
+          prodTransferred++;
         }
-        prodTransferred++;
       } else if (item.ore) {
-        const barKey = 'bar_' + item.ore;
-        if (currentDepotCount < depotCap) {
-          this.depot.products[barKey] = (this.depot.products[barKey] || 0) + 1;
-          currentDepotCount++;
-          oreTransferred++;
-        } else {
-          this.player.factoryProducts[barKey] = (this.player.factoryProducts[barKey] || 0) + 1;
-          oreTransferred++;
-        }
-      } else {
-        this.player.cash += item.value;
-        oreCashGained += item.value;
+        this.player.cargo.push(item.ore);
+        oreTransferred++;
       }
     });
 
@@ -3989,69 +4022,68 @@ export class BaseSystem {
 
     let msg = '';
     if (oreTransferred > 0 && prodTransferred > 0) {
-      msg = `📦 ${oreTransferred}x Barren/Briketts & ${prodTransferred}x Waren sicher ins Depot eingelagert!`;
+      msg = `📦 ${oreTransferred}x Barren/Briketts & ${prodTransferred}x Waren sicher ins Lager/Inventar übernommen!`;
     } else if (oreTransferred > 0) {
-      msg = `📦 ${oreTransferred}x veredelte Barren/Briketts sicher ins Depot eingelagert!`;
+      msg = `📦 ${oreTransferred}x veredelte Barren/Briketts sicher ins Lager/Inventar übernommen!`;
     } else if (prodTransferred > 0) {
-      msg = `📦 ${prodTransferred}x Fabrik-Waren sicher ins Depot eingelagert!`;
-    } else if (oreCashGained > 0) {
-      msg = `Lager voll: Barren für +€${oreCashGained} verkauft!`;
+      msg = `📦 ${prodTransferred}x Fabrik-Waren sicher ins Lager/Inventar übernommen!`;
     }
-    this.scene.events.emit('notify', msg);
+    if (msg) this.scene.events.emit('notify', msg);
   }
 
   depositOreToRefinery(oreKey, count = 1) {
-    let moved = 0;
-    // 1. Zuerst aus Frachtraum
-    for (let i = this.player.cargo.length - 1; i >= 0 && moved < count; i--) {
-      if (this.player.cargo[i] === oreKey) {
-        this.player.cargo.splice(i, 1);
-        const durationMs = getRefinerySmeltDurationMs(oreKey);
-        const netVal = getRefinedOreNetValue(oreKey);
+    const availableCoal = (this.player.cargo.filter(k => k === 'coal').length) + (this.depot?.ores?.['coal'] || 0);
+    const availableTarget = (this.player.cargo.filter(k => k === oreKey).length) + (this.depot?.ores?.[oreKey] || 0);
+
+    // Schmelzofen benötigt immer 1x Kohle als Brennstoff
+    if (oreKey === 'coal') {
+      // 1 Kohle zum Einschmelzen + 1 Kohle als Brennstoff = 2 Kohle pro Brikett
+      const maxPossible = Math.floor(availableCoal / 2);
+      const toSmelt = Math.min(count, maxPossible);
+      if (toSmelt <= 0) {
+        if (availableCoal < 2) {
+          this.scene.events.emit('notify', 'Mindestens 2x Kohle erforderlich (1x zum Veredeln + 1x als Brennstoff)!');
+        }
+        return;
+      }
+
+      for (let i = 0; i < toSmelt; i++) {
+        this.consumeSingleOre('coal'); // Material
+        this.consumeSingleOre('coal'); // Brennstoff
+        const durationMs = getRefinerySmeltDurationMs('coal');
+        const netVal = getRefinedOreNetValue('coal');
         this.refinery.queue.push({
           id: `q_${Date.now()}_${Math.random().toString(36).substr(2, 7)}`,
-          ore: oreKey,
-          name: getRefinedOreName(oreKey),
+          ore: 'coal',
+          name: getRefinedOreName('coal'),
           durationMs,
           remainingMs: durationMs,
           value: netVal
         });
-        moved++;
       }
-    }
 
-    // 2. Falls noch nötig: aus Depot entnehmen
-    if (moved < count && this.depot?.ores?.[oreKey] > 0) {
-      const takeFromDepot = Math.min(count - moved, this.depot.ores[oreKey]);
-      this.depot.ores[oreKey] -= takeFromDepot;
-      for (let k = 0; k < takeFromDepot; k++) {
-        const durationMs = getRefinerySmeltDurationMs(oreKey);
-        const netVal = getRefinedOreNetValue(oreKey);
-        this.refinery.queue.push({
-          id: `q_${Date.now()}_${Math.random().toString(36).substr(2, 7)}`,
-          ore: oreKey,
-          name: getRefinedOreName(oreKey),
-          durationMs,
-          remainingMs: durationMs,
-          value: netVal
-        });
-        moved++;
-      }
-    }
-
-    if (moved > 0) {
       soundFx.playFurnace();
       this.renderRefineryModalBody();
       if (this.scene.hud) this.scene.hud.update();
-      this.scene.events.emit('notify', `${moved}x ${ORE_DATA[oreKey]?.name || oreKey} wird zu ${getRefinedOreName(oreKey)} veredelt.`);
+      this.scene.events.emit('notify', `${toSmelt}x Kohle-Brikett in Ofen gegeben (${toSmelt}x Kohle als Brennstoff verbraucht).`);
+      return;
     }
-  }
 
-  depositAllCargoToRefinery() {
-    const total = this.player.cargo.length;
-    if (total === 0) return;
+    // Anderes Erz als Kohle:
+    if (availableCoal <= 0) {
+      this.scene.events.emit('notify', 'Keine Kohle vorhanden! Der Schmelzofen benötigt 1x Kohle als Brennstoff.');
+      return;
+    }
 
-    this.player.cargo.forEach(oreKey => {
+    const toSmelt = Math.min(count, availableTarget, availableCoal);
+    if (toSmelt <= 0) {
+      this.scene.events.emit('notify', `Kein ${ORE_DATA[oreKey]?.name || oreKey} zum Einschmelzen vorhanden.`);
+      return;
+    }
+
+    for (let i = 0; i < toSmelt; i++) {
+      this.consumeSingleOre(oreKey); // Erz
+      this.consumeSingleOre('coal');  // Brennstoff
       const durationMs = getRefinerySmeltDurationMs(oreKey);
       const netVal = getRefinedOreNetValue(oreKey);
       this.refinery.queue.push({
@@ -4062,44 +4094,114 @@ export class BaseSystem {
         remainingMs: durationMs,
         value: netVal
       });
-    });
+    }
 
-    this.player.cargo = [];
     soundFx.playFurnace();
     this.renderRefineryModalBody();
     if (this.scene.hud) this.scene.hud.update();
-    this.scene.events.emit('notify', `${total} Erze aus dem Frachtraum in den Schmelzofen gegeben!`);
+    this.scene.events.emit('notify', `${toSmelt}x ${ORE_DATA[oreKey]?.name || oreKey} im Ofen (${toSmelt}x Kohle als Brennstoff verbraucht).`);
+  }
+
+  depositAllCargoToRefinery() {
+    if (this.player.cargo.length === 0) return;
+
+    let availableCoal = (this.player.cargo.filter(k => k === 'coal').length) + (this.depot?.ores?.['coal'] || 0);
+    if (availableCoal <= 0) {
+      this.scene.events.emit('notify', 'Keine Kohle vorhanden! Der Schmelzofen benötigt 1x Kohle als Brennstoff pro Vorgang.');
+      return;
+    }
+
+    // Erst andere Erze einschmelzen, damit Kohle als Brennstoff genutzt wird
+    const cargoCopy = [...this.player.cargo];
+    cargoCopy.sort((a, b) => (a === 'coal' ? 1 : 0) - (b === 'coal' ? 1 : 0));
+
+    let smelted = 0;
+    for (const oreKey of cargoCopy) {
+      if (oreKey === 'coal') {
+        if (availableCoal < 2) break;
+      } else {
+        if (availableCoal < 1) break;
+      }
+
+      // Check ob Erz noch in Fracht
+      const oreIdx = this.player.cargo.indexOf(oreKey);
+      if (oreIdx === -1) continue;
+      this.player.cargo.splice(oreIdx, 1);
+
+      // 1 Kohle als Brennstoff abziehen
+      this.consumeSingleOre('coal');
+      availableCoal--;
+
+      const durationMs = getRefinerySmeltDurationMs(oreKey);
+      const netVal = getRefinedOreNetValue(oreKey);
+      this.refinery.queue.push({
+        id: `q_${Date.now()}_${Math.random().toString(36).substr(2, 7)}`,
+        ore: oreKey,
+        name: getRefinedOreName(oreKey),
+        durationMs,
+        remainingMs: durationMs,
+        value: netVal
+      });
+      smelted++;
+    }
+
+    if (smelted > 0) {
+      soundFx.playFurnace();
+      this.renderRefineryModalBody();
+      if (this.scene.hud) this.scene.hud.update();
+      this.scene.events.emit('notify', `${smelted} Fracht-Erze in den Schmelzofen gegeben (${smelted}x Kohle als Brennstoff verbraucht)!`);
+    } else {
+      this.scene.events.emit('notify', 'Nicht genug Kohle vorhanden, um Erze einzuschmelzen.');
+    }
   }
 
   depositAllDepotToRefinery() {
     if (!this.depot?.ores) return;
-    let count = 0;
-    for (const [oreKey, qty] of Object.entries(this.depot.ores)) {
-      if (qty > 0) {
-        for (let i = 0; i < qty; i++) {
-          const durationMs = getRefinerySmeltDurationMs(oreKey);
-          const netVal = getRefinedOreNetValue(oreKey);
-          this.refinery.queue.push({
-            id: `q_${Date.now()}_${Math.random().toString(36).substr(2, 7)}`,
-            ore: oreKey,
-            name: getRefinedOreName(oreKey),
-            durationMs,
-            remainingMs: durationMs,
-            value: netVal
-          });
-          count++;
+
+    let availableCoal = (this.player.cargo.filter(k => k === 'coal').length) + (this.depot?.ores?.['coal'] || 0);
+    if (availableCoal <= 0) {
+      this.scene.events.emit('notify', 'Keine Kohle vorhanden! Der Schmelzofen benötigt 1x Kohle als Brennstoff pro Vorgang.');
+      return;
+    }
+
+    // Erze aus dem Depot holen, Kohle zuletzt
+    const oreKeys = Object.keys(this.depot.ores).filter(k => (this.depot.ores[k] || 0) > 0);
+    oreKeys.sort((a, b) => (a === 'coal' ? 1 : 0) - (b === 'coal' ? 1 : 0));
+
+    let smelted = 0;
+    for (const oreKey of oreKeys) {
+      while ((this.depot.ores[oreKey] || 0) > 0) {
+        if (oreKey === 'coal') {
+          if (availableCoal < 2) break;
+        } else {
+          if (availableCoal < 1) break;
         }
-        this.depot.ores[oreKey] = 0;
+
+        this.depot.ores[oreKey]--;
+        this.consumeSingleOre('coal');
+        availableCoal--;
+
+        const durationMs = getRefinerySmeltDurationMs(oreKey);
+        const netVal = getRefinedOreNetValue(oreKey);
+        this.refinery.queue.push({
+          id: `q_${Date.now()}_${Math.random().toString(36).substr(2, 7)}`,
+          ore: oreKey,
+          name: getRefinedOreName(oreKey),
+          durationMs,
+          remainingMs: durationMs,
+          value: netVal
+        });
+        smelted++;
       }
     }
 
-    if (count > 0) {
+    if (smelted > 0) {
       soundFx.playFurnace();
       this.renderRefineryModalBody();
       if (this.scene.hud) this.scene.hud.update();
-      this.scene.events.emit('notify', `📦 ${count} Erze aus dem Depot in den Schmelzofen gegeben!`);
+      this.scene.events.emit('notify', `📦 ${smelted} Depot-Erze in den Schmelzofen gegeben (${smelted}x Kohle als Brennstoff verbraucht)!`);
     } else {
-      this.scene.events.emit('notify', 'Keine Erze im Depot vorhanden.');
+      this.scene.events.emit('notify', 'Nicht genug Kohle vorhanden, um Erze einzuschmelzen.');
     }
   }
 

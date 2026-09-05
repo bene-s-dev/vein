@@ -1,6 +1,6 @@
 import { ORE_DATA } from '../core/GridSystem.js';
 import { soundFx } from '../core/SoundEffects.js';
-import { icon, refreshIcons, oreIcon, itemDisplayIcon, getRefinedOreName } from './IconHelper.js';
+import { icon, refreshIcons, oreIcon, itemDisplayIcon, getRefinedOreName, drillerVehicleIcon } from './IconHelper.js';
 import { notifyModalClosed } from '../core/BaseSystem.js';
 
 /**
@@ -46,11 +46,11 @@ export class DrillerMenuModal {
     const bodyEl = document.getElementById('modal-body');
     if (!modalEl || !titleEl || !bodyEl) return;
 
-    // Titel: "BOHRER"
+    // Titel: "BOHRER" mit dem originalen Spiel-Fahrzeug-Icon
     titleEl.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 8px; color: #38bdf8;">
-        ${icon('disc', '', 18)}
-        <span>BOHRER</span>
+      <div style="display: flex; align-items: center; gap: 10px; color: #38bdf8;">
+        ${drillerVehicleIcon(26)}
+        <span style="font-weight: 800; letter-spacing: 0.5px;">BOHRER</span>
       </div>
     `;
 
@@ -224,9 +224,9 @@ export class DrillerMenuModal {
             line-height: 1.2;
           ">${count}x</span>
 
-          <!-- Stein Icon -->
+          <!-- Stein Icon: Lucide "stone" in individueller Erzfarbe -->
           <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; margin-top: 2px;">
-            ${itemDisplayIcon(key, 28)}
+            ${oreIcon(key, 28)}
           </div>
 
           <!-- Stein Name -->
@@ -348,33 +348,16 @@ export class DrillerMenuModal {
       </div>
     `;
 
-    // 3. Nur ein Schließen-Button am Ende (keine Buttons zu Gebäuden xy, keine Tab-Buttons)
-    const footerHtml = `
-      <div style="display: flex; justify-content: flex-end; margin-top: 16px;">
-        <button id="btn-driller-close" class="btn-3d-secondary" style="height: 34px; font-size: 12px; font-weight: 700; padding: 0 20px; border-radius: 8px;">
-          SCHLIESSEN
-        </button>
-      </div>
-    `;
-
     bodyEl.innerHTML = `
       <div style="display: flex; flex-direction: column;">
         ${statusBarsHtml}
         ${inventoryHtml}
-        ${footerHtml}
       </div>
     `;
 
     modalEl.style.display = 'flex';
     refreshIcons(modalEl);
 
-    // Close Button Event
-    const btnClose = bodyEl.querySelector('#btn-driller-close');
-    if (btnClose) {
-      btnClose.onclick = () => {
-        soundFx.playClick();
-        this.close();
-      };
-    }
+
   }
 }

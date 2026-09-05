@@ -46,6 +46,7 @@ export const COMPONENT_ICONS = {
 export const BUILDING_ICONS = {
   hangar: 'wrench',
   market: 'coins',
+  office: 'laptop-minimal',
   geologist: 'microscope',
   lab: 'cpu',
   refinery: 'factory',
@@ -59,8 +60,8 @@ export const BUILDING_ICONS = {
  * Individuelle Farbpalette für alle 15 Erze im Spiel
  */
 export const ORE_COLORS = {
-  coal: '#64748b',         // Kohle (Schiefergrau)
-  copper: '#f59e0b',       // Kupfer (Bernstein/Kupfer)
+  coal: '#475569',         // Kohle (Dunkles Anthrazit / Kohleschwarz-Kontur)
+  copper: '#ea580c',       // Kupfer (Kupferrot / Echtes Kupfer, kein Gelb)
   iron: '#94a3b8',         // Eisen (Stahlgrau)
   tin: '#cbd5e1',          // Zinn (Hellgrau/Silber)
   silver: '#f8fafc',       // Silber (Silberweiß)
@@ -74,6 +75,27 @@ export const ORE_COLORS = {
   uranium: '#84cc16',      // Uran (Neongrün)
   obsidian_gem: '#c084fc', // Obsidian-Kern (Violett)
   dark_matter: '#a855f7'   // Dunkelmaterie (Purpur)
+};
+
+/**
+ * Harmonische Innenfüllfarben für die Roherz-Steine (Stone-Icon)
+ */
+export const ORE_FILL_COLORS = {
+  coal: '#090d16',         // Kohle (Tiefschwarz / Pechkohle)
+  copper: '#7c2d12',       // Kupfer (Tiefes Kupferrotbraun)
+  iron: '#475569',         // Eisen (Industrielles Stahlgrau)
+  tin: '#64748b',          // Zinn (Hellgraues Zinn)
+  silver: '#64748b',       // Silber (Edles Feinsilber)
+  gold: '#b45309',         // Gold (Tiefes Goldbraun)
+  emerald: '#065f46',      // Smaragd (Dunkles Smaragdgrün)
+  sapphire: '#1e40af',     // Saphir (Tiefes Saphirblau)
+  ruby: '#991b1b',         // Rubin (Dunkles Rubinrot)
+  diamond: '#0369a1',      // Diamant (Funkelndes Tiefcyan)
+  titanium: '#3730a3',     // Titan (Tiefes Titan-Indigo)
+  platinum: '#475569',     // Platin (Edles Platingrau)
+  uranium: '#3f6212',      // Uran (Giftiges Tiefgrün)
+  obsidian_gem: '#581c87', // Obsidian (Tiefes Obsidianviolett)
+  dark_matter: '#3b0764'   // Dunkelmaterie (Kosmisches Dunkelpurpur)
 };
 
 /**
@@ -208,12 +230,39 @@ export function getRefinedOreName(oreKey) {
 }
 
 /**
- * Erzeugt das Lucide "stone"-Icon in der individuellen Erzfarbe
+ * Erzeugt das Lucide "stone"-Icon in der individuellen Erzfarbe mit passender Innenfüllung.
+ * Das Stone-Icon ist strikt für Roherze reserviert!
  */
 export function oreIcon(oreKey, size = 14, extraClass = '') {
   const cleanKey = oreKey.startsWith('bar_') ? oreKey.replace('bar_', '') : oreKey;
-  const color = ORE_COLORS[cleanKey] || '#94a3b8';
-  return `<i data-lucide="stone" class="lucide-icon ore-icon ore-icon-${cleanKey} ${extraClass}" style="width: ${size}px; height: ${size}px; display: inline-flex; vertical-align: middle; flex-shrink: 0; color: ${color}; stroke: ${color};"></i>`;
+  const strokeColor = ORE_COLORS[cleanKey] || '#94a3b8';
+  const fillColor = ORE_FILL_COLORS[cleanKey] || 'rgba(148, 163, 184, 0.4)';
+  return `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${strokeColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon ore-icon ore-icon-${cleanKey} ${extraClass}" style="width: ${size}px; height: ${size}px; display: inline-flex; vertical-align: middle; flex-shrink: 0;">
+      <path d="M11.264 2.205A4 4 0 0 0 6.42 4.211l-4 8a4 4 0 0 0 1.359 5.117l6 4a4 4 0 0 0 4.438 0l6-4a4 4 0 0 0 1.576-4.592l-2-6a4 4 0 0 0-2.53-2.53z" fill="${fillColor}" />
+      <path d="M11.99 22 14 12l7.822 3.184" fill="none" />
+      <path d="M14 12 8.47 2.302" fill="none" />
+    </svg>
+  `.trim();
+}
+
+/**
+ * Spezielles 3D-Metallbarren Vektor-Icon für alle geschmolzenen Barren (Kupfer-Barren, Eisen-Barren etc.)
+ * 1:1 an den isometrischen Stil und die visuelle Identität der Stone-Icons angepasst (ohne Lücken).
+ */
+export function ingotIcon(strokeColor = '#f59e0b', size = 14, extraClass = '', fillColor = null) {
+  const actualFill = fillColor || (strokeColor.startsWith('#') ? strokeColor + '40' : strokeColor);
+  return `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${strokeColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon ingot-icon ${extraClass}" style="width: ${size}px; height: ${size}px; display: inline-flex; vertical-align: middle; flex-shrink: 0;">
+      <!-- Barren-Hauptkörper (geschlossene Geometrie im 3D-Winkel des Stone-Icons) -->
+      <path d="M9.5 4.5 L18 8 L21 13.5 L13 19.5 L3 14.5 L5.5 9 Z" fill="${actualFill}" />
+      <!-- Oberseite mit dezentem metallischem Glanz -->
+      <path d="M9.5 4.5 L18 8 L13 12 L5.5 9 Z" fill="#ffffff" fill-opacity="0.16" />
+      <!-- Innere Facettenlinien -->
+      <path d="M5.5 9 L13 12 L18 8" fill="none" />
+      <path d="M13 12 L13 19.5" fill="none" />
+    </svg>
+  `.trim();
 }
 
 /**
@@ -222,21 +271,64 @@ export function oreIcon(oreKey, size = 14, extraClass = '') {
 export function refinedItemIcon(key, size = 14, extraClass = '') {
   const rawKey = key.startsWith('bar_') ? key.replace('bar_', '') : key;
   const color = ORE_COLORS[rawKey] || '#38bdf8';
+  const fillColor = ORE_FILL_COLORS[rawKey] || 'rgba(148, 163, 184, 0.4)';
   const data = REFINED_ORE_DATA[rawKey];
+  if (data?.type === 'barren') {
+    return ingotIcon(color, size, extraClass, fillColor);
+  }
   const iconName = data ? data.iconName : 'layers';
   return `<i data-lucide="${iconName}" class="lucide-icon refined-icon ${extraClass}" style="width: ${size}px; height: ${size}px; display: inline-flex; vertical-align: middle; flex-shrink: 0; color: ${color}; stroke: ${color};"></i>`;
 }
 
+export const FACTORY_PRODUCT_ICONS = {
+  steel_beam: 'circle-pile',
+  bronze_ingot: 'layers',
+  circuit_board: 'cpu',
+  polished_gem: 'gem',
+  titan_plate: 'shield',
+  fusion_rod: 'flame'
+};
+
 /**
- * Universeller Helfer: erkennt automatisch rohe Erze, veredelte Barren oder Fabrikprodukte
+ * Universeller Helfer: erkennt automatisch rohe Erze, veredelte Barren oder Fabrikprodukte.
+ * Rohe Steine erhalten immer das gefüllte Lucide "stone"-Icon.
+ * Verarbeitete Steine (bar_*) erhalten entsprechende Barren-, Brikett- oder Edelstein-Symbole.
  */
 export function itemDisplayIcon(key, size = 14, extraClass = '') {
-  if (key.startsWith('bar_') || REFINED_ORE_DATA[key]) {
+  if (key.startsWith('bar_')) {
     return refinedItemIcon(key, size, extraClass);
+  }
+  if (key === 'bronze_ingot') {
+    return ingotIcon('#d97706', size, extraClass, '#92400e');
+  }
+  if (FACTORY_PRODUCT_ICONS[key]) {
+    return icon(FACTORY_PRODUCT_ICONS[key], extraClass, size);
   }
   if (ORE_COLORS[key]) {
     return oreIcon(key, size, extraClass);
   }
   return icon('box', extraClass, size);
+}
+
+/**
+ * Minimalistisches Lucide-Style Vektor-Icon für das Bohrer-Fahrzeug.
+ * Einheitlich wie alle Lucide-Icons (24x24 viewBox, stroke="currentColor", stroke-width="2",
+ * minimalistische Linienführung mit Kettenlaufwerk, Fahrerkabine und Bohrkegel).
+ */
+export function drillerVehicleIcon(size = 24, extraClass = '') {
+  return `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon driller-vehicle-icon ${extraClass}" style="display: inline-flex; vertical-align: middle; flex-shrink: 0;">
+      <!-- Kettenlaufwerk unten mit Rollenpunkten -->
+      <rect x="2" y="15" width="13" height="5" rx="2.5" />
+      <path d="M6 17.5h.01M10 17.5h.01" />
+      <!-- Chassis & Fahrerkabine -->
+      <path d="M4 15V8.5A1.5 1.5 0 0 1 5.5 7h4l3.5 4.5v3.5" />
+      <!-- Cockpit-Sichtfenster -->
+      <path d="M7 10h2.5" />
+      <!-- Bohrkegel & Schneidwendel -->
+      <path d="M14 8.5L21.5 12 14 15.5Z" />
+      <path d="M17.5 10.2L18.5 13.8" />
+    </svg>
+  `;
 }
 

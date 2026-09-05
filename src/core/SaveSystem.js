@@ -147,7 +147,7 @@ export class SaveSystem {
       p.drillPower = data.player.drillPower || p.drillPower;
       p.drillTier = data.player.drillTier || p.drillTier;
       p.researchedDrillTier = data.player.researchedDrillTier || p.drillTier || 1;
-      p.discoveredOres = new Set(data.player.discoveredOres || []);
+      p.discoveredOres = new Set(data.player.discoveredOres && data.player.discoveredOres.length ? data.player.discoveredOres : ['coal']);
       p.factoryProducts = data.player.factoryProducts || {};
 
       if (p.upgradeEngine) {

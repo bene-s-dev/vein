@@ -188,8 +188,16 @@ export class MissionSystem {
 
   assignNewMission() {
     const playerLevel = this.player.level || 1;
-    const available = MISSION_POOL.filter(m => m.minLevel <= playerLevel && (!this.activeMission || m.id !== this.activeMission.id));
-    const chosen = available[Math.floor(Math.random() * available.length)] || MISSION_POOL[0];
+    const available = MISSION_POOL.filter(m => {
+      if (m.minLevel > playerLevel) return false;
+      if (this.activeMission && m.id === this.activeMission.id) return false;
+      if (m.type === 'COLLECT_ORE' && !this.player.isOreDiscovered(m.targetOre)) return false;
+      return true;
+    });
+
+    const chosen = available[Math.floor(Math.random() * available.length)] ||
+                   MISSION_POOL.find(m => m.type === 'REACH_DEPTH' && m.minLevel <= playerLevel) ||
+                   MISSION_POOL[0];
 
     this.activeMission = { ...chosen };
     this.progress = 0;
