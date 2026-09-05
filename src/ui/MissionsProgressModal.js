@@ -764,11 +764,8 @@ export class MissionsProgressModal {
         const mid = btn.getAttribute('data-mid');
         const targetMission = MISSION_POOL.find(m => m.id === mid);
         if (targetMission) {
-          this.missionSystem.activeMission = { ...targetMission };
-          this.missionSystem.progress = 0;
-          this.missionSystem.isCompleted = false;
+          this.missionSystem.setActiveMission(targetMission);
           soundFx.playPurchase();
-          this.scene.events.emit('mission_updated', this.missionSystem.getMissionStatus());
           this.scene.events.emit('notify', `Neuer Auftrag aktiviert: ${targetMission.title}`);
           this.currentTab = 'active';
           this.render();

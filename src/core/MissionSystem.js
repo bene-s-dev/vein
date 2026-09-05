@@ -184,6 +184,33 @@ export class MissionSystem {
     // Event-Listener für Erz-Sammeln und Tiefe
     this.scene.events.on('ore_collected', (oreType) => this.onOreCollected(oreType));
     this.scene.events.on('depth_changed', (depth) => this.onDepthChanged(depth));
+
+    // Sofortige Überprüfung des aktuellen Spielstands
+    this.checkCurrentProgress();
+  }
+
+  setActiveMission(mission) {
+    if (!mission) return;
+    this.activeMission = { ...mission };
+    this.progress = 0;
+    this.isCompleted = false;
+
+    this.checkCurrentProgress();
+    this.scene.events.emit('mission_updated', this.getMissionStatus());
+  }
+
+  checkCurrentProgress() {
+    if (!this.activeMission || this.isCompleted) return;
+
+    if (this.activeMission.type === 'REACH_DEPTH') {
+      const currentDepth = Math.max(
+        this.player.highestDepthReached || 0,
+        this.player.depthMeters || 0
+      );
+      if (currentDepth > 0) {
+        this.onDepthChanged(currentDepth);
+      }
+    }
   }
 
   assignNewMission() {
@@ -199,11 +226,7 @@ export class MissionSystem {
                    MISSION_POOL.find(m => m.type === 'REACH_DEPTH' && m.minLevel <= playerLevel) ||
                    MISSION_POOL[0];
 
-    this.activeMission = { ...chosen };
-    this.progress = 0;
-    this.isCompleted = false;
-
-    this.scene.events.emit('mission_updated', this.getMissionStatus());
+    this.setActiveMission(chosen);
   }
 
   onOreCollected(oreType) {
@@ -230,7 +253,7 @@ export class MissionSystem {
         this.progress = this.activeMission.targetDepth;
         this.isCompleted = true;
         soundFx.playOreCollect(3);
-        this.scene.events.emit('notify', `🎉 TIEFENZIEL ERREICHT! Kehre zur Basis zurück.`);
+        this.scene.events.emit('notify', `🎉 TIEFENZIEL ERREICHT (${this.activeMission.targetDepth}m)! Kehre zur Basis zurück.`);
       }
       this.scene.events.emit('mission_updated', this.getMissionStatus());
     }
@@ -256,6 +279,20 @@ export class MissionSystem {
   getMissionStatus() {
     if (!this.activeMission) return null;
 
+    // Dynamische Absicherung für Tiefenziele
+    if (this.activeMission.type === 'REACH_DEPTH' && !this.isCompleted) {
+      const currentDepth = Math.max(
+        this.player.highestDepthReached || 0,
+        this.player.depthMeters || 0
+      );
+      if (currentDepth >= this.activeMission.targetDepth) {
+        this.progress = this.activeMission.targetDepth;
+        this.isCompleted = true;
+      } else if (currentDepth > this.progress) {
+        this.progress = currentDepth;
+      }
+    }
+
     let targetText = '';
     if (this.activeMission.type === 'COLLECT_ORE') {
       const oreName = (this.activeMission.targetOre && ORE_DATA[this.activeMission.targetOre]?.name) || 'Erze';
@@ -265,11 +302,14 @@ export class MissionSystem {
     }
 
     return {
+      id: this.activeMission.id,
       title: this.activeMission.title,
       desc: this.activeMission.desc,
       rewardCash: this.activeMission.rewardCash,
       rewardXp: this.activeMission.rewardXp,
       targetText,
+      progress: this.progress,
+      targetCount: this.activeMission.targetDepth || this.activeMission.targetCount,
       isCompleted: this.isCompleted
     };
   }

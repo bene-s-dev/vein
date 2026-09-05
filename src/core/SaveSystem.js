@@ -244,6 +244,9 @@ export class SaveSystem {
           ms.progress = data.mission.progress || 0;
           ms.isCompleted = !!data.mission.isCompleted;
           ms.completedMissionIds = data.mission.completedMissionIds || [];
+          if (ms.checkCurrentProgress) {
+            ms.checkCurrentProgress();
+          }
           scene.events.emit('mission_updated', ms.getMissionStatus());
         }
       }

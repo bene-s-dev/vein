@@ -1288,6 +1288,10 @@ export class Player {
 
     soundFx.playGemCollect();
 
+    if (this.scene && this.scene.events) {
+      this.scene.events.emit('ore_collected', oreType);
+    }
+
     // Entdeckungs-Event beim allerersten Fund
     if (this.discoveredOres && !this.discoveredOres.has(oreType)) {
       this.discoveredOres.add(oreType);
@@ -1314,9 +1318,12 @@ export class Player {
   }
 
   checkDepthProgress() {
-    const depthMeters = Math.max(0, Math.round((this.y / TILE_SIZE) * 2));
+    const depthMeters = this.depthMeters;
     if (depthMeters > this.highestDepthReached) {
       this.highestDepthReached = depthMeters;
+    }
+    if (this.scene && this.scene.events) {
+      this.scene.events.emit('depth_changed', depthMeters);
     }
   }
 
