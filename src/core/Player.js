@@ -981,30 +981,30 @@ export class Player {
     this.repairArm.fillStyle(0x1e293b, 1);
     this.repairArm.fillRect(curTipX - 2, curTipY - 3, 4, 5);
 
-    // 7. Effekte: 1,5s Schweißanimation an diesem Punkt
+    // 7. Effekte: 1,5s Schweißanimation an diesem Punkt (kompakt & dezent skaliert)
     if (this.repairArmState.isWelding) {
-      // 1. Schweißlichtbogen-Aura (hellblau / cyan)
-      const arcRadius = 3.5 + Math.random() * 3.5;
-      this.repairArm.fillStyle(0x38bdf8, 0.65);
+      // 1. Zarter Schweißlichtbogen-Aura (hellblau / cyan)
+      const arcRadius = 1.6 + Math.random() * 1.6;
+      this.repairArm.fillStyle(0x38bdf8, 0.6);
       this.repairArm.fillCircle(curTipX, curTipY, arcRadius);
 
       // 2. Glühender Heißer Kern (weiß)
-      this.repairArm.fillStyle(0xffffff, 1);
-      this.repairArm.fillCircle(curTipX, curTipY, 2.0);
+      this.repairArm.fillStyle(0xffffff, 0.95);
+      this.repairArm.fillCircle(curTipX, curTipY, 1.0);
 
       // 3. Zweiter innerer Lichtblitz
-      this.repairArm.fillStyle(0xe0f2fe, 0.95);
-      this.repairArm.fillCircle(curTipX, curTipY, 1.2);
+      this.repairArm.fillStyle(0xe0f2fe, 0.9);
+      this.repairArm.fillCircle(curTipX, curTipY, 0.6);
 
-      // 4. Sprühende Schweißfunken (5-8 dynamische Funkenbahnen)
-      const sparkCount = 5 + Math.floor(Math.random() * 4);
+      // 4. Sprühende Schweißfunken (feine, kurze Funkenbahnen)
+      const sparkCount = 3 + Math.floor(Math.random() * 3);
       for (let s = 0; s < sparkCount; s++) {
         const angle = Math.random() * Math.PI * 2;
-        const sparkDist = 5 + Math.random() * 12;
+        const sparkDist = 2.5 + Math.random() * 4.5;
         const sparkColor = (Math.random() > 0.4) ? 0xfacc15 : (Math.random() > 0.5 ? 0xf97316 : 0xffffff);
         const sparkAlpha = 0.7 + Math.random() * 0.3;
 
-        this.repairArm.lineStyle(1.2, sparkColor, sparkAlpha);
+        this.repairArm.lineStyle(0.8, sparkColor, sparkAlpha);
         this.repairArm.beginPath();
         this.repairArm.moveTo(curTipX, curTipY);
         this.repairArm.lineTo(curTipX + Math.cos(angle) * sparkDist, curTipY + Math.sin(angle) * sparkDist);
