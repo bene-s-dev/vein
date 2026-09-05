@@ -792,6 +792,34 @@ class SoundManager {
       osc.stop(startTime + 0.16);
     });
   }
+
+  // -----------------------------------------------------------------------
+  // 14. SCHWEISSEN (Lichtbogen-Zischen & Knistern)
+  // -----------------------------------------------------------------------
+  playWeldSparks() {
+    if (this.muted) return;
+    this.ensureContext();
+    if (!this.ctx) return;
+
+    const now = this.ctx.currentTime;
+    const noise = this.createNoiseBufferSource('pink');
+    if (noise) {
+      const flt = this.ctx.createBiquadFilter();
+      flt.type = 'bandpass';
+      flt.frequency.setValueAtTime(2200 + (Math.random() - 0.5) * 800, now);
+      flt.Q.setValueAtTime(3.5, now);
+
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(0.045, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
+
+      noise.connect(flt);
+      flt.connect(gain);
+      gain.connect(this.masterGain);
+      noise.start(now);
+      noise.stop(now + 0.09);
+    }
+  }
 }
 
 export const soundFx = new SoundManager();

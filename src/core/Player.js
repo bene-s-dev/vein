@@ -609,10 +609,10 @@ export class Player {
         this.isDocked = true;
       }
 
-      // Rumpfreparatur: Verlängerte, sorgfältige Schweißzeit (4 HP/s = ~25s für 100 HP)
-      const isRepairReady = isParkedAtHangar && this.repairArmState && this.repairArmState.activeWeight > 0.8;
-      if (isRepairReady && this.hull < this.maxHull) {
-        this.hull = Math.min(this.maxHull, this.hull + (delta / 1000) * 4);
+      // Rumpfreparatur: Erhöht sich während des 1,5s Schweißens an den einzelnen Punkten
+      const isRepairWelding = isParkedAtHangar && this.repairArmState && this.repairArmState.isWelding;
+      if (isRepairWelding && this.hull < this.maxHull) {
+        this.hull = Math.min(this.maxHull, this.hull + (delta / 1000) * 12);
         if (this.hull >= this.maxHull - 0.05) {
           this.hull = this.maxHull;
         }
@@ -807,24 +807,33 @@ export class Player {
     const armBaseX = 15 * TILE_SIZE + 32;
     const armBaseY = -30;
 
+    // 6 markante Schweißpunkte am Fahrzeug (statt kontinuierlichem Schleifen):
+    const REPAIR_SPOTS = [
+      { dx: -12, dy:  1 }, // 1. Bohrkopf / Spitze vorne
+      { dx:  -7, dy:  7 }, // 2. Fahrwerk / vordere Kette
+      { dx:  -1, dy: -9 }, // 3. Cockpit-Dach / Panzerung
+      { dx:   4, dy: -4 }, // 4. Motorblock / Mitte
+      { dx:  11, dy: -7 }, // 5. Heck-Spoiler / Auspuff
+      { dx:  10, dy:  7 }  // 6. Hintere Kette / Aufhängung
+    ];
+
     if (!this.repairArmState) {
       this.repairArmState = {
         curTipX: armBaseX - 8,
         curTipY: armBaseY + 20,
         curMidX: armBaseX - 16,
         curMidY: armBaseY + 8,
-        activeWeight: 0
+        activeWeight: 0,
+        spotIndex: 0,
+        phase: 'traveling', // 'traveling' | 'welding'
+        timer: 0,
+        isWelding: false,
+        lastSoundTime: 0
       };
     }
 
-    // 1. Sanfte Gewichtsannäherung (0 = geparkt am Dach, 1 = am Bohrer-Chassis)
-    // Sobald die Hülle 100% repariert ist (shouldDeploy = false), fährt der Arm sanft wieder ein
-    const targetWeight = shouldDeploy ? 1.0 : 0.0;
-    this.repairArmState.activeWeight = Phaser.Math.Linear(
-      this.repairArmState.activeWeight,
-      targetWeight,
-      dt * 1.8
-    );
+    const isConnected = this.repairArmState.activeWeight > 0.75;
+    const isStationary = shouldDeploy && (this.hull < this.maxHull);
 
     // Park-Position am Hangar-Dach (Arm sauber eingeklappt)
     const parkTipX = armBaseX - 8;
@@ -832,28 +841,60 @@ export class Player {
     const parkMidX = armBaseX - 16;
     const parkMidY = armBaseY + 8;
 
-    // Zielposition: Wenn aktiv am Fahrzeug (strikt auf die Hangar-Bucht begrenzt),
-    // andernfalls direkt die Park-Position (kein Nachziehen beim Wegfahren des Autos!)
     let targetTipX, targetTipY, targetMidX, targetMidY;
 
-    const isConnected = this.repairArmState.activeWeight > 0.8;
-    const isRepairing = isConnected && shouldDeploy && (this.hull < this.maxHull);
-
-    if (shouldDeploy) {
+    if (isStationary) {
       const clampedVehX = Phaser.Math.Clamp(this.sprite.x, 15 * TILE_SIZE - 20, 15 * TILE_SIZE + 20);
       const clampedVehY = Phaser.Math.Clamp(this.sprite.y, -32, -4);
-      const sweepX = isRepairing ? Math.sin(now * 0.007) * 8 : 0;
-      const workTipX = clampedVehX + sweepX;
-      const workTipY = clampedVehY - 10;
 
-      targetTipX = workTipX;
-      targetTipY = workTipY;
-      targetMidX = (armBaseX + workTipX) / 2 + 5;
-      targetMidY = Math.min(armBaseY, workTipY) - 15;
+      const spot = REPAIR_SPOTS[this.repairArmState.spotIndex % REPAIR_SPOTS.length];
+      const spotX = clampedVehX + spot.dx;
+      const spotY = clampedVehY + spot.dy;
 
-      this.repairArmState.activeWeight = Phaser.Math.Linear(this.repairArmState.activeWeight, 1.0, dt * 2.2);
+      const distToSpot = Math.hypot(this.repairArmState.curTipX - spotX, this.repairArmState.curTipY - spotY);
+
+      if (this.repairArmState.phase === 'traveling') {
+        this.repairArmState.isWelding = false;
+        targetTipX = spotX;
+        targetTipY = spotY;
+
+        // Wenn Arm ausgefahren ist und den aktuellen Schweißpunkt erreicht hat:
+        // Schweißvorgang für 1.5 Sekunden starten!
+        if (isConnected && distToSpot < 3.5) {
+          this.repairArmState.phase = 'welding';
+          this.repairArmState.timer = 0;
+          this.repairArmState.isWelding = true;
+        }
+      } else if (this.repairArmState.phase === 'welding') {
+        this.repairArmState.isWelding = true;
+        this.repairArmState.timer += delta;
+
+        // Am Punkt fixieren mit ganz feinem Schweiß-Mikrozittern (+/- 0.4px)
+        const microJitterX = (Math.random() - 0.5) * 0.8;
+        const microJitterY = (Math.random() - 0.5) * 0.8;
+        targetTipX = spotX + microJitterX;
+        targetTipY = spotY + microJitterY;
+
+        // Nach exakt 1.5 Sekunden Schweißanimation zum nächsten Punkt wechseln
+        if (this.repairArmState.timer >= 1500) {
+          this.repairArmState.spotIndex = (this.repairArmState.spotIndex + 1) % REPAIR_SPOTS.length;
+          this.repairArmState.phase = 'traveling';
+          this.repairArmState.timer = 0;
+          this.repairArmState.isWelding = false;
+        }
+      }
+
+      // Ellbogen-Gelenk kinematischer Zwischenpunkt
+      targetMidX = (armBaseX + targetTipX) / 2 + 5;
+      targetMidY = Math.min(armBaseY, targetTipY) - 15;
+
+      this.repairArmState.activeWeight = Phaser.Math.Linear(this.repairArmState.activeWeight, 1.0, dt * 2.5);
     } else {
       // Wenn Hülle repariert oder Auto weiterfährt: Sofort zur Parkposition zurückfahren!
+      this.repairArmState.isWelding = false;
+      this.repairArmState.phase = 'traveling';
+      this.repairArmState.timer = 0;
+
       targetTipX = parkTipX;
       targetTipY = parkTipY;
       targetMidX = parkMidX;
@@ -862,11 +903,12 @@ export class Player {
       this.repairArmState.activeWeight = Phaser.Math.Linear(this.repairArmState.activeWeight, 0.0, dt * 2.8);
     }
 
-    // Sanftes Nachführen der Gelenke (kinematisches Nachziehen, kein Springen oder Strecken)
-    this.repairArmState.curTipX = Phaser.Math.Linear(this.repairArmState.curTipX, targetTipX, dt * 3.8);
-    this.repairArmState.curTipY = Phaser.Math.Linear(this.repairArmState.curTipY, targetTipY, dt * 3.8);
-    this.repairArmState.curMidX = Phaser.Math.Linear(this.repairArmState.curMidX, targetMidX, dt * 3.8);
-    this.repairArmState.curMidY = Phaser.Math.Linear(this.repairArmState.curMidY, targetMidY, dt * 3.8);
+    // Kinematische Nachführung der Gelenke
+    const moveSpeed = this.repairArmState.isWelding ? 14.0 : 6.5;
+    this.repairArmState.curTipX = Phaser.Math.Linear(this.repairArmState.curTipX, targetTipX, dt * moveSpeed);
+    this.repairArmState.curTipY = Phaser.Math.Linear(this.repairArmState.curTipY, targetTipY, dt * moveSpeed);
+    this.repairArmState.curMidX = Phaser.Math.Linear(this.repairArmState.curMidX, targetMidX, dt * moveSpeed);
+    this.repairArmState.curMidY = Phaser.Math.Linear(this.repairArmState.curMidY, targetMidY, dt * moveSpeed);
 
     const curTipX = this.repairArmState.curTipX;
     const curTipY = this.repairArmState.curTipY;
@@ -896,7 +938,7 @@ export class Player {
     // 4. Ellbogen-Gelenk
     this.repairArm.fillStyle(0x0f172a, 1);
     this.repairArm.fillCircle(curMidX, curMidY, 3.5);
-    this.repairArm.fillStyle(isRepairing ? 0x38bdf8 : isConnected ? 0x10b981 : 0x64748b, 1);
+    this.repairArm.fillStyle(this.repairArmState.isWelding ? 0x38bdf8 : isConnected ? 0x10b981 : 0x64748b, 1);
     this.repairArm.fillCircle(curMidX, curMidY, 1.8);
 
     // 5. Segment 2: Unterarm (vom Gelenk zum Schweißkopf)
@@ -917,31 +959,49 @@ export class Player {
     this.repairArm.fillStyle(0x1e293b, 1);
     this.repairArm.fillRect(curTipX - 2, curTipY - 3, 4, 5);
 
-    // 7. Effekte: Schweißlichtbogen & Funken nur beim tatsächlichen Schweißen vor Ort
-    if (isRepairing) {
-      const sparkSize = 2.5 + Math.random() * 2.5;
-      this.repairArm.fillStyle(0x38bdf8, 0.85);
-      this.repairArm.fillCircle(curTipX, curTipY, sparkSize);
+    // 7. Effekte: 1,5s Schweißanimation an diesem Punkt
+    if (this.repairArmState.isWelding) {
+      // 1. Schweißlichtbogen-Aura (hellblau / cyan)
+      const arcRadius = 3.5 + Math.random() * 3.5;
+      this.repairArm.fillStyle(0x38bdf8, 0.65);
+      this.repairArm.fillCircle(curTipX, curTipY, arcRadius);
 
+      // 2. Glühender Heißer Kern (weiß)
       this.repairArm.fillStyle(0xffffff, 1);
-      this.repairArm.fillCircle(curTipX, curTipY, 1.4);
+      this.repairArm.fillCircle(curTipX, curTipY, 2.0);
 
-      // Winzige Funken
-      this.repairArm.lineStyle(1, 0xfacc15, 0.9);
-      for (let s = 0; s < 3; s++) {
-        const rx = (Math.random() - 0.5) * 10;
-        const ry = (Math.random() - 0.5) * 8;
+      // 3. Zweiter innerer Lichtblitz
+      this.repairArm.fillStyle(0xe0f2fe, 0.95);
+      this.repairArm.fillCircle(curTipX, curTipY, 1.2);
+
+      // 4. Sprühende Schweißfunken (5-8 dynamische Funkenbahnen)
+      const sparkCount = 5 + Math.floor(Math.random() * 4);
+      for (let s = 0; s < sparkCount; s++) {
+        const angle = Math.random() * Math.PI * 2;
+        const sparkDist = 5 + Math.random() * 12;
+        const sparkColor = (Math.random() > 0.4) ? 0xfacc15 : (Math.random() > 0.5 ? 0xf97316 : 0xffffff);
+        const sparkAlpha = 0.7 + Math.random() * 0.3;
+
+        this.repairArm.lineStyle(1.2, sparkColor, sparkAlpha);
         this.repairArm.beginPath();
         this.repairArm.moveTo(curTipX, curTipY);
-        this.repairArm.lineTo(curTipX + rx, curTipY + ry);
+        this.repairArm.lineTo(curTipX + Math.cos(angle) * sparkDist, curTipY + Math.sin(angle) * sparkDist);
         this.repairArm.strokePath();
       }
+
+      // 5. Akustisches Schweiß-Zischen
+      if (now - (this.repairArmState.lastSoundTime || 0) > 120) {
+        this.repairArmState.lastSoundTime = now;
+        if (soundFx && soundFx.playWeldSparks) {
+          soundFx.playWeldSparks();
+        }
+      }
     } else if (this.repairArmState.activeWeight > 0.15) {
-      // Beim Zurückfahren / Fertig: Grüne Erfolgs-LED
-      this.repairArm.fillStyle(0x10b981, 1);
+      // Beim Fahren / Spot-Wechsel: Ziel-Sensor-LED (blau-türkis)
+      this.repairArm.fillStyle(0x06b6d4, 0.9);
       this.repairArm.fillCircle(curTipX, curTipY, 1.6);
     } else {
-      // Inaktiv / Standby: Dezentes Pulsieren der Bereitschafts-LED
+      // Inaktiv / Standby am Dach: Dezente Standby-LED
       const pulse = 0.4 + 0.3 * Math.sin(now * 0.003);
       this.repairArm.fillStyle(0x0284c7, pulse);
       this.repairArm.fillCircle(curTipX, curTipY, 1.4);
