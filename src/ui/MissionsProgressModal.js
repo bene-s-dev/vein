@@ -840,7 +840,10 @@ export class MissionsProgressModal {
           { id: 'geologist_iron_tin', reqs: { iron: 4, tin: 3 }, rewardKey: 'titan_alloy', name: 'Titan-Legierung', cash: 350, xp: 280 },
           { id: 'geologist_silver_gold', reqs: { silver: 3, gold: 2 }, rewardKey: 'laser_lens', name: 'Kristall-Fokuslinse', cash: 800, xp: 580 },
           { id: 'geologist_gem_cluster', reqs: { emerald: 2, ruby: 2 }, rewardKey: 'quantum_chip', name: 'Quanten-Steuerkern', cash: 1900, xp: 1150 },
-          { id: 'geologist_diamond_core', reqs: { diamond: 1, sapphire: 2 }, rewardKey: 'quantum_chip', name: 'Quanten-Steuerkern', cash: 3400, xp: 1900 }
+          { id: 'geologist_diamond_core', reqs: { diamond: 1, sapphire: 2 }, rewardKey: 'quantum_chip', name: 'Quanten-Steuerkern', cash: 3400, xp: 1900 },
+          { id: 'geologist_deep_amethyst', reqs: { amethyst: 2, ruby: 3 }, rewardKey: 'laser_lens', name: 'Kristall-Fokuslinse', cash: 4800, xp: 2600 },
+          { id: 'geologist_abyssal_diamonds', reqs: { diamond: 2, sapphire: 2 }, rewardKey: 'quantum_chip', name: 'Quanten-Steuerkern', cash: 7500, xp: 3800 },
+          { id: 'geologist_dark_matter_anomaly', reqs: { dark_matter: 1, diamond: 3 }, rewardKey: 'quantum_chip', name: 'Quanten-Steuerkern', cash: 15000, xp: 7500 }
         ];
         const q = quests.find(item => item.id === qid);
         if (!q) return;

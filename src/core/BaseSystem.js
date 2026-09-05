@@ -677,22 +677,40 @@ export class BaseSystem {
   // =========================================================
   // 1. ERZ-BÖRSE (FREIE MENGENWAHL MIT STEPPER & DIREKT-EINGABE)
   // =========================================================
+  // =========================================================
+  // 1. ERZ-BÖRSE (EINHEITLICHES INVENTAR OHNE STANDORT-TRENNUNG)
+  // =========================================================
   openMarketModal() {
-    const cargo = this.player.cargo;
-    const counts = {};
-    let totalValue = 0;
+    const cargo = this.player.cargo || [];
+    const depotOres = this.depot?.ores || {};
 
+    // Summe aller Erze (Fracht + Depot) ermitteln
+    const combinedCounts = {};
     cargo.forEach((ore) => {
-      counts[ore] = (counts[ore] || 0) + 1;
-      totalValue += ORE_DATA[ore] ? ORE_DATA[ore].value : 0;
+      combinedCounts[ore] = (combinedCounts[ore] || 0) + 1;
     });
+    for (const [ore, count] of Object.entries(depotOres)) {
+      if (count > 0) {
+        combinedCounts[ore] = (combinedCounts[ore] || 0) + count;
+      }
+    }
+
+    let totalOreValue = 0;
+    let totalOreCount = 0;
+    for (const [ore, count] of Object.entries(combinedCounts)) {
+      if (count > 0 && ORE_DATA[ore]) {
+        totalOreValue += ORE_DATA[ore].value * count;
+        totalOreCount += count;
+      }
+    }
 
     let oreListHtml = '';
-    if (cargo.length === 0) {
-      oreListHtml = '<p style="color: #94a3b8; font-style: italic; margin: 18px 0; text-align: center;">Dein Frachtraum ist leer. Baue Erze im Schacht ab!</p>';
+    if (totalOreCount === 0) {
+      oreListHtml = '<p style="color: #94a3b8; font-style: italic; margin: 18px 0; text-align: center;">Keine Erze im Frachtraum oder Depot vorhanden. Baue Erze im Schacht ab!</p>';
     } else {
       oreListHtml = '<div style="display: flex; flex-direction: column; gap: 10px; margin: 12px 0; max-height: 280px; overflow-y: auto; padding-right: 4px;">';
-      for (const [ore, count] of Object.entries(counts)) {
+      for (const [ore, count] of Object.entries(combinedCounts)) {
+        if (count <= 0) continue;
         const data = ORE_DATA[ore];
         const val = data ? data.value : 0;
         oreListHtml += `
@@ -704,7 +722,7 @@ export class BaseSystem {
                 <span style="font-size: 11px; color: #94a3b8;">(€${val}/Stk)</span>
               </div>
               <div style="display: flex; align-items: center; gap: 4px;">
-                <strong class="ore-subtotal" id="subtotal-${ore}" style="color: #fbbf24; font-size: 13.5px; font-weight: 800;">€${val * count}</strong>
+                <strong class="ore-subtotal" id="subtotal-${ore}" style="color: #fbbf24; font-size: 13.5px; font-weight: 800;">€${(val * count).toLocaleString()}</strong>
               </div>
             </div>
 
@@ -760,7 +778,7 @@ export class BaseSystem {
       oreListHtml += '</div>';
     }
 
-    // Fabrik-Produkte & Barren (aus Bohrer-Inventar und Depot-Lager)
+    // Fabrik-Produkte & Barren (aus Bohrer-Inventar und Depot-Lager summiert)
     let factoryHtml = '';
     const fp = this.player.factoryProducts || {};
     const dp = this.depot?.products || {};
@@ -818,7 +836,7 @@ export class BaseSystem {
                 <span style="font-size: 11px; color: #94a3b8;">(€${val}/Stk)</span>
               </div>
               <div style="display: flex; align-items: center; gap: 4px;">
-                <strong class="fp-subtotal" id="subtotal-fp-${prodId}" style="color: #fbbf24; font-size: 13.5px; font-weight: 800;">€${subtotal}</strong>
+                <strong class="fp-subtotal" id="subtotal-fp-${prodId}" style="color: #fbbf24; font-size: 13.5px; font-weight: 800;">€${subtotal.toLocaleString()}</strong>
               </div>
             </div>
 
@@ -846,101 +864,34 @@ export class BaseSystem {
       <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; margin-top: 14px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
           <strong style="color: #38bdf8; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
-            ${icon('container', '', 15)} FABRIK-ERZEUGNISSE
+            ${icon('container', '', 15)} FABRIK-ERZEUGNISSE & BARREN
           </strong>
-          <span style="color: #fbbf24; font-size: 13px; font-weight: 700;">Warenwert: €${totalFpValue}</span>
+          <span style="color: #fbbf24; font-size: 13px; font-weight: 700;">Warenwert: €${totalFpValue.toLocaleString()}</span>
         </div>
         ${fpListHtml}
         ${hasAnyFp ? `
           <button id="btn-sell-all-fp" class="btn-buy btn-lg" style="width: 100%; margin-top: 6px;">
-            ${icon('coins', '', 15)} Fabrik-Waren verkaufen (€${totalFpValue})
-          </button>
-        ` : ''}
-      </div>
-    `;
-
-    // Erze im Depot-Lager
-    let depotHtml = '';
-    const depotOres = this.depot?.ores || {};
-    let totalDepotValue = 0;
-    let totalDepotCount = 0;
-    for (const [ore, count] of Object.entries(depotOres)) {
-      if (count > 0 && ORE_DATA[ore]) {
-        totalDepotValue += ORE_DATA[ore].value * count;
-        totalDepotCount += count;
-      }
-    }
-
-    let depotListHtml = '';
-    if (totalDepotCount === 0) {
-      depotListHtml = '<p style="color: #64748b; font-style: italic; margin: 10px 0; text-align: center; font-size: 12px;">Aktuell keine Erze im Depot eingelagert.</p>';
-    } else {
-      depotListHtml = '<div style="display: flex; flex-direction: column; gap: 8px; margin: 8px 0; max-height: 240px; overflow-y: auto; padding-right: 4px;">';
-      for (const [ore, count] of Object.entries(depotOres)) {
-        if (count <= 0) continue;
-        const data = ORE_DATA[ore];
-        const val = data ? data.value : 0;
-        depotListHtml += `
-          <div class="market-depot-card" data-ore="${ore}" style="background: #141c2b; padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.07); display: flex; flex-direction: column; gap: 8px;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-weight: 700; color: #f8fafc; font-size: 13.5px; display: inline-flex; align-items: center; gap: 6px;">${oreIcon(ore, 16)} ${data.name}</span>
-                <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); padding: 2px 8px; border-radius: 6px; font-size: 11px; color: #38bdf8; font-weight: 700;">${count}x</span>
-                <span style="font-size: 11px; color: #94a3b8;">(€${val}/Stk)</span>
-              </div>
-              <div style="display: flex; align-items: center; gap: 4px;">
-                <strong class="ore-subtotal" id="subtotal-depot-${ore}" style="color: #fbbf24; font-size: 13.5px; font-weight: 800;">€${val * count}</strong>
-              </div>
-            </div>
-
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 10px;">
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <span style="font-size: 11.5px; color: #94a3b8; font-weight: 700;">Menge:</span>
-                <button class="btn-depot-qty-step btn-3d-secondary" data-ore="${ore}" data-step="-1" style="width: 32px; height: 32px; padding: 0; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 800; border-radius: 8px;">-</button>
-                <input type="number" class="input-depot-qty" id="qty-input-depot-${ore}" data-ore="${ore}" data-unit-val="${val}" data-max="${count}" min="1" max="${count}" value="${count}" style="width: 50px; height: 32px; padding: 0 4px; box-sizing: border-box; background: #090d16; border: 1px solid rgba(255,255,255,0.18); border-radius: 8px; color: #f8fafc; text-align: center; font-weight: 800; font-size: 13px; outline: none;">
-                <button class="btn-depot-qty-step btn-3d-secondary" data-ore="${ore}" data-step="1" style="width: 32px; height: 32px; padding: 0; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 800; border-radius: 8px;">+</button>
-                <button class="btn-depot-qty-quick btn-3d-secondary" data-ore="${ore}" data-set="1" style="height: 32px; padding: 0 10px; font-size: 11.5px; font-weight: 700; border-radius: 8px;">1x</button>
-                <button class="btn-depot-qty-quick btn-action" data-ore="${ore}" data-set="${count}" style="height: 32px; padding: 0 10px; font-size: 11.5px; font-weight: 700; border-radius: 8px;">Alle (${count})</button>
-              </div>
-
-              <button class="btn-sell-depot-market-custom btn-buy" data-ore="${ore}" style="height: 32px; padding: 0 14px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px;">
-                ${icon('coins', '', 14)}
-                <span id="btn-sell-depot-text-${ore}">Verkaufen</span>
-              </button>
-            </div>
-          </div>
-        `;
-      }
-      depotListHtml += '</div>';
-    }
-
-    depotHtml = `
-      <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 10px; padding: 12px; margin-top: 14px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-          <strong style="color: #38bdf8; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
-            ${icon('warehouse', '', 15)} DEPOT-LAGER (${totalDepotCount} Erze)
-          </strong>
-          <span style="color: #fbbf24; font-size: 13px; font-weight: 700;">Wert: €${totalDepotValue.toLocaleString()}</span>
-        </div>
-        ${depotListHtml}
-        ${totalDepotCount > 0 ? `
-          <button id="btn-sell-all-depot-market" class="btn-buy btn-lg" style="width: 100%; margin-top: 6px;">
-            ${icon('coins', '', 15)} Depot-Erze verkaufen (€${totalDepotValue.toLocaleString()})
+            ${icon('coins', '', 15)} Fabrik-Waren verkaufen (€${totalFpValue.toLocaleString()})
           </button>
         ` : ''}
       </div>
     `;
 
     const content = `
-      <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px;">
-        <span style="font-size: 13px; color: var(--text-muted);">Frachtraum: <strong>${cargo.length} / ${this.player.maxCargo}</strong> Erzen</span>
-        <strong style="color: #fbbf24; font-size: 14px;">Frachtwert: €${totalValue.toLocaleString()}</strong>
+      <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 4px;">
+          <strong style="color: #38bdf8; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
+            ${icon('coins', '', 15)} ROHERZE & MINERALIEN (${totalOreCount} Erze verfügbar)
+          </strong>
+          <strong style="color: #fbbf24; font-size: 14px; font-weight: 800;">Gesamtwert: €${totalOreValue.toLocaleString()}</strong>
+        </div>
+        ${oreListHtml}
+        ${totalOreCount > 0 ? `
+          <button id="btn-sell-all-ores" class="btn-buy btn-lg" style="width: 100%; margin-top: 6px;">
+            ${icon('coins', '', 15)} Alle Erze verkaufen (€${totalOreValue.toLocaleString()})
+          </button>
+        ` : ''}
       </div>
-      ${oreListHtml}
-      <button id="btn-do-sell" class="btn-buy btn-lg" style="width: 100%; margin-top: 8px;" ${cargo.length === 0 ? 'disabled' : ''}>
-        ${icon('coins', '', 15)} Fracht verkaufen (€${totalValue.toLocaleString()})
-      </button>
-      ${depotHtml}
       ${factoryHtml}
     `;
 
@@ -951,7 +902,7 @@ export class BaseSystem {
       </div>
     `, content);
 
-    // Mengen-Aktualisierungshelfer (Erze im Frachtraum)
+    // Mengen-Aktualisierungshelfer (Erze)
     const updateOreQty = (ore, newQty) => {
       const input = document.getElementById(`qty-input-${ore}`);
       const subtotalEl = document.getElementById(`subtotal-${ore}`);
@@ -965,9 +916,8 @@ export class BaseSystem {
       if (btnSellText) btnSellText.innerText = 'Verkaufen';
     };
 
-    // Stepper Plus/Minus (Frachtraum)
-    const stepBtns = document.querySelectorAll('.btn-qty-step');
-    stepBtns.forEach((btn) => {
+    // Stepper Plus/Minus
+    document.querySelectorAll('.btn-qty-step').forEach((btn) => {
       btn.onclick = () => {
         const ore = btn.getAttribute('data-ore');
         const step = parseInt(btn.getAttribute('data-step'), 10) || 0;
@@ -978,9 +928,8 @@ export class BaseSystem {
       };
     });
 
-    // Quick Buttons (1x, Alle) (Frachtraum)
-    const quickBtns = document.querySelectorAll('.btn-qty-quick');
-    quickBtns.forEach((btn) => {
+    // Quick Buttons (1x, Alle)
+    document.querySelectorAll('.btn-qty-quick').forEach((btn) => {
       btn.onclick = () => {
         const ore = btn.getAttribute('data-ore');
         const setVal = parseInt(btn.getAttribute('data-set'), 10) || 1;
@@ -988,86 +937,39 @@ export class BaseSystem {
       };
     });
 
-    // Direkte Tastatureingabe im Number-Input (Frachtraum)
-    const qtyInputs = document.querySelectorAll('.input-ore-qty');
-    qtyInputs.forEach((input) => {
+    // Direkte Tastatureingabe im Number-Input
+    document.querySelectorAll('.input-ore-qty').forEach((input) => {
       input.oninput = () => {
         const ore = input.getAttribute('data-ore');
         updateOreQty(ore, input.value);
       };
     });
 
-    // Individueller Verkauf mit gewählter Stückzahl (Frachtraum)
-    const sellCustomBtns = document.querySelectorAll('.btn-sell-custom');
-    sellCustomBtns.forEach((btn) => {
+    // Individueller Verkauf mit gewählter Stückzahl (aus Fracht und Depot)
+    document.querySelectorAll('.btn-sell-custom').forEach((btn) => {
       btn.onclick = () => {
         const ore = btn.getAttribute('data-ore');
         const input = document.getElementById(`qty-input-${ore}`);
         const qty = input ? parseInt(input.value, 10) || 1 : 1;
-        const res = this.player.sellSpecificOre(ore, qty);
-        if (res.count > 0) {
+        const earned = this.sellMarketOreFromPlayerOrDepot(ore, qty);
+        if (earned > 0) {
           soundFx.playPurchase();
           this.openMarketModal();
-          this.scene.events.emit('notify', `${res.count}x ${ORE_DATA[ore]?.name || ore} verkauft für +€${res.totalEarned}!`);
+          this.scene.events.emit('notify', `${qty}x ${ORE_DATA[ore]?.name || ore} verkauft für +€${earned.toLocaleString()}!`);
         }
       };
     });
 
-    // Depot Mengen-Aktualisierungshelfer (Erzbörse)
-    const updateDepotOreQty = (ore, newQty) => {
-      const input = document.getElementById(`qty-input-depot-${ore}`);
-      const subtotalEl = document.getElementById(`subtotal-depot-${ore}`);
-      const btnSellText = document.getElementById(`btn-sell-depot-text-${ore}`);
-      if (!input || !subtotalEl) return;
-      const max = parseInt(input.getAttribute('data-max'), 10) || 1;
-      const val = parseInt(input.getAttribute('data-unit-val'), 10) || 0;
-      const clamped = Math.max(1, Math.min(max, parseInt(newQty, 10) || 1));
-      input.value = clamped;
-      subtotalEl.innerText = `€${(clamped * val).toLocaleString()}`;
-      if (btnSellText) btnSellText.innerText = 'Verkaufen';
-    };
-
-    document.querySelectorAll('.btn-depot-qty-step').forEach(btn => {
-      btn.onclick = () => {
-        const ore = btn.getAttribute('data-ore');
-        const step = parseInt(btn.getAttribute('data-step'), 10) || 0;
-        const input = document.getElementById(`qty-input-depot-${ore}`);
-        if (!input) return;
-        const cur = parseInt(input.value, 10) || 1;
-        updateDepotOreQty(ore, cur + step);
-      };
-    });
-
-    document.querySelectorAll('.btn-depot-qty-quick').forEach(btn => {
-      btn.onclick = () => {
-        const ore = btn.getAttribute('data-ore');
-        const setVal = parseInt(btn.getAttribute('data-set'), 10) || 1;
-        updateDepotOreQty(ore, setVal);
-      };
-    });
-
-    document.querySelectorAll('.input-depot-qty').forEach(input => {
-      input.oninput = () => {
-        const ore = input.getAttribute('data-ore');
-        updateDepotOreQty(ore, input.value);
-      };
-    });
-
-    document.querySelectorAll('.btn-sell-depot-market-custom').forEach(btn => {
-      btn.onclick = () => {
-        const ore = btn.getAttribute('data-ore');
-        const input = document.getElementById(`qty-input-depot-${ore}`);
-        const qty = input ? parseInt(input.value, 10) || 1 : 1;
-        this.sellDepotOre(ore, qty);
-        this.openMarketModal();
-      };
-    });
-
-    const btnSellAllDepotMarket = document.getElementById('btn-sell-all-depot-market');
-    if (btnSellAllDepotMarket) {
-      btnSellAllDepotMarket.onclick = () => {
-        this.sellAllDepotOres();
-        this.openMarketModal();
+    // Gesamtverkauf aller Erze (Fracht + Depot)
+    const btnSellAllOres = document.getElementById('btn-sell-all-ores');
+    if (btnSellAllOres) {
+      btnSellAllOres.onclick = () => {
+        const res = this.sellAllMarketOres();
+        if (res.totalEarned > 0) {
+          soundFx.playPurchase();
+          this.openMarketModal();
+          this.scene.events.emit('notify', `${res.totalCount} Erze vollständig verkauft für +€${res.totalEarned.toLocaleString()}!`);
+        }
       };
     }
 
@@ -1154,17 +1056,78 @@ export class BaseSystem {
         }
       };
     }
+  }
 
-    // Gesamtverkauf Roherze Listener
-    const btnSell = document.getElementById('btn-do-sell');
-    if (btnSell) {
-      btnSell.onclick = () => {
-        const earnings = this.player.sellCargo();
-        soundFx.playPurchase();
-        this.openMarketModal();
-        this.scene.events.emit('notify', `Fracht vollständig verkauft für +€${earnings}!`);
-      };
+  sellMarketOreFromPlayerOrDepot(oreKey, count = 1) {
+    if (!this.player.cargo) this.player.cargo = [];
+    if (!this.depot) this.depot = {};
+    if (!this.depot.ores) this.depot.ores = {};
+
+    const inCargo = this.player.cargo.filter(k => k === oreKey).length;
+    const inDepot = this.depot.ores[oreKey] || 0;
+    const totalAvail = inCargo + inDepot;
+    const toSell = Math.max(0, Math.min(totalAvail, count));
+    if (toSell <= 0) return 0;
+
+    let remainingToSell = toSell;
+
+    // 1. Erst aus Frachtraum verkaufen
+    while (remainingToSell > 0) {
+      const idx = this.player.cargo.indexOf(oreKey);
+      if (idx !== -1) {
+        this.player.cargo.splice(idx, 1);
+        remainingToSell--;
+      } else {
+        break;
+      }
     }
+
+    // 2. Rest aus Depot verkaufen
+    if (remainingToSell > 0 && this.depot.ores[oreKey] > 0) {
+      const fromDepot = Math.min(remainingToSell, this.depot.ores[oreKey]);
+      this.depot.ores[oreKey] -= fromDepot;
+      remainingToSell -= fromDepot;
+    }
+
+    const val = ORE_DATA[oreKey]?.value || 0;
+    const earned = Math.round(toSell * val);
+    this.player.cash += earned;
+    this.player.stats.totalCashEarned = (this.player.stats.totalCashEarned || 0) + earned;
+    if (this.scene.hud) this.scene.hud.update();
+    return earned;
+  }
+
+  sellAllMarketOres() {
+    let totalEarned = 0;
+    let totalCount = 0;
+
+    // Aus Frachtraum
+    const cargo = this.player.cargo || [];
+    for (const ore of cargo) {
+      if (ORE_DATA[ore]) {
+        totalEarned += ORE_DATA[ore].value;
+        totalCount++;
+      }
+    }
+    this.player.cargo = [];
+
+    // Aus Depot
+    if (this.depot?.ores) {
+      for (const [ore, count] of Object.entries(this.depot.ores)) {
+        if (count > 0 && ORE_DATA[ore]) {
+          totalEarned += ORE_DATA[ore].value * count;
+          totalCount += count;
+        }
+      }
+      this.depot.ores = {};
+    }
+
+    if (totalEarned > 0) {
+      this.player.cash += totalEarned;
+      this.player.stats.totalCashEarned = (this.player.stats.totalCashEarned || 0) + totalEarned;
+      if (this.scene.hud) this.scene.hud.update();
+    }
+    return { totalEarned, totalCount };
   }
 
   sellMarketProductFromPlayerOrDepot(prodId, count = 1) {
@@ -3740,7 +3703,7 @@ export class BaseSystem {
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
           <strong style="color: #38bdf8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 6px;">
             ${icon('container', '', 14)}
-            Roherz-Schmelzofen (Fracht: ${totalCargoOres}/${this.player.maxCargo} · Depot: ${totalDepotOres})
+            Roherz-Schmelzofen (${totalAvailableOres} Erze verfügbar)
           </strong>
         </div>
     `;
@@ -3753,20 +3716,12 @@ export class BaseSystem {
       `;
     } else {
       html += `
-        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-          ${totalCargoOres > 0 ? `
-            <button id="btn-deposit-all-cargo" class="btn-action" ${availableCoal > 0 ? '' : 'disabled'} style="flex: 1; height: 32px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 5px;">
-              ${icon('flame', '', 14)}
-              <span>Fracht schmelzen (${totalCargoOres})</span>
-            </button>
-          ` : ''}
-          ${totalDepotOres > 0 ? `
-            <button id="btn-deposit-all-depot" class="btn-buy" ${availableCoal > 0 ? '' : 'disabled'} style="flex: 1; height: 32px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 5px;">
-              ${icon('warehouse', '', 14)}
-              <span>Depot schmelzen (${totalDepotOres})</span>
-            </button>
-          ` : ''}
-        </div>
+        ${totalAvailableOres > 0 ? `
+          <button id="btn-deposit-all-ores" class="btn-buy" ${availableCoal > 0 ? '' : 'disabled'} style="width: 100%; height: 34px; font-size: 11.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+            ${icon('flame', '', 14)}
+            <span>Alle Erze schmelzen (${totalAvailableOres})</span>
+          </button>
+        ` : ''}
       `;
 
       const allOreKeys = Object.keys(ORE_DATA).filter(k => this.player.isOreDiscovered(k) && ((cargoCounts[k] || 0) > 0 || (this.depot?.ores?.[k] || 0) > 0));
@@ -3813,7 +3768,7 @@ export class BaseSystem {
             <!-- Spalte 4: Vorrat (flex: 1) -->
             <div style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px;">
               <span style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 6px; font-size: 11px; color: #94a3b8; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums;">
-                ${totalThisOre}x verfügbar (${inCargo}F + ${inDepot}D)
+                ${totalThisOre}x verfügbar
               </span>
             </div>
 
@@ -3851,17 +3806,10 @@ export class BaseSystem {
       };
     }
 
-    const btnDepositAll = document.getElementById('btn-deposit-all-cargo');
-    if (btnDepositAll) {
-      btnDepositAll.onclick = () => {
-        this.depositAllCargoToRefinery();
-      };
-    }
-
-    const btnDepositAllDepot = document.getElementById('btn-deposit-all-depot');
-    if (btnDepositAllDepot) {
-      btnDepositAllDepot.onclick = () => {
-        this.depositAllDepotToRefinery();
+    const btnDepositAllOres = document.getElementById('btn-deposit-all-ores');
+    if (btnDepositAllOres) {
+      btnDepositAllOres.onclick = () => {
+        this.depositAllOresToRefinery();
       };
     }
 
@@ -4084,34 +4032,39 @@ export class BaseSystem {
     this.scene.events.emit('notify', `${toSmelt}x ${ORE_DATA[oreKey]?.name || oreKey} im Ofen (${toSmelt}x Kohle als Brennstoff verbraucht).`);
   }
 
-  depositAllCargoToRefinery() {
-    if (this.player.cargo.length === 0) return;
-
+  depositAllOresToRefinery() {
     let availableCoal = (this.player.cargo.filter(k => k === 'coal').length) + (this.depot?.ores?.['coal'] || 0);
     if (availableCoal <= 0) {
       this.scene.events.emit('notify', 'Keine Kohle vorhanden! Der Schmelzofen benötigt 1x Kohle als Brennstoff pro Vorgang.');
       return;
     }
 
-    // Erst andere Erze einschmelzen, damit Kohle als Brennstoff genutzt wird
+    // Liste aller Erze sammeln (Fracht + Depot)
     const cargoCopy = [...this.player.cargo];
-    cargoCopy.sort((a, b) => (a === 'coal' ? 1 : 0) - (b === 'coal' ? 1 : 0));
+    const depotOres = this.depot?.ores || {};
+    const depotList = [];
+    for (const [oreKey, count] of Object.entries(depotOres)) {
+      for (let i = 0; i < count; i++) {
+        depotList.push(oreKey);
+      }
+    }
+
+    const allOres = [...cargoCopy, ...depotList];
+    // Kohle zuletzt, damit sie als Brennstoff für andere Erze genutzt wird
+    allOres.sort((a, b) => (a === 'coal' ? 1 : 0) - (b === 'coal' ? 1 : 0));
 
     let smelted = 0;
-    for (const oreKey of cargoCopy) {
+    for (const oreKey of allOres) {
       if (oreKey === 'coal') {
         if (availableCoal < 2) break;
       } else {
         if (availableCoal < 1) break;
       }
 
-      // Check ob Erz noch in Fracht
-      const oreIdx = this.player.cargo.indexOf(oreKey);
-      if (oreIdx === -1) continue;
-      this.player.cargo.splice(oreIdx, 1);
+      const consumed = this.consumeSingleOre(oreKey);
+      if (!consumed) continue;
 
-      // 1 Kohle als Brennstoff abziehen
-      this.consumeSingleOre('coal');
+      this.consumeSingleOre('coal'); // Brennstoff
       availableCoal--;
 
       const durationMs = getRefinerySmeltDurationMs(oreKey);
@@ -4131,60 +4084,19 @@ export class BaseSystem {
       soundFx.playFurnace();
       this.renderRefineryModalBody();
       if (this.scene.hud) this.scene.hud.update();
-      this.scene.events.emit('notify', `${smelted} Fracht-Erze in den Schmelzofen gegeben (${smelted}x Kohle als Brennstoff verbraucht)!`);
+      this.scene.events.emit('notify', `${smelted} Erze in den Schmelzofen gegeben (${smelted}x Kohle als Brennstoff verbraucht)!`);
     } else {
       this.scene.events.emit('notify', 'Nicht genug Kohle vorhanden, um Erze einzuschmelzen.');
     }
   }
 
+  // Alias-Methoden für Abwärtskompatibilität
+  depositAllCargoToRefinery() {
+    this.depositAllOresToRefinery();
+  }
+
   depositAllDepotToRefinery() {
-    if (!this.depot?.ores) return;
-
-    let availableCoal = (this.player.cargo.filter(k => k === 'coal').length) + (this.depot?.ores?.['coal'] || 0);
-    if (availableCoal <= 0) {
-      this.scene.events.emit('notify', 'Keine Kohle vorhanden! Der Schmelzofen benötigt 1x Kohle als Brennstoff pro Vorgang.');
-      return;
-    }
-
-    // Erze aus dem Depot holen, Kohle zuletzt
-    const oreKeys = Object.keys(this.depot.ores).filter(k => (this.depot.ores[k] || 0) > 0);
-    oreKeys.sort((a, b) => (a === 'coal' ? 1 : 0) - (b === 'coal' ? 1 : 0));
-
-    let smelted = 0;
-    for (const oreKey of oreKeys) {
-      while ((this.depot.ores[oreKey] || 0) > 0) {
-        if (oreKey === 'coal') {
-          if (availableCoal < 2) break;
-        } else {
-          if (availableCoal < 1) break;
-        }
-
-        this.depot.ores[oreKey]--;
-        this.consumeSingleOre('coal');
-        availableCoal--;
-
-        const durationMs = getRefinerySmeltDurationMs(oreKey);
-        const netVal = getRefinedOreNetValue(oreKey);
-        this.refinery.queue.push({
-          id: `q_${Date.now()}_${Math.random().toString(36).substr(2, 7)}`,
-          ore: oreKey,
-          name: getRefinedOreName(oreKey),
-          durationMs,
-          remainingMs: durationMs,
-          value: netVal
-        });
-        smelted++;
-      }
-    }
-
-    if (smelted > 0) {
-      soundFx.playFurnace();
-      this.renderRefineryModalBody();
-      if (this.scene.hud) this.scene.hud.update();
-      this.scene.events.emit('notify', `📦 ${smelted} Depot-Erze in den Schmelzofen gegeben (${smelted}x Kohle als Brennstoff verbraucht)!`);
-    } else {
-      this.scene.events.emit('notify', 'Nicht genug Kohle vorhanden, um Erze einzuschmelzen.');
-    }
+    this.depositAllOresToRefinery();
   }
 
   collectRefinedIngots() {
