@@ -1078,8 +1078,8 @@ export class Player {
     const isTargetSolid = this.gridSystem.isSolid(targetGx, targetGy);
 
     if (!isTargetSolid) {
-      // Freies Feld: normale Fahrt
-      this.moveTo(targetGx, targetGy, 130);
+      // Freies Feld: normale Fahrt (Geschwindigkeit skaliert über Antriebsstufe this.moveDuration)
+      this.moveTo(targetGx, targetGy);
       this.consumeFuel(0.3);
       soundFx.startDrive();
     } else {
