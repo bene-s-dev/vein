@@ -1376,17 +1376,12 @@ export class BaseSystem {
     `;
 
     // Action Header über den Inventaren
-    const freePlayerCargo = Math.max(0, (this.player.maxCargo || 10) - (playerCargoOreLength + playerCargoBarCount));
     const actionsHtml = `
       <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 2px;">
         <span style="font-size: 11.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 5px;">
-          ${icon('arrow-down-up', '', 13)} Schnellumladung
+          ${icon('arrow-down-to-line', '', 13)} Einlagerung aus Bohrer
         </span>
         <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-          <button id="btn-depot-fill-cargo" class="btn-3d-secondary" style="height: 28px; font-size: 11px; font-weight: 800; padding: 0 10px; display: inline-flex; align-items: center; gap: 4px;" ${totalStored > 0 && freePlayerCargo > 0 ? '' : 'disabled'}>
-            ${icon('arrow-up-from-line', '', 12)}
-            <span>Bohrer füllen (${freePlayerCargo})</span>
-          </button>
           <button id="btn-depot-all-ores" class="btn-action" style="height: 28px; font-size: 11px; font-weight: 800; padding: 0 10px; display: inline-flex; align-items: center; gap: 4px;" ${playerCargoOreLength > 0 && freeDepot > 0 ? '' : 'disabled'}>
             ${icon('stone', '', 12)}
             <span>Erze (${playerCargoOreLength})</span>
@@ -1403,22 +1398,28 @@ export class BaseSystem {
       </div>
     `;
 
-    // 1. OBERES INVENTAR: DEPOT-LAGER
-    let depotItemsHtml = '';
-    let depotFilledCount = 0;
+    // 1. OBERES INVENTAR: ERZE & MINERALIEN
+    let oresItemsHtml = '';
+    let filledOresCount = 0;
 
-    // Erze im Depot
-    Object.keys(ORE_DATA).forEach(key => {
-      const count = this.depot.ores?.[key] || 0;
-      if (count <= 0) return;
-      depotFilledCount++;
+    const oreKeys = Object.keys(ORE_DATA).filter(k => {
+      const inDepot = this.depot.ores?.[k] || 0;
+      const inCargo = cargoOreCounts[k] || 0;
+      return inDepot > 0 || inCargo > 0;
+    });
+
+    oreKeys.forEach(key => {
+      filledOresCount++;
+      const depotCount = this.depot.ores?.[key] || 0;
+      const inCargo = cargoOreCounts[key] || 0;
       const data = ORE_DATA[key] || { name: key };
+      const canDeposit = inCargo > 0 && freeDepot > 0;
 
-      depotItemsHtml += `
-        <div class="depot-grid-card" data-location="depot" data-type="ore" data-key="${key}" style="
+      oresItemsHtml += `
+        <div class="depot-ore-card" data-key="${key}" style="
           position: relative;
           background: rgba(15, 23, 42, 0.9);
-          border: 1px solid rgba(56, 189, 248, 0.35);
+          border: 1px solid ${canDeposit ? 'rgba(56, 189, 248, 0.45)' : 'rgba(56, 189, 248, 0.25)'};
           border-radius: 10px;
           padding: 10px 6px 8px 6px;
           display: flex;
@@ -1429,10 +1430,10 @@ export class BaseSystem {
           min-height: 84px;
           box-sizing: border-box;
           box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-          cursor: pointer;
+          cursor: ${canDeposit ? 'pointer' : 'default'};
           user-select: none;
           transition: transform 0.1s ease, border-color 0.15s ease;
-        " title="${data.name}: ${count}x im Depot (Klick = 1x in Bohrer, Shift-Klick = Alle)">
+        " title="${data.name}: ${depotCount}x im Depot${inCargo > 0 ? ` · ${inCargo}x im Bohrer (Klick = 1x einlagern, Shift-Klick = Alle)` : ''}">
           <!-- Anzahl Badge -->
           <span style="
             position: absolute;
@@ -1446,7 +1447,23 @@ export class BaseSystem {
             padding: 1px 5px;
             border-radius: 99px;
             line-height: 1.2;
-          ">${count}x</span>
+          ">${depotCount}x</span>
+
+          ${inCargo > 0 ? `
+            <span style="
+              position: absolute;
+              top: 5px;
+              left: 5px;
+              background: rgba(16, 185, 129, 0.25);
+              border: 1px solid rgba(16, 185, 129, 0.5);
+              color: #34d399;
+              font-size: 9px;
+              font-weight: 800;
+              padding: 1px 4px;
+              border-radius: 99px;
+              line-height: 1.2;
+            ">+${inCargo}</span>
+          ` : ''}
 
           <!-- Stein Icon -->
           <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; margin-top: 2px;">
@@ -1468,19 +1485,52 @@ export class BaseSystem {
       `;
     });
 
-    // Barren im Depot
-    Object.entries(REFINED_ORE_DATA).forEach(([_, r]) => {
-      const key = r.key;
-      const count = this.depot.products?.[key] || 0;
-      if (count <= 0) return;
-      depotFilledCount++;
-      const name = getRefinedOreName(key.replace('bar_', ''));
+    // Leere Slots für das Erze-Grid
+    const minOreSlots = 12;
+    const totalOreSlots = Math.max(minOreSlots, Math.ceil(filledOresCount / 4) * 4);
+    const emptyOreSlots = Math.max(0, totalOreSlots - filledOresCount);
+    for (let i = 0; i < emptyOreSlots; i++) {
+      oresItemsHtml += `
+        <div style="
+          background: rgba(15, 23, 42, 0.3);
+          border: 1px dashed rgba(255, 255, 255, 0.08);
+          border-radius: 10px;
+          min-height: 84px;
+          box-sizing: border-box;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        ">
+          <span style="color: rgba(255, 255, 255, 0.08); font-size: 16px; font-weight: 700;">+</span>
+        </div>
+      `;
+    }
 
-      depotItemsHtml += `
-        <div class="depot-grid-card" data-location="depot" data-type="product" data-key="${key}" style="
+    // 2. UNTERES INVENTAR: WAREN & BAUTEILE
+    let goodsItemsHtml = '';
+    let filledGoodsCount = 0;
+
+    // Barren im Depot & Bohrer
+    const refinedBarKeys = Object.entries(REFINED_ORE_DATA).map(([_, r]) => r.key).filter(k => {
+      const inDepot = this.depot.products?.[k] || 0;
+      const inCargo = this.player.cargo ? this.player.cargo.filter(c => c === k).length : 0;
+      const inPlayer = (playerProducts[k] || 0) + inCargo;
+      return inDepot > 0 || inPlayer > 0;
+    });
+
+    refinedBarKeys.forEach(key => {
+      filledGoodsCount++;
+      const depotCount = this.depot.products?.[key] || 0;
+      const inCargo = this.player.cargo ? this.player.cargo.filter(c => c === key).length : 0;
+      const inPlayer = (playerProducts[key] || 0) + inCargo;
+      const name = getRefinedOreName(key.replace('bar_', ''));
+      const canDeposit = inPlayer > 0 && freeDepot > 0;
+
+      goodsItemsHtml += `
+        <div class="depot-goods-card" data-type="product" data-key="${key}" style="
           position: relative;
           background: rgba(15, 23, 42, 0.9);
-          border: 1px solid rgba(245, 158, 11, 0.4);
+          border: 1px solid ${canDeposit ? 'rgba(245, 158, 11, 0.55)' : 'rgba(245, 158, 11, 0.35)'};
           border-radius: 10px;
           padding: 10px 6px 8px 6px;
           display: flex;
@@ -1491,10 +1541,10 @@ export class BaseSystem {
           min-height: 84px;
           box-sizing: border-box;
           box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-          cursor: pointer;
+          cursor: ${canDeposit ? 'pointer' : 'default'};
           user-select: none;
           transition: transform 0.1s ease, border-color 0.15s ease;
-        " title="${name}: ${count}x im Depot (Klick = 1x in Bohrer, Shift-Klick = Alle)">
+        " title="${name}: ${depotCount}x im Depot${inPlayer > 0 ? ` · ${inPlayer}x im Bohrer (Klick = 1x einlagern, Shift-Klick = Alle)` : ''}">
           <!-- Anzahl Badge -->
           <span style="
             position: absolute;
@@ -1508,7 +1558,23 @@ export class BaseSystem {
             padding: 1px 5px;
             border-radius: 99px;
             line-height: 1.2;
-          ">${count}x</span>
+          ">${depotCount}x</span>
+
+          ${inPlayer > 0 ? `
+            <span style="
+              position: absolute;
+              top: 5px;
+              left: 5px;
+              background: rgba(16, 185, 129, 0.25);
+              border: 1px solid rgba(16, 185, 129, 0.5);
+              color: #34d399;
+              font-size: 9px;
+              font-weight: 800;
+              padding: 1px 4px;
+              border-radius: 99px;
+              line-height: 1.2;
+            ">+${inPlayer}</span>
+          ` : ''}
 
           <!-- Icon -->
           <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; margin-top: 2px;">
@@ -1530,18 +1596,25 @@ export class BaseSystem {
       `;
     });
 
-    // Fabrikprodukte im Depot
-    Object.keys(FACTORY_PRODUCTS).forEach(key => {
-      const count = this.depot.products?.[key] || 0;
-      if (count <= 0) return;
-      depotFilledCount++;
-      const name = FACTORY_PRODUCTS[key]?.name || key;
+    // Fabrikprodukte im Depot & Bohrer
+    const factoryKeys = Object.keys(FACTORY_PRODUCTS).filter(k => {
+      const inDepot = this.depot.products?.[k] || 0;
+      const inPlayer = playerProducts[k] || 0;
+      return inDepot > 0 || inPlayer > 0;
+    });
 
-      depotItemsHtml += `
-        <div class="depot-grid-card" data-location="depot" data-type="product" data-key="${key}" style="
+    factoryKeys.forEach(key => {
+      filledGoodsCount++;
+      const depotCount = this.depot.products?.[key] || 0;
+      const inPlayer = playerProducts[key] || 0;
+      const name = FACTORY_PRODUCTS[key]?.name || key;
+      const canDeposit = inPlayer > 0 && freeDepot > 0;
+
+      goodsItemsHtml += `
+        <div class="depot-goods-card" data-type="product" data-key="${key}" style="
           position: relative;
           background: rgba(15, 23, 42, 0.9);
-          border: 1px solid rgba(192, 132, 252, 0.4);
+          border: 1px solid ${canDeposit ? 'rgba(192, 132, 252, 0.55)' : 'rgba(192, 132, 252, 0.35)'};
           border-radius: 10px;
           padding: 10px 6px 8px 6px;
           display: flex;
@@ -1552,10 +1625,10 @@ export class BaseSystem {
           min-height: 84px;
           box-sizing: border-box;
           box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-          cursor: pointer;
+          cursor: ${canDeposit ? 'pointer' : 'default'};
           user-select: none;
           transition: transform 0.1s ease, border-color 0.15s ease;
-        " title="${name}: ${count}x im Depot (Klick = 1x in Bohrer, Shift-Klick = Alle)">
+        " title="${name}: ${depotCount}x im Depot${inPlayer > 0 ? ` · ${inPlayer}x im Bohrer (Klick = 1x einlagern, Shift-Klick = Alle)` : ''}">
           <!-- Anzahl Badge -->
           <span style="
             position: absolute;
@@ -1569,7 +1642,23 @@ export class BaseSystem {
             padding: 1px 5px;
             border-radius: 99px;
             line-height: 1.2;
-          ">${count}x</span>
+          ">${depotCount}x</span>
+
+          ${inPlayer > 0 ? `
+            <span style="
+              position: absolute;
+              top: 5px;
+              left: 5px;
+              background: rgba(16, 185, 129, 0.25);
+              border: 1px solid rgba(16, 185, 129, 0.5);
+              color: #34d399;
+              font-size: 9px;
+              font-weight: 800;
+              padding: 1px 4px;
+              border-radius: 99px;
+              line-height: 1.2;
+            ">+${inPlayer}</span>
+          ` : ''}
 
           <!-- Icon -->
           <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; margin-top: 2px;">
@@ -1592,14 +1681,17 @@ export class BaseSystem {
     });
 
     // Bauteile im Depot
-    Object.keys(COMPONENT_DATA).forEach(key => {
+    const compKeys = Object.keys(COMPONENT_DATA).filter(k => {
+      return (this.player.components?.[k] || 0) > 0;
+    });
+
+    compKeys.forEach(key => {
+      filledGoodsCount++;
       const count = this.player.components?.[key] || 0;
-      if (count <= 0) return;
-      depotFilledCount++;
       const compInfo = COMPONENT_DATA[key] || { name: key, icon: 'box', color: '#c084fc' };
 
-      depotItemsHtml += `
-        <div class="depot-grid-card" data-location="depot" data-type="component" data-key="${key}" style="
+      goodsItemsHtml += `
+        <div class="depot-goods-card" data-type="component" data-key="${key}" style="
           position: relative;
           background: rgba(15, 23, 42, 0.9);
           border: 1px solid rgba(168, 85, 247, 0.45);
@@ -1613,8 +1705,8 @@ export class BaseSystem {
           min-height: 84px;
           box-sizing: border-box;
           box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-          cursor: default;
           user-select: none;
+          cursor: default;
         " title="${compInfo.name}: ${count}x vorhanden (Spezial-Bauteil)">
           <!-- Anzahl Badge -->
           <span style="
@@ -1651,12 +1743,12 @@ export class BaseSystem {
       `;
     });
 
-    // Leere Slots im Depot
-    const minDepotSlots = 12;
-    const totalDepotSlots = Math.max(minDepotSlots, Math.ceil(depotFilledCount / 4) * 4);
-    const emptyDepotSlots = Math.max(0, totalDepotSlots - depotFilledCount);
-    for (let i = 0; i < emptyDepotSlots; i++) {
-      depotItemsHtml += `
+    // Leere Slots für das Waren-Grid
+    const minGoodsSlots = 12;
+    const totalGoodsSlots = Math.max(minGoodsSlots, Math.ceil(filledGoodsCount / 4) * 4);
+    const emptyGoodsSlots = Math.max(0, totalGoodsSlots - filledGoodsCount);
+    for (let i = 0; i < emptyGoodsSlots; i++) {
+      goodsItemsHtml += `
         <div style="
           background: rgba(15, 23, 42, 0.3);
           border: 1px dashed rgba(255, 255, 255, 0.08);
@@ -1672,224 +1764,8 @@ export class BaseSystem {
       `;
     }
 
-    // 2. UNTERES INVENTAR: BOHRER-INVENTAR
-    let bohrerItemsHtml = '';
-    let bohrerFilledCount = 0;
-
-    // Erze im Bohrer
-    Object.keys(cargoOreCounts).forEach(key => {
-      const count = cargoOreCounts[key];
-      if (count <= 0) return;
-      bohrerFilledCount++;
-      const data = ORE_DATA[key] || { name: key };
-
-      bohrerItemsHtml += `
-        <div class="bohrer-grid-card" data-location="bohrer" data-type="ore" data-key="${key}" style="
-          position: relative;
-          background: rgba(15, 23, 42, 0.9);
-          border: 1px solid rgba(56, 189, 248, 0.35);
-          border-radius: 10px;
-          padding: 10px 6px 8px 6px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          gap: 6px;
-          min-height: 84px;
-          box-sizing: border-box;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-          cursor: pointer;
-          user-select: none;
-          transition: transform 0.1s ease, border-color 0.15s ease;
-        " title="${data.name}: ${count}x im Bohrer (Klick = 1x ins Depot, Shift-Klick = Alle)">
-          <!-- Anzahl Badge -->
-          <span style="
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: #0284c7;
-            border: 1px solid #38bdf8;
-            color: #ffffff;
-            font-size: 10px;
-            font-weight: 800;
-            padding: 1px 5px;
-            border-radius: 99px;
-            line-height: 1.2;
-          ">${count}x</span>
-
-          <!-- Stein Icon -->
-          <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; margin-top: 2px;">
-            ${oreIcon(key, 28)}
-          </div>
-
-          <!-- Name -->
-          <span style="
-            font-size: 11px;
-            font-weight: 700;
-            color: #f8fafc;
-            text-align: center;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 100%;
-          ">${data.name}</span>
-        </div>
-      `;
-    });
-
-    // Barren im Bohrer (aus player.cargo)
-    const bohrerBars = {};
-    (this.player.cargo || []).forEach(item => {
-      if (typeof item === 'string' && item.startsWith('bar_')) {
-        bohrerBars[item] = (bohrerBars[item] || 0) + 1;
-      }
-    });
-
-    Object.keys(bohrerBars).forEach(key => {
-      const count = bohrerBars[key];
-      if (count <= 0) return;
-      bohrerFilledCount++;
-      const name = getRefinedOreName(key.replace('bar_', ''));
-
-      bohrerItemsHtml += `
-        <div class="bohrer-grid-card" data-location="bohrer" data-type="product" data-key="${key}" style="
-          position: relative;
-          background: rgba(15, 23, 42, 0.9);
-          border: 1px solid rgba(245, 158, 11, 0.4);
-          border-radius: 10px;
-          padding: 10px 6px 8px 6px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          gap: 6px;
-          min-height: 84px;
-          box-sizing: border-box;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-          cursor: pointer;
-          user-select: none;
-          transition: transform 0.1s ease, border-color 0.15s ease;
-        " title="${name}: ${count}x im Bohrer (Klick = 1x ins Depot, Shift-Klick = Alle)">
-          <!-- Anzahl Badge -->
-          <span style="
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: #d97706;
-            border: 1px solid #f59e0b;
-            color: #ffffff;
-            font-size: 10px;
-            font-weight: 800;
-            padding: 1px 5px;
-            border-radius: 99px;
-            line-height: 1.2;
-          ">${count}x</span>
-
-          <!-- Icon -->
-          <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; margin-top: 2px;">
-            ${itemDisplayIcon(key, 28)}
-          </div>
-
-          <!-- Name -->
-          <span style="
-            font-size: 11px;
-            font-weight: 700;
-            color: #f8fafc;
-            text-align: center;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 100%;
-          ">${name}</span>
-        </div>
-      `;
-    });
-
-    // Fabrikprodukte im Bohrer (aus player.factoryProducts)
-    Object.keys(playerProducts).forEach(key => {
-      const count = playerProducts[key] || 0;
-      if (count <= 0) return;
-      bohrerFilledCount++;
-      const name = FACTORY_PRODUCTS[key]?.name || key;
-
-      bohrerItemsHtml += `
-        <div class="bohrer-grid-card" data-location="bohrer" data-type="product" data-key="${key}" style="
-          position: relative;
-          background: rgba(15, 23, 42, 0.9);
-          border: 1px solid rgba(192, 132, 252, 0.4);
-          border-radius: 10px;
-          padding: 10px 6px 8px 6px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          gap: 6px;
-          min-height: 84px;
-          box-sizing: border-box;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-          cursor: pointer;
-          user-select: none;
-          transition: transform 0.1s ease, border-color 0.15s ease;
-        " title="${name}: ${count}x im Bohrer (Klick = 1x ins Depot, Shift-Klick = Alle)">
-          <!-- Anzahl Badge -->
-          <span style="
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: #7c3aed;
-            border: 1px solid #c084fc;
-            color: #ffffff;
-            font-size: 10px;
-            font-weight: 800;
-            padding: 1px 5px;
-            border-radius: 99px;
-            line-height: 1.2;
-          ">${count}x</span>
-
-          <!-- Icon -->
-          <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; margin-top: 2px;">
-            ${itemDisplayIcon(key, 28)}
-          </div>
-
-          <!-- Name -->
-          <span style="
-            font-size: 11px;
-            font-weight: 700;
-            color: #f8fafc;
-            text-align: center;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 100%;
-          ">${name}</span>
-        </div>
-      `;
-    });
-
-    // Leere Slots im Bohrer
-    const maxCargo = this.player.maxCargo || 10;
-    const minBohrerSlots = 12;
-    const totalBohrerSlots = Math.max(minBohrerSlots, Math.ceil(bohrerFilledCount / 4) * 4);
-    const emptyBohrerSlots = Math.max(0, totalBohrerSlots - bohrerFilledCount);
-    for (let i = 0; i < emptyBohrerSlots; i++) {
-      bohrerItemsHtml += `
-        <div style="
-          background: rgba(15, 23, 42, 0.3);
-          border: 1px dashed rgba(255, 255, 255, 0.08);
-          border-radius: 10px;
-          min-height: 84px;
-          box-sizing: border-box;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        ">
-          <span style="color: rgba(255, 255, 255, 0.08); font-size: 16px; font-weight: 700;">+</span>
-        </div>
-      `;
-    }
-
-    const currentBohrerCount = playerCargoOreLength + playerCargoBarCount;
-    const isBohrerFull = currentBohrerCount >= maxCargo;
+    const totalStoredOresCount = Object.values(this.depot.ores || {}).reduce((s, v) => s + v, 0);
+    const totalStoredGoodsCount = Object.values(this.depot.products || {}).reduce((s, v) => s + v, 0) + Object.values(this.player.components || {}).reduce((s, v) => s + v, 0);
 
     // Zusammenbau des scrollbaren Modals mit ZWEI Inventaren untereinander
     this.modalBodyEl.innerHTML = `
@@ -1897,13 +1773,13 @@ export class BaseSystem {
         ${headerHtml}
         ${actionsHtml}
 
-        <!-- 1. OBERES INVENTAR: DEPOT-LAGER -->
+        <!-- 1. OBERES INVENTAR: ERZE & MINERALIEN -->
         <div style="display: flex; flex-direction: column; gap: 6px; background: rgba(15, 23, 42, 0.55); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 12px; padding: 10px;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <span style="font-size: 11.5px; font-weight: 800; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 5px;">
-              ${icon('warehouse', '', 14)} Depot-Lager (${totalStored}/${capacity})
+              ${icon('stone', '', 14)} Erze & Mineralien (${totalStoredOresCount} im Depot)
             </span>
-            <span style="font-size: 10.5px; color: #94a3b8;">Klick = 1x in Bohrer entnehmen</span>
+            <span style="font-size: 10.5px; color: #94a3b8;">${playerCargoOreLength > 0 ? 'Klick auf Erz = 1x einlagern' : 'Lagerbestand'}</span>
           </div>
           <div style="
             display: grid;
@@ -1913,20 +1789,17 @@ export class BaseSystem {
             overflow-y: auto;
             padding-right: 2px;
           ">
-            ${depotItemsHtml}
+            ${oresItemsHtml}
           </div>
         </div>
 
-        <!-- 2. UNTERES INVENTAR: BOHRER-INVENTAR -->
-        <div style="display: flex; flex-direction: column; gap: 6px; background: rgba(15, 23, 42, 0.55); border: 1px solid rgba(251, 191, 36, 0.2); border-radius: 12px; padding: 10px;">
+        <!-- 2. UNTERES INVENTAR: WAREN & BAUTEILE -->
+        <div style="display: flex; flex-direction: column; gap: 6px; background: rgba(15, 23, 42, 0.55); border: 1px solid rgba(192, 132, 252, 0.2); border-radius: 12px; padding: 10px;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <span style="font-size: 11.5px; font-weight: 800; color: #fbbf24; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 5px;">
-                ${icon('truck', '', 14)} Bohrer-Laderaum (${currentBohrerCount}/${maxCargo})
-              </span>
-              ${isBohrerFull ? `<span style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #ef4444; font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 4px;">VOLL</span>` : ''}
-            </div>
-            <span style="font-size: 10.5px; color: #94a3b8;">Klick = 1x ins Depot einlagern</span>
+            <span style="font-size: 11.5px; font-weight: 800; color: #c084fc; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 5px;">
+              ${icon('layers', '', 14)} Waren & Bauteile (${totalStoredGoodsCount} im Depot)
+            </span>
+            <span style="font-size: 10.5px; color: #94a3b8;">${totalPlayerProdCount > 0 ? 'Klick auf Ware = 1x einlagern' : 'Lagerbestand'}</span>
           </div>
           <div style="
             display: grid;
@@ -1936,7 +1809,7 @@ export class BaseSystem {
             overflow-y: auto;
             padding-right: 2px;
           ">
-            ${bohrerItemsHtml}
+            ${goodsItemsHtml}
           </div>
         </div>
       </div>
@@ -1963,35 +1836,25 @@ export class BaseSystem {
     const btnAllProducts = body.querySelector('#btn-depot-all-products');
     if (btnAllProducts) btnAllProducts.onclick = () => this.depositAllProducts();
 
-    const btnFillCargo = body.querySelector('#btn-depot-fill-cargo');
-    if (btnFillCargo) btnFillCargo.onclick = () => this.fillCargoFromDepot();
-
-    // Oberes Inventar: Klick = Entnehmen in den Bohrer (Shift-Klick = Alle)
-    body.querySelectorAll('.depot-grid-card').forEach(card => {
+    // Klick auf Erz-Kachel (Einlagern aus Bohrer)
+    body.querySelectorAll('.depot-ore-card').forEach(card => {
       card.onclick = (e) => {
-        const type = card.getAttribute('data-type');
         const key = card.getAttribute('data-key');
         const count = e.shiftKey ? 9999 : 1;
-        if (type === 'ore') {
-          this.withdrawOre(key, count);
-        } else if (type === 'product') {
-          this.withdrawProduct(key, count);
-        } else if (type === 'component') {
-          this.scene.events.emit('notify', 'ℹ️ Spezial-Bauteile verbleiben sicher im Depot für Modul-Upgrades.');
-        }
+        this.depositOre(key, count);
       };
     });
 
-    // Unteres Inventar: Klick = Einlagern ins Depot (Shift-Klick = Alle)
-    body.querySelectorAll('.bohrer-grid-card').forEach(card => {
+    // Klick auf Waren-Kachel (Einlagern aus Bohrer)
+    body.querySelectorAll('.depot-goods-card').forEach(card => {
       card.onclick = (e) => {
         const type = card.getAttribute('data-type');
         const key = card.getAttribute('data-key');
         const count = e.shiftKey ? 9999 : 1;
-        if (type === 'ore') {
-          this.depositOre(key, count);
-        } else if (type === 'product') {
+        if (type === 'product') {
           this.depositProduct(key, count);
+        } else if (type === 'component') {
+          this.scene.events.emit('notify', 'ℹ️ Spezial-Bauteile verbleiben sicher im Depot für Modul-Upgrades.');
         }
       };
     });
