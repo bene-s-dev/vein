@@ -8,7 +8,7 @@
 
 import { TILE_SIZE, ORE_DATA } from './GridSystem.js';
 import { soundFx } from './SoundEffects.js';
-import { icon, refreshIcons, COMPONENT_ICONS } from '../ui/IconHelper.js';
+import { icon, refreshIcons, COMPONENT_ICONS, oreIcon, ORE_COLORS } from '../ui/IconHelper.js';
 import { BATTERY_TIERS } from './Player.js';
 
 // Dauer für das Einschmelzen einzelner Erze in Sekunden
@@ -179,7 +179,7 @@ export class BaseSystem {
         id: 'factory',
         title: 'FABRIK',
         label: 'FABRIK',
-        iconName: 'flame',
+        iconName: 'factory',
         spriteKey: 'building_factory',
         gx: 26,
         height: 72,
@@ -646,7 +646,7 @@ export class BaseSystem {
           <div class="market-ore-card" data-ore="${ore}" style="background: #141c2b; padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.07); display: flex; flex-direction: column; gap: 8px;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
               <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-weight: 700; color: #f8fafc; font-size: 13.5px;">${data.name}</span>
+                <span style="font-weight: 700; color: #f8fafc; font-size: 13.5px; display: inline-flex; align-items: center; gap: 6px;">${oreIcon(ore, 16)} ${data.name}</span>
                 <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); padding: 2px 8px; border-radius: 6px; font-size: 11px; color: #38bdf8; font-weight: 700;">Vorrat: ${count}</span>
                 <span style="font-size: 11px; color: #94a3b8;">(€${val}/Stk)</span>
               </div>
@@ -767,7 +767,7 @@ export class BaseSystem {
       <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; margin-top: 14px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
           <strong style="color: #38bdf8; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
-            ${icon('box', '', 15)} FABRIK-ERZEUGNISSE (INDUSTRIE-WAREN)
+            ${icon('container', '', 15)} FABRIK-ERZEUGNISSE (INDUSTRIE-WAREN)
           </strong>
           <span style="color: #fbbf24; font-size: 13px; font-weight: 700;">Warenwert: €${totalFpValue}</span>
         </div>
@@ -1166,7 +1166,7 @@ export class BaseSystem {
         currentTier: p.engineTier || 1,
         maxTier: 8,
         tiers: [
-          { tier: 1, name: 'Standard-Raupenfahrwerk', stat: '180ms / 120 px/s', cost: 0, comp: null, level: 1, desc: 'Sicheres Basis-Fahrwerk für solide Schachtmanöver.' },
+          { tier: 1, name: 'Standard-Raupenfahrwerk', stat: '260ms / 120 px/s', cost: 0, comp: null, level: 1, desc: 'Sicheres Basis-Fahrwerk für solide Schachtmanöver.' },
           { tier: 2, name: 'Verstärkte Getriebe Mk.II', stat: '160ms / 145 px/s (+18%)', cost: 190, comp: null, level: 1, desc: 'Kürzere Schaltzeiten beschleunigen Kriechgang und Steigflug.' },
           { tier: 3, name: 'Hydraulik-Raupen Mk.III', stat: '142ms / 175 px/s (+22%)', cost: 440, comp: null, level: 1, desc: 'Flüssigere Kettenbewegungen und mehr Schubdüsengeschwindigkeit.' },
           { tier: 4, name: 'Hochdruck-Turbine Mk.IV', stat: '126ms / 210 px/s (+25%)', cost: 980, comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 }, level: 2, desc: 'Kraftvoller Vortrieb im Schacht und schnellerer Aufstieg.' },
@@ -1182,7 +1182,7 @@ export class BaseSystem {
       {
         id: 'cargo',
         title: 'FRACHTRAUM',
-        iconName: 'box',
+        iconName: 'container',
         currentTier: p.cargoTier || 1,
         maxTier: 8,
         tiers: [
@@ -1226,7 +1226,7 @@ export class BaseSystem {
       {
         id: 'hull',
         title: 'PANZERUNG',
-        iconName: 'shield',
+        iconName: 'shield-cog',
         currentTier: p.hullTier || 1,
         maxTier: 8,
         tiers: [
@@ -1481,7 +1481,7 @@ export class BaseSystem {
   openDroneModal() {
     const pb = this.purchasableBuildings.find(b => b.id === 'drone_hangar');
     const ores = pb.storedOres || [];
-    let oreList = ores.map(o => `<span style="background: rgba(255,255,255,0.08); padding: 3px 8px; border-radius: 6px; font-size: 12px;">${ORE_DATA[o]?.name || o}</span>`).join(' ');
+    let oreList = ores.map(o => `<span style="background: rgba(255,255,255,0.08); padding: 3px 8px; border-radius: 6px; font-size: 12px; display: inline-flex; align-items: center; gap: 5px;">${oreIcon(o, 13)} ${ORE_DATA[o]?.name || o}</span>`).join(' ');
     if (ores.length === 0) oreList = '<span style="color: #94a3b8; font-style: italic;">Drohne schürft aktuell...</span>';
 
     const content = `
@@ -1496,7 +1496,7 @@ export class BaseSystem {
           </div>
         </div>
         <button id="btn-collect-drone-ores" class="btn-buy btn-lg" ${ores.length === 0 ? 'disabled' : ''} style="width: 100%;">
-          ${icon('box', '', 14)}
+          ${icon('container', '', 14)}
           <span>ALLE FUNDE INS FAHRZEUG ÜBERTRAGEN</span>
         </button>
       </div>
@@ -1958,7 +1958,7 @@ export class BaseSystem {
 
     this.openModal(`
       <div style="display: flex; align-items: center; gap: 8px;">
-        ${icon('flame', '', 18)}
+        ${icon('factory', '', 18)}
         <span>FABRIK</span>
       </div>
     `, `<div id="refinery-modal-container"></div>`);
@@ -2078,7 +2078,7 @@ export class BaseSystem {
             <!-- 1. STATION: ZUFUHR / EINFÜLL-TRICHTER -->
             <div style="flex: 1; min-width: 0; height: 86px; box-sizing: border-box; background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; justify-content: space-between;">
               <div style="display: flex; align-items: center; gap: 5px; white-space: nowrap;">
-                <span style="color: #38bdf8; flex-shrink: 0;">${icon('box', '', 13)}</span>
+                <span style="color: #38bdf8; flex-shrink: 0;">${icon('container', '', 13)}</span>
                 <strong style="font-size: 11px; color: #94a3b8; text-transform: uppercase; white-space: nowrap;">1. Zufuhr</strong>
               </div>
               <div style="font-size: 13px; font-weight: 700; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
@@ -2175,7 +2175,7 @@ export class BaseSystem {
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; box-sizing: border-box;">
             <button id="btn-transfer-to-storage" class="btn-buy" style="height: 34px; font-size: 11.5px; font-weight: 700; padding: 0 10px; width: 100%; box-sizing: border-box; justify-content: center;">
-              ${icon('box', '', 14)}
+              ${icon('container', '', 14)}
               <span>Ins Lager</span>
             </button>
             <button id="btn-collect-refined" class="btn-action" style="height: 34px; font-size: 11.5px; font-weight: 700; padding: 0 10px; width: 100%; box-sizing: border-box; justify-content: center;">
@@ -2205,7 +2205,7 @@ export class BaseSystem {
         const have = cargoCounts[ore] || 0;
         if (have < need) canCraft = false;
         const oreName = ORE_DATA[ore]?.name || ore;
-        return `<span style="color: ${have >= need ? '#10b981' : '#f87171'}; font-size: 11px; font-weight: 700; background: rgba(0,0,0,0.35); padding: 2px 6px; border-radius: 4px; border: 1px solid ${have >= need ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'};">${need}x ${oreName} (${have}/${need})</span>`;
+        return `<span style="color: ${have >= need ? '#10b981' : '#f87171'}; font-size: 11px; font-weight: 700; background: rgba(0,0,0,0.35); padding: 2px 6px; border-radius: 4px; border: 1px solid ${have >= need ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}; display: inline-flex; align-items: center; gap: 4px;">${oreIcon(ore, 12)} ${need}x ${oreName} (${have}/${need})</span>`;
       }).join(' ');
 
       html += `
@@ -2239,7 +2239,7 @@ export class BaseSystem {
       <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <strong style="color: #38bdf8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 6px;">
-            ${icon('box', '', 14)}
+            ${icon('container', '', 14)}
             Roherz-Schmelzofen (Frachtraum: ${cargo.length}/${this.player.maxCargo} Erze)
           </strong>
         </div>
@@ -2268,9 +2268,12 @@ export class BaseSystem {
 
         html += `
           <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 6px 10px;">
-            <div>
-              <strong style="color: #f8fafc; font-size: 12.5px;">${oreName}</strong>
-              <span style="color: #94a3b8; font-size: 11px; margin-left: 6px;">(${count}x Vorrat) · ${durSec}s/Stk · +€${netVal}/Barren</span>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              ${oreIcon(oreKey, 14)}
+              <div>
+                <strong style="color: #f8fafc; font-size: 12.5px;">${oreName}</strong>
+                <span style="color: #94a3b8; font-size: 11px; margin-left: 6px;">(${count}x Vorrat) · ${durSec}s/Stk · +€${netVal}/Barren</span>
+              </div>
             </div>
             <div style="display: flex; gap: 6px; align-items: center;">
               <button class="btn-deposit-one btn-3d-secondary" data-ore="${oreKey}" style="height: 32px; padding: 0 10px; font-size: 11px; font-weight: 700; border-radius: 8px;">+1 in Ofen</button>

@@ -156,7 +156,7 @@ export class Player {
 
     // Antrieb & Geschwindigkeit (am Anfang ruhig & beherrschbar, upgradebar)
     this.engineTier = 1;
-    this.moveDuration = 180; // 180ms pro Kachel (~5.5 Kacheln/s statt 95ms)
+    this.moveDuration = 260; // 260ms pro Kachel (~3.8 Kacheln/s für ruhiges, kontrolliertes Fahren auf Stufe 1)
     this.flightSpeed = 120;  // 120 px/s Steigflug (ca. 2.5 Kacheln/s)
 
     this.maxCargo = 10;
@@ -284,11 +284,11 @@ export class Player {
 
   upgradeEngine(tier) {
     this.engineTier = tier;
-    // Bewegung: Stufe 1 (180ms) bis Stufe 8 (78ms)
+    // Bewegung: Stufe 1 (260ms) bis Stufe 8 (90ms)
     // Fluggeschwindigkeit: Stufe 1 (120 px/s) bis Stufe 8 (340 px/s)
-    const moveDurations = [180, 160, 142, 126, 112, 100, 88, 78];
+    const moveDurations = [260, 225, 195, 170, 145, 125, 105, 90];
     const flightSpeeds = [120, 138, 160, 185, 215, 250, 290, 340];
-    this.moveDuration = moveDurations[tier - 1] || 180;
+    this.moveDuration = moveDurations[tier - 1] || 260;
     this.flightSpeed = flightSpeeds[tier - 1] || 120;
   }
 

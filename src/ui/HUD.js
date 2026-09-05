@@ -1,7 +1,7 @@
 import { soundFx } from '../core/SoundEffects.js';
 import { SaveSystem } from '../core/SaveSystem.js';
 import { MissionsProgressModal } from './MissionsProgressModal.js';
-import { icon, refreshIcons } from './IconHelper.js';
+import { icon, refreshIcons, oreIcon } from './IconHelper.js';
 import { ORE_DATA } from '../core/GridSystem.js';
 import { notifyModalClosed } from '../core/BaseSystem.js';
 
@@ -188,8 +188,9 @@ export class HUD {
           width: 100%;
           box-sizing: border-box;
         ">
-          <h2 style="color: #f8fafc; font-size: 22px; font-weight: 800; margin: 0 0 8px 0; letter-spacing: 0.5px;">
-            ${data.name.toUpperCase()}
+          <h2 style="color: #f8fafc; font-size: 22px; font-weight: 800; margin: 0 0 8px 0; letter-spacing: 0.5px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+            ${oreIcon(oreType, 22)}
+            <span>${data.name.toUpperCase()}</span>
           </h2>
           <div style="display: flex; justify-content: center; gap: 10px; font-size: 12px; margin-bottom: 12px; flex-wrap: wrap;">
             <span style="background: rgba(251, 191, 36, 0.15); border: 1px solid rgba(251, 191, 36, 0.3); color: #fbbf24; font-weight: 800; padding: 3px 10px; border-radius: 6px;">
@@ -687,7 +688,7 @@ export class HUD {
     const tabs = [
       { id: 'controls', label: 'Steuerung', icon: 'gamepad-2' },
       { id: 'base', label: 'Gebäude', icon: 'building-2' },
-      { id: 'refinery', label: 'Erze & Fabrik', icon: 'flame' },
+      { id: 'refinery', label: 'Erze & Fabrik', icon: 'factory' },
       { id: 'tips', label: 'Profi-Tipps', icon: 'lightbulb' }
     ];
 

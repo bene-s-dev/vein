@@ -78,8 +78,8 @@ class SoundManager {
     }
   }
 
-  // Erzeugt weißes/rosa Rauschen
-  createNoiseBuffer(duration = 0.2, pink = true) {
+  // Erzeugt tiefes, weiches Rumpel-Rauschen (Brownian Noise, absolut kein scharfes Zischen)
+  createNoiseBuffer(duration = 0.2) {
     if (!this.ctx) return null;
     const bufferSize = Math.floor(this.ctx.sampleRate * duration);
     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
@@ -87,17 +87,17 @@ class SoundManager {
     let lastOut = 0.0;
     for (let i = 0; i < bufferSize; i++) {
       const white = Math.random() * 2 - 1;
-      data[i] = pink ? (lastOut * 0.7) + (white * 0.3) : white;
-      lastOut = data[i];
+      // Starke Tiefpass-Glättung: 95% Tiefenanteil schneidet jedes Rauschen/Zischen weg
+      lastOut = (lastOut * 0.95) + (white * 0.05);
+      data[i] = lastOut * 3.5;
     }
     return buffer;
   }
 
-  // Looping noise source (returns node)
+  // Looping noise source (returns node) mit starker Tiefpassfilterung
   _createLoopingNoise(filterType, freqVal, Q = 1.0) {
     if (!this.ctx) return null;
-    // Short buffer is fine — it loops seamlessly, and stays fast on main thread
-    const buf = this.createNoiseBuffer(0.3);
+    const buf = this.createNoiseBuffer(0.4);
     if (!buf) return null;
     const src = this.ctx.createBufferSource();
     src.buffer = buf;
@@ -105,7 +105,7 @@ class SoundManager {
 
     const flt = this.ctx.createBiquadFilter();
     flt.type = filterType;
-    flt.frequency.value = freqVal;
+    flt.frequency.value = Math.min(freqVal, 220); // Niemals scharfe Höhen durchlassen
     flt.Q.value = Q;
 
     src.connect(flt);
@@ -113,7 +113,7 @@ class SoundManager {
   }
 
   // -----------------------------------------------------------------------
-  // JETPACK — kontinuierlicher Schub mit Ramp-Up / Ramp-Down
+  // JETPACK — warmer, tiefer Triebwerksschub (saubere Synthese, kein Rauschen)
   // -----------------------------------------------------------------------
   startJetpack() {
     this.ensureContext();
@@ -123,43 +123,51 @@ class SoundManager {
     const now = this.ctx.currentTime;
     const masterGain = this.ctx.createGain();
     masterGain.gain.setValueAtTime(0.001, now);
-    masterGain.gain.linearRampToValueAtTime(this.muted ? 0.001 : 0.06, now + 0.25);
+    masterGain.gain.linearRampToValueAtTime(this.muted ? 0.001 : 0.035, now + 0.2);
     masterGain.connect(this.ctx.destination);
     this._jetpackGain = masterGain;
 
-    // 1. Gedämpftes Schub-Rauschen (enger Bandpass, leise)
-    const noisy = this._createLoopingNoise('bandpass', 900, 3.5);
-    if (noisy) {
-      noisy.src.connect(masterGain);
-      noisy.src.start(now);
-      this._jetpackNoise = noisy.src;
-    }
-
-    // 2. Sanfter Turbinen-Grundton (Sine, nicht Säge – viel weicher)
+    // 1. Sanfter Turbinen-Grundton (reine Sinuswelle)
     const hum = this.ctx.createOscillator();
     hum.type = 'sine';
-    hum.frequency.setValueAtTime(72, now);
-    hum.frequency.linearRampToValueAtTime(88, now + 0.25);
-    const humGain = this.ctx.createGain();
-    humGain.gain.value = 0.5;
-    hum.connect(humGain);
-    humGain.connect(masterGain);
+    hum.frequency.setValueAtTime(64, now);
+    hum.frequency.linearRampToValueAtTime(82, now + 0.25);
+
+    // 2. Harmonischer Obertongenerator
+    const hum2 = this.ctx.createOscillator();
+    hum2.type = 'triangle';
+    hum2.frequency.setValueAtTime(128, now);
+    hum2.frequency.linearRampToValueAtTime(164, now + 0.25);
+
+    const flt = this.ctx.createBiquadFilter();
+    flt.type = 'lowpass';
+    flt.frequency.value = 220; // Glättet alle Obertöne für samtweichen Klang
+
+    const oscGain = this.ctx.createGain();
+    oscGain.gain.value = 0.5;
+
+    hum.connect(flt);
+    hum2.connect(flt);
+    flt.connect(oscGain);
+    oscGain.connect(masterGain);
+
     hum.start(now);
+    hum2.start(now);
     this._jetpackHum = hum;
-    this._jetpackHumGain = humGain;
+    this._jetpackHum2 = hum2;
   }
 
   stopJetpack() {
     if (!this._jetpackRunning || !this.ctx) return;
     this._jetpackRunning = false;
     const now = this.ctx.currentTime;
-    const fadeOut = 0.22;
+    const fadeOut = 0.2;
 
     if (this._jetpackGain) {
       this._jetpackGain.gain.setTargetAtTime(0.001, now, fadeOut / 3);
     }
 
-    const nodes = [this._jetpackNoise, this._jetpackHum];
+    const nodes = [this._jetpackHum, this._jetpackHum2];
     nodes.forEach(n => {
       if (!n) return;
       try { n.stop(now + fadeOut + 0.05); } catch(_) {}
@@ -168,9 +176,8 @@ class SoundManager {
     setTimeout(() => {
       try { if (this._jetpackGain) this._jetpackGain.disconnect(); } catch(_) {}
       this._jetpackGain = null;
-      this._jetpackNoise = null;
       this._jetpackHum = null;
-      this._jetpackMid = null;
+      this._jetpackHum2 = null;
     }, (fadeOut + 0.1) * 1000);
   }
 
@@ -180,7 +187,7 @@ class SoundManager {
   }
 
   // -----------------------------------------------------------------------
-  // BOHREN — Kontinuierliches Schleif-/Mahlgeräusch (kein Hämmern)
+  // BOHREN — Mechanischer Fräsmotor (reine Oszillatoren, null Hiss)
   // -----------------------------------------------------------------------
   startDrilling() {
     this.ensureContext();
@@ -190,57 +197,42 @@ class SoundManager {
     const now = this.ctx.currentTime;
     const masterGain = this.ctx.createGain();
     masterGain.gain.setValueAtTime(0.001, now);
-    masterGain.gain.linearRampToValueAtTime(this.muted ? 0.001 : 0.05, now + 0.12);
+    masterGain.gain.linearRampToValueAtTime(this.muted ? 0.001 : 0.04, now + 0.1);
     masterGain.connect(this.ctx.destination);
     this._drillGain = masterGain;
 
-    // 1. Schleifgeräusch (enger Bandpass um 600 Hz – klingt nach Schleifen, nicht Rauschen)
-    const grind = this._createLoopingNoise('bandpass', 600, 4.5);
-    if (grind) {
-      grind.src.connect(masterGain);
-      grind.src.start(now);
-      this._drillNoise = grind.src;
-    }
-
-    // 2. Tiefer Bohrmotorton (Sine, weich)
+    // 1. Tiefes Bohrer-Surren (Sinuswelle bei 48 Hz)
     const motorOsc = this.ctx.createOscillator();
     motorOsc.type = 'sine';
-    motorOsc.frequency.value = 42;
-    const motorGain = this.ctx.createGain();
-    motorGain.gain.value = 0.4;
-    motorOsc.connect(motorGain);
-    motorGain.connect(masterGain);
-    motorOsc.start(now);
-    this._drillOsc = motorOsc;
+    motorOsc.frequency.value = 48;
 
-    // 3. Unregelmäßige Steinknirsch-Bursts (leise, alle ~300–500ms)
-    const scheduleNextCrunch = () => {
-      if (!this._drillRunning) return;
-      const delay = 0.3 + Math.random() * 0.22;
-      this._drillCrunchTimer = setTimeout(() => {
-        if (!this._drillRunning || !this.ctx || this.muted) {
-          scheduleNextCrunch();
-          return;
-        }
-        const t = this.ctx.currentTime;
-        const buf = this.createNoiseBuffer(0.06);
-        if (buf) {
-          const src = this.ctx.createBufferSource();
-          src.buffer = buf;
-          const flt = this.ctx.createBiquadFilter();
-          flt.type = 'bandpass';
-          flt.frequency.value = 700 + Math.random() * 400;
-          flt.Q.value = 5.0;
-          const g = this.ctx.createGain();
-          g.gain.setValueAtTime(0.07, t);
-          g.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
-          src.connect(flt); flt.connect(g); g.connect(this.ctx.destination);
-          src.start(t);
-        }
-        scheduleNextCrunch();
-      }, delay * 1000);
-    };
-    scheduleNextCrunch();
+    // 2. Mechanische Zahnrad-Vibration (Moduliertes Dreieck bei 96 Hz)
+    const gearOsc = this.ctx.createOscillator();
+    gearOsc.type = 'triangle';
+    gearOsc.frequency.value = 96;
+
+    // LFO für die typische Bohrkopf-Rotation (14 Hz Pulsieren)
+    const lfo = this.ctx.createOscillator();
+    lfo.type = 'sine';
+    lfo.frequency.value = 14;
+    const lfoGain = this.ctx.createGain();
+    lfoGain.gain.value = 12;
+    lfo.connect(gearOsc.frequency);
+    lfo.start(now);
+    this._drillLfo = lfo;
+
+    const flt = this.ctx.createBiquadFilter();
+    flt.type = 'lowpass';
+    flt.frequency.value = 260; // Kein scharfes Zischen, nur warmes mechanisches Mahlen
+
+    motorOsc.connect(flt);
+    gearOsc.connect(flt);
+    flt.connect(masterGain);
+
+    motorOsc.start(now);
+    gearOsc.start(now);
+    this._drillOsc = motorOsc;
+    this._drillGear = gearOsc;
   }
 
   stopDrilling() {
@@ -252,17 +244,19 @@ class SoundManager {
     if (this._drillGain) {
       this._drillGain.gain.setTargetAtTime(0.001, now, 0.05);
     }
-    const nodes = [this._drillNoise, this._drillOsc, this._drillScrape];
+    const nodes = [this._drillOsc, this._drillGear, this._drillLfo];
     nodes.forEach(n => {
       if (!n) return;
-      try { n.stop(now + 0.12); } catch(_) {}
+      try { n.stop(now + 0.1); } catch(_) {}
     });
 
     setTimeout(() => {
       try { if (this._drillGain) this._drillGain.disconnect(); } catch(_) {}
-      this._drillGain = null; this._drillNoise = null;
-      this._drillOsc = null; this._drillScrape = null;
-    }, 200);
+      this._drillGain = null;
+      this._drillOsc = null;
+      this._drillGear = null;
+      this._drillLfo = null;
+    }, 150);
   }
 
   // Legacy wrapper — called per-frame, manages start/stop state
@@ -272,7 +266,7 @@ class SoundManager {
   }
 
   // -----------------------------------------------------------------------
-  // FAHREN — leises mechanisches Rollgeräusch
+  // FAHREN — sonorer Kettenantrieb (sauberes Motorengeräusch, absolut kein Rauschen)
   // -----------------------------------------------------------------------
   startDrive() {
     this.ensureContext();
@@ -282,26 +276,30 @@ class SoundManager {
     const now = this.ctx.currentTime;
     const masterGain = this.ctx.createGain();
     masterGain.gain.setValueAtTime(0.001, now);
-    masterGain.gain.linearRampToValueAtTime(this.muted ? 0.001 : 0.06, now + 0.08);
+    masterGain.gain.linearRampToValueAtTime(this.muted ? 0.001 : 0.035, now + 0.06);
     masterGain.connect(this.ctx.destination);
     this._driveGain = masterGain;
 
-    // 1. Leises Kettenrasseln / Rollgeräusch (Lowpass Rauschen)
-    const roll = this._createLoopingNoise('lowpass', 280, 0.8);
-    if (roll) {
-      roll.src.connect(masterGain);
-      roll.src.start(now);
-      this._driveNoise = roll.src;
-    }
-
-    // 2. Tiefer Motorbrumm (Elektromotor ~55 Hz)
+    // Tiefer Elektromotor / Raupenantrieb (reine Sinuswelle mit sanfter LFO-Modulation)
     const osc = this.ctx.createOscillator();
-    osc.type = 'sine';
-    osc.frequency.value = 55;
-    const oscGain = this.ctx.createGain();
-    oscGain.gain.value = 0.4;
-    osc.connect(oscGain);
-    oscGain.connect(masterGain);
+    osc.type = 'triangle';
+    osc.frequency.value = 44;
+
+    const lfo = this.ctx.createOscillator();
+    lfo.type = 'sine';
+    lfo.frequency.value = 9; // Kettentakt 9 Hz
+    const lfoGain = this.ctx.createGain();
+    lfoGain.gain.value = 5;
+    lfo.connect(osc.frequency);
+    lfo.start(now);
+    this._driveLfo = lfo;
+
+    const flt = this.ctx.createBiquadFilter();
+    flt.type = 'lowpass';
+    flt.frequency.value = 160; // Sehr tiefer, warmer Klang ohne Rauschen
+
+    osc.connect(flt);
+    flt.connect(masterGain);
     osc.start(now);
     this._driveOsc = osc;
   }
@@ -312,17 +310,19 @@ class SoundManager {
     const now = this.ctx.currentTime;
 
     if (this._driveGain) {
-      this._driveGain.gain.setTargetAtTime(0.001, now, 0.06);
+      this._driveGain.gain.setTargetAtTime(0.001, now, 0.05);
     }
-    [this._driveNoise, this._driveOsc].forEach(n => {
+    [this._driveOsc, this._driveLfo].forEach(n => {
       if (!n) return;
-      try { n.stop(now + 0.15); } catch(_) {}
+      try { n.stop(now + 0.1); } catch(_) {}
     });
 
     setTimeout(() => {
       try { if (this._driveGain) this._driveGain.disconnect(); } catch(_) {}
-      this._driveGain = null; this._driveNoise = null; this._driveOsc = null;
-    }, 200);
+      this._driveGain = null;
+      this._driveOsc = null;
+      this._driveLfo = null;
+    }, 150);
   }
 
   // -----------------------------------------------------------------------
@@ -347,17 +347,17 @@ class SoundManager {
     boom.start(now);
     boom.stop(now + 0.22);
 
-    const noiseBuffer = this.createNoiseBuffer(0.28);
+    const noiseBuffer = this.createNoiseBuffer(0.24);
     if (noiseBuffer) {
       const noise = this.ctx.createBufferSource();
       noise.buffer = noiseBuffer;
       const filter = this.ctx.createBiquadFilter();
       filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(700, now);
-      filter.frequency.exponentialRampToValueAtTime(120, now + 0.28);
+      filter.frequency.setValueAtTime(280, now);
+      filter.frequency.exponentialRampToValueAtTime(60, now + 0.24);
       const noiseGain = this.ctx.createGain();
-      noiseGain.gain.setValueAtTime(0.22, now);
-      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+      noiseGain.gain.setValueAtTime(0.11, now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
       noise.connect(filter);
       filter.connect(noiseGain);
       noiseGain.connect(this.ctx.destination);

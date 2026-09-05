@@ -1,7 +1,7 @@
 import { MISSION_POOL } from '../core/MissionSystem.js';
 import { ORE_DATA } from '../core/GridSystem.js';
 import { soundFx } from '../core/SoundEffects.js';
-import { icon, refreshIcons } from './IconHelper.js';
+import { icon, refreshIcons, oreIcon } from './IconHelper.js';
 
 /**
  * MissionsProgressModal.js
@@ -183,7 +183,7 @@ export class MissionsProgressModal {
             <div style="display: flex; justify-content: space-between; font-size: 11.5px; font-weight: 700; margin-bottom: 5px;">
               <span style="color: #cbd5e1; display: inline-flex; align-items: center; gap: 5px;">
                 ${icon('target', '', 13)}
-                ${mission.type === 'COLLECT_ORE' ? `Gefördert: ${curProg} von ${maxProg} ${ORE_DATA[mission.targetOre]?.name || 'Erzen'}` : `Ziel-Tiefe: ${curProg} von ${maxProg} Metern`}
+                ${mission.type === 'COLLECT_ORE' ? `Gefördert: ${curProg} von ${maxProg} <span style="display: inline-flex; align-items: center; gap: 4px;">${oreIcon(mission.targetOre, 13)} ${ORE_DATA[mission.targetOre]?.name || 'Erzen'}</span>` : `Ziel-Tiefe: ${curProg} von ${maxProg} Metern`}
               </span>
               <span style="color: ${isDone ? '#10b981' : '#38bdf8'};">${pct}%</span>
             </div>
@@ -531,7 +531,7 @@ export class MissionsProgressModal {
               const have = cargoCounts[ore] || 0;
               const oreName = ORE_DATA[ore]?.name || ore;
               if (have < needed) canFulfill = false;
-              reqsText.push(`<span style="color: ${have >= needed ? '#10b981' : '#f87171'}; font-weight: 600;">${oreName}: ${have}/${needed}</span>`);
+              reqsText.push(`<span style="color: ${have >= needed ? '#10b981' : '#f87171'}; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">${oreIcon(ore, 12)} ${oreName}: ${have}/${needed}</span>`);
             }
 
             return `
@@ -655,8 +655,8 @@ export class MissionsProgressModal {
             ${Object.entries(ORE_DATA).map(([key, data]) => {
               const count = (stats.totalOresMined && stats.totalOresMined[key]) || 0;
               return `
-                <div style="display: flex; justify-content: space-between; background: rgba(0,0,0,0.25); padding: 4px 6px; border-radius: 4px;">
-                  <span style="color: #94a3b8;">${data.name}:</span>
+                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.25); padding: 4px 6px; border-radius: 4px;">
+                  <span style="color: #94a3b8; display: inline-flex; align-items: center; gap: 4px;">${oreIcon(key, 12)} ${data.name}:</span>
                   <strong style="color: ${count > 0 ? '#38bdf8' : '#64748b'};">${count}</strong>
                 </div>
               `;
