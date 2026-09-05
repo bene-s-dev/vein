@@ -21,19 +21,26 @@ export const RANK_NAMES = [
   'Novize',
   'Schürfer',
   'Tiefen-Geologe',
+  'Basalt-Pionier',
   'Kern-Ingenieur',
+  'Magma-Schürfer',
+  'Kavitations-Experte',
+  'Urgestein-Meister',
+  'Quanten-Architekt',
   'Meister der Tiefe'
 ];
 
 export const TANK_TIERS = [
   { tier: 1, name: 'Standard-Tank', maxFuel: 100, stat: '100 L', cost: 0, comp: null, level: 1, desc: 'Basis-Treibstofftank für kurze Bohrgänge.' },
-  { tier: 2, name: 'Kerosin-Tank Mk.II', maxFuel: 135, stat: '135 L', cost: 180, comp: null, level: 1, desc: 'Erhöht Treibstoff auf 135 Liter und senkt Verbrauch um 12%.' },
-  { tier: 3, name: 'Spartriebwerk Mk.III', maxFuel: 180, stat: '180 L', cost: 420, comp: null, level: 1, desc: 'Erhöht Treibstoff auf 180 Liter und spart 20% Kerosin.' },
-  { tier: 4, name: 'Dual-Injektor Mk.IV', maxFuel: 240, stat: '240 L', cost: 950, comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 }, level: 2, desc: 'Verbessert Steigflug-Effizienz mit Hochdruck-Injektoren.' },
-  { tier: 5, name: 'Kompressions-Tank Mk.V', maxFuel: 320, stat: '320 L', cost: 2000, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 }, level: 2, desc: 'Hochfeste Legierung erlaubt 320 Liter Treibstoffkapazität.' },
-  { tier: 6, name: 'Turbo-Booster Mk.VI', maxFuel: 420, stat: '420 L', cost: 4200, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 2 }, level: 3, desc: 'Großer 420L Tank für tiefe Expeditionen.' },
-  { tier: 7, name: 'Fusions-Generator Mk.VII', maxFuel: 540, stat: '540 L', cost: 8800, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 4, desc: 'Hocheffizienter Fusions-Antrieb mit 540 Litern Kapazität.' },
-  { tier: 8, name: 'Quanten-Ionen-Antrieb', maxFuel: 700, stat: '700 L', cost: 17500, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 5, desc: 'Ultimativer 700L Quantenantrieb mit extrem sparsamen Düsen.' }
+  { tier: 2, name: 'Kerosin-Tank Mk.II', maxFuel: 140, stat: '140 L', cost: 180, comp: null, level: 1, desc: 'Erhöht Treibstoff auf 140 Liter und senkt Verbrauch um 12%.' },
+  { tier: 3, name: 'Spartriebwerk Mk.III', maxFuel: 190, stat: '190 L', cost: 420, comp: null, level: 1, desc: 'Erhöht Treibstoff auf 190 Liter und spart 20% Kerosin.' },
+  { tier: 4, name: 'Dual-Injektor Mk.IV', maxFuel: 250, stat: '250 L', cost: 950, comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 }, level: 2, desc: 'Verbessert Steigflug-Effizienz mit Hochdruck-Injektoren.' },
+  { tier: 5, name: 'Kompressions-Tank Mk.V', maxFuel: 330, stat: '330 L', cost: 2000, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 }, level: 3, desc: 'Hochfeste Legierung erlaubt 330 Liter Treibstoffkapazität.' },
+  { tier: 6, name: 'Turbo-Booster Mk.VI', maxFuel: 430, stat: '430 L', cost: 4200, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 2 }, level: 4, desc: 'Großer 430L Tank für tiefe Expeditionen.' },
+  { tier: 7, name: 'Fusions-Zelle Mk.VII', maxFuel: 560, stat: '560 L', cost: 8500, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 5, desc: 'Hocheffizienter Fusions-Antrieb mit 560 Litern Kapazität.' },
+  { tier: 8, name: 'Plasma-Injektor Mk.VIII', maxFuel: 720, stat: '720 L', cost: 16000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 1 }, level: 6, desc: 'Plasmagespeister 720L Tank mit geringstem Kerosinverbrauch.' },
+  { tier: 9, name: 'Dunkelfeld-Speicher Mk.IX', maxFuel: 920, stat: '920 L', cost: 27000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 8, desc: 'Hochenergie-Tank für ausgedehnte Tiefen-Expeditionen.' },
+  { tier: 10, name: 'Quanten-Ionen-Matrix X', maxFuel: 1200, stat: '1200 L', cost: 42000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 3 }, level: 10, desc: 'Ultimative 1200L Quantenmatrix mit nahezu unerschöpflichem Schub.' }
 ];
 
 export const HULL_TIERS = [
@@ -89,7 +96,7 @@ export const HULL_TIERS = [
     stat: '350 HP',
     cost: 1700,
     comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 2 },
-    level: 2,
+    level: 3,
     desc: 'Schützt das Gehäuse vor extremen Tiefentemperaturen und Erschütterungen.'
   },
   {
@@ -100,7 +107,7 @@ export const HULL_TIERS = [
     stat: '470 HP',
     cost: 3400,
     comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 1 },
-    level: 3,
+    level: 4,
     desc: 'Extrem schlagfester Case-Schutz für härtestes Basaltgestein.'
   },
   {
@@ -109,9 +116,9 @@ export const HULL_TIERS = [
     shortName: 'Deflektor Mk.VII',
     maxHull: 620,
     stat: '620 HP',
-    cost: 7300,
-    comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 1 },
-    level: 4,
+    cost: 7000,
+    comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 1, extra: { key: 'quantum_chip', count: 1 } },
+    level: 5,
     desc: 'Aktives Energieschild fängt Reibungsenergie ab und stärkt das Gehäuse.'
   },
   {
@@ -120,10 +127,32 @@ export const HULL_TIERS = [
     shortName: 'Nanit Mk.VIII',
     maxHull: 800,
     stat: '800 HP',
-    cost: 15500,
+    cost: 14000,
     comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 },
-    level: 5,
+    level: 6,
     desc: 'Selbstreparierendes Naniten-Gehäuse für maximale Tiefen-Integrität.'
+  },
+  {
+    tier: 9,
+    name: 'Adamantit-Panzer Mk.IX',
+    shortName: 'Adamantit Mk.IX',
+    maxHull: 1050,
+    stat: '1050 HP',
+    cost: 25000,
+    comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 },
+    level: 8,
+    desc: 'Unerreichte Dichte schützt zuverlässig gegen Einstürze im Urgestein.'
+  },
+  {
+    tier: 10,
+    name: 'Quanten-Aura-Chassis X',
+    shortName: 'Quanten-Aura X',
+    maxHull: 1400,
+    stat: '1400 HP',
+    cost: 40000,
+    comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 3 },
+    level: 10,
+    desc: 'Permanentes quantenmechanisches Schutzfeld für tiefste Kernzonen.'
   }
 ];
 
@@ -132,21 +161,25 @@ export const ENGINE_TIERS = [
   { tier: 2, name: 'Verstärkte Getriebe Mk.II', stat: '138 px/s', moveDuration: 225, flightSpeed: 138, cost: 190, comp: null, level: 1, desc: 'Kürzere Schaltzeiten beschleunigen Kriechgang und Steigflug.' },
   { tier: 3, name: 'Hydraulik-Raupen Mk.III', stat: '160 px/s', moveDuration: 195, flightSpeed: 160, cost: 440, comp: null, level: 1, desc: 'Flüssigere Kettenbewegungen und mehr Schubdüsengeschwindigkeit.' },
   { tier: 4, name: 'Hochdruck-Turbine Mk.IV', stat: '185 px/s', moveDuration: 170, flightSpeed: 185, cost: 980, comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 }, level: 2, desc: 'Kraftvoller Vortrieb im Schacht und schnellerer Aufstieg.' },
-  { tier: 5, name: 'Titan-Kettenantrieb Mk.V', stat: '215 px/s', moveDuration: 145, flightSpeed: 215, cost: 2100, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 }, level: 2, desc: 'Geringerer Rollwiderstand und kräftige Schwebetriebwerke.' },
-  { tier: 6, name: 'Vektor-Booster Mk.VI', stat: '250 px/s', moveDuration: 125, flightSpeed: 250, cost: 4300, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 2 }, level: 3, desc: 'Schnelle Manövrierfähigkeit im Gestein und hoher Schwebespeed.' },
-  { tier: 7, name: 'Magnet-Levitation Mk.VII', stat: '290 px/s', moveDuration: 105, flightSpeed: 290, cost: 8900, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 4, desc: 'Magnetschwebende Fahrwerkssegmente für rasantes Gleiten.' },
-  { tier: 8, name: 'Quanten-Gravitationsantrieb', stat: '340 px/s', moveDuration: 90, flightSpeed: 340, cost: 18000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 5, desc: 'Krümmt das Schwerefeld für blitzschnelle Fortbewegung.' }
+  { tier: 5, name: 'Titan-Kettenantrieb Mk.V', stat: '215 px/s', moveDuration: 145, flightSpeed: 215, cost: 2100, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 }, level: 3, desc: 'Geringerer Rollwiderstand und kräftige Schwebetriebwerke.' },
+  { tier: 6, name: 'Vektor-Booster Mk.VI', stat: '250 px/s', moveDuration: 125, flightSpeed: 250, cost: 4300, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 2 }, level: 4, desc: 'Schnelle Manövrierfähigkeit im Gestein und hoher Schwebespeed.' },
+  { tier: 7, name: 'Magnet-Levitation Mk.VII', stat: '290 px/s', moveDuration: 105, flightSpeed: 290, cost: 8800, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 5, desc: 'Magnetschwebende Fahrwerkssegmente für rasantes Gleiten.' },
+  { tier: 8, name: 'Quanten-Gravitationsantrieb Mk.VIII', stat: '340 px/s', moveDuration: 90, flightSpeed: 340, cost: 17000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 6, desc: 'Krümmt das Schwerefeld für blitzschnelle Fortbewegung.' },
+  { tier: 9, name: 'Impuls-Vortex-Schub Mk.IX', stat: '400 px/s', moveDuration: 75, flightSpeed: 400, cost: 27000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 8, desc: 'Subatomare Schubdüsen für unvergleichliche Wendigkeit.' },
+  { tier: 10, name: 'Chrono-Tachyonen-Antrieb X', stat: '480 px/s', moveDuration: 60, flightSpeed: 480, cost: 42000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 3 }, level: 10, desc: 'Höchstgeschwindigkeit im Erdreich und schwebende Schwerelosigkeit.' }
 ];
 
 export const CARGO_TIERS = [
   { tier: 1, name: 'Standard-Ladebucht', maxCargo: 10, stat: '10 Plätze', cost: 0, comp: null, level: 1, desc: 'Kompakter Laderaum für die ersten Bergbau-Expeditionen.' },
-  { tier: 2, name: 'Erweiterte Frachtbucht', maxCargo: 14, stat: '14 Plätze', cost: 170, comp: null, level: 1, desc: 'Erweitert Ladeplätze auf 14 Erze für lukrativere Tauchgänge.' },
+  { tier: 2, name: 'Erweiterte Frachtbucht Mk.II', maxCargo: 14, stat: '14 Plätze', cost: 170, comp: null, level: 1, desc: 'Erweitert Ladeplätze auf 14 Erze für lukrativere Tauchgänge.' },
   { tier: 3, name: 'Titan-Containermodul Mk.III', maxCargo: 20, stat: '20 Plätze', cost: 400, comp: null, level: 1, desc: 'Großzügiger Frachtraum für 20 Erze.' },
   { tier: 4, name: 'Struktur-Laderaum Mk.IV', maxCargo: 28, stat: '28 Plätze', cost: 900, comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 }, level: 2, desc: 'Hydraulische Ladeklappen bieten Platz für 28 Erze.' },
-  { tier: 5, name: 'Molekular-Kompressor Mk.V', maxCargo: 38, stat: '38 Plätze', cost: 1900, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 }, level: 2, desc: 'Hohe Packdichte erlaubt den Transport von 38 Erzen.' },
-  { tier: 6, name: 'Subraum-Boxen Mk.VI', maxCargo: 50, stat: '50 Plätze', cost: 3900, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 2 }, level: 3, desc: 'Transportiert bis zu 50 Erze auf einen Schlag.' },
-  { tier: 7, name: 'Tiefsee-Depot Mk.VII', maxCargo: 65, stat: '65 Plätze', cost: 8200, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 4, desc: 'Riesige Kapazität von 65 Plätzen für Edelsteine.' },
-  { tier: 8, name: 'Quanten-Frachtdepot Mk.VIII', maxCargo: 80, stat: '80 Plätze', cost: 16500, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 5, desc: 'Gigantischer 80-Plätze-Frachtraum für maximale Gewinne.' }
+  { tier: 5, name: 'Molekular-Kompressor Mk.V', maxCargo: 38, stat: '38 Plätze', cost: 1900, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 }, level: 3, desc: 'Hohe Packdichte erlaubt den Transport von 38 Erzen.' },
+  { tier: 6, name: 'Subraum-Boxen Mk.VI', maxCargo: 50, stat: '50 Plätze', cost: 3900, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 2 }, level: 4, desc: 'Transportiert bis zu 50 Erze auf einen Schlag.' },
+  { tier: 7, name: 'Tiefsee-Depot Mk.VII', maxCargo: 65, stat: '65 Plätze', cost: 8200, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 5, desc: 'Riesige Kapazität von 65 Plätzen für Edelsteine.' },
+  { tier: 8, name: 'Quanten-Frachtdepot Mk.VIII', maxCargo: 85, stat: '85 Plätze', cost: 16500, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 6, desc: 'Gigantischer 85-Plätze-Frachtraum für maximale Gewinne.' },
+  { tier: 9, name: 'Dimensions-Kompaktor Mk.IX', maxCargo: 110, stat: '110 Plätze', cost: 26000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 8, desc: 'Räumliche Kompression fasst 110 Erze im Frachtbereich.' },
+  { tier: 10, name: 'Unendlicher Subraum-Bunker X', maxCargo: 150, stat: '150 Plätze', cost: 42000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 3 }, level: 10, desc: 'Absolutes Maximum: 150 Plätze für unendliche Bergbauexpeditionen.' }
 ];
 
 export const SENSOR_TIERS = [
@@ -154,10 +187,12 @@ export const SENSOR_TIERS = [
   { tier: 2, name: 'Geo-Scanner Mk.II', radius: 2.4, stat: '2.4 Kacheln', cost: 140, comp: null, level: 1, desc: 'Vergrößert den kreisrunden Scan-Umkreis spürbar.' },
   { tier: 3, name: 'Puls-Sonar Mk.III', radius: 3.0, stat: '3.0 Kacheln', cost: 340, comp: null, level: 1, desc: 'Erweitert den Erfassungsbereich auf 3.0 Kacheln.' },
   { tier: 4, name: 'Spektral-Radar Mk.IV', radius: 3.7, stat: '3.7 Kacheln', cost: 780, comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 }, level: 2, desc: 'Schwenkbarer Pylon deckt Erze in 3.7 Kacheln Umkreis auf.' },
-  { tier: 5, name: 'Tiefen-Sensor Mk.V', radius: 4.5, stat: '4.5 Kacheln', cost: 1650, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 1 }, level: 2, desc: 'Optische Linse durchdringt dicke Gesteinsschichten bis 4.5 Kacheln.' },
-  { tier: 6, name: 'Sub-Terra-Scan Mk.VI', radius: 5.4, stat: '5.4 Kacheln', cost: 3400, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 3, desc: 'Großer Scanradius von 5.4 Kacheln für seltene Adern.' },
-  { tier: 7, name: 'Graviton-Array Mk.VII', radius: 6.4, stat: '6.4 Kacheln', cost: 7200, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 1 }, level: 4, desc: 'Erfasst 6.4 Kacheln im Umkreis auf einen Blick.' },
-  { tier: 8, name: 'Quanten-Resonator Mk.VIII', radius: 7.5, stat: '7.5 Kacheln', cost: 15200, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 5, desc: 'Elite-Scanbereich von 7.5 Kacheln erhellt riesige Höhlen.' }
+  { tier: 5, name: 'Tiefen-Sensor Mk.V', radius: 4.5, stat: '4.5 Kacheln', cost: 1650, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 1 }, level: 3, desc: 'Optische Linse durchdringt dicke Gesteinsschichten bis 4.5 Kacheln.' },
+  { tier: 6, name: 'Sub-Terra-Scan Mk.VI', radius: 5.4, stat: '5.4 Kacheln', cost: 3400, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 4, desc: 'Großer Scanradius von 5.4 Kacheln für seltene Adern.' },
+  { tier: 7, name: 'Graviton-Array Mk.VII', radius: 6.4, stat: '6.4 Kacheln', cost: 7200, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 1 }, level: 5, desc: 'Erfasst 6.4 Kacheln im Umkreis auf einen Blick.' },
+  { tier: 8, name: 'Quanten-Resonator Mk.VIII', radius: 7.5, stat: '7.5 Kacheln', cost: 15000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 6, desc: 'Elite-Scanbereich von 7.5 Kacheln erhellt riesige Höhlen.' },
+  { tier: 9, name: 'Tachyonen-Echo Mk.IX', radius: 9.0, stat: '9.0 Kacheln', cost: 25000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 8, desc: 'Subatomare Echos enthüllen Erze bis zu 9 Kacheln tief.' },
+  { tier: 10, name: 'Allwissendes Omnispektrum X', radius: 11.0, stat: '11.0 Kacheln', cost: 40000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 3 }, level: 10, desc: 'Erleuchtet ganze Abschnitte mit einem gewaltigen 11-Kachel-Radius.' }
 ];
 
 export class Player {
@@ -389,12 +424,11 @@ export class Player {
 
   upgradeEngine(tier) {
     this.engineTier = tier;
-    // Bewegung: Stufe 1 (260ms) bis Stufe 8 (90ms)
-    // Fluggeschwindigkeit: Stufe 1 (120 px/s) bis Stufe 8 (340 px/s)
-    const moveDurations = [260, 225, 195, 170, 145, 125, 105, 90];
-    const flightSpeeds = [120, 138, 160, 185, 215, 250, 290, 340];
-    this.moveDuration = moveDurations[tier - 1] || 260;
-    this.flightSpeed = flightSpeeds[tier - 1] || 120;
+    // Bewegung: Stufe 1 (260ms) bis Stufe 10 (60ms)
+    // Fluggeschwindigkeit: Stufe 1 (120 px/s) bis Stufe 10 (480 px/s)
+    const data = ENGINE_TIERS[tier - 1] || ENGINE_TIERS[0];
+    this.moveDuration = data.moveDuration || 260;
+    this.flightSpeed = data.flightSpeed || 120;
   }
 
   drawScanner() {
@@ -517,7 +551,7 @@ export class Player {
     const data = TANK_TIERS[tier - 1] || TANK_TIERS[0];
     const prevMax = this.maxFuel || 100;
     this.maxFuel = data.maxFuel;
-    const effs = [1.0, 1.12, 1.20, 1.28, 1.35, 1.42, 1.50, 1.60];
+    const effs = [1.0, 1.12, 1.20, 1.28, 1.35, 1.42, 1.50, 1.60, 1.72, 1.85];
     this.fuelEfficiency = effs[tier - 1] || 1.0;
     this.fuel = Math.min(this.maxFuel, this.fuel + (this.maxFuel - prevMax));
   }
@@ -1329,7 +1363,7 @@ export class Player {
 
   addXp(amount) {
     this.xp += amount;
-    while (this.xp >= this.xpNeeded && this.level < 5) {
+    while (this.xp >= this.xpNeeded && this.level < 10) {
       this.xp -= this.xpNeeded;
       this.level++;
       this.xpNeeded = Math.round(this.xpNeeded * 1.6);

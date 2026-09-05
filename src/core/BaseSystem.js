@@ -67,13 +67,29 @@ export const DRILL_TIERS = [
   { tier: 2, name: 'Wolframkarbid-Spitze', stat: '45 DPS', cost: 220, comp: null, level: 1, desc: 'Fräst spürbar flüssiger durch Erde (ca. 1.9s) und Schiefer.' },
   { tier: 3, name: 'Gehärteter Meißel Mk.III', stat: '60 DPS', cost: 480, comp: null, level: 1, desc: 'Schneidet zügig durch Stein und zerbröckelt Fels.' },
   { tier: 4, name: 'Titan-Diamant-Kopf Mk.IV', stat: '82 DPS', cost: 1050, comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 }, level: 2, desc: 'Hydraulisch verstärkte Fräse zermalmt harte Granitadern.' },
-  { tier: 5, name: 'Hochdruck-Fräse Mk.V', stat: '115 DPS', cost: 2200, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 }, level: 2, desc: 'Panzerung und Zahnkränze fräsen mühelos durch Granit und Basalt.' },
-  { tier: 6, name: 'Plasma-Schneidbrenner Mk.VI', stat: '165 DPS', cost: 4500, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 1 }, level: 3, desc: 'Fokussierter Plasmastrahl schmilzt Obsidian-Gestein.' },
-  { tier: 7, name: 'Laser-Kavitationsmeißel Mk.VII', stat: '240 DPS', cost: 9200, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 4, desc: 'Höchste Schneidleistung für schwerste Tiefenerze.' },
-  { tier: 8, name: 'Antimaterie-Bohrer Mk.VIII', stat: '350 DPS', cost: 18500, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 5, desc: 'Ultimativer Bohrkopf. Fräst durch den Tiefenkern wie Butter.' }
+  { tier: 5, name: 'Hochdruck-Fräse Mk.V', stat: '115 DPS', cost: 2200, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 }, level: 3, desc: 'Panzerung und Zahnkränze fräsen mühelos durch Granit und Basalt.' },
+  { tier: 6, name: 'Plasma-Schneidbrenner Mk.VI', stat: '165 DPS', cost: 4500, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 1 }, level: 4, desc: 'Fokussierter Plasmastrahl schmilzt Obsidian-Gestein.' },
+  { tier: 7, name: 'Laser-Kavitationsmeißel Mk.VII', stat: '240 DPS', cost: 9000, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 5, desc: 'Höchste Schneidleistung für schwerste Tiefenerze.' },
+  { tier: 8, name: 'Antimaterie-Bohrer Mk.VIII', stat: '350 DPS', cost: 17500, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 6, desc: 'Fräst durch das härteste Urgestein wie Butter.' },
+  { tier: 9, name: 'Singularitäts-Fräse Mk.IX', stat: '500 DPS', cost: 28000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 8, desc: 'Erzeugt Mikrogravitations-Kollapse vor dem Bohrkopf.' },
+  { tier: 10, name: 'Tachyonen-Disruptor X', stat: '700 DPS', cost: 45000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 3 }, level: 10, desc: 'Zersetzt die Molekularstruktur des Erdkerns in Sekundenbruchteilen.' }
 ];
-export const DRILL_DPS = [34, 45, 60, 82, 115, 165, 240, 350];
+export const DRILL_DPS = [34, 45, 60, 82, 115, 165, 240, 350, 500, 700];
 export const DRILL_DATA = DRILL_TIERS;
+
+// Zentrale Depot-Ausbaustufen (10 Tiers mit linear-exponentieller Kapazität)
+export const DEPOT_TIERS = [
+  { tier: 1, capacity: 10, costCash: 0, label: 'Kompaktes Lagerfach' },
+  { tier: 2, capacity: 25, costCash: 250, label: 'Erweitertes Regallager' },
+  { tier: 3, capacity: 60, costCash: 800, costComp: { hydraulic_part: 1 }, compName: '1x Hydraulikzylinder', label: 'Automatisierte Förderbrücke' },
+  { tier: 4, capacity: 150, costCash: 2200, costComp: { titan_alloy: 1 }, compName: '1x Titan-Legierung', label: 'Schwergut-Containerterminal' },
+  { tier: 5, capacity: 350, costCash: 5500, costComp: { titan_alloy: 2 }, compName: '2x Titan-Legierung', label: 'Industrie-Großlager' },
+  { tier: 6, capacity: 650, costCash: 11000, costComp: { laser_lens: 2 }, compName: '2x Kristall-Fokuslinse', label: 'Logistik-Zentralverteiler' },
+  { tier: 7, capacity: 1000, costCash: 18000, costComp: { quantum_chip: 1 }, compName: '1x Quanten-Steuerkern', label: 'Quanten-Kompressionslager' },
+  { tier: 8, capacity: 1500, costCash: 26000, costComp: { quantum_chip: 2 }, compName: '2x Quanten-Steuerkern', label: 'Subraum-Speicherkomplex' },
+  { tier: 9, capacity: 2200, costCash: 35000, costComp: { quantum_chip: 2 }, compName: '2x Quanten-Kern, 2x Titan', label: 'Megaspeicher-Matrix' },
+  { tier: 10, capacity: 3000, costCash: 48000, costComp: { quantum_chip: 3 }, compName: '3x Quanten-Steuerkern', label: 'Interdimensionales Zentrallager' }
+];
 
 // Fabrik-Produkte (Industrielle Werkstoffe mit hohem Börsenwert)
 // Jedes Produkt benötigt zusätzlich 2x Kohle als Prozesshitze/Brennstoff
@@ -1241,14 +1257,6 @@ export class BaseSystem {
     this.depot.products = { ...(data.products || {}) };
     this.depot.tier = data.tier || 1;
 
-    const DEPOT_TIERS = [
-      { tier: 1, capacity: 10 },
-      { tier: 2, capacity: 25 },
-      { tier: 3, capacity: 60 },
-      { tier: 4, capacity: 150 },
-      { tier: 5, capacity: 400 },
-      { tier: 6, capacity: 1000 }
-    ];
     const tierInfo = DEPOT_TIERS.find(t => t.tier === this.depot.tier) || DEPOT_TIERS[0];
     if (!data.capacity || (this.depot.tier === 1 && data.capacity === 150)) {
       this.depot.capacity = tierInfo.capacity;
@@ -1292,16 +1300,6 @@ export class BaseSystem {
 
     const playerProducts = this.player.factoryProducts || {};
     const totalPlayerProdCount = Object.values(playerProducts).reduce((s, v) => s + v, 0);
-
-    // Ausbau-Daten
-    const DEPOT_TIERS = [
-      { tier: 1, capacity: 10, costCash: 0, label: 'Kompaktes Lagerfach' },
-      { tier: 2, capacity: 25, costCash: 250, label: 'Erweitertes Regallager' },
-      { tier: 3, capacity: 60, costCash: 800, costComp: { hydraulic_part: 1 }, compName: '1x Hydraulikzylinder', label: 'Automatisierte Förderbrücke' },
-      { tier: 4, capacity: 150, costCash: 2200, costComp: { titan_alloy: 1 }, compName: '1x Titan-Legierung', label: 'Schwergut-Containerterminal' },
-      { tier: 5, capacity: 400, costCash: 6500, costComp: { titan_alloy: 2 }, compName: '2x Titan-Legierung', label: 'Industrie-Großlager' },
-      { tier: 6, capacity: 1000, costCash: 16000, costComp: { quantum_chip: 2 }, compName: '2x Quanten-Steuerkern', label: 'Quanten-Kompressionslager' }
-    ];
 
     const currentTier = this.depot.tier || 1;
     const nextTierData = DEPOT_TIERS.find(t => t.tier === currentTier + 1);
@@ -1992,15 +1990,6 @@ export class BaseSystem {
   }
 
   upgradeDepot() {
-    const DEPOT_TIERS = [
-      { tier: 1, capacity: 10, costCash: 0 },
-      { tier: 2, capacity: 25, costCash: 250 },
-      { tier: 3, capacity: 60, costCash: 800, costComp: { hydraulic_part: 1 } },
-      { tier: 4, capacity: 150, costCash: 2200, costComp: { titan_alloy: 1 } },
-      { tier: 5, capacity: 400, costCash: 6500, costComp: { titan_alloy: 2 } },
-      { tier: 6, capacity: 1000, costCash: 16000, costComp: { quantum_chip: 2 } }
-    ];
-
     const currentTier = this.depot.tier || 1;
     const nextTierData = DEPOT_TIERS.find(t => t.tier === currentTier + 1);
     if (!nextTierData) {
@@ -2234,7 +2223,7 @@ export class BaseSystem {
         title: 'TREIBSTOFF-TANK',
         iconName: 'fuel',
         currentTier: p.tankTier || 1,
-        maxTier: 8,
+        maxTier: TANK_TIERS.length,
         tiers: TANK_TIERS,
         apply: (tier) => p.upgradeTank(tier)
       },
@@ -2243,7 +2232,7 @@ export class BaseSystem {
         title: 'GEHÄUSESCHUTZ / PANZERUNG',
         iconName: 'shield-cog',
         currentTier: p.hullTier || 1,
-        maxTier: 8,
+        maxTier: HULL_TIERS.length,
         tiers: HULL_TIERS,
         apply: (tier) => p.upgradeHull(tier)
       },
@@ -2252,7 +2241,7 @@ export class BaseSystem {
         title: 'BOHRKOPF-BAUPLÄNE',
         iconName: 'pickaxe',
         currentTier: p.researchedDrillTier || p.drillTier || 1,
-        maxTier: 8,
+        maxTier: DRILL_DATA.length,
         tiers: DRILL_DATA,
         apply: (tier) => {
           p.researchedDrillTier = tier;
@@ -2263,7 +2252,7 @@ export class BaseSystem {
         title: 'ANTRIEB & STEIGFLUG',
         iconName: 'zap',
         currentTier: p.engineTier || 1,
-        maxTier: 8,
+        maxTier: ENGINE_TIERS.length,
         tiers: ENGINE_TIERS,
         apply: (tier) => p.upgradeEngine(tier)
       },
@@ -2272,7 +2261,7 @@ export class BaseSystem {
         title: 'FRACHTRAUM-KAPAZITÄT',
         iconName: 'container',
         currentTier: p.cargoTier || 1,
-        maxTier: 8,
+        maxTier: CARGO_TIERS.length,
         tiers: CARGO_TIERS,
         apply: (tier) => p.upgradeCargo(tier)
       },
@@ -2281,7 +2270,7 @@ export class BaseSystem {
         title: 'GEO-SENSOR & RADAR',
         iconName: 'radio',
         currentTier: p.sensorTier || 1,
-        maxTier: 8,
+        maxTier: SENSOR_TIERS.length,
         tiers: SENSOR_TIERS,
         apply: (tier) => p.upgradeSensor(tier)
       }
@@ -2306,25 +2295,25 @@ export class BaseSystem {
       const hasNext = track.currentTier < track.maxTier;
       const nextTier = hasNext ? track.tiers[track.currentTier] : null;
 
-      // Segmented Progress Bar (8 saubere Blöcke ohne umbrechenden Text)
+      // Segmented Progress Bar (saubere Blöcke ohne umbrechenden Text)
       let segmentsHtml = '<div class="segmented-progress-bar">';
       for (let s = 1; s <= track.maxTier; s++) {
         if (s <= track.currentTier) {
           segmentsHtml += `
             <div class="seg-step completed${s === track.currentTier ? ' current' : ''}">
-              <span>Stufe ${s}</span>
+              <span><span class="step-label">Stufe </span>${s}</span>
             </div>
           `;
         } else if (s === track.currentTier + 1) {
           segmentsHtml += `
             <div class="seg-step active">
-              <span>Stufe ${s}</span>
+              <span><span class="step-label">Stufe </span>${s}</span>
             </div>
           `;
         } else {
           segmentsHtml += `
             <div class="seg-step locked">
-              <span>Stufe ${s}</span>
+              <span><span class="step-label">Stufe </span>${s}</span>
             </div>
           `;
         }
@@ -2779,27 +2768,27 @@ export class BaseSystem {
     const canAffordSensor = checkAfford(nextSensorData);
 
     const renderDockCard = (cfg) => {
-      const { id, iconName, title, curTier = 1, maxTier = 8, curData, canUpgrade, nextData, canAfford, specialAction } = cfg;
+      const { id, iconName, title, curTier = 1, maxTier = 10, curData, canUpgrade, nextData, canAfford, specialAction } = cfg;
 
-      // Segmented Progress Bar wie im Labor (8 Blöcke)
+      // Segmented Progress Bar wie im Labor
       let segmentsHtml = '<div class="segmented-progress-bar">';
       for (let s = 1; s <= maxTier; s++) {
         if (s <= curTier) {
           segmentsHtml += `
             <div class="seg-step completed${s === curTier ? ' current' : ''}">
-              <span>Stufe ${s}</span>
+              <span><span class="step-label">Stufe </span>${s}</span>
             </div>
           `;
         } else if (s === curTier + 1) {
           segmentsHtml += `
             <div class="seg-step active">
-              <span>Stufe ${s}</span>
+              <span><span class="step-label">Stufe </span>${s}</span>
             </div>
           `;
         } else {
           segmentsHtml += `
             <div class="seg-step locked">
-              <span>Stufe ${s}</span>
+              <span><span class="step-label">Stufe </span>${s}</span>
             </div>
           `;
         }

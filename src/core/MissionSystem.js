@@ -157,15 +157,78 @@ export const MISSION_POOL = [
     minLevel: 5
   },
   {
+    id: 'sapphire_crystals',
+    title: 'Tiefblaue Saphire',
+    desc: 'Fördere 3 seltene Saphire aus den magmatischen Schichten.',
+    type: 'COLLECT_ORE',
+    targetOre: 'sapphire',
+    targetCount: 3,
+    rewardCash: 12000,
+    rewardXp: 4000,
+    minLevel: 6
+  },
+  {
+    id: 'depth_pioneer_7',
+    title: 'Tiefenbohrung VII: 1600 Meter',
+    desc: 'Dringe tief in den Urgestein-Sockel vor und erreiche 1.600 Meter Tiefe.',
+    type: 'REACH_DEPTH',
+    targetDepth: 1600,
+    rewardCash: 15000,
+    rewardXp: 5000,
+    minLevel: 6
+  },
+  {
+    id: 'amethyst_resonance',
+    title: 'Amethyst-Geoden',
+    desc: 'Berge 3 edle Amethyste aus den tiefen Kristallkavitationen.',
+    type: 'COLLECT_ORE',
+    targetOre: 'amethyst',
+    targetCount: 3,
+    rewardCash: 18000,
+    rewardXp: 6000,
+    minLevel: 7
+  },
+  {
+    id: 'depth_pioneer_8',
+    title: 'Tiefenbohrung VIII: 2000 Meter',
+    desc: 'Stoße in den äußeren Erdkern vor und erreiche 2.000 Meter Tiefe.',
+    type: 'REACH_DEPTH',
+    targetDepth: 2000,
+    rewardCash: 22000,
+    rewardXp: 7500,
+    minLevel: 8
+  },
+  {
+    id: 'diamond_hoard',
+    title: 'Diamanten-Vollendung',
+    desc: 'Sammle 4 ungeschliffene Diamanten aus den extremsten Druckkammern.',
+    type: 'COLLECT_ORE',
+    targetOre: 'diamond',
+    targetCount: 4,
+    rewardCash: 28000,
+    rewardXp: 9500,
+    minLevel: 8
+  },
+  {
     id: 'dark_matter_expedition',
     title: 'Artefakt der Dunkelmaterie',
-    desc: 'Fördere 1 Einheit Dunkelmaterie aus der tiefsten Abyssalzone.',
+    desc: 'Fördere 2 Einheiten Dunkelmaterie aus der tiefsten Abyssalzone.',
     type: 'COLLECT_ORE',
     targetOre: 'dark_matter',
-    targetCount: 1,
-    rewardCash: 24000,
-    rewardXp: 8000,
-    minLevel: 5
+    targetCount: 2,
+    rewardCash: 40000,
+    rewardXp: 15000,
+    minLevel: 9
+  },
+  {
+    id: 'depth_core_abyss',
+    title: 'Reise zum Planetenkern: 3000 Meter',
+    desc: 'Meistere die ultimative Herausforderung und stoße bis auf 3.000 Meter Tiefe vor!',
+    type: 'REACH_DEPTH',
+    targetDepth: 3000,
+    rewardCash: 65000,
+    rewardXp: 30000,
+    minLevel: 10
   }
 ];
 

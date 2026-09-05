@@ -283,20 +283,50 @@ export class MissionsProgressModal {
       {
         level: 3,
         title: 'Tiefen-Geologe',
-        desc: curLevel >= 3 ? 'Dichte Granitschicht (180-480m). Wertvolle Minerale & Adern.' : 'Dichte Granitschicht (180-480m). Unbekannte Tiefenadern.',
+        desc: curLevel >= 3 ? 'Dichte Granitschicht (180-350m). Wertvolle Minerale & Adern.' : 'Dichte Granitschicht (180-350m). Unbekannte Tiefenadern.',
         perks: 'Kristall-Fokuslinsen und Plasmabrenner freigeschaltet'
       },
       {
         level: 4,
-        title: 'Kern-Ingenieur',
-        desc: curLevel >= 4 ? 'Obsidian- und Basaltzone (480-950m). Magmatische Hochdruck-Zone.' : 'Obsidian- und Basaltzone (480-950m). Extreme Tiefenregion.',
-        perks: 'Quanten-Steuerkerne und Teleporter-Warp aktivierbar'
+        title: 'Basalt-Pionier',
+        desc: curLevel >= 4 ? 'Basalt- und Härteschicht (350-550m). Enormer Gebirgsdruck.' : 'Basalt- und Härteschicht (350-550m). Massiver Basaltfels.',
+        perks: 'Schwere Verbundpanzerung und Vektor-Booster'
       },
       {
         level: 5,
+        title: 'Kern-Ingenieur',
+        desc: curLevel >= 5 ? 'Obsidian- und Kristallzone (550-850m). Magmatische Hochdruck-Zone.' : 'Obsidian- und Kristallzone (550-850m). Magmatische Tiefenregion.',
+        perks: 'Quanten-Steuerkerne und Fusions-Reaktoren'
+      },
+      {
+        level: 6,
+        title: 'Magma-Schürfer',
+        desc: curLevel >= 6 ? 'Glühende Magma-Übergangszone (850-1.200m). Intensive Hitze.' : 'Glühende Magma-Übergangszone (850-1.200m). Glutflüssiges Gestein.',
+        perks: 'Nanit-Matrix-Chassis und Plasmareaktoren'
+      },
+      {
+        level: 7,
+        title: 'Kavitations-Experte',
+        desc: curLevel >= 7 ? 'Sub-Krusten-Kavitation (1.200-1.600m). Seltene Kristallgeoden.' : 'Sub-Krusten-Kavitation (1.200-1.600m). Tiefe Hohlraum-Systeme.',
+        perks: 'Kraftfeld-Deflektoren und Subraum-Module'
+      },
+      {
+        level: 8,
+        title: 'Urgestein-Meister',
+        desc: curLevel >= 8 ? 'Uralter Kontinentalsockel (1.600-2.000m). Extrem verdichtetes Gestein.' : 'Uralter Kontinentalsockel (1.600-2.000m). Unerreichtes Urgestein.',
+        perks: 'Singularitäts-Fräsen und Dimensions-Kompaktoren'
+      },
+      {
+        level: 9,
+        title: 'Quanten-Architekt',
+        desc: curLevel >= 9 ? 'Äußerer Erdkern (2.000-2.500m). Fluktuierende Gravitationsfelder.' : 'Äußerer Erdkern (2.000-2.500m). Der Gravitations-Kern.',
+        perks: 'Chrono-Tachyonen-Antrieb und Adamantit-Hülle'
+      },
+      {
+        level: 10,
         title: 'Meister der Tiefe',
-        desc: curLevel >= 5 ? 'Urgestein und Tiefenkern (950-1.600m+). Tiefste Erdkruste.' : 'Urgestein und Tiefenkern (950-1.600m+). Der unberührte Erdkern.',
-        perks: 'Antimaterie-Bohrer und Maximale Frachtkapazität'
+        desc: curLevel >= 10 ? 'Zentrum des Planetenkerns (2.500m+). Das Herz der Welt.' : 'Zentrum des Planetenkerns (2.500m+). Das unberührte Planetenherz.',
+        perks: 'Tachyonen-Disruptor X, Quanten-Aura und Omnispektrum'
       }
     ];
 
@@ -533,6 +563,33 @@ export class MissionsProgressModal {
         rewardComp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', iconName: 'atom' },
         rewardCash: 3400,
         rewardXp: 1900
+      },
+      {
+        id: 'geologist_deep_amethyst',
+        title: 'Subraum-Resonanz VI',
+        depthHint: 'Tiefe 1.000-1.500m (Basalt & Urgestein)',
+        reqs: { amethyst: 2, ruby: 3 },
+        rewardComp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', iconName: 'disc' },
+        rewardCash: 4800,
+        rewardXp: 2600
+      },
+      {
+        id: 'geologist_abyssal_diamonds',
+        title: 'Quanten-Partikelanalyse VII',
+        depthHint: 'Tiefe 1.500m+ (Urgesteins-Kern)',
+        reqs: { diamond: 2, sapphire: 2 },
+        rewardComp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', iconName: 'atom' },
+        rewardCash: 7500,
+        rewardXp: 3800
+      },
+      {
+        id: 'geologist_dark_matter_anomaly',
+        title: 'Kosmologische Tiefenstudie VIII',
+        depthHint: 'Tiefe 2.000m+ (Erdkern-Zentrum)',
+        reqs: { dark_matter: 1, diamond: 3 },
+        rewardComp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', iconName: 'atom' },
+        rewardCash: 15000,
+        rewardXp: 7500
       }
     ];
 
