@@ -59,7 +59,11 @@ class ToastManager {
 
     // Audio-Feedback
     if (sound && soundFx) {
-      soundFx.playError();
+      if (sound === 'cockpit' || sound === 'collision') {
+        soundFx.playCockpitAlarm();
+      } else {
+        soundFx.playError();
+      }
     }
 
     requestAnimationFrame(() => {

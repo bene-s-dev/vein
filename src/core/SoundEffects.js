@@ -755,6 +755,43 @@ class SoundManager {
     clank.start(now);
     clank.stop(now + 0.14);
   }
+
+  // -----------------------------------------------------------------------
+  // 13. COCKPIT KOLLISIONS- / RÜCKKEHR-WARNUNG (Flugzeug-Alarm "Whoop-Whoop")
+  // -----------------------------------------------------------------------
+  playCockpitAlarm() {
+    if (this.muted) return;
+    this.ensureContext();
+    if (!this.ctx) return;
+
+    const now = this.ctx.currentTime;
+
+    // Zwei rasante, ansteigende Tonstöße wie im Flugzeugcockpit (GPWS / TCAS Warnung)
+    [0, 0.20].forEach((delay) => {
+      const startTime = now + delay;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      const filter = this.ctx.createBiquadFilter();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(440, startTime);
+      osc.frequency.exponentialRampToValueAtTime(960, startTime + 0.14);
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(2400, startTime);
+
+      gain.gain.setValueAtTime(0.20, startTime);
+      gain.gain.setValueAtTime(0.20, startTime + 0.10);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.15);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.start(startTime);
+      osc.stop(startTime + 0.16);
+    });
+  }
 }
 
 export const soundFx = new SoundManager();

@@ -390,7 +390,8 @@ export class HUD {
         toastManager.show({
           id: 'return-fuel-2percent',
           text: 'Rückkehrwarnung',
-          duration: 4000
+          duration: 4000,
+          sound: 'cockpit'
         });
       }
     }
