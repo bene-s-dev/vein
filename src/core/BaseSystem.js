@@ -2779,7 +2779,32 @@ export class BaseSystem {
     const canAffordSensor = checkAfford(nextSensorData);
 
     const renderDockCard = (cfg) => {
-      const { id, iconName, title, curData, canUpgrade, nextData, canAfford, specialAction } = cfg;
+      const { id, iconName, title, curTier = 1, maxTier = 8, curData, canUpgrade, nextData, canAfford, specialAction } = cfg;
+
+      // Segmented Progress Bar wie im Labor (8 Blöcke)
+      let segmentsHtml = '<div class="segmented-progress-bar">';
+      for (let s = 1; s <= maxTier; s++) {
+        if (s <= curTier) {
+          segmentsHtml += `
+            <div class="seg-step completed${s === curTier ? ' current' : ''}">
+              <span>Stufe ${s}</span>
+            </div>
+          `;
+        } else if (s === curTier + 1) {
+          segmentsHtml += `
+            <div class="seg-step active">
+              <span>Stufe ${s}</span>
+            </div>
+          `;
+        } else {
+          segmentsHtml += `
+            <div class="seg-step locked">
+              <span>Stufe ${s}</span>
+            </div>
+          `;
+        }
+      }
+      segmentsHtml += '</div>';
 
       let compBadgeHtml = '';
       let levelBadgeHtml = '';
@@ -2830,41 +2855,99 @@ export class BaseSystem {
         `;
       }
 
-      const statText = canUpgrade && nextData
-        ? `${curData.stat} ➔ ${nextData.stat}`
-        : `${curData.stat}`;
+      let actionRowHtml = '';
+      if (canUpgrade && nextData) {
+        actionRowHtml = `
+          <div class="cat-action-row" style="margin-top: 6px; display: flex; align-items: center; background: rgba(15,23,42,0.6); padding: 8px 12px; border-radius: 8px; gap: 10px; box-sizing: border-box;">
+            <!-- Spalte 1: Modul-Name (200px) -->
+            <div style="width: 200px; min-width: 200px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              <strong style="color: #f8fafc; font-size: 13px;">${nextData.name}</strong>
+            </div>
+
+            <!-- Spalte 2: Stat (100px) -->
+            <div style="width: 100px; min-width: 100px; flex-shrink: 0;">
+              <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-weight: 700; font-size: 11.5px; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
+                ${nextData.stat}
+              </span>
+            </div>
+
+            <!-- Spalte 3: Spezialbauteile & Level (flex: 1, rechtsbündig) -->
+            <div style="flex: 1; min-width: 0; display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
+              ${levelBadgeHtml}
+              ${compBadgeHtml}
+            </div>
+
+            <!-- Spalte 4: Preis-Badge (90px) -->
+            <div style="width: 90px; min-width: 90px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+              ${costBadgeHtml}
+            </div>
+
+            <!-- Spalte 5: Button (110px) -->
+            <div style="width: 110px; min-width: 110px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end;">
+              ${actionBtnHtml}
+            </div>
+          </div>
+        `;
+      } else if (specialAction && mountDrillData) {
+        actionRowHtml = `
+          <div class="cat-action-row" style="margin-top: 6px; display: flex; align-items: center; background: rgba(15,23,42,0.6); padding: 8px 12px; border-radius: 8px; gap: 10px; box-sizing: border-box;">
+            <!-- Spalte 1: Modul-Name (200px) -->
+            <div style="width: 200px; min-width: 200px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              <strong style="color: #f8fafc; font-size: 13px;">${mountDrillData.name}</strong>
+            </div>
+
+            <!-- Spalte 2: Stat (100px) -->
+            <div style="width: 100px; min-width: 100px; flex-shrink: 0;">
+              <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-weight: 700; font-size: 11.5px; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
+                ${mountDrillData.stat}
+              </span>
+            </div>
+
+            <!-- Spalte 3: Bereit im Labor erforscht -->
+            <div style="flex: 1; min-width: 0; display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
+              <span style="color: #34d399; font-size: 11px; font-weight: 700;">Im Labor erforscht</span>
+            </div>
+
+            <!-- Spalte 4: Preis-Badge (90px) -->
+            <div style="width: 90px; min-width: 90px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+              <span style="color: #64748b; font-size: 11px;">Kostenlos</span>
+            </div>
+
+            <!-- Spalte 5: Button (110px) -->
+            <div style="width: 110px; min-width: 110px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end;">
+              ${actionBtnHtml}
+            </div>
+          </div>
+        `;
+      } else {
+        actionRowHtml = `
+          <div class="cat-action-row" style="margin-top: 6px; display: flex; align-items: center; background: rgba(15,23,42,0.6); padding: 8px 12px; border-radius: 8px; gap: 10px; box-sizing: border-box;">
+            <div style="flex: 1; min-width: 0;">
+              <strong style="color: #10b981; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px;">
+                ${icon('award', '', 14)} Vollständig aufgerüstet
+              </strong>
+            </div>
+            <div style="width: 110px; min-width: 110px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end;">
+              ${actionBtnHtml}
+            </div>
+          </div>
+        `;
+      }
 
       return `
-        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); padding: 10px 14px; border-radius: 10px; display: flex; align-items: center; gap: 10px; box-sizing: border-box;">
-          <!-- Spalte 1: Modul Titel (135px) -->
-          <div style="width: 135px; min-width: 135px; flex-shrink: 0;">
-            <strong style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #f8fafc; white-space: nowrap;">
-              ${icon(iconName, '', 14)} ${title}
-            </strong>
+        <div class="tech-category-card">
+          <div class="cat-header-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <div class="cat-title-wrap" style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; color: #f8fafc;">
+              ${icon(iconName, '', 16)}
+              <span>${title}</span>
+            </div>
+            <div class="cat-status-pill" style="font-size: 11px; color: #94a3b8; background: rgba(255, 255, 255, 0.06); padding: 3px 8px; border-radius: 6px;">
+              Stufe ${curTier}/${maxTier} • <strong style="color: #10b981;">${curData.stat}</strong>
+            </div>
           </div>
 
-          <!-- Spalte 2: Stat-Fortschritt (175px) -->
-          <div style="width: 175px; min-width: 175px; flex-shrink: 0;">
-            <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-weight: 700; font-size: 11.5px; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
-              ${statText}
-            </span>
-          </div>
-
-          <!-- Spalte 3: Spezialbauteile & Level (flex: 1, rechtsbündig) -->
-          <div style="flex: 1; min-width: 0; display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
-            ${levelBadgeHtml}
-            ${compBadgeHtml}
-          </div>
-
-          <!-- Spalte 4: Preis-Badge (90px) -->
-          <div style="width: 90px; min-width: 90px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
-            ${costBadgeHtml}
-          </div>
-
-          <!-- Spalte 5: Button (110px) -->
-          <div style="width: 110px; min-width: 110px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end;">
-            ${actionBtnHtml}
-          </div>
+          ${segmentsHtml}
+          ${actionRowHtml}
         </div>
       `;
     };
@@ -2872,7 +2955,9 @@ export class BaseSystem {
     const tankSection = renderDockCard({
       id: 'btn-upgrade-tank-dock',
       iconName: 'fuel',
-      title: 'Tank',
+      title: 'TREIBSTOFF-TANK',
+      curTier: curTankTier,
+      maxTier: TANK_TIERS.length,
       curData: curTankData,
       canUpgrade: canUpgradeTank,
       nextData: nextTankData,
@@ -2882,7 +2967,9 @@ export class BaseSystem {
     const hullSection = renderDockCard({
       id: 'btn-upgrade-hull-dock',
       iconName: 'shield-cog',
-      title: 'Hülle',
+      title: 'GEHÄUSESCHUTZ / PANZERUNG',
+      curTier: curHullTier,
+      maxTier: HULL_TIERS.length,
       curData: curHullData,
       canUpgrade: canUpgradeHull,
       nextData: nextHullData,
@@ -2892,10 +2979,12 @@ export class BaseSystem {
     const drillSection = renderDockCard({
       id: 'btn-upgrade-drill-dock',
       iconName: 'pickaxe',
-      title: 'Bohrkopf',
+      title: 'BOHRKOPF-WERKSTATT',
+      curTier: curDrillTier,
+      maxTier: DRILL_DATA.length,
       curData: curDrillData,
       canUpgrade: canUpgradeDrill,
-      nextData: nextDrillData,
+      nextData: canMount ? mountDrillData : nextDrillData,
       canAfford: canAffordDrill,
       specialAction: canMount ? `
         <button id="btn-mount-drill-dock" class="btn-buy" style="width: 100%; height: 30px; padding: 0 10px; font-size: 11px; font-weight: 800; background: linear-gradient(135deg, #10b981, #059669); display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
@@ -2907,7 +2996,9 @@ export class BaseSystem {
     const engineSection = renderDockCard({
       id: 'btn-upgrade-engine-dock',
       iconName: 'zap',
-      title: 'Antrieb',
+      title: 'ANTRIEB & STEIGFLUG',
+      curTier: curEngineTier,
+      maxTier: ENGINE_TIERS.length,
       curData: curEngineData,
       canUpgrade: canUpgradeEngine,
       nextData: nextEngineData,
@@ -2917,7 +3008,9 @@ export class BaseSystem {
     const cargoSection = renderDockCard({
       id: 'btn-upgrade-cargo-dock',
       iconName: 'container',
-      title: 'Frachtraum',
+      title: 'FRACHTRAUM-KAPAZITÄT',
+      curTier: curCargoTier,
+      maxTier: CARGO_TIERS.length,
       curData: curCargoData,
       canUpgrade: canUpgradeCargo,
       nextData: nextCargoData,
@@ -2927,7 +3020,9 @@ export class BaseSystem {
     const sensorSection = renderDockCard({
       id: 'btn-upgrade-sensor-dock',
       iconName: 'radio',
-      title: 'Radar-Sensor',
+      title: 'GEO-SENSOR & RADAR',
+      curTier: curSensorTier,
+      maxTier: SENSOR_TIERS.length,
       curData: curSensorData,
       canUpgrade: canUpgradeSensor,
       nextData: nextSensorData,
