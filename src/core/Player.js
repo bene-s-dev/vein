@@ -257,6 +257,27 @@ export class Player {
       frequency: 25,
       emitting: false
     }).setDepth(9);
+
+    // Sanfte Schwebedüsen (wenn der Driller in der Luft schwebt, aber nicht hochfliegt)
+    this.leftHoverParticles = scene.add.particles(0, 0, 'particle_thrust', {
+      speedY: { min: 25, max: 55 },
+      speedX: { min: -5, max: 5 },
+      scale: { start: 0.65, end: 0.08 },
+      alpha: { start: 0.75, end: 0 },
+      lifespan: 110,
+      frequency: 32,
+      emitting: false
+    }).setDepth(9);
+
+    this.rightHoverParticles = scene.add.particles(0, 0, 'particle_thrust', {
+      speedY: { min: 25, max: 55 },
+      speedX: { min: -5, max: 5 },
+      scale: { start: 0.65, end: 0.08 },
+      alpha: { start: 0.75, end: 0 },
+      lifespan: 110,
+      frequency: 32,
+      emitting: false
+    }).setDepth(9);
   }
 
   get depthMeters() {
@@ -305,13 +326,38 @@ export class Player {
     this.headlight.setPosition(this.sprite.x, this.sprite.y);
     this.drawScanner();
 
-    // SICHERHEIT: Düsenstrahlen sofort stoppen, wenn nicht geflogen wird!
-    if (this.state !== PLAYER_STATES.FLYING) {
-      if (this.leftThrustParticles && this.leftThrustParticles.emitting) {
-        this.leftThrustParticles.stop();
-      }
-      if (this.rightThrustParticles && this.rightThrustParticles.emitting) {
-        this.rightThrustParticles.stop();
+    // Position der Düsen am Unterflur-Fahrgestell
+    const n1X = this.sprite.x - 7;
+    const n1Y = this.sprite.y + 15;
+    const n2X = this.sprite.x + 7;
+    const n2Y = this.sprite.y + 15;
+
+    if (this.leftThrustParticles) this.leftThrustParticles.setPosition(n1X, n1Y);
+    if (this.rightThrustParticles) this.rightThrustParticles.setPosition(n2X, n2Y);
+    if (this.leftHoverParticles) this.leftHoverParticles.setPosition(n1X, n1Y);
+    if (this.rightHoverParticles) this.rightHoverParticles.setPosition(n2X, n2Y);
+
+    if (this.state === PLAYER_STATES.FLYING) {
+      // Voller Steigflug: Große Düsenstrahlen an, sanfte Schwebedüsen aus
+      if (this.leftHoverParticles?.emitting) this.leftHoverParticles.stop();
+      if (this.rightHoverParticles?.emitting) this.rightHoverParticles.stop();
+    } else {
+      // Nicht im Steigflug: Große Düsenstrahlen sicher stoppen
+      if (this.leftThrustParticles?.emitting) this.leftThrustParticles.stop();
+      if (this.rightThrustParticles?.emitting) this.rightThrustParticles.stop();
+
+      // Prüfen ob Driller in der Luft schwebt (kein Boden unter den Ketten)
+      const isHovering = this.state !== PLAYER_STATES.DRILLING && this.isHoveringInAir();
+      if (isHovering) {
+        if (!this.leftHoverParticles?.emitting) {
+          this.leftHoverParticles?.start();
+          this.rightHoverParticles?.start();
+        }
+      } else {
+        if (this.leftHoverParticles?.emitting) {
+          this.leftHoverParticles?.stop();
+          this.rightHoverParticles?.stop();
+        }
       }
     }
 
@@ -596,6 +642,27 @@ export class Player {
     this.y = nextY;
     this.gy = (this.y - TILE_SIZE / 2) / TILE_SIZE;
     this.checkDepthProgress();
+  }
+
+  isHoveringInAir() {
+    if (!this.sprite) return false;
+
+    // Erdoberfläche:
+    if (this.sprite.y <= -15) {
+      // Über dem Schachteinstieg (gx 19-20) schwebt der Bohrer über dem Abgrund
+      return (this.gx >= 19 && this.gx <= 20);
+    }
+
+    // Unter Tage: prüfen ob unter den Ketten feste Kacheln liegen
+    const footY = this.sprite.y + 17;
+    const checkGy = Math.floor(footY / TILE_SIZE);
+    if (checkGy < 0) return true;
+
+    const leftGx = Math.floor((this.sprite.x - 8) / TILE_SIZE);
+    const rightGx = Math.floor((this.sprite.x + 8) / TILE_SIZE);
+
+    const solidGround = (this.gridSystem && (this.gridSystem.isSolid(leftGx, checkGy) || this.gridSystem.isSolid(rightGx, checkGy)));
+    return !solidGround;
   }
 
   stopFlying() {
@@ -1007,6 +1074,8 @@ export class Player {
     soundFx.stopDrive();
     if (this.leftThrustParticles) this.leftThrustParticles.stop();
     if (this.rightThrustParticles) this.rightThrustParticles.stop();
+    if (this.leftHoverParticles) this.leftHoverParticles.stop();
+    if (this.rightHoverParticles) this.rightHoverParticles.stop();
     if (this.drillParticles) this.drillParticles.stop();
     this.cancelDrilling();
 
