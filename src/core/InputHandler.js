@@ -18,14 +18,26 @@ export class InputHandler {
     // Desktop Tastatur
     this.cursors = scene.input.keyboard.createCursorKeys();
     this.wasd = {
-      W: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
-      A: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
-      S: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
-      D: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D)
+      W: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W, false),
+      A: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A, false),
+      S: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S, false),
+      D: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D, false)
     };
 
-    this.keyEsc = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
-    this.keyP = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.P);
+    this.keyEsc = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC, false);
+    this.keyP = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.P, false);
+
+    // Tastatur-Capture für Buchstaben freigeben, damit Texteingaben (z. B. 'delete') überall funktionieren
+    if (scene.input.keyboard.removeCapture) {
+      scene.input.keyboard.removeCapture([
+        Phaser.Input.Keyboard.KeyCodes.W,
+        Phaser.Input.Keyboard.KeyCodes.A,
+        Phaser.Input.Keyboard.KeyCodes.S,
+        Phaser.Input.Keyboard.KeyCodes.D,
+        Phaser.Input.Keyboard.KeyCodes.ESC,
+        Phaser.Input.Keyboard.KeyCodes.P
+      ]);
+    }
 
     const handlePauseKey = () => {
       if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
@@ -196,6 +208,11 @@ export class InputHandler {
   }
 
   getDirection() {
+    // Wenn der Fokus in einem Eingabefeld liegt (z. B. Spielstand löschen 'delete')
+    if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+      return null;
+    }
+
     // 1. Mobile Jetpack Button hat Vorrang für Aufstieg
     if (this.flyButtonPressed) {
       return 'UP';

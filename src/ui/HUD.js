@@ -729,6 +729,15 @@ export class HUD {
         return isMatch;
       };
 
+      ['keydown', 'keyup', 'keypress'].forEach((evt) => {
+        deleteInput.addEventListener(evt, (e) => {
+          e.stopPropagation();
+          if (evt === 'keydown' && e.key === 'Enter' && checkMatch()) {
+            executeDelete();
+          }
+        });
+      });
+
       deleteInput.addEventListener('input', checkMatch);
 
       const executeDelete = () => {
@@ -739,12 +748,6 @@ export class HUD {
           window.location.reload();
         }
       };
-
-      deleteInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && checkMatch()) {
-          executeDelete();
-        }
-      });
 
       deleteConfirmBtn.onclick = executeDelete;
     }

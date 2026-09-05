@@ -64,15 +64,15 @@ export function getRefinedOreNetValue(oreKey) {
 // Bohrkopf-Stufen & DPS (Entwicklung im Labor -> Montage im Hangar)
 export const DRILL_TIERS = [
   { tier: 1, name: 'Stahl-Bohrkopf', stat: '34 DPS', cost: 0, comp: null, level: 1, desc: 'Solider Bohrkopf für Humus & lockere Erde (ca. 2.5s pro Block).' },
-  { tier: 2, name: 'Wolframkarbid-Spitze', stat: '45 DPS', cost: 220, comp: null, level: 1, desc: 'Fräst spürbar flüssiger durch Erde (ca. 1.9s) und Schiefer.' },
-  { tier: 3, name: 'Gehärteter Meißel Mk.III', stat: '60 DPS', cost: 480, comp: null, level: 1, desc: 'Schneidet zügig durch Stein und zerbröckelt Fels.' },
-  { tier: 4, name: 'Titan-Diamant-Kopf Mk.IV', stat: '82 DPS', cost: 1050, comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 }, level: 2, desc: 'Hydraulisch verstärkte Fräse zermalmt harte Granitadern.' },
-  { tier: 5, name: 'Hochdruck-Fräse Mk.V', stat: '115 DPS', cost: 2200, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 }, level: 3, desc: 'Panzerung und Zahnkränze fräsen mühelos durch Granit und Basalt.' },
-  { tier: 6, name: 'Plasma-Schneidbrenner Mk.VI', stat: '165 DPS', cost: 4500, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 1 }, level: 4, desc: 'Fokussierter Plasmastrahl schmilzt Obsidian-Gestein.' },
-  { tier: 7, name: 'Laser-Kavitationsmeißel Mk.VII', stat: '240 DPS', cost: 9000, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 5, desc: 'Höchste Schneidleistung für schwerste Tiefenerze.' },
-  { tier: 8, name: 'Antimaterie-Bohrer Mk.VIII', stat: '350 DPS', cost: 17500, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 6, desc: 'Fräst durch das härteste Urgestein wie Butter.' },
-  { tier: 9, name: 'Singularitäts-Fräse Mk.IX', stat: '500 DPS', cost: 28000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 8, desc: 'Erzeugt Mikrogravitations-Kollapse vor dem Bohrkopf.' },
-  { tier: 10, name: 'Tachyonen-Disruptor X', stat: '700 DPS', cost: 45000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 3 }, level: 10, desc: 'Zersetzt die Molekularstruktur des Erdkerns in Sekundenbruchteilen.' }
+  { tier: 2, name: 'Wolframkarbid-Spitze', stat: '45 DPS', cost: 520, comp: null, level: 1, desc: 'Fräst spürbar flüssiger durch Erde (ca. 1.9s) und Schiefer.' },
+  { tier: 3, name: 'Gehärteter Meißel Mk.III', stat: '60 DPS', cost: 1750, comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 }, level: 1, desc: 'Schneidet zügig durch Stein und zerbröckelt Fels.' },
+  { tier: 4, name: 'Titan-Diamant-Kopf Mk.IV', stat: '82 DPS', cost: 4600, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 }, level: 2, desc: 'Hydraulisch verstärkte Fräse zermalmt harte Granitadern.' },
+  { tier: 5, name: 'Hochdruck-Fräse Mk.V', stat: '115 DPS', cost: 12000, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 2 }, level: 3, desc: 'Panzerung und Zahnkränze fräsen mühelos durch Granit und Basalt.' },
+  { tier: 6, name: 'Plasma-Schneidbrenner Mk.VI', stat: '165 DPS', cost: 27000, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 1 }, level: 4, desc: 'Fokussierter Plasmastrahl schmilzt Obsidian-Gestein.' },
+  { tier: 7, name: 'Laser-Kavitationsmeißel Mk.VII', stat: '240 DPS', cost: 58000, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 5, desc: 'Höchste Schneidleistung für schwerste Tiefenerze.' },
+  { tier: 8, name: 'Antimaterie-Bohrer Mk.VIII', stat: '350 DPS', cost: 125000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 1 }, level: 6, desc: 'Fräst durch das härteste Urgestein wie Butter.' },
+  { tier: 9, name: 'Singularitäts-Fräse Mk.IX', stat: '500 DPS', cost: 245000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 8, desc: 'Erzeugt Mikrogravitations-Kollapse vor dem Bohrkopf.' },
+  { tier: 10, name: 'Tachyonen-Disruptor X', stat: '700 DPS', cost: 480000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 3 }, level: 10, desc: 'Zersetzt die Molekularstruktur des Erdkerns in Sekundenbruchteilen.' }
 ];
 export const DRILL_DPS = [34, 45, 60, 82, 115, 165, 240, 350, 500, 700];
 export const DRILL_DATA = DRILL_TIERS;
@@ -80,15 +80,15 @@ export const DRILL_DATA = DRILL_TIERS;
 // Zentrale Depot-Ausbaustufen (10 Tiers mit linear-exponentieller Kapazität)
 export const DEPOT_TIERS = [
   { tier: 1, capacity: 10, costCash: 0, label: 'Kompaktes Lagerfach' },
-  { tier: 2, capacity: 25, costCash: 250, label: 'Erweitertes Regallager' },
-  { tier: 3, capacity: 60, costCash: 800, costComp: { hydraulic_part: 1 }, compName: '1x Hydraulikzylinder', label: 'Automatisierte Förderbrücke' },
-  { tier: 4, capacity: 150, costCash: 2200, costComp: { titan_alloy: 1 }, compName: '1x Titan-Legierung', label: 'Schwergut-Containerterminal' },
-  { tier: 5, capacity: 350, costCash: 5500, costComp: { titan_alloy: 2 }, compName: '2x Titan-Legierung', label: 'Industrie-Großlager' },
-  { tier: 6, capacity: 650, costCash: 11000, costComp: { laser_lens: 2 }, compName: '2x Kristall-Fokuslinse', label: 'Logistik-Zentralverteiler' },
-  { tier: 7, capacity: 1000, costCash: 18000, costComp: { quantum_chip: 1 }, compName: '1x Quanten-Steuerkern', label: 'Quanten-Kompressionslager' },
-  { tier: 8, capacity: 1500, costCash: 26000, costComp: { quantum_chip: 2 }, compName: '2x Quanten-Steuerkern', label: 'Subraum-Speicherkomplex' },
-  { tier: 9, capacity: 2200, costCash: 35000, costComp: { quantum_chip: 2 }, compName: '2x Quanten-Kern, 2x Titan', label: 'Megaspeicher-Matrix' },
-  { tier: 10, capacity: 3000, costCash: 48000, costComp: { quantum_chip: 3 }, compName: '3x Quanten-Steuerkern', label: 'Interdimensionales Zentrallager' }
+  { tier: 2, capacity: 25, costCash: 450, label: 'Erweitertes Regallager' },
+  { tier: 3, capacity: 60, costCash: 1600, costComp: { hydraulic_part: 1 }, compName: '1x Hydraulikzylinder', label: 'Automatisierte Förderbrücke' },
+  { tier: 4, capacity: 150, costCash: 4200, costComp: { titan_alloy: 1 }, compName: '1x Titan-Legierung', label: 'Schwergut-Containerterminal' },
+  { tier: 5, capacity: 350, costCash: 11000, costComp: { titan_alloy: 2 }, compName: '2x Titan-Legierung', label: 'Industrie-Großlager' },
+  { tier: 6, capacity: 650, costCash: 24000, costComp: { laser_lens: 2 }, compName: '2x Kristall-Fokuslinse', label: 'Logistik-Zentralverteiler' },
+  { tier: 7, capacity: 1000, costCash: 52000, costComp: { quantum_chip: 1 }, compName: '1x Quanten-Steuerkern', label: 'Quanten-Kompressionslager' },
+  { tier: 8, capacity: 1500, costCash: 115000, costComp: { quantum_chip: 2 }, compName: '2x Quanten-Steuerkern', label: 'Subraum-Speicherkomplex' },
+  { tier: 9, capacity: 2200, costCash: 230000, costComp: { quantum_chip: 2 }, compName: '2x Quanten-Steuerkern', label: 'Megaspeicher-Matrix' },
+  { tier: 10, capacity: 3000, costCash: 450000, costComp: { quantum_chip: 3 }, compName: '3x Quanten-Steuerkern', label: 'Interdimensionales Zentrallager' }
 ];
 
 // Spezial-Upgrade-Bauteile (Auftragsbelohnungen, als Plätze im Depot)
@@ -249,7 +249,7 @@ export class BaseSystem {
         spriteKey: 'building_drone_hangar',
         gx: -16,
         height: 70,
-        costCash: 650,
+        costCash: 2400,
         costComp: { hydraulic_part: 1 },
         isBuilt: false,
         storedOres: ['coal', 'copper'],
@@ -265,8 +265,8 @@ export class BaseSystem {
         spriteKey: 'building_teleporter',
         gx: 34,
         height: 76,
-        costCash: 1100,
-        costComp: { hydraulic_part: 2, titan_alloy: 1 },
+        costCash: 5800,
+        costComp: { hydraulic_part: 1, titan_alloy: 1 },
         isBuilt: false,
         action: () => this.openTeleporterModal()
       },
@@ -275,11 +275,11 @@ export class BaseSystem {
         title: 'KRAFTWERK',
         label: 'KRAFTWERK',
         iconName: 'zap',
-        desc: 'Generiert passives Einkommen (+€35 alle 8s) und verdoppelt die Basis-Auftankgeschwindigkeit.',
+        desc: 'Generiert passives Einkommen (+€65 alle 8s) und verdoppelt die Basis-Auftankgeschwindigkeit.',
         spriteKey: 'building_powerplant',
         gx: 42,
         height: 76,
-        costCash: 1950,
+        costCash: 14500,
         costComp: { titan_alloy: 2, laser_lens: 1 },
         isBuilt: false,
         timer: 0,
@@ -634,8 +634,8 @@ export class BaseSystem {
         pb.timer = (pb.timer || 0) + dt;
         if (pb.timer >= 8) {
           pb.timer = 0;
-          this.player.cash += 35;
-          pb.accumulatedCash = (pb.accumulatedCash || 0) + 35;
+          this.player.cash += 65;
+          pb.accumulatedCash = (pb.accumulatedCash || 0) + 65;
         }
       }
     });

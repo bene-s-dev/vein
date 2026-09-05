@@ -185,6 +185,11 @@ export class MissionsProgressModal {
               <span style="background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.3); color: #c084fc; font-weight: 800; font-size: 12px; padding: 4px 10px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
                 ${icon('award', '', 13)} ${mission.rewardXp} XP
               </span>
+              ${mission.rewardComp ? `
+                <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-weight: 800; font-size: 12px; padding: 4px 10px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+                  ${icon('package', '', 13)} +${mission.rewardComp.count || 1}x ${mission.rewardComp.name || 'Bauteil'}
+                </span>
+              ` : ''}
             </div>
           </div>
 
@@ -438,13 +443,18 @@ export class MissionsProgressModal {
                     <strong style="color: #f8fafc; font-size: 13px;">${m.title}</strong>
                     <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">${m.desc}</div>
                   </div>
-                  <div style="display: flex; gap: 6px; align-items: center;">
+                  <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
                     <span style="color: #fbbf24; font-weight: 700; font-size: 11.5px; display: inline-flex; align-items: center; gap: 3px;">
                       ${icon('coins', '', 12)} €${m.rewardCash}
                     </span>
                     <span style="color: #c084fc; font-weight: 700; font-size: 11.5px; display: inline-flex; align-items: center; gap: 3px;">
                       ${icon('award', '', 12)} ${m.rewardXp} XP
                     </span>
+                    ${m.rewardComp ? `
+                      <span style="color: #38bdf8; font-weight: 700; font-size: 11.5px; display: inline-flex; align-items: center; gap: 3px;">
+                        ${icon('package', '', 12)} +${m.rewardComp.count || 1} ${m.rewardComp.name || 'Bauteil'}
+                      </span>
+                    ` : ''}
                   </div>
                 </div>
 
