@@ -391,6 +391,10 @@ export class DrillerMenuModal {
             ${icon('coins', '', 13)}
             <span>ZUR ERZ-BÖRSE</span>
           </button>
+          <button id="btn-driller-to-depot" class="btn-action" style="height: 32px; font-size: 11.5px; font-weight: 800; padding: 0 14px; display: inline-flex; align-items: center; gap: 6px;">
+            ${icon('warehouse', '', 13)}
+            <span>ZUM DEPOT</span>
+          </button>
           <button id="btn-driller-to-hangar" class="btn-action" style="height: 32px; font-size: 11.5px; font-weight: 800; padding: 0 14px; display: inline-flex; align-items: center; gap: 6px;">
             ${icon('wrench', '', 13)}
             <span>ZUR WERKSTATT</span>
@@ -610,6 +614,16 @@ export class DrillerMenuModal {
         soundFx.playClick();
         if (this.baseSystem && this.baseSystem.openMarketModal) {
           this.baseSystem.openMarketModal();
+        }
+      };
+    }
+
+    const btnToDepot = bodyEl.querySelector('#btn-driller-to-depot');
+    if (btnToDepot) {
+      btnToDepot.onclick = () => {
+        soundFx.playClick();
+        if (this.baseSystem && this.baseSystem.openDepotModal) {
+          this.baseSystem.openDepotModal('ores');
         }
       };
     }

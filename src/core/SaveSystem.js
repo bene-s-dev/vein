@@ -99,6 +99,7 @@ export class SaveSystem {
         },
         buildings: buildingsData,
         refinery: bs && bs.getRefinerySaveData ? bs.getRefinerySaveData() : null,
+        depot: bs && bs.getDepotSaveData ? bs.getDepotSaveData() : null,
         mission: missionData
       };
 
@@ -228,6 +229,11 @@ export class SaveSystem {
       // 4b. Raffinerie-Status & Offline-Veredelung anhand Geräte-Uhrzeit
       if (bs && data.refinery && bs.loadRefinerySaveData) {
         bs.loadRefinerySaveData(data.refinery);
+      }
+
+      // 4c. Rohstoff- & Waren-Depot
+      if (bs && data.depot && bs.loadDepotSaveData) {
+        bs.loadDepotSaveData(data.depot);
       }
 
       // 5. Missions-Status

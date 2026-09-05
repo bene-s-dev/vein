@@ -1231,6 +1231,176 @@ export class AssetLoader {
       ctx.fill();
     });
 
+    // B2) ROHSTOFF- & WAREN-DEPOT (92x70) - Hochregallager & Schwergut-Containerterminal
+    createTexture('building_depot', 92, 70, (ctx) => {
+      // 1. Schweres Beton-Fundament mit Laderampe & Dehnungsfugen
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 65, 92, 5);
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(2, 61, 88, 5);
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(2, 60, 88, 1.5);
+
+      // Anfahrschutz-Puffer an der Rampe
+      ctx.fillStyle = '#090d16';
+      ctx.fillRect(10, 61, 3, 5);
+      ctx.fillRect(44, 61, 3, 5);
+      ctx.fillRect(80, 61, 3, 5);
+
+      // 2. Lager-Hauptgebäude (Stahlkonstruktion)
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(4, 12, 84, 49);
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(5, 13, 82, 47);
+
+      // Vertikale Profilrippen auf der Fassade
+      for (let x = 6; x < 86; x += 3.5) {
+        ctx.fillStyle = '#162032';
+        ctx.fillRect(x, 14, 1, 45);
+        ctx.fillStyle = '#26354a';
+        ctx.fillRect(x + 1, 14, 1, 45);
+      }
+
+      // Stahlbau-Eckpfeiler
+      const cornerPillars = [4, 84];
+      cornerPillars.forEach(px => {
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(px, 12, 4, 49);
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(px + 1, 12, 2, 49);
+      });
+
+      // 3. Fracht-Sektionaltor links (x=10..46, y=26..61)
+      ctx.fillStyle = '#0b0f19';
+      ctx.fillRect(10, 26, 36, 35);
+      // Innenbeleuchtung / Regale im Hintergrund
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(11, 27, 34, 33);
+      // Glimmende Innenlampe
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.18)';
+      ctx.beginPath();
+      ctx.moveTo(28, 27);
+      ctx.lineTo(12, 60);
+      ctx.lineTo(44, 60);
+      ctx.closePath();
+      ctx.fill();
+
+      // Palette mit Kisten im Torbereich
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(14, 56, 12, 3);
+      ctx.fillStyle = '#0284c7';
+      ctx.fillRect(15, 48, 10, 8);
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(16, 49, 8, 2);
+
+      // Zweite Kiste (Erz-Behälter)
+      ctx.fillStyle = '#92400e';
+      ctx.fillRect(28, 51, 12, 8);
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillRect(29, 52, 10, 2);
+
+      // Aufgerolltes Rolltor oben mit Lamellen
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(10, 26, 36, 6);
+      ctx.fillStyle = '#475569';
+      for (let ly = 27; ly < 32; ly += 1.5) {
+        ctx.fillRect(10, ly, 36, 0.8);
+      }
+
+      // Gelb-schwarze Warnstreifen über dem Tor
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(9, 23, 38, 3);
+      for (let wx = 10; wx < 46; wx += 5) {
+        ctx.fillStyle = '#fbbf24';
+        ctx.beginPath();
+        ctx.moveTo(wx, 26);
+        ctx.lineTo(wx + 2.5, 23);
+        ctx.lineTo(wx + 4.5, 23);
+        ctx.lineTo(wx + 2, 26);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // 4. Rechts: Gestapelte Schwerlast-Seefracht-Container (x=50..82)
+      // Unterer Container (Blau / Cyan für Mineralien)
+      ctx.fillStyle = '#0369a1';
+      ctx.fillRect(50, 41, 32, 19);
+      ctx.fillStyle = '#0284c7';
+      ctx.fillRect(51, 42, 30, 17);
+      for (let cx = 53; cx < 80; cx += 3) {
+        ctx.fillStyle = '#075985';
+        ctx.fillRect(cx, 43, 1, 15);
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(cx + 1, 43, 0.8, 15);
+      }
+      // Eckbeschläge
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(50, 41, 3, 3);
+      ctx.fillRect(79, 41, 3, 3);
+      ctx.fillRect(50, 57, 3, 3);
+      ctx.fillRect(79, 57, 3, 3);
+
+      // Oberer Container (Orange / Bernstein für Legierungen)
+      ctx.fillStyle = '#b45309';
+      ctx.fillRect(52, 21, 30, 19);
+      ctx.fillStyle = '#d97706';
+      ctx.fillRect(53, 22, 28, 17);
+      for (let cx = 55; cx < 80; cx += 3) {
+        ctx.fillStyle = '#92400e';
+        ctx.fillRect(cx, 23, 1, 15);
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(cx + 1, 23, 0.8, 15);
+      }
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(52, 21, 3, 3);
+      ctx.fillRect(79, 21, 3, 3);
+      ctx.fillRect(52, 37, 3, 3);
+      ctx.fillRect(79, 37, 3, 3);
+
+      // 5. Dachkonstruktion mit Deckenkran-Laufkatze & Entlüftung
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(2, 9, 88, 4);
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(3, 10, 86, 2);
+
+      // Dach-Kranbahn (Gelber I-Träger mit Seilzug)
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillRect(20, 5, 30, 4);
+      ctx.fillStyle = '#b45309';
+      ctx.fillRect(20, 8, 30, 1);
+      // Laufkatze mit Lastseil & Magnetkralle
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(32, 3, 7, 5);
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillRect(35, 8, 1, 6);
+      ctx.fillStyle = '#ef4444';
+      ctx.fillRect(33, 14, 5, 3);
+
+      // Funk- & Logistik-Antenne links auf dem Dach
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(7, 2, 2, 8);
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(6, 1, 4, 1.5);
+      // Rote Status-Blinkleuchte
+      ctx.fillStyle = '#ef4444';
+      ctx.fillRect(7.5, 0, 1, 1);
+
+      // 6. Digitales Leuchtschild "DEPOT" über dem Tor
+      ctx.fillStyle = '#090d16';
+      ctx.fillRect(12, 14, 32, 7);
+      ctx.fillStyle = '#0284c7';
+      ctx.strokeRect(12, 14, 32, 7);
+      // Leuchtschrift
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = 'bold 5px sans-serif';
+      ctx.fillText('DEPOT', 18, 19.5);
+      // Kleines Container-Piktogramm
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(14, 16, 2.5, 3);
+      ctx.fillStyle = '#0ea5e9';
+      ctx.fillRect(14.5, 16.5, 1.5, 2);
+    });
+
     // C) FABRIK & WERKSTOFF-PRODUKTION (104x72) - Authentisches Schmelzwerk mit Abstichrinne & Gießerei
     createTexture('building_factory', 104, 72, (ctx) => {
       // 1. Schwerlast-Fundament & Riffelblech-Boden

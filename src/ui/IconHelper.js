@@ -51,7 +51,8 @@ export const BUILDING_ICONS = {
   refinery: 'factory',
   drone_hangar: 'bot',
   powerplant: 'zap',
-  teleporter: 'navigation'
+  teleporter: 'navigation',
+  depot: 'warehouse'
 };
 
 /**
