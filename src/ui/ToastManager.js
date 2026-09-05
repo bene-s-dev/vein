@@ -1,10 +1,8 @@
-import { icon, refreshIcons } from './IconHelper.js';
 import { soundFx } from '../core/SoundEffects.js';
 
 /**
  * ToastManager
- * Modernes, animiertes Benachrichtigungssystem oben rechts für Warnungen,
- * Status-Updates und Missions-Hinweise.
+ * Schlanke, rote Warnungs-Toasts oben zentriert mit Achtung-Emoji.
  */
 class ToastManager {
   constructor() {
@@ -26,96 +24,53 @@ class ToastManager {
   }
 
   /**
-   * Zeigt einen Toast-Hinweis oben rechts an.
+   * Zeigt einen kompakten roten Warn-Toast oben mittig an.
    * @param {Object} options
-   * @param {string} [options.id] - Eindeutige ID (verhindert doppeltes Einblenden der gleichen Warnung)
-   * @param {string} [options.title='Warnung'] - Überschrift
-   * @param {string} [options.message=''] - Hinweistext
-   * @param {'warning'|'critical'|'info'} [options.type='warning'] - Art des Toasts (Farbschema)
-   * @param {string} [options.iconName='triangle-alert'] - Lucide-Icon-Name
-   * @param {Array<string>|string} [options.badges=[]] - Kleine Daten-Badges unter dem Text
-   * @param {number} [options.duration=5000] - Anzeigedauer in ms (0 = dauerhaft)
-   * @param {boolean} [options.sound=true] - Ob ein Benachrichtigungston abgespielt werden soll
+   * @param {string} [options.id] - Eindeutige ID
+   * @param {string} [options.text] - Angezeigter Begriff (z. B. 'Tanken empfohlen' oder 'Rückkehrwarnung')
+   * @param {number} [options.duration=4000] - Anzeigedauer in ms
+   * @param {boolean} [options.sound=true] - Ob ein Warnton ertönen soll
    */
   show(options = {}) {
     const {
       id = 'toast_' + Date.now(),
-      title = 'Warnung',
-      message = '',
-      type = 'warning',
-      iconName = 'triangle-alert',
-      badges = [],
-      duration = 5000,
+      text = options.text || options.title || 'Warnung',
+      duration = 4000,
       sound = true
     } = options;
 
     const container = this.getContainer();
     if (!container) return;
 
-    // Falls ein Toast mit dieser ID bereits existiert, ersetzen
     if (this.toasts.has(id)) {
       this.dismiss(id, false);
     }
 
     const toastEl = document.createElement('div');
-    toastEl.className = `game-toast toast-${type}`;
+    toastEl.className = 'game-toast';
     toastEl.id = `toast-item-${id}`;
 
-    const badgesList = Array.isArray(badges) ? badges : (badges ? [badges] : []);
-    const badgesHtml = badgesList.length > 0
-      ? `<div class="toast-badges">
-          ${badgesList.map(b => `<span class="toast-badge">${b}</span>`).join('')}
-        </div>`
-      : '';
-
     toastEl.innerHTML = `
-      <div class="toast-icon-wrap">
-        ${icon(iconName, '', 16)}
-      </div>
-      <div class="toast-body">
-        <div class="toast-header-row">
-          <span class="toast-title">${title}</span>
-          <button class="toast-close-btn" title="Schließen">&times;</button>
-        </div>
-        ${message ? `<p class="toast-msg">${message}</p>` : ''}
-        ${badgesHtml}
-      </div>
-      ${duration > 0 ? `
-        <div class="toast-progress">
-          <div class="toast-progress-fill" style="transition-duration: ${duration}ms;"></div>
-        </div>
-      ` : ''}
+      <span class="toast-emoji">⚠️</span>
+      <span class="toast-label">${text}</span>
     `;
 
     container.appendChild(toastEl);
-    refreshIcons(toastEl);
 
     // Audio-Feedback
     if (sound && soundFx) {
       soundFx.playError();
     }
 
-    // Einblende-Animation
     requestAnimationFrame(() => {
       toastEl.classList.add('show');
-      const progressFill = toastEl.querySelector('.toast-progress-fill');
-      if (progressFill) {
-        requestAnimationFrame(() => {
-          progressFill.style.transform = 'scaleX(0)';
-        });
-      }
     });
 
-    // Klick auf Schließen
-    const closeBtn = toastEl.querySelector('.toast-close-btn');
-    if (closeBtn) {
-      closeBtn.onclick = (e) => {
-        e.stopPropagation();
-        this.dismiss(id);
-      };
-    }
+    toastEl.onclick = (e) => {
+      e.stopPropagation();
+      this.dismiss(id);
+    };
 
-    // Auto-Dismiss
     let timeoutId = null;
     if (duration > 0) {
       timeoutId = setTimeout(() => {
@@ -125,8 +80,7 @@ class ToastManager {
 
     this.toasts.set(id, { element: toastEl, timeoutId });
 
-    // Begrenzung auf maximal 3 gleichzeitige Toasts
-    if (this.toasts.size > 3) {
+    if (this.toasts.size > 2) {
       const oldestKey = this.toasts.keys().next().value;
       this.dismiss(oldestKey);
     }
@@ -149,7 +103,7 @@ class ToastManager {
         if (el.parentNode) {
           el.parentNode.removeChild(el);
         }
-      }, 350);
+      }, 250);
     } else {
       el.parentNode.removeChild(el);
     }

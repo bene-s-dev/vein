@@ -375,12 +375,8 @@ export class HUD {
       if (fuelPctRaw < 15) {
         toastManager.show({
           id: 'fuel-low-entry',
-          title: 'Treibstoff niedrig',
-          message: 'Einfahrt unter Tage mit unter 15% Tank! Vor längeren Abstiegen auftanken empfohlen.',
-          type: 'warning',
-          iconName: 'fuel',
-          badges: [`Tank: ${Math.round(fuelPctRaw)}%`],
-          duration: 5000
+          text: 'Tanken empfohlen',
+          duration: 4000
         });
       }
     }
@@ -393,15 +389,8 @@ export class HUD {
         this.warnedReturn2Percent = true;
         toastManager.show({
           id: 'return-fuel-2percent',
-          title: 'Rückkehr-Warnung',
-          message: 'Kritisches Tankminimum fast erreicht! Nur noch 2% Puffer für den garantierten Rückweg.',
-          type: 'critical',
-          iconName: 'triangle-alert',
-          badges: [
-            `Tank: ${Math.round(fuelPctRaw)}%`,
-            `Rückweg-Minimum: ${Math.round(returnPct)}% (+2% Puffer)`
-          ],
-          duration: 6500
+          text: 'Rückkehrwarnung',
+          duration: 4000
         });
       }
     }
