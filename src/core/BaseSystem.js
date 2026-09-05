@@ -91,6 +91,14 @@ export const DEPOT_TIERS = [
   { tier: 10, capacity: 3000, costCash: 48000, costComp: { quantum_chip: 3 }, compName: '3x Quanten-Steuerkern', label: 'Interdimensionales Zentrallager' }
 ];
 
+// Spezial-Upgrade-Bauteile (Auftragsbelohnungen, als Plätze im Depot)
+export const COMPONENT_DATA = {
+  hydraulic_part: { name: 'Hydraulik-Zylinder', icon: 'cog', color: '#38bdf8' },
+  titan_alloy: { name: 'Titan-Legierung', icon: 'shield-check', color: '#60a5fa' },
+  laser_lens: { name: 'Kristall-Fokuslinse', icon: 'disc', color: '#c084fc' },
+  quantum_chip: { name: 'Quanten-Steuerkern', icon: 'atom', color: '#34d399' }
+};
+
 // Fabrik-Produkte (Industrielle Werkstoffe mit hohem Börsenwert)
 // Jedes Produkt benötigt zusätzlich 2x Kohle als Prozesshitze/Brennstoff
 export const FACTORY_PRODUCTS = {
@@ -1648,7 +1656,70 @@ export class BaseSystem {
       `;
     });
 
-    // 4. Leere Slots für den echten Inventar-Grid-Look
+    // 4. Spezial-Bauteile (als Plätze im Depot-Inventar)
+    const compKeys = Object.keys(COMPONENT_DATA).filter(k => {
+      return (this.player.components?.[k] || 0) > 0;
+    });
+
+    compKeys.forEach(key => {
+      filledCount++;
+      const count = this.player.components?.[key] || 0;
+      const compInfo = COMPONENT_DATA[key] || { name: key, icon: 'box', color: '#c084fc' };
+
+      gridItemsHtml += `
+        <div class="depot-grid-item" data-type="component" data-key="${key}" style="
+          position: relative;
+          background: rgba(15, 23, 42, 0.9);
+          border: 1px solid rgba(168, 85, 247, 0.45);
+          border-radius: 10px;
+          padding: 10px 6px 8px 6px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          min-height: 84px;
+          box-sizing: border-box;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+          user-select: none;
+          cursor: default;
+        " title="${compInfo.name}: ${count}x im Lager (Spezial-Bauteil)">
+          <!-- Anzahl Badge -->
+          <span style="
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #7c3aed;
+            border: 1px solid #c084fc;
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 1px 5px;
+            border-radius: 99px;
+            line-height: 1.2;
+          ">${count}x</span>
+
+          <!-- Bauteil Icon -->
+          <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; margin-top: 2px; color: ${compInfo.color || '#c084fc'};">
+            ${icon(compInfo.icon, '', 28)}
+          </div>
+
+          <!-- Bauteil Name -->
+          <span style="
+            font-size: 11px;
+            font-weight: 700;
+            color: #f8fafc;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+          ">${compInfo.name}</span>
+        </div>
+      `;
+    });
+
+    // 5. Leere Slots für den echten Inventar-Grid-Look
     const minSlots = 16;
     const totalSlots = Math.max(minSlots, Math.ceil(filledCount / 4) * 4);
     const emptySlotsCount = Math.max(0, totalSlots - filledCount);
@@ -2363,17 +2434,6 @@ export class BaseSystem {
       }
     ];
 
-    // Komponenten-Übersicht im Labor-Header
-    const comps = p.components;
-    const compHeader = `
-      <div style="background: rgba(15,23,42,0.85); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-around; font-size: 12px; margin-bottom: 12px; flex-wrap: wrap; gap: 6px;">
-        <span style="display: inline-flex; align-items: center; gap: 4px;">${icon('cog', '', 13)} Hydraulik-Zylinder: <strong style="color: #38bdf8;">${comps.hydraulic_part || 0}</strong></span>
-        <span style="display: inline-flex; align-items: center; gap: 4px;">${icon('shield-check', '', 13)} Titan-Legierung: <strong style="color: #38bdf8;">${comps.titan_alloy || 0}</strong></span>
-        <span style="display: inline-flex; align-items: center; gap: 4px;">${icon('disc', '', 13)} Kristall-Fokuslinse: <strong style="color: #38bdf8;">${comps.laser_lens || 0}</strong></span>
-        <span style="display: inline-flex; align-items: center; gap: 4px;">${icon('atom', '', 13)} Quanten-Steuerkern: <strong style="color: #38bdf8;">${comps.quantum_chip || 0}</strong></span>
-      </div>
-    `;
-
     // Feste Kategorien mit Segmented Progress Bar (OHNE Filterleiste!)
     let cardsHtml = '<div class="tech-lab-categories" style="display: flex; flex-direction: column; gap: 14px; max-height: 480px; overflow-y: auto; padding-right: 4px;">';
 
@@ -2506,7 +2566,7 @@ export class BaseSystem {
     });
     cardsHtml += '</div>';
 
-    const fullContent = compHeader + cardsHtml;
+    const fullContent = cardsHtml;
     this.openModal(`
       <div style="display: flex; align-items: center; gap: 8px;">
         ${icon('microscope', '', 18)}
