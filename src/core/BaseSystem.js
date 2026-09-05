@@ -3671,10 +3671,10 @@ export class BaseSystem {
                 <div class="conveyor-arrow ${isSmelting ? 'running' : ''}" style="font-size: 10px;">▶▶</div>
               </div>
 
-              <!-- 3. Ausgang -->
+              <!-- 3. Ausgang (Depot) -->
               <div style="width: 72px; height: 44px; box-sizing: border-box; background: ${finishedSmelt.length > 0 ? 'rgba(16, 185, 129, 0.12)' : 'rgba(15,23,42,0.65)'}; border: 1px solid ${finishedSmelt.length > 0 ? 'rgba(16, 185, 129, 0.4)' : 'rgba(255,255,255,0.06)'}; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;">
-                <span style="color: ${finishedSmelt.length > 0 ? '#34d399' : '#64748b'};">${icon('check-circle', '', 12)}</span>
-                <span style="font-size: 10px; font-weight: 700; color: ${finishedSmelt.length > 0 ? '#34d399' : '#64748b'};">${finishedSmelt.length > 0 ? `${finishedSmelt.length} Barren` : 'Leer'}</span>
+                <span style="color: ${finishedSmelt.length > 0 ? '#34d399' : '#38bdf8'};">${icon('warehouse', '', 13)}</span>
+                <span style="font-size: 10px; font-weight: 700; color: ${finishedSmelt.length > 0 ? '#34d399' : '#38bdf8'};">${finishedSmelt.length > 0 ? `${finishedSmelt.length} Barren` : 'Depot'}</span>
               </div>
             </div>
           </div>
@@ -3730,10 +3730,10 @@ export class BaseSystem {
                 <div class="conveyor-arrow ${isCrafting ? 'running' : ''}" style="font-size: 10px;">▶▶</div>
               </div>
 
-              <!-- 3. Ausgang -->
+              <!-- 3. Ausgang (Depot) -->
               <div style="width: 72px; height: 44px; box-sizing: border-box; background: ${finishedCraft.length > 0 ? 'rgba(16, 185, 129, 0.12)' : 'rgba(15,23,42,0.65)'}; border: 1px solid ${finishedCraft.length > 0 ? 'rgba(16, 185, 129, 0.4)' : 'rgba(255,255,255,0.06)'}; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;">
-                <span style="color: ${finishedCraft.length > 0 ? '#34d399' : '#64748b'};">${icon('award', '', 12)}</span>
-                <span style="font-size: 10px; font-weight: 700; color: ${finishedCraft.length > 0 ? '#34d399' : '#64748b'};">${finishedCraft.length > 0 ? `${finishedCraft.length} Waren` : 'Leer'}</span>
+                <span style="color: ${finishedCraft.length > 0 ? '#34d399' : '#38bdf8'};">${icon('warehouse', '', 13)}</span>
+                <span style="font-size: 10px; font-weight: 700; color: ${finishedCraft.length > 0 ? '#34d399' : '#38bdf8'};">${finishedCraft.length > 0 ? `${finishedCraft.length} Waren` : 'Depot'}</span>
               </div>
             </div>
           </div>
