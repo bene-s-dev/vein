@@ -636,7 +636,7 @@ class SoundManager {
   }
 
   // -----------------------------------------------------------------------
-  // 9. SCHMELZOFEN (Amboss-Schlag & Zischen)
+  // 9. SCHMELZOFEN & FERTIGUNG (Harmonischer Amboss-Chime / Fertig-Klang)
   // -----------------------------------------------------------------------
   playSmelt() {
     if (this.muted) return;
@@ -645,37 +645,42 @@ class SoundManager {
 
     const now = this.ctx.currentTime;
 
-    // Metall-Glocke (helles Klirren)
-    const bell = this.ctx.createOscillator();
-    const bellGain = this.ctx.createGain();
-    bell.type = 'sine';
-    bell.frequency.setValueAtTime(880, now);
-    bell.frequency.exponentialRampToValueAtTime(440, now + 0.25);
-    bellGain.gain.setValueAtTime(0.10, now);
-    bellGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.25);
+    // 1. Feiner Amboss-Anschlag (kurzer Klopfton)
+    const tap = this.ctx.createOscillator();
+    const tapGain = this.ctx.createGain();
+    tap.type = 'triangle';
+    tap.frequency.setValueAtTime(520, now);
+    tap.frequency.exponentialRampToValueAtTime(240, now + 0.04);
+    tapGain.gain.setValueAtTime(0.08, now);
+    tapGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.045);
+    tap.connect(tapGain);
+    tapGain.connect(this.masterGain);
+    tap.start(now);
+    tap.stop(now + 0.05);
 
-    bell.connect(bellGain);
-    bellGain.connect(this.masterGain);
-    bell.start(now);
-    bell.stop(now + 0.25);
+    // 2. Warmer, harmonischer Metall-Zweiklang (A5 -> E6) mit kristallklarem Ausklingen
+    const tones = [
+      { freq: 880.00, delay: 0, gain: 0.07, decay: 0.28 },      // Vorstufe A5
+      { freq: 1318.51, delay: 0.05, gain: 0.11, decay: 0.50 },  // Glanzton E6 (Quinte)
+      { freq: 2637.02, delay: 0.05, gain: 0.035, decay: 0.32 }  // Kristalliner Oberton E7 (Oktave)
+    ];
 
-    // Zischen (Heißes Metall in Wasser)
-    const hiss = this.createNoiseBufferSource('pink');
-    if (hiss) {
-      const flt = this.ctx.createBiquadFilter();
-      flt.type = 'highpass';
-      flt.frequency.setValueAtTime(1600, now);
+    tones.forEach(({ freq, delay, gain, decay }) => {
+      const startTime = now + delay;
+      const osc = this.ctx.createOscillator();
+      const oscGain = this.ctx.createGain();
 
-      const hissGain = this.ctx.createGain();
-      hissGain.gain.setValueAtTime(0.08, now);
-      hissGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, startTime);
 
-      hiss.connect(flt);
-      flt.connect(hissGain);
-      hissGain.connect(this.masterGain);
-      hiss.start(now);
-      hiss.stop(now + 0.2);
-    }
+      oscGain.gain.setValueAtTime(gain, startTime);
+      oscGain.gain.exponentialRampToValueAtTime(0.0001, startTime + decay);
+
+      osc.connect(oscGain);
+      oscGain.connect(this.masterGain);
+      osc.start(startTime);
+      osc.stop(startTime + decay + 0.02);
+    });
   }
 
   // -----------------------------------------------------------------------
