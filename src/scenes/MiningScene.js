@@ -33,6 +33,7 @@ export class MiningScene extends Phaser.Scene {
 
     // 7. HUD
     this.hud = new HUD(this, this.player, this.missionSystem);
+    window.__activeMiningScene = this;
 
     // 8. Gespeicherten Spielfortschritt aus localStorage laden
     SaveSystem.load(this);
@@ -86,7 +87,8 @@ export class MiningScene extends Phaser.Scene {
 
     // Endlose Kamera-Grenzen nach links, rechts und in die Tiefe
     cam.setBounds(-100000, -280, 200000, 500000);
-    cam.startFollow(this.player.sprite, true, 0.08, 0.08);
+    cam.roundPixels = false;
+    cam.startFollow(this.player.sprite, false, 0.15, 0.15);
 
     const screenW = this.scale.width || window.innerWidth;
     const screenH = this.scale.height || window.innerHeight;

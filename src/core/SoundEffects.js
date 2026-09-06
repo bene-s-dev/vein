@@ -182,17 +182,17 @@ class SoundManager {
   }
 
   // -----------------------------------------------------------------------
-  // 1. FAHREN (Raupenketten / Elektromotor)
+  // 1. FAHREN (Ruhiges, sattes Raupenfahrwerk mit Motor- & Schotter-Gleiten)
   // -----------------------------------------------------------------------
   startDrive() {
     this.ensureContext();
     if (!this.ctx) return;
 
     if (this._driveActive && this._driveNodes) {
-      // Läuft bereits: sanft auf Betriebslautstärke halten
+      // Läuft bereits kontinuierlich: Lautstärke sanft auffrischen
       const now = this.ctx.currentTime;
       this._driveNodes.gain.gain.cancelScheduledValues(now);
-      this._driveNodes.gain.gain.setTargetAtTime(0.045, now, 0.03);
+      this._driveNodes.gain.gain.setTargetAtTime(0.065, now, 0.05);
       return;
     }
 
@@ -202,41 +202,59 @@ class SoundManager {
 
     const gain = this.ctx.createGain();
     gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.setTargetAtTime(0.045, now, 0.04);
+    gain.gain.setTargetAtTime(0.065, now, 0.06);
     gain.connect(this.masterGain);
 
-    // Motor-Brummen (Doppel-Oszillator für tiefen, sonoren Klang)
+    // 1. Sehr tiefer, dumpfer Diesel-Kolben Grundton (38 Hz, tiefpassgefiltert bei 85 Hz - kein UFO-Surren!)
     const osc1 = this.ctx.createOscillator();
     osc1.type = 'triangle';
-    osc1.frequency.setValueAtTime(52, now);
+    osc1.frequency.setValueAtTime(38, now);
 
-    const osc2 = this.ctx.createOscillator();
-    osc2.type = 'sine';
-    osc2.frequency.setValueAtTime(104, now);
+    const osc1Flt = this.ctx.createBiquadFilter();
+    osc1Flt.type = 'lowpass';
+    osc1Flt.frequency.setValueAtTime(85, now);
 
-    // Sanfte LFO-Modulation für Kettenumlauf
-    const lfo = this.ctx.createOscillator();
-    lfo.type = 'sine';
-    lfo.frequency.setValueAtTime(8.5, now);
-    const lfoGain = this.ctx.createGain();
-    lfoGain.gain.setValueAtTime(6, now);
-    lfo.connect(osc1.frequency);
-    lfo.connect(osc2.frequency);
+    const osc1Gain = this.ctx.createGain();
+    osc1Gain.gain.setValueAtTime(0.35, now);
 
-    // Filter für samtigen Tiefpass
-    const flt = this.ctx.createBiquadFilter();
-    flt.type = 'lowpass';
-    flt.frequency.setValueAtTime(180, now);
-
-    osc1.connect(flt);
-    osc2.connect(flt);
-    flt.connect(gain);
-
+    osc1.connect(osc1Flt);
+    osc1Flt.connect(osc1Gain);
+    osc1Gain.connect(gain);
     osc1.start(now);
-    osc2.start(now);
-    lfo.start(now);
 
-    this._driveNodes = { gain, osc1, osc2, lfo, flt };
+    // 2. Echtes metallisches Kettenabroll- und Schotterknirschen (Brown + Pink Noise)
+    const brownNoise = this.createNoiseBufferSource('brown');
+    if (brownNoise) {
+      const brownFlt = this.ctx.createBiquadFilter();
+      brownFlt.type = 'bandpass';
+      brownFlt.frequency.setValueAtTime(180, now);
+      brownFlt.Q.setValueAtTime(0.8, now);
+
+      const brownGain = this.ctx.createGain();
+      brownGain.gain.setValueAtTime(0.45, now);
+
+      brownNoise.connect(brownFlt);
+      brownFlt.connect(brownGain);
+      brownGain.connect(gain);
+      brownNoise.start(now);
+    }
+
+    const pinkNoise = this.createNoiseBufferSource('pink');
+    if (pinkNoise) {
+      const pinkFlt = this.ctx.createBiquadFilter();
+      pinkFlt.type = 'lowpass';
+      pinkFlt.frequency.setValueAtTime(450, now);
+
+      const pinkGain = this.ctx.createGain();
+      pinkGain.gain.setValueAtTime(0.2, now);
+
+      pinkNoise.connect(pinkFlt);
+      pinkFlt.connect(pinkGain);
+      pinkGain.connect(gain);
+      pinkNoise.start(now);
+    }
+
+    this._driveNodes = { gain, osc1, brownNoise, pinkNoise };
   }
 
   stopDrive() {
@@ -248,19 +266,19 @@ class SoundManager {
 
     const now = this.ctx.currentTime;
     nodes.gain.gain.cancelScheduledValues(now);
-    nodes.gain.gain.setTargetAtTime(0.0001, now, 0.04);
+    nodes.gain.gain.setTargetAtTime(0.0001, now, 0.05);
 
     setTimeout(() => {
       if (this._driveGen === currentGen) {
         try {
-          nodes.osc1.stop();
-          nodes.osc2.stop();
-          nodes.lfo.stop();
+          if (nodes.osc1) nodes.osc1.stop();
+          if (nodes.osc2) nodes.osc2.stop();
+          if (nodes.brownNoise) nodes.brownNoise.stop();
           nodes.gain.disconnect();
         } catch (_) {}
         this._driveNodes = null;
       }
-    }, 120);
+    }, 150);
   }
 
   // -----------------------------------------------------------------------

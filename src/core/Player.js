@@ -31,15 +31,15 @@ export const RANK_NAMES = [
 ];
 
 export const TANK_TIERS = [
-  { tier: 1, name: 'Standard-Tank', maxFuel: 45, stat: '45 L', cost: 0, comp: null, level: 1, desc: 'Kompakter Basis-Tank für kurze erste Erkundungen.' },
-  { tier: 2, name: 'Kerosin-Tank Mk.II', maxFuel: 75, stat: '75 L', cost: 450, comp: null, level: 1, desc: 'Erhöht Treibstoff auf 75 Liter (+66%) und senkt Verbrauch um 12%.' },
-  { tier: 3, name: 'Spartriebwerk Mk.III', maxFuel: 120, stat: '120 L', cost: 1500, comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 }, level: 1, desc: 'Erhöht Treibstoff auf 120 Liter und spart 20% Kerosin.' },
-  { tier: 4, name: 'Dual-Injektor Mk.IV', maxFuel: 180, stat: '180 L', cost: 4200, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 }, level: 2, desc: 'Verbessert Steigflug-Effizienz mit Hochdruck-Injektoren (180 L).' },
-  { tier: 5, name: 'Kompressions-Tank Mk.V', maxFuel: 260, stat: '260 L', cost: 11000, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 2 }, level: 3, desc: 'Hochfeste Legierung erlaubt 260 Liter Treibstoffkapazität.' },
-  { tier: 6, name: 'Turbo-Booster Mk.VI', maxFuel: 370, stat: '370 L', cost: 25000, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 1 }, level: 4, desc: 'Großer 370L Tank für tiefe Expeditionen.' },
-  { tier: 7, name: 'Fusions-Zelle Mk.VII', maxFuel: 500, stat: '500 L', cost: 55000, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 5, desc: 'Hocheffizienter Fusions-Antrieb mit 500 Litern Kapazität.' },
-  { tier: 8, name: 'Plasma-Injektor Mk.VIII', maxFuel: 680, stat: '680 L', cost: 115000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 1 }, level: 6, desc: 'Plasmagespeister 680L Tank mit geringstem Kerosinverbrauch.' },
-  { tier: 9, name: 'Dunkelfeld-Speicher Mk.IX', maxFuel: 900, stat: '900 L', cost: 225000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 8, desc: 'Hochenergie-Tank für ausgedehnte Tiefen-Expeditionen.' },
+  { tier: 1, name: 'Standard-Tank', maxFuel: 100, stat: '100 L', cost: 0, comp: null, level: 1, desc: 'Basis-Treibstofftank für normale Bohrgänge.' },
+  { tier: 2, name: 'Kerosin-Tank Mk.II', maxFuel: 140, stat: '140 L', cost: 450, comp: null, level: 1, desc: 'Erhöht Treibstoff auf 140 Liter und senkt Verbrauch um 12%.' },
+  { tier: 3, name: 'Spartriebwerk Mk.III', maxFuel: 190, stat: '190 L', cost: 1500, comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 }, level: 1, desc: 'Erhöht Treibstoff auf 190 Liter und spart 20% Kerosin.' },
+  { tier: 4, name: 'Dual-Injektor Mk.IV', maxFuel: 250, stat: '250 L', cost: 4200, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 }, level: 2, desc: 'Verbessert Steigflug-Effizienz mit Hochdruck-Injektoren (250 L).' },
+  { tier: 5, name: 'Kompressions-Tank Mk.V', maxFuel: 330, stat: '330 L', cost: 11000, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 2 }, level: 3, desc: 'Hochfeste Legierung erlaubt 330 Liter Treibstoffkapazität.' },
+  { tier: 6, name: 'Turbo-Booster Mk.VI', maxFuel: 430, stat: '430 L', cost: 25000, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 1 }, level: 4, desc: 'Großer 430L Tank für tiefe Expeditionen.' },
+  { tier: 7, name: 'Fusions-Zelle Mk.VII', maxFuel: 560, stat: '560 L', cost: 55000, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 5, desc: 'Hocheffizienter Fusions-Antrieb mit 560 Litern Kapazität.' },
+  { tier: 8, name: 'Plasma-Injektor Mk.VIII', maxFuel: 720, stat: '720 L', cost: 115000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 1 }, level: 6, desc: 'Plasmagespeister 720L Tank mit geringstem Kerosinverbrauch.' },
+  { tier: 9, name: 'Dunkelfeld-Speicher Mk.IX', maxFuel: 920, stat: '920 L', cost: 225000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 8, desc: 'Hochenergie-Tank für ausgedehnte Tiefen-Expeditionen.' },
   { tier: 10, name: 'Quanten-Ionen-Matrix X', maxFuel: 1200, stat: '1200 L', cost: 450000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 3 }, level: 10, desc: 'Ultimative 1200L Quantenmatrix mit nahezu unerschöpflichem Schub.' }
 ];
 
@@ -157,16 +157,16 @@ export const HULL_TIERS = [
 ];
 
 export const ENGINE_TIERS = [
-  { tier: 1, name: 'Standard-Raupenfahrwerk', stat: '120 px/s', moveDuration: 260, flightSpeed: 120, cost: 0, comp: null, level: 1, desc: 'Sicheres Basis-Fahrwerk für solide Schachtmanöver.' },
-  { tier: 2, name: 'Verstärkte Getriebe Mk.II', stat: '138 px/s', moveDuration: 225, flightSpeed: 138, cost: 480, comp: null, level: 1, desc: 'Kürzere Schaltzeiten beschleunigen Kriechgang und Steigflug.' },
-  { tier: 3, name: 'Hydraulik-Raupen Mk.III', stat: '160 px/s', moveDuration: 195, flightSpeed: 160, cost: 1600, comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 }, level: 1, desc: 'Flüssigere Kettenbewegungen und mehr Schubdüsengeschwindigkeit.' },
-  { tier: 4, name: 'Hochdruck-Turbine Mk.IV', stat: '185 px/s', moveDuration: 170, flightSpeed: 185, cost: 4400, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 }, level: 2, desc: 'Kraftvoller Vortrieb im Schacht und schnellerer Aufstieg.' },
-  { tier: 5, name: 'Titan-Kettenantrieb Mk.V', stat: '215 px/s', moveDuration: 145, flightSpeed: 215, cost: 11500, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 2 }, level: 3, desc: 'Geringerer Rollwiderstand und kräftige Schwebetriebwerke.' },
-  { tier: 6, name: 'Vektor-Booster Mk.VI', stat: '250 px/s', moveDuration: 125, flightSpeed: 250, cost: 26000, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 1 }, level: 4, desc: 'Schnelle Manövrierfähigkeit im Gestein und hoher Schwebespeed.' },
-  { tier: 7, name: 'Magnet-Levitation Mk.VII', stat: '290 px/s', moveDuration: 105, flightSpeed: 290, cost: 56000, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 5, desc: 'Magnetschwebende Fahrwerkssegmente für rasantes Gleiten.' },
-  { tier: 8, name: 'Quanten-Gravitationsantrieb Mk.VIII', stat: '340 px/s', moveDuration: 90, flightSpeed: 340, cost: 120000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 1 }, level: 6, desc: 'Krümmt das Schwerefeld für blitzschnelle Fortbewegung.' },
-  { tier: 9, name: 'Impuls-Vortex-Schub Mk.IX', stat: '400 px/s', moveDuration: 75, flightSpeed: 400, cost: 235000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 8, desc: 'Subatomare Schubdüsen für unvergleichliche Wendigkeit.' },
-  { tier: 10, name: 'Chrono-Tachyonen-Antrieb X', stat: '480 px/s', moveDuration: 60, flightSpeed: 480, cost: 460000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 3 }, level: 10, desc: 'Höchstgeschwindigkeit im Erdreich und schwebende Schwerelosigkeit.' }
+  { tier: 1, name: 'Standard-Raupenfahrwerk', stat: '175 px/s', moveDuration: 160, flightSpeed: 175, cost: 0, comp: null, level: 1, desc: 'Sicheres Basis-Fahrwerk für solide Schachtmanöver.' },
+  { tier: 2, name: 'Verstärkte Getriebe Mk.II', stat: '195 px/s', moveDuration: 145, flightSpeed: 195, cost: 480, comp: null, level: 1, desc: 'Kürzere Schaltzeiten beschleunigen Kriechgang und Steigflug.' },
+  { tier: 3, name: 'Hydraulik-Raupen Mk.III', stat: '220 px/s', moveDuration: 130, flightSpeed: 220, cost: 1600, comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 }, level: 1, desc: 'Flüssigere Kettenbewegungen und mehr Schubdüsengeschwindigkeit.' },
+  { tier: 4, name: 'Hochdruck-Turbine Mk.IV', stat: '250 px/s', moveDuration: 115, flightSpeed: 250, cost: 4400, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 }, level: 2, desc: 'Kraftvoller Vortrieb im Schacht und schnellerer Aufstieg.' },
+  { tier: 5, name: 'Titan-Kettenantrieb Mk.V', stat: '285 px/s', moveDuration: 100, flightSpeed: 285, cost: 11500, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 2 }, level: 3, desc: 'Geringerer Rollwiderstand und kräftige Schwebetriebwerke.' },
+  { tier: 6, name: 'Vektor-Booster Mk.VI', stat: '325 px/s', moveDuration: 88, flightSpeed: 325, cost: 26000, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 1 }, level: 4, desc: 'Schnelle Manövrierfähigkeit im Gestein und hoher Schwebespeed.' },
+  { tier: 7, name: 'Magnet-Levitation Mk.VII', stat: '370 px/s', moveDuration: 76, flightSpeed: 370, cost: 56000, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 5, desc: 'Magnetschwebende Fahrwerkssegmente für rasantes Gleiten.' },
+  { tier: 8, name: 'Quanten-Gravitationsantrieb Mk.VIII', stat: '420 px/s', moveDuration: 65, flightSpeed: 420, cost: 120000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 1 }, level: 6, desc: 'Krümmt das Schwerefeld für blitzschnelle Fortbewegung.' },
+  { tier: 9, name: 'Impuls-Vortex-Schub Mk.IX', stat: '475 px/s', moveDuration: 55, flightSpeed: 475, cost: 235000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 8, desc: 'Subatomare Schubdüsen für unvergleichliche Wendigkeit.' },
+  { tier: 10, name: 'Chrono-Tachyonen-Antrieb X', stat: '540 px/s', moveDuration: 45, flightSpeed: 540, cost: 460000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 3 }, level: 10, desc: 'Höchstgeschwindigkeit im Erdreich und schwebende Schwerelosigkeit.' }
 ];
 
 export const CARGO_TIERS = [
@@ -253,8 +253,8 @@ export class Player {
       .setVisible(false);
 
     // Fahrzeug-Werte & Stats (ausbalancierte Wirtschaft)
-    this.maxFuel = 45;
-    this.fuel = 45;
+    this.maxFuel = 100;
+    this.fuel = 100;
     this.fuelEfficiency = 1.0;
     this.tankTier = 1;
     this.batteryTier = 1;
@@ -1032,7 +1032,8 @@ export class Player {
 
   handleInput(dir) {
     if (this.fuel <= 0) {
-      return; // Kein Treibstoff
+      soundFx.stopDrive();
+      return false; // Kein Treibstoff
     }
 
     let targetGx = this.gx;
@@ -1052,7 +1053,8 @@ export class Player {
       // Wenn das Fahrzeug bereits an der Oberfläche ist (gy <= -1 oder y <= -16),
       // kann es nicht in die Luft / den Himmel fliegen!
       if (this.sprite.y <= -16 || this.gy <= -1) {
-        return;
+        soundFx.stopDrive();
+        return false;
       }
 
       // Prüfen ob die Kachel direkt über dem Bohrer feste Erde / Erz ist
@@ -1060,55 +1062,73 @@ export class Player {
       if (checkGy >= 0 && this.gridSystem.isSolid(this.gx, checkGy)) {
         // NACH OBEN BOHREN!
         const tile = this.gridSystem.getTile(this.gx, checkGy);
-        if (!tile || tile.indestructible || checkGy === 0) return;
+        if (!tile || tile.indestructible || checkGy === 0) {
+          soundFx.stopDrive();
+          return false;
+        }
 
+        soundFx.stopDrive();
         this.setVisualDirection('UP');
         this.startDrilling(this.gx, checkGy);
-        return;
+        return true;
       }
 
-      // Wenn frei: Flüssigen Flug starten (behält bei Bedarf horizontale Blickrichtung bei)
+      // Wenn frei: Flüssigen Flug starten
+      soundFx.stopDrive();
       this.state = PLAYER_STATES.FLYING;
       this.flySoundTimer = 0;
       soundFx.startJetpack();
-      return;
+      return true;
+    }
+
+    // Grenzprüfung Weltbreite
+    if (targetGx < 0 || targetGx >= this.gridSystem.width) {
+      soundFx.stopDrive();
+      return false;
     }
 
     // Prüfen ob Zielfeld solid ist (für LINKS, RECHTS, UNTEN)
     const isTargetSolid = this.gridSystem.isSolid(targetGx, targetGy);
 
     if (!isTargetSolid) {
-      // Freies Feld: normale Fahrt (Geschwindigkeit skaliert über Antriebsstufe this.moveDuration)
-      this.moveTo(targetGx, targetGy);
-      this.consumeFuel(0.45);
+      // Freies Feld: normale Fahrt
       soundFx.startDrive();
+      this.moveTo(targetGx, targetGy);
+      this.consumeFuel(0.3);
+      return true;
     } else {
       // Festes Feld: Bohren
+      soundFx.stopDrive();
       const tile = this.gridSystem.getTile(targetGx, targetGy);
       if (!tile || tile.indestructible || targetGy === 0) {
         if (targetGy === 0) {
           this.scene.events.emit('notify', 'Oberfläche unzerstörbar! Nutze den überdachten Schachteinstieg.');
         }
-        return;
+        return false;
       }
 
       this.startDrilling(targetGx, targetGy);
+      return true;
     }
   }
 
   processFlying(delta, inputDir) {
-    // Wenn kein Treibstoff mehr vorhanden ist oder Richtung nicht mehr UP ist
-    if (this.fuel <= 0 || inputDir !== 'UP') {
+    const inputHandler = this.scene.inputHandler;
+    const isUpActive = (inputDir === 'UP') ||
+      (inputHandler && (inputHandler.cursors?.up?.isDown || inputHandler.wasd?.W?.isDown || inputHandler.flyButtonPressed || inputHandler.touchDirection === 'UP'));
+
+    // Wenn kein Treibstoff mehr vorhanden ist oder Aufstieg beendet wurde
+    if (this.fuel <= 0 || !isUpActive) {
       this.stopFlying();
       return;
     }
 
-    const dt = delta / 1000;
+    const dt = Math.min(delta, 33.33) / 1000;
 
-    // Vertikaler Jetpack-Steigflug mit Treibstoffverbrauch
-    this.consumeFuel(dt * 2.8);
+    // Sanfter, gleichmäßiger Treibstoffverbrauch im Flug
+    this.consumeFuel(dt * 1.8);
 
-    // Zwei sichtbare blaue Jetpack-Strahlen (unter dem Fahrgestell bei den Unterflurdüsen)
+    // Zwei sichtbare blaue Jetpack-Strahlen unter dem Fahrgestell
     const n1X = this.sprite.x - 7;
     const n1Y = this.sprite.y + 15;
     const n2X = this.sprite.x + 7;
@@ -1122,15 +1142,44 @@ export class Player {
       this.rightThrustParticles.start();
     }
 
-    // Dezent taktender Jetpack-Sound (nur sicherstellen, dass er läuft)
-    if (!soundFx._jetpackRunning) {
+    // Jetpack-Sound dauerhaft laufen lassen (ohne ständiges Neu-Initialisieren)
+    if (!soundFx._jetpackActive) {
       soundFx.startJetpack();
     }
 
-    // Flüssiger Aufstieg mit kontinuierlicher Geschwindigkeit (am Anfang 120 px/s, upgradebar)
-    const flightSpeed = this.flightSpeed || 120;
+    // Flüssiger, kraftvoller Aufstieg mit kontinuierlicher Geschwindigkeit
+    const flightSpeed = this.flightSpeed || 175;
     const dy = flightSpeed * dt;
     const nextY = this.sprite.y - dy;
+
+    // Sanfte horizontale Steuerung während des Flugs ermöglichen
+    if (inputHandler) {
+      const isLeft = inputHandler.cursors?.left?.isDown || inputHandler.wasd?.A?.isDown || inputHandler.touchDirection === 'LEFT';
+      const isRight = inputHandler.cursors?.right?.isDown || inputHandler.wasd?.D?.isDown || inputHandler.touchDirection === 'RIGHT';
+      const horizSpeed = (flightSpeed * 0.7) * dt;
+
+      if (isLeft) {
+        const nextX = this.sprite.x - horizSpeed;
+        const leftGx = Math.floor((nextX - 10) / TILE_SIZE);
+        const curGy = Math.round((this.sprite.y - TILE_SIZE / 2) / TILE_SIZE);
+        if (leftGx >= 0 && (!this.gridSystem.isSolid(leftGx, curGy) || this.sprite.y <= -16)) {
+          this.sprite.x = nextX;
+          this.x = nextX;
+          this.gx = Math.round((this.x - TILE_SIZE / 2) / TILE_SIZE);
+          this.setVisualDirection('LEFT');
+        }
+      } else if (isRight) {
+        const nextX = this.sprite.x + horizSpeed;
+        const rightGx = Math.floor((nextX + 10) / TILE_SIZE);
+        const curGy = Math.round((this.sprite.y - TILE_SIZE / 2) / TILE_SIZE);
+        if (rightGx < this.gridSystem.width && (!this.gridSystem.isSolid(rightGx, curGy) || this.sprite.y <= -16)) {
+          this.sprite.x = nextX;
+          this.x = nextX;
+          this.gx = Math.round((this.x - TILE_SIZE / 2) / TILE_SIZE);
+          this.setVisualDirection('RIGHT');
+        }
+      }
+    }
 
     // Kollisionsprüfung mit der Decke über dem Fahrzeug
     const headY = nextY - TILE_SIZE / 2;
@@ -1194,23 +1243,11 @@ export class Player {
       this.rightThrustParticles.stop();
     }
 
-    // Beim Loslassen sanft auf die nächste Kachelhöhe einrasten (50ms)
-    const targetGy = Math.max(-1, Math.round((this.sprite.y - TILE_SIZE / 2) / TILE_SIZE));
-    const targetY = targetGy * TILE_SIZE + TILE_SIZE / 2;
-
-    this.state = PLAYER_STATES.MOVING;
-    this.scene.tweens.add({
-      targets: this.sprite,
-      y: targetY,
-      duration: 50,
-      ease: 'Linear',
-      onComplete: () => {
-        this.y = targetY;
-        this.gy = targetGy;
-        this.state = PLAYER_STATES.IDLE;
-        this.checkDepthProgress();
-      }
-    });
+    // Direkt nahtlos stoppen - kein blockierender 50ms-Tween mehr, der die Steuerung abhackt!
+    this.y = this.sprite.y;
+    this.gy = Math.round((this.y - TILE_SIZE / 2) / TILE_SIZE);
+    this.state = PLAYER_STATES.IDLE;
+    this.checkDepthProgress();
   }
 
   setVisualDirection(dir) {
@@ -1229,7 +1266,7 @@ export class Player {
 
     const targetX = targetGx * TILE_SIZE + TILE_SIZE / 2;
     const targetY = targetGy * TILE_SIZE + TILE_SIZE / 2;
-    const moveDur = duration !== null ? duration : (this.moveDuration || 180);
+    const moveDur = duration !== null ? duration : (this.moveDuration || 160);
 
     this.scene.tweens.add({
       targets: this.sprite,
@@ -1237,16 +1274,26 @@ export class Player {
       y: targetY,
       duration: moveDur,
       ease: 'Linear',
+      onUpdate: () => {
+        this.x = this.sprite.x;
+        this.y = this.sprite.y;
+      },
       onComplete: () => {
         this.x = targetX;
         this.y = targetY;
         this.state = PLAYER_STATES.IDLE;
-        soundFx.stopDrive();
         this.checkDepthProgress();
 
-        // Flüssiges Weiterfahren ohne Ruckeln / Pausen zwischen den Kacheln
-        if (this.lastInputDir && this.fuel > 0) {
-          this.handleInput(this.lastInputDir);
+        // Flüssiges Weiterfahren: Wenn der Spieler die Richtung hält, bleibt der Motorsound nahtlos an!
+        const nextDir = this.scene.inputHandler ? this.scene.inputHandler.getDirection() : this.lastInputDir;
+        if (nextDir && this.fuel > 0) {
+          const continued = this.handleInput(nextDir);
+          if (!continued) {
+            soundFx.stopDrive();
+          }
+        } else {
+          // Keine weitere Bewegung: Motor sanft ausklingen lassen
+          soundFx.stopDrive();
         }
       }
     });
@@ -1315,7 +1362,7 @@ export class Player {
     }
 
     // Treibstoffverbrauch während des aktiven Bohrens
-    this.consumeFuel(1.2 * (delta / 1000));
+    this.consumeFuel(0.6 * (delta / 1000));
 
     // Karosserie-Verschleiß beim Bohren (nur beim Bohren, nicht beim Fahren)
     // Auf Level 1 besonders robust (nur ca. 0.35 HP/s statt 1.5 HP/s, mehr als 4x langsamer kaputt)
@@ -1482,7 +1529,7 @@ export class Player {
       // Überirdisch: nur horizontaler Rückweg zur Einfahrt (gx ~19.5)
       const tilesX = Math.abs(this.gx - entranceGx);
       if (tilesX < 1) return 0; // Schon nah genug an der Basis
-      return (tilesX * (0.45 / efficiency)) * 1.10;
+      return (tilesX * (0.3 / efficiency)) * 1.10;
     }
 
     // Unterirdisch: Steigflug + horizontaler Weg
@@ -1491,10 +1538,10 @@ export class Player {
     const flightSpeed = Math.max(1, this.flightSpeed || 120);
 
     const flightTimeSec = distY / flightSpeed;
-    const verticalFuel = flightTimeSec * (2.8 / efficiency);
+    const verticalFuel = flightTimeSec * (1.8 / efficiency);
 
     const tilesX = Math.abs(this.gx - entranceGx);
-    const horizontalFuel = tilesX * (0.45 / efficiency);
+    const horizontalFuel = tilesX * (0.3 / efficiency);
 
     return (verticalFuel + horizontalFuel) * 1.10;
   }

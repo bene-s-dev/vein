@@ -11,7 +11,14 @@ const config = {
   type: Phaser.AUTO,
   parent: 'game-container',
   pixelArt: true,
-  roundPixels: true,
+  roundPixels: false,
+  fps: {
+    min: 30,
+    target: 60,
+    limit: 60,
+    smoothStep: true,
+    deltaHistory: 10
+  },
   backgroundColor: '#07090e',
   scale: {
     mode: Phaser.Scale.RESIZE,
@@ -29,6 +36,7 @@ const config = {
 };
 
 import { refreshIcons } from './ui/IconHelper.js';
+import { closeActiveModal } from './core/BaseSystem.js';
 
 function shieldUiElements() {
   // Verhindert das Durchklicken vom Modal & HUD auf den darunterliegenden Phaser-Canvas
@@ -43,7 +51,7 @@ function shieldUiElements() {
     });
   }
 
-  const elements = document.querySelectorAll('#hud-overlay, #btn-mobile-fly, #orientation-tip, #mission-tracker');
+  const elements = document.querySelectorAll('#hud-overlay, #orientation-tip, #mission-tracker');
   elements.forEach((el) => {
     ['pointerdown', 'pointerup', 'mousedown', 'mouseup', 'touchstart', 'touchend'].forEach((eventType) => {
       el.addEventListener(eventType, (e) => {
@@ -55,12 +63,43 @@ function shieldUiElements() {
 
 function initModalObserver() {
   const modal = document.getElementById('building-modal');
+  const titleEl = document.getElementById('modal-title');
+  const centerTitleEl = document.getElementById('hud-center-menu-title');
+
+  function syncMenuTitle() {
+    if (!titleEl || !centerTitleEl) return;
+    if (centerTitleEl.innerHTML !== titleEl.innerHTML) {
+      centerTitleEl.innerHTML = titleEl.innerHTML;
+    }
+  }
+
   if (modal) {
     const obs = new MutationObserver(() => {
       const isOpen = modal.style.display === 'flex' || (modal.style.display !== 'none' && modal.style.display !== '');
       document.body.classList.toggle('modal-open', isOpen);
+      if (isOpen) {
+        syncMenuTitle();
+      }
     });
     obs.observe(modal, { attributes: true, attributeFilter: ['style'] });
+  }
+
+  if (titleEl) {
+    let isSyncing = false;
+    const titleObs = new MutationObserver(() => {
+      if (isSyncing) return;
+      isSyncing = true;
+      syncMenuTitle();
+      isSyncing = false;
+    });
+    titleObs.observe(titleEl, { childList: true, subtree: true, characterData: true });
+  }
+  const closeBtn = document.getElementById('modal-close-btn');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeActiveModal();
+    });
   }
 }
 

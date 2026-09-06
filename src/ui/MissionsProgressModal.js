@@ -2,6 +2,7 @@ import { MISSION_POOL } from '../core/MissionSystem.js';
 import { ORE_DATA } from '../core/GridSystem.js';
 import { soundFx } from '../core/SoundEffects.js';
 import { icon, refreshIcons, oreIcon } from './IconHelper.js';
+import { closeActiveModal } from '../core/BaseSystem.js';
 
 /**
  * MissionsProgressModal.js
@@ -32,14 +33,7 @@ export class MissionsProgressModal {
   }
 
   close() {
-    notifyModalClosed();
-    const modalEl = document.getElementById('building-modal');
-    if (modalEl) {
-      modalEl.style.display = 'none';
-    }
-    if (this.scene) {
-      this.scene.isPaused = false;
-    }
+    closeActiveModal(this.scene);
   }
 
   render() {
@@ -118,6 +112,7 @@ export class MissionsProgressModal {
       </div>
     `;
 
+    document.body.classList.add('modal-open');
     modalEl.style.display = 'flex';
     refreshIcons(modalEl);
 

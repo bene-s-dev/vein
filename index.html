@@ -166,15 +166,15 @@
     }
 
     #hud-fuel-cluster {
-      min-width: 54px;
+      min-width: auto;
     }
 
     #hud-hull-cluster {
-      min-width: 54px;
+      min-width: auto;
     }
 
     #hud-cargo-cluster {
-      min-width: 62px;
+      min-width: auto;
     }
 
     .stat-cluster {
@@ -203,7 +203,7 @@
     .stat-row {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 2.5px;
       font-size: 12px;
       font-weight: 700;
       letter-spacing: 0.2px;
@@ -231,7 +231,7 @@
     .stat-row span {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 2.5px;
       color: #ffffff;
     }
 
@@ -278,28 +278,31 @@
       white-space: nowrap;
     }
 
-    #hud-fuel-text {
-      width: 38px;
-      min-width: 38px;
+    .hud-num-slot {
+      display: inline-flex;
+      justify-content: flex-end;
+      align-items: center;
+      width: 3ch;
+      min-width: 3ch;
       text-align: right;
       font-variant-numeric: tabular-nums;
-      display: inline-block;
     }
 
-    #hud-hull-text {
-      width: 38px;
-      min-width: 38px;
+    #hud-cargo-num,
+    #hud-fuel-num,
+    #hud-hull-num {
+      display: inline-flex;
+      justify-content: flex-end;
       text-align: right;
-      font-variant-numeric: tabular-nums;
-      display: inline-block;
     }
 
+    #hud-fuel-text,
+    #hud-hull-text,
     #hud-cargo-text {
-      width: 44px;
-      min-width: 44px;
-      text-align: right;
+      display: inline-flex;
+      align-items: center;
       font-variant-numeric: tabular-nums;
-      display: inline-block;
+      white-space: nowrap;
     }
 
     .cash-badge {
@@ -339,6 +342,44 @@
       align-items: center;
       justify-content: center;
       z-index: 101;
+    }
+
+    #hud-center-menu-title {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-weight: 800;
+      font-size: 13.5px;
+      color: #38bdf8;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    #hud-center-menu-title svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    /* HUD im Menü: Vollständig transparenter Hintergrund, damit die 3 Badges schwebend hervortreten */
+    body.modal-open #hud-overlay {
+      background: transparent !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      border: none !important;
+      box-shadow: none !important;
+      align-items: center !important;
+      pointer-events: none !important;
+      transition: none;
+    }
+
+    body.modal-open #hud-depth {
+      display: none !important;
+    }
+
+    body.modal-open #hud-center-menu-title {
+      display: inline-flex !important;
     }
 
     /* Mission Tracker Window Hidden (Missions managed exclusively in Büro) */
@@ -743,65 +784,130 @@
       background: rgba(241, 245, 249, 0.8);
     }
 
-    /* Mobile Jetpack Schnell-Button */
     .mobile-fly-btn {
-      position: fixed;
-      bottom: 24px;
-      right: 20px;
-      width: 58px;
-      height: 58px;
-      border-radius: 50%;
-      background: rgba(30, 41, 59, 0.65);
-      border: 1.5px solid rgba(56, 189, 248, 0.45);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
-      backdrop-filter: blur(10px);
-      color: #f8fafc;
-      font-family: var(--font-family);
-      font-size: 10px;
-      font-weight: 700;
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 2px;
-      z-index: 100;
-      cursor: pointer;
-      user-select: none;
-      -webkit-user-select: none;
-      touch-action: manipulation;
-      transition: transform 0.1s, background 0.1s;
-    }
-
-    .mobile-fly-btn:active, .mobile-fly-btn.active {
-      background: rgba(56, 189, 248, 0.4);
-      border-color: #38bdf8;
-      transform: scale(0.92);
-    }
-
-    @media (max-width: 900px) {
-      .mobile-fly-btn {
-        display: flex;
-      }
+      display: none !important;
     }
 
     /* ========================================================
        MOBILE SCALING & RESPONSIVE ANPASSUNGEN
        ======================================================== */
     @media (max-width: 960px), (max-height: 520px) {
+      /* Im Spiel: Entspannte obere Positionierung (Tankanzeige NICHT an den oberen Rand gezogen) */
       #hud-overlay {
-        padding: max(4px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) 2px max(8px, env(safe-area-inset-left));
-        gap: 6px;
-        align-items: center;
+        padding: max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 6px max(12px, env(safe-area-inset-left)) !important;
+        gap: 8px;
+        align-items: flex-start;
         flex-wrap: nowrap;
         justify-content: space-between;
         width: 100%;
+        box-sizing: border-box;
+        background: transparent !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        border: none !important;
+        box-shadow: none !important;
+        pointer-events: none !important;
+        transition: background 0.15s ease, backdrop-filter 0.15s ease, border-bottom 0.15s ease;
       }
 
-      .hud-card {
-        padding: 4px 8px;
-        gap: 6px;
-        border-radius: 8px;
-        flex-shrink: 0;
+      /* Im Menü: Durchgehende, schlanke Blurry-Leiste auf exakt derselben Höhe */
+      body.modal-open #hud-overlay {
+        background: rgba(14, 22, 38, 0.72) !important;
+        backdrop-filter: blur(20px) saturate(190%) contrast(110%) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(190%) contrast(110%) !important;
+        border-bottom: 1px solid rgba(56, 189, 248, 0.22) !important;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5) !important;
+        transform: translateZ(0) !important;
+        will-change: backdrop-filter;
+      }
+
+      /* Tankanzeige & Gauges: Natürliche, entspannte Position - kein Hochziehen an die Decke */
+      #card-gauges {
+        pointer-events: auto !important;
+        background: transparent !important;
+        border: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        display: inline-flex !important;
+        align-items: flex-start !important;
+        gap: 8px !important;
+        flex-shrink: 0 !important;
+      }
+
+      #hud-center-depth {
+        position: absolute !important;
+        left: 50% !important;
+        top: calc(max(10px, env(safe-area-inset-top)) + 10px) !important;
+        transform: translate(-50%, -50%) !important;
+        pointer-events: auto !important;
+        background: transparent !important;
+        border: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        z-index: 301 !important;
+      }
+
+      body.modal-open #hud-center-depth {
+        top: calc(max(10px, env(safe-area-inset-top)) + 10px) !important;
+        transform: translate(-50%, -50%) !important;
+      }
+
+      #hud-center-menu-title {
+        font-size: 11.5px !important;
+        gap: 4px !important;
+        font-weight: 800 !important;
+        color: #38bdf8 !important;
+        white-space: nowrap !important;
+        line-height: 1 !important;
+      }
+
+      #hud-center-menu-title svg {
+        width: 14px !important;
+        height: 14px !important;
+      }
+
+      #card-status {
+        pointer-events: auto !important;
+        background: transparent !important;
+        border: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        flex-wrap: nowrap !important;
+        flex-shrink: 0 !important;
+      }
+
+      #btn-pause {
+        width: 28px !important;
+        height: 26px !important;
+        min-width: 28px !important;
+        min-height: 26px !important;
+        border-radius: 6px !important;
+        padding: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+      }
+
+      body.modal-open #btn-pause {
+        width: 28px !important;
+        height: 26px !important;
+        min-width: 28px !important;
+        min-height: 26px !important;
       }
 
       .stat-cluster {
@@ -811,7 +917,7 @@
 
       .stat-row {
         font-size: 10px;
-        gap: 4px;
+        gap: 2.5px;
       }
 
       .bar-container {
@@ -823,18 +929,8 @@
         display: none !important; /* LVL/XP in Mini-Top-Bar ausblenden für maximale Übersicht */
       }
 
-      #hud-center-depth {
-        top: max(6px, env(safe-area-inset-top));
-      }
-
       #mission-tracker {
         display: none !important;
-      }
-
-      #card-status {
-        padding: 4px 8px;
-        gap: 6px;
-        flex-shrink: 0;
       }
 
       .cash-badge {
@@ -861,11 +957,13 @@
         height: 100vh !important;
         padding: 0 !important;
         margin: 0 !important;
-        background: #090d16 !important;
-        backdrop-filter: blur(16px) !important;
+        background: rgba(7, 11, 19, 0.75) !important;
+        backdrop-filter: blur(16px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
         justify-content: flex-start !important;
         align-items: stretch !important;
         z-index: 250 !important; /* Unter HUD (z-index: 300), damit HUD oben voll sichtbar bleibt */
+        transform: translateZ(0) !important;
       }
 
       .modal-window {
@@ -878,7 +976,7 @@
         box-shadow: none !important;
         background: transparent !important;
         margin: 0 !important;
-        padding: calc(max(6px, env(safe-area-inset-top)) + 42px) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)) !important;
+        padding: 0 max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)) !important;
         box-sizing: border-box !important;
         display: flex !important;
         flex-direction: column !important;
@@ -886,57 +984,13 @@
       }
 
       .modal-header {
-        padding: 0 42px 6px 2px !important;
-        margin-bottom: 6px !important;
-        min-height: 26px !important;
-        display: flex !important;
-        align-items: center !important;
-        flex-shrink: 0 !important;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
-      }
-
-      .modal-title {
-        font-size: 13px !important;
-        font-weight: 800 !important;
-        letter-spacing: 0.5px !important;
-      }
-
-      /* Prominenter Schließen-Button oben rechts */
-      .modal-close {
-        position: fixed !important;
-        top: max(6px, env(safe-area-inset-top)) !important;
-        right: max(8px, env(safe-area-inset-right)) !important;
-        z-index: 400 !important;
-        width: 32px !important;
-        height: 30px !important;
-        min-width: 32px !important;
-        min-height: 30px !important;
-        border-radius: 6px !important;
-        background: rgba(30, 41, 59, 0.95) !important;
-        border: 1px solid rgba(255, 255, 255, 0.2) !important;
-        color: #f8fafc !important;
-        font-size: 18px !important;
-        font-weight: 700 !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6) !important;
-      }
-
-      .modal-close:hover,
-      .modal-close:active {
-        background: rgba(239, 68, 68, 0.35) !important;
-        border-color: rgba(239, 68, 68, 0.6) !important;
-        color: #ffffff !important;
-      }
-
-      body.modal-open #btn-pause {
-        display: none !important; /* Pause-Button wird durch Schließen-X ersetzt */
+        display: none !important;
       }
 
       .modal-content {
+        padding-top: calc(max(10px, env(safe-area-inset-top)) + 42px) !important;
         padding-right: 4px !important;
-        padding-bottom: 16px !important;
+        padding-bottom: 24px !important;
         font-size: 11px !important;
         flex: 1 1 auto !important;
         max-height: none !important;
@@ -945,19 +999,40 @@
         -webkit-overflow-scrolling: touch !important;
       }
 
+      .modal-floating-actions {
+        right: max(16px, env(safe-area-inset-right)) !important;
+        bottom: max(14px, env(safe-area-inset-bottom)) !important;
+      }
+
+      .btn-flyover {
+        height: 35px !important;
+        padding: 0 14px !important;
+        font-size: 12px !important;
+      }
+
+
       /* ========================================================
          KOMPAKTE MOBILE MENÜ-ELEMENTE (WENIGER SCROLLEN)
          ======================================================== */
       /* Fließbänder / Fabrik */
+      .furnace-slot {
+        width: 38px !important;
+        height: 38px !important;
+        min-width: 38px !important;
+      }
+      .furnace-chamber {
+        height: 38px !important;
+        padding: 2px 6px !important;
+      }
+      .furnace-slot-label {
+        font-size: 7px !important;
+      }
+      .furnace-conveyor {
+        padding: 0 1px !important;
+      }
       .modal-content .conveyor-arrow {
         font-size: 8px !important;
-      }
-      .modal-content div[style*="width: 72px"] {
-        width: 52px !important;
-        height: 36px !important;
-      }
-      .modal-content div[style*="height: 44px"] {
-        height: 36px !important;
+        letter-spacing: 0 !important;
       }
 
       /* Generelle Paddings & Gaps in Modal-Karten & Boxen */
@@ -1150,8 +1225,9 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(10, 14, 23, 0.75);
-      backdrop-filter: blur(12px);
+      background: rgba(8, 12, 22, 0.7);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
       display: none;
       justify-content: center;
       align-items: center;
@@ -1160,11 +1236,14 @@
       touch-action: pan-y !important;
       padding: 64px 16px 20px 16px;
       box-sizing: border-box;
+      transform: translateZ(0);
     }
 
     .modal-window {
-      background: #182234;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(18, 26, 42, 0.82);
+      backdrop-filter: blur(24px) saturate(180%) contrast(105%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%) contrast(105%);
+      border: 1px solid rgba(56, 189, 248, 0.22);
       border-radius: 16px;
       width: 92%;
       max-width: 860px;
@@ -1173,21 +1252,30 @@
       flex-direction: column;
       overflow: hidden;
       box-sizing: border-box;
-      padding: 20px 4px 16px 24px;
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+      padding: 0 4px 16px 20px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), 0 0 35px rgba(14, 165, 233, 0.12);
       position: relative;
       pointer-events: auto !important;
       touch-action: pan-y !important;
+      transform: translateZ(0);
     }
 
     .modal-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 14px;
-      padding-bottom: 8px;
-      padding-right: 20px;
+      padding: 14px 20px 12px 20px;
+      margin: 0 -4px 12px -20px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(14, 22, 38, 0.78);
+      backdrop-filter: blur(20px) saturate(190%) contrast(110%);
+      -webkit-backdrop-filter: blur(20px) saturate(190%) contrast(110%);
+      border-bottom: 1px solid rgba(56, 189, 248, 0.25);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
       flex-shrink: 0;
+      transform: translateZ(0);
     }
 
     .modal-title {
@@ -1201,32 +1289,62 @@
     }
 
     .modal-close {
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      font-size: 20px;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      background: rgba(30, 41, 59, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #f8fafc;
+      font-size: 19px;
+      font-weight: 700;
       cursor: pointer;
       line-height: 1;
       padding: 0;
-      width: 28px;
-      height: 28px;
-      min-width: 28px;
-      min-height: 28px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 6px;
-      pointer-events: auto !important;
-      touch-action: manipulation !important;
-      transition: background 0.15s ease, color 0.15s ease;
+      transition: all 0.15s ease;
+      touch-action: manipulation;
+    }
+    .modal-close:hover {
+      background: rgba(239, 68, 68, 0.35);
+      border-color: rgba(239, 68, 68, 0.6);
+      color: #ffffff;
+      transform: scale(1.05);
+    }
+    .modal-close:active {
+      transform: scale(0.95);
+      background: rgba(239, 68, 68, 0.55);
     }
 
-    .modal-close:hover,
-    .modal-close:focus,
-    .modal-close:focus-visible {
-      color: var(--text-main);
-      background: rgba(255, 255, 255, 0.08);
-      outline: none;
+    /* Pause-Button verwandelt sich im Menü in das Schließen-X */
+    body.modal-open #btn-pause #icon-pause-state {
+      display: none !important;
+    }
+    body.modal-open #btn-pause #icon-close-state {
+      display: block !important;
+    }
+    body:not(.modal-open) #btn-pause #icon-pause-state {
+      display: block !important;
+    }
+    body:not(.modal-open) #btn-pause #icon-close-state {
+      display: none !important;
+    }
+
+    body.modal-open #btn-pause {
+      background: rgba(30, 41, 59, 0.95) !important;
+      border: 1px solid rgba(255, 255, 255, 0.25) !important;
+      color: #f8fafc !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5) !important;
+    }
+    body.modal-open #btn-pause:hover {
+      background: rgba(239, 68, 68, 0.35) !important;
+      border-color: rgba(239, 68, 68, 0.6) !important;
+      color: #ffffff !important;
+    }
+    body.modal-open #btn-pause:active {
+      transform: scale(0.92) !important;
+      background: rgba(239, 68, 68, 0.55) !important;
     }
 
     .modal-content {
@@ -1319,6 +1437,63 @@
       box-shadow: none;
       transform: none;
     }
+
+    /* Modal Floating Action Button (Flyover unten rechts) */
+    .modal-floating-actions {
+      position: absolute;
+      right: 24px;
+      bottom: 18px;
+      z-index: 120;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      pointer-events: auto;
+    }
+
+    .modal-floating-actions:empty {
+      display: none !important;
+    }
+
+    .btn-flyover {
+      height: 38px;
+      padding: 0 16px;
+      font-size: 13px;
+      font-weight: 800;
+      border-radius: 9px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(2, 132, 199, 0.45);
+      border: 1px solid #7dd3fc;
+      border-bottom: 3px solid #0369a1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      white-space: nowrap;
+      user-select: none;
+      pointer-events: auto !important;
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.15s ease, background 0.12s;
+    }
+
+    .btn-flyover:not(:disabled):hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.6), 0 4px 12px rgba(2, 132, 199, 0.6);
+    }
+
+    .btn-flyover:not(:disabled):active {
+      transform: translateY(2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    }
+
+    .btn-flyover:disabled {
+      background: #243248 !important;
+      border: 1px solid #3b4d68 !important;
+      border-bottom: 2px solid #1a2536 !important;
+      color: #64748b !important;
+      cursor: not-allowed !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+      transform: none !important;
+    }
+
 
     /* Tech Lab Fixed Categories & Segmented Progress Bar */
     .tech-lab-categories {
@@ -1518,6 +1693,223 @@
       display: inline-block;
       animation: flameFlicker 1.2s infinite ease-in-out;
     }
+
+    /* ========================================================
+       AUTHENTISCHE VISUELLE INDUSTRIE-PRODUKTIONSLINIE
+       ======================================================== */
+    @keyframes smokePuff {
+      0% { opacity: 0; transform: translateY(0) scale(0.6); }
+      30% { opacity: 0.7; transform: translateY(-8px) scale(0.9); }
+      100% { opacity: 0; transform: translateY(-22px) scale(1.5); }
+    }
+
+    @keyframes moltenBubble {
+      0%, 100% { transform: scale(1); filter: brightness(1); }
+      50% { transform: scale(1.08); filter: brightness(1.3); }
+    }
+
+    @keyframes moltenPour {
+      0% { stroke-dashoffset: 0; }
+      100% { stroke-dashoffset: -20; }
+    }
+
+    @keyframes rollerSpin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes beltScroll {
+      0% { stroke-dashoffset: 0; }
+      100% { stroke-dashoffset: -16; }
+    }
+
+    @keyframes pistonPress {
+      0%, 100% { transform: translateY(0); }
+      35% { transform: translateY(12px); }
+      50% { transform: translateY(12px); }
+      75% { transform: translateY(0); }
+    }
+
+    @keyframes weldingArc {
+      0%, 100% { opacity: 0.1; filter: drop-shadow(0 0 2px #38bdf8); }
+      20% { opacity: 1; filter: drop-shadow(0 0 8px #38bdf8) drop-shadow(0 0 16px #ffffff); }
+      40% { opacity: 0.2; }
+      70% { opacity: 0.9; filter: drop-shadow(0 0 10px #0284c7); }
+    }
+
+    @keyframes alertBeacon {
+      0%, 100% { opacity: 0.35; filter: drop-shadow(0 0 2px #ef4444); }
+      50% { opacity: 1; filter: drop-shadow(0 0 10px #ef4444) drop-shadow(0 0 18px #f87171); }
+    }
+
+    .machine-smoke {
+      animation: smokePuff 2.2s infinite ease-out;
+      transform-origin: center bottom;
+    }
+    .machine-smoke-2 {
+      animation: smokePuff 2.2s 1.1s infinite ease-out;
+      transform-origin: center bottom;
+    }
+
+    .machine-molten-core {
+      animation: moltenBubble 1.5s infinite ease-in-out;
+      transform-origin: center center;
+    }
+
+    .machine-pour-stream {
+      stroke-dasharray: 6 4;
+      animation: moltenPour 0.5s linear infinite;
+    }
+
+    .machine-roller-running {
+      animation: rollerSpin 1.2s linear infinite;
+      transform-origin: center center;
+    }
+
+    .machine-belt-running {
+      stroke-dasharray: 4 4;
+      animation: beltScroll 0.8s linear infinite;
+    }
+
+    .machine-piston-running {
+      animation: pistonPress 1.3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+
+    .machine-welder-active {
+      animation: weldingArc 0.6s infinite ease-in-out;
+    }
+
+    .machine-alert-beacon {
+      animation: alertBeacon 0.8s infinite ease-in-out;
+    }
+
+    .craft-icon-active {
+      display: inline-block;
+      animation: pulseActiveIcon 1.2s infinite ease-in-out;
+    }
+
+    /* Tactile Furnace & Crafting Slots */
+    .furnace-slot {
+      width: 46px;
+      height: 46px;
+      min-width: 46px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+      box-sizing: border-box;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+
+    .furnace-slot-label {
+      font-size: 8px;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.2px;
+      margin-top: 1px;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .furnace-slot-badge {
+      position: absolute;
+      bottom: 2px;
+      right: 3px;
+      background: rgba(0, 0, 0, 0.82);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+      padding: 0 3px;
+      font-size: 8px;
+      font-weight: 800;
+      color: #f8fafc;
+      line-height: 1.2;
+    }
+
+    .furnace-slot.slot-empty {
+      border: 1.5px dashed rgba(148, 163, 184, 0.28);
+      background: rgba(15, 23, 42, 0.45);
+    }
+
+    .furnace-slot.slot-fuel-ok {
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      background: rgba(245, 158, 11, 0.08);
+    }
+
+    /* Fehlender Brennstoff Slot: Pulsierender Rahmen und Warn-Symbol */
+    .furnace-slot.slot-fuel-missing {
+      border: 1.5px dashed #ef4444 !important;
+      background: rgba(239, 68, 68, 0.12) !important;
+      animation: warnPulse 1.6s infinite ease-in-out;
+    }
+
+    .furnace-slot.slot-fuel-missing .furnace-slot-label {
+      color: #f87171 !important;
+      font-weight: 800;
+    }
+
+    .furnace-slot-warn-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #ef4444;
+      color: #ffffff;
+      font-size: 9.5px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 8px rgba(239, 68, 68, 0.9);
+      line-height: 1;
+      z-index: 2;
+    }
+
+    .furnace-conveyor {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      padding: 0 2px;
+    }
+
+    .furnace-chamber {
+      flex: 1;
+      min-width: 0;
+      height: 46px;
+      box-sizing: border-box;
+      border-radius: 8px;
+      padding: 4px 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 3px;
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.25s ease;
+    }
+
+    .furnace-chamber.smelt-active {
+      background: radial-gradient(ellipse at 50% 50%, rgba(234, 88, 12, 0.22) 0%, rgba(15, 23, 42, 0.9) 100%);
+      border: 1px solid rgba(249, 115, 22, 0.5);
+      animation: furnaceGlow 1.8s infinite ease-in-out;
+    }
+
+    .furnace-chamber.craft-active {
+      background: radial-gradient(ellipse at 50% 50%, rgba(2, 132, 199, 0.22) 0%, rgba(15, 23, 42, 0.9) 100%);
+      border: 1px solid rgba(56, 189, 248, 0.5);
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.3);
+    }
   </style>
 </head>
 <body>
@@ -1530,9 +1922,9 @@
       <div class="hud-card" id="card-gauges" title="Bohrer-Status (Klick / Tippen zum Öffnen)">
         <!-- Tank -->
         <div class="hud-cluster-part" id="hud-fuel-cluster">
-          <div class="stat-row" style="gap: 4px;">
+          <div class="stat-row" style="gap: 2.5px;">
             <span id="hud-fuel-icon" style="display: inline-flex; align-items: center;"><i data-lucide="fuel" style="width: 14px; height: 14px;"></i></span>
-            <span class="hud-value-badge" id="hud-fuel-text" style="color: #f8fafc;">100%</span>
+            <span class="hud-value-badge" id="hud-fuel-text" style="color: #f8fafc;"><span class="hud-num-slot" id="hud-fuel-num">100</span>%</span>
           </div>
           <div class="bar-container" id="hud-fuel-bar-container" style="position: relative;" title="Tank & garantierte Rückkehr">
             <!-- Aktueller Tank-Füllstand -->
@@ -1544,25 +1936,26 @@
 
         <!-- Hülle -->
         <div class="hud-cluster-part" id="hud-hull-cluster">
-          <div class="stat-row" style="gap: 4px;">
+          <div class="stat-row" style="gap: 2.5px;">
             <span id="hud-hull-icon" style="display: inline-flex; align-items: center;"><i data-lucide="shield-cog" style="width: 14px; height: 14px;"></i></span>
-            <span class="hud-value-badge" id="hud-hull-text" style="color: #10b981;">100%</span>
+            <span class="hud-value-badge" id="hud-hull-text" style="color: #10b981;"><span class="hud-num-slot" id="hud-hull-num">100</span>%</span>
           </div>
         </div>
 
         <!-- Fracht -->
         <div class="hud-cluster-part" id="hud-cargo-cluster">
-          <div class="stat-row" style="gap: 4px;">
+          <div class="stat-row" style="gap: 2.5px;">
             <span id="hud-cargo-icon" style="display: inline-flex; align-items: center;"><i data-lucide="container" style="width: 14px; height: 14px;"></i></span>
-            <span class="hud-value-badge" id="hud-cargo-text" style="color: #38bdf8;">0/10</span>
+            <span class="hud-value-badge" id="hud-cargo-text" style="color: #38bdf8;"><span class="hud-num-slot" id="hud-cargo-num">0</span>/<span id="hud-cargo-max">10</span></span>
           </div>
         </div>
       </div>
 
-      <!-- Center: Cockpit Depth Widget -->
+      <!-- Center: Cockpit Depth Widget / Modal Title in Menus -->
       <div class="hud-card" id="hud-center-depth">
         <div class="stat-row" style="align-items: center; justify-content: center; gap: 4px;">
           <span class="hud-value-badge depth-badge" id="hud-depth" style="color: #f8fafc; font-weight: 800; font-size: 14px;">0 m</span>
+          <div id="hud-center-menu-title"></div>
         </div>
       </div>
 
@@ -1596,8 +1989,12 @@
           <span id="hud-cash-icon" style="display: inline-flex; align-items: center; color: #fbbf24;"><i data-lucide="coins" style="width: 14px; height: 14px; color: #fbbf24;"></i></span>
           <span class="hud-value-badge cash-badge" id="hud-cash">€150</span>
         </div>
-        <button id="btn-pause" class="btn-3d-secondary" title="Spielmenü & Pause (ESC / P)" style="width: 32px; height: 30px; padding: 0; color: #ffffff;">
-          <i data-lucide="pause" style="width: 15px; height: 15px;"></i>
+        <button id="btn-pause" class="btn-3d-secondary" title="Spielmenü (ESC / P)" style="width: 32px; height: 30px; padding: 0; color: #ffffff; display: inline-flex; align-items: center; justify-content: center;">
+          <i data-lucide="pause" id="icon-pause-state" style="width: 15px; height: 15px;"></i>
+          <svg id="icon-close-state" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: none; pointer-events: none;">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
         </button>
       </div>
     </div>
@@ -1618,22 +2015,17 @@
       </div>
     </div>
 
-    <!-- Mobile Jetpack Schnell-Aufstiegs-Button -->
-    <button id="btn-mobile-fly" class="mobile-fly-btn" title="Jetpack Aufstieg">
-      <i data-lucide="chevron-up" style="width: 18px; height: 18px;"></i>
-      <span>HOCH</span>
-    </button>
-
     <!-- Clean Material Modal Dialog -->
     <div class="modal-backdrop" id="building-modal">
       <div class="modal-window">
         <div class="modal-header">
           <div class="modal-title" id="modal-title">GEBÄUDE</div>
-          <button class="modal-close" id="modal-close-btn">&times;</button>
+          <button class="modal-close" id="modal-close-btn" title="Schließen (ESC)">&times;</button>
         </div>
         <div class="modal-content" id="modal-body">
           <!-- Dynamic Content -->
         </div>
+        <div id="modal-floating-actions" class="modal-floating-actions" style="display: none;"></div>
       </div>
     </div>
   </div>

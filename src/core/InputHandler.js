@@ -6,7 +6,7 @@
  */
 
 import Phaser from 'phaser';
-import { isModalActive } from './BaseSystem.js';
+import { isModalActive, closeActiveModal } from './BaseSystem.js';
 
 export class InputHandler {
   constructor(scene) {
@@ -43,8 +43,14 @@ export class InputHandler {
       if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
         return;
       }
-      if (this.scene.hud && this.scene.hud.togglePauseMenu) {
-        this.scene.hud.togglePauseMenu();
+      const modalEl = document.getElementById('building-modal');
+      const isModalOpen = modalEl && modalEl.style.display && modalEl.style.display !== 'none';
+      if (isModalOpen) {
+        closeActiveModal(this.scene);
+      } else {
+        if (this.scene.hud && this.scene.hud.openPauseMenu) {
+          this.scene.hud.openPauseMenu();
+        }
       }
     };
 

@@ -43,6 +43,41 @@ export function notifyModalClosed() {
   lastModalCloseTimestamp = Date.now();
 }
 
+export function closeActiveModal(scene) {
+  notifyModalClosed();
+
+  const modalEl = document.getElementById('building-modal');
+  if (modalEl) {
+    modalEl.style.display = 'none';
+  }
+  const floatingContainer = document.getElementById('modal-floating-actions');
+  if (floatingContainer) {
+    floatingContainer.innerHTML = '';
+    floatingContainer.style.display = 'none';
+  }
+  document.body.classList.remove('modal-open');
+
+  const sc = scene || (window.__game && window.__game.scene && window.__game.scene.getScene('MiningScene'));
+  if (sc) {
+    sc.isPaused = false;
+    if (sc.hud) {
+      sc.hud.isPauseMenuOpen = false;
+    }
+    if (sc.baseSystem) {
+      sc.baseSystem.isRefineryModalOpen = false;
+      sc.baseSystem.isDepotModalOpen = false;
+      if (sc.baseSystem.refineryUiInterval) {
+        clearInterval(sc.baseSystem.refineryUiInterval);
+        sc.baseSystem.refineryUiInterval = null;
+      }
+    }
+  }
+
+  try {
+    soundFx.playClick();
+  } catch (e) {}
+}
+
 export function isModalActive() {
   const modal = document.getElementById('building-modal');
   if (modal && modal.style.display && modal.style.display !== 'none') {
@@ -99,6 +134,15 @@ export const COMPONENT_DATA = {
   quantum_chip: { name: 'Quanten-Steuerkern', icon: 'atom', color: '#34d399' }
 };
 
+// Fabrik-Maschinen Ausbaustufen (Schaltet Fertigung mit tieferen Erzen frei)
+export const REFINERY_MACHINE_TIERS = [
+  { tier: 1, name: 'Standard-Maschine', costCash: 0, desc: 'Einfache Bauteile aus Eisen, Kupfer und Zinn.' },
+  { tier: 2, name: 'Präzisions-Werkbank Mk.II', costCash: 1500, desc: 'Elektronik-Platinen (Silber, Gold).' },
+  { tier: 3, name: 'Kristall-Schleifer Mk.III', costCash: 5000, desc: 'Schmuck-Diamanten (Smaragd, Rubin).' },
+  { tier: 4, name: 'Tiefsee-Schmiede Mk.IV', costCash: 15000, desc: 'Titan-Panzerungen (Titan, Diamant).' },
+  { tier: 5, name: 'Quanten-Assembler V', costCash: 45000, desc: 'Quanten-Brennstäbe (Uran, Platin).' }
+];
+
 // Fabrik-Produkte (Industrielle Werkstoffe mit hohem Börsenwert)
 // Jedes Produkt benötigt zusätzlich 2x Kohle als Prozesshitze/Brennstoff
 export const FACTORY_PRODUCTS = {
@@ -109,6 +153,7 @@ export const FACTORY_PRODUCTS = {
     iconName: 'circle-pile',
     recipe: { iron: 2, coal: 2 }, // 2x Eisen + 2x Kohle Material
     fuelCoal: 2,
+    minTier: 1,
     durationSec: 45,
     value: 260
   },
@@ -119,6 +164,7 @@ export const FACTORY_PRODUCTS = {
     iconName: 'layers',
     recipe: { copper: 2, tin: 2 },
     fuelCoal: 2,
+    minTier: 1,
     durationSec: 60,
     value: 390
   },
@@ -129,6 +175,7 @@ export const FACTORY_PRODUCTS = {
     iconName: 'cpu',
     recipe: { copper: 2, silver: 1, gold: 1 },
     fuelCoal: 2,
+    minTier: 2,
     durationSec: 120,
     value: 920
   },
@@ -139,6 +186,7 @@ export const FACTORY_PRODUCTS = {
     iconName: 'gem',
     recipe: { emerald: 1, ruby: 1 },
     fuelCoal: 2,
+    minTier: 3,
     durationSec: 200,
     value: 3600
   },
@@ -149,6 +197,7 @@ export const FACTORY_PRODUCTS = {
     iconName: 'shield',
     recipe: { titanium: 2, diamond: 1 },
     fuelCoal: 2,
+    minTier: 4,
     durationSec: 320,
     value: 9400
   },
@@ -159,6 +208,7 @@ export const FACTORY_PRODUCTS = {
     iconName: 'zap',
     recipe: { uranium: 2, platinum: 1 },
     fuelCoal: 2,
+    minTier: 5,
     durationSec: 480,
     value: 24500
   }
@@ -291,13 +341,14 @@ export class BaseSystem {
     this.modalEl = document.getElementById('building-modal');
     this.modalTitleEl = document.getElementById('modal-title');
     this.modalBodyEl = document.getElementById('modal-body');
-    this.modalCloseBtn = document.getElementById('modal-close-btn');
 
     // Raffinerie-Zustand (Berechnung über Geräte-Uhrzeit, auch offline)
     this.refinery = {
       queue: [], // [{ id, ore, name, durationMs, remainingMs, value }]
       finished: [], // [{ id, ore, name, value, finishedAt }]
-      lastTimestamp: Date.now()
+      lastTimestamp: Date.now(),
+      fuelCoal: 0,   // Manuell geladene Kohle in der Brennkammer
+      machineTier: 1 // Ausbaustufe der Industrie-Maschine (1-5)
     };
     this.isRefineryModalOpen = false;
     this.refineryUiInterval = null;
@@ -519,23 +570,21 @@ export class BaseSystem {
   }
 
   initEvents() {
-    if (this.modalCloseBtn) {
-      this.modalCloseBtn.onclick = (e) => {
-        if (e) e.stopPropagation();
-        this.closeModal();
-      };
-    }
 
     if (this.modalEl) {
       // Verhindert das Durchklicken auf Canvas und Objekte hinter dem Modal
-      const blockEvents = ['pointerdown', 'pointerup', 'pointermove', 'mousedown', 'mouseup', 'click', 'touchstart', 'touchend'];
+      const blockEvents = ['pointerdown', 'pointerup', 'pointermove', 'mousedown', 'mouseup', 'touchstart', 'touchend'];
       blockEvents.forEach((evt) => {
         this.modalEl.addEventListener(evt, (e) => {
-          if (evt === 'click' && e.target === this.modalEl) {
-            this.closeModal();
-          }
           e.stopPropagation();
         });
+      });
+
+      this.modalEl.addEventListener('click', (e) => {
+        if (e.target === this.modalEl) {
+          closeActiveModal(this.scene);
+        }
+        e.stopPropagation();
       });
     }
 
@@ -655,8 +704,10 @@ export class BaseSystem {
       this.scene.isPaused = true;
     }
     if (!this.modalEl || !this.modalTitleEl || !this.modalBodyEl) return;
+    this.clearFloatingAction();
     this.modalTitleEl.innerHTML = title;
     this.modalBodyEl.innerHTML = contentHtml;
+    document.body.classList.add('modal-open');
     this.modalEl.style.display = 'flex';
     refreshIcons(this.modalEl);
     if (this.scene && this.scene.hud) {
@@ -664,23 +715,31 @@ export class BaseSystem {
     }
   }
 
+  setFloatingAction(html, onAttach) {
+    const container = document.getElementById('modal-floating-actions');
+    if (!container) return;
+    if (!html) {
+      container.innerHTML = '';
+      container.style.display = 'none';
+      return;
+    }
+    container.innerHTML = html;
+    container.style.display = 'flex';
+    refreshIcons(container);
+    if (onAttach) onAttach(container);
+  }
+
+  clearFloatingAction() {
+    const container = document.getElementById('modal-floating-actions');
+    if (container) {
+      container.innerHTML = '';
+      container.style.display = 'none';
+    }
+  }
+
   closeModal() {
-    notifyModalClosed();
-    this.isRefineryModalOpen = false;
-    this.isDepotModalOpen = false;
-    if (this.refineryUiInterval) {
-      clearInterval(this.refineryUiInterval);
-      this.refineryUiInterval = null;
-    }
-    if (this.modalEl) {
-      this.modalEl.style.display = 'none';
-    }
-    if (this.scene) {
-      this.scene.isPaused = false;
-      if (this.scene.hud) {
-        this.scene.hud.isPauseMenuOpen = false;
-      }
-    }
+    this.clearFloatingAction();
+    closeActiveModal(this.scene);
   }
 
   // Alias für Hangar / Werkstatt
@@ -804,6 +863,7 @@ export class BaseSystem {
 
     const hasAnyFp = allProductKeys.length > 0;
     let totalFpValue = 0;
+    let totalFpCount = 0;
 
     let fpListHtml = '';
     if (!hasAnyFp) {
@@ -815,6 +875,7 @@ export class BaseSystem {
         const dCount = dp[prodId] || 0;
         const count = pCount + dCount;
         if (count <= 0) continue;
+        totalFpCount += count;
         const isBar = prodId.startsWith('bar_');
         let prodName = '';
         let val = 0;
@@ -892,21 +953,23 @@ export class BaseSystem {
     `;
 
     const content = `
-      <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 4px;">
-          <strong style="color: #38bdf8; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
-            ${icon('coins', '', 15)} ROHERZE & MINERALIEN (${totalOreCount} Erze verfügbar)
-          </strong>
-          <strong style="color: #fbbf24; font-size: 14px; font-weight: 800;">Gesamtwert: €${totalOreValue.toLocaleString()}</strong>
+      <div style="display: flex; flex-direction: column; gap: 12px; padding-bottom: 54px;">
+        <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 4px;">
+            <strong style="color: #38bdf8; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
+              ${icon('coins', '', 15)} ROHERZE & MINERALIEN (${totalOreCount} Erze verfügbar)
+            </strong>
+            <strong style="color: #fbbf24; font-size: 14px; font-weight: 800;">Gesamtwert: €${totalOreValue.toLocaleString()}</strong>
+          </div>
+          ${oreListHtml}
+          ${totalOreCount > 0 ? `
+            <button id="btn-sell-all-ores" class="btn-buy btn-lg" style="width: 100%; margin-top: 6px;">
+              ${icon('coins', '', 15)} Alle Erze verkaufen (€${totalOreValue.toLocaleString()})
+            </button>
+          ` : ''}
         </div>
-        ${oreListHtml}
-        ${totalOreCount > 0 ? `
-          <button id="btn-sell-all-ores" class="btn-buy btn-lg" style="width: 100%; margin-top: 6px;">
-            ${icon('coins', '', 15)} Alle Erze verkaufen (€${totalOreValue.toLocaleString()})
-          </button>
-        ` : ''}
+        ${factoryHtml}
       </div>
-      ${factoryHtml}
     `;
 
     this.openModal(`
@@ -915,6 +978,29 @@ export class BaseSystem {
         <span>ERZBÖRSE</span>
       </div>
     `, content);
+
+    const totalSellCount = totalOreCount + totalFpCount;
+    const totalSellValue = totalOreValue + totalFpValue;
+
+    this.setFloatingAction(`
+      <button id="btn-market-sell-all-flyover" class="btn-buy btn-flyover" style="gap: 6px;" ${totalSellCount > 0 ? '' : 'disabled'}>
+        ${icon('coins', '', 14)}
+        <span>Alles verkaufen (${totalSellCount}${totalSellCount > 0 ? ` · €${totalSellValue.toLocaleString()}` : ''})</span>
+      </button>
+    `, (container) => {
+      const btn = container.querySelector('#btn-market-sell-all-flyover');
+      if (btn) {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          const res = this.sellAllMarketItems();
+          if (res.totalEarned > 0) {
+            soundFx.playPurchase();
+            this.openMarketModal();
+            this.scene.events.emit('notify', `${res.totalCount} Einheiten vollständig verkauft für +€${res.totalEarned.toLocaleString()}!`);
+          }
+        };
+      }
+    });
 
     // Mengen-Aktualisierungshelfer (Erze)
     const updateOreQty = (ore, newQty) => {
@@ -1144,6 +1230,31 @@ export class BaseSystem {
     return { totalEarned, totalCount };
   }
 
+  sellAllMarketItems() {
+    const oresRes = this.sellAllMarketOres();
+    let totalFpEarned = 0;
+    let totalFpCount = 0;
+    const allKeys = Array.from(new Set([
+      ...Object.keys(FACTORY_PRODUCTS),
+      ...Object.keys(this.player.factoryProducts || {}),
+      ...Object.keys(this.depot?.products || {})
+    ]));
+    for (const prodId of allKeys) {
+      const avail = (this.player.factoryProducts?.[prodId] || 0) + (this.depot?.products?.[prodId] || 0);
+      if (avail > 0) {
+        const earned = this.sellMarketProductFromPlayerOrDepot(prodId, avail);
+        if (earned > 0) {
+          totalFpCount += avail;
+          totalFpEarned += earned;
+        }
+      }
+    }
+    return {
+      totalEarned: (oresRes?.totalEarned || 0) + totalFpEarned,
+      totalCount: (oresRes?.totalCount || 0) + totalFpCount
+    };
+  }
+
   sellMarketProductFromPlayerOrDepot(prodId, count = 1) {
     if (!this.player.factoryProducts) this.player.factoryProducts = {};
     if (!this.depot) this.depot = {};
@@ -1366,12 +1477,9 @@ export class BaseSystem {
             </span>
             ${isFull ? `<span style="background: #ef4444; color: #ffffff; font-size: 9.5px; font-weight: 800; padding: 1px 6px; border-radius: 4px;">VOLL</span>` : ''}
           </div>
-          <div style="display: flex; align-items: center; gap: 10px; font-size: 11px; font-weight: 700;">
+          <div style="display: flex; align-items: center; gap: 10px; font-size: 12.5px; font-weight: 800;">
             <span style="color: ${isFull ? '#ef4444' : '#f8fafc'}; font-variant-numeric: tabular-nums;">
-              ${totalStored} / ${capacity} Plätze belegt (${occPct}%)
-            </span>
-            <span style="color: #fbbf24; display: inline-flex; align-items: center; gap: 3px; font-variant-numeric: tabular-nums;">
-              ${icon('coins', '', 12)} Wert: +€${totalVal.toLocaleString()}
+              ${totalStored}/${capacity}
             </span>
           </div>
         </div>
@@ -1384,15 +1492,6 @@ export class BaseSystem {
       </div>
     `;
 
-    // Action Header über den Inventaren (nur Erze aus dem Bohrer einlagern)
-    const actionsHtml = `
-      <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 2px;">
-        <button id="btn-depot-all-ores" class="btn-buy" style="height: 28px; font-size: 11.5px; font-weight: 800; padding: 0 14px; display: inline-flex; align-items: center; gap: 6px;" ${playerCargoOreLength > 0 && freeDepot > 0 ? '' : 'disabled'}>
-          ${icon('arrow-down-to-line', '', 13)}
-          <span>Erze einlagern (${playerCargoOreLength})</span>
-        </button>
-      </div>
-    `;
 
     // 1. OBERES INVENTAR: ERZE & MINERALIEN
     let oresItemsHtml = '';
@@ -1700,9 +1799,8 @@ export class BaseSystem {
 
     // Zusammenbau des scrollbaren Modals mit ZWEI Inventaren untereinander
     this.modalBodyEl.innerHTML = `
-      <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: flex; flex-direction: column; gap: 12px; padding-bottom: 54px;">
         ${headerHtml}
-        ${actionsHtml}
 
         <!-- 1. OBERES INVENTAR: ERZE & MINERALIEN -->
         <div style="display: flex; flex-direction: column; gap: 6px; background: rgba(15, 23, 42, 0.55); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 12px; padding: 10px;">
@@ -1738,6 +1836,22 @@ export class BaseSystem {
       </div>
     `;
 
+    this.setFloatingAction(`
+      <button id="btn-depot-all-ores" class="btn-buy btn-flyover" style="gap: 6px;" ${playerCargoOreLength > 0 && freeDepot > 0 ? '' : 'disabled'}>
+        ${icon('arrow-down-to-line', '', 14)}
+        <span>Erze einlagern (${playerCargoOreLength})</span>
+      </button>
+    `, (container) => {
+      const btn = container.querySelector('#btn-depot-all-ores');
+      if (btn) {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          this.depositAllOres();
+        };
+      }
+    });
+
+    document.body.classList.add('modal-open');
     this.modalEl.style.display = 'flex';
     refreshIcons(this.modalEl);
 
@@ -1750,8 +1864,13 @@ export class BaseSystem {
     if (!body) return;
 
     // Bulk Aktionen: Nur Erze aus dem Bohrer einlagern
-    const btnAllOres = body.querySelector('#btn-depot-all-ores');
-    if (btnAllOres) btnAllOres.onclick = () => this.depositAllOres();
+    const btnAllOres = document.getElementById('btn-depot-all-ores');
+    if (btnAllOres) {
+      btnAllOres.onclick = (e) => {
+        e.stopPropagation();
+        this.depositAllOres();
+      };
+    }
 
     // Klick auf Erz-Kachel (Einlagern aus Bohrer)
     body.querySelectorAll('.depot-ore-card').forEach(card => {
@@ -2805,10 +2924,6 @@ export class BaseSystem {
   // BASIS-DOCKING & SCHMELZOFEN
   // =========================================================
   openDockModal() {
-    const fuelCost = Math.round((this.player.maxFuel - this.player.fuel) * 0.4);
-    const repairCost = Math.round((this.player.maxHull - this.player.hull) * 1.0);
-
-
     // Helper für Bauteil- und Levelanforderungen
     const checkAfford = (nextData) => {
       if (!nextData) return false;
@@ -3131,64 +3246,6 @@ export class BaseSystem {
 
     const content = `
       <div style="display: flex; flex-direction: column; gap: 8px;">
-        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); padding: 10px 14px; border-radius: 10px; display: flex; align-items: center; gap: 10px; box-sizing: border-box;">
-          <div style="width: 135px; min-width: 135px; flex-shrink: 0;">
-            <strong style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #f8fafc; white-space: nowrap;">
-              ${icon('fuel', '', 14)} Tank
-            </strong>
-          </div>
-          <div style="width: 175px; min-width: 175px; flex-shrink: 0;">
-            <span style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); color: #f59e0b; font-weight: 800; font-size: 11.5px; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
-              ${Math.round(this.player.fuel)} / ${this.player.maxFuel} L
-            </span>
-          </div>
-          <div style="flex: 1; min-width: 0;"></div>
-          <div style="width: 90px; min-width: 90px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
-            ${fuelCost > 0 ? `
-              <span style="background: rgba(251, 191, 36, 0.12); border: 1px solid rgba(251, 191, 36, 0.3); color: #fbbf24; font-weight: 800; font-size: 11.5px; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; gap: 3px; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
-                ${icon('coins', '', 11)} €${fuelCost}
-              </span>
-            ` : ''}
-          </div>
-          <div style="width: 110px; min-width: 110px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end;">
-            <button id="btn-refuel-dock" class="btn-buy" style="width: 100%; height: 30px; padding: 0 10px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 4px;" ${fuelCost <= 0 || this.player.cash < fuelCost ? 'disabled' : ''}>
-              ${icon('fuel', '', 12)}
-              <span>${fuelCost <= 0 ? 'Voll' : 'Tanken'}</span>
-            </button>
-          </div>
-        </div>
-
-        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); padding: 10px 14px; border-radius: 10px; display: flex; align-items: center; gap: 10px; box-sizing: border-box;">
-          <div style="width: 135px; min-width: 135px; flex-shrink: 0;">
-            <strong style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #f8fafc; white-space: nowrap;">
-              ${icon('shield', '', 14)} Hülle
-            </strong>
-          </div>
-          <div style="width: 175px; min-width: 175px; flex-shrink: 0;">
-            <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981; font-weight: 800; font-size: 11.5px; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
-              ${Math.round(this.player.hull)} / ${this.player.maxHull} HP
-            </span>
-          </div>
-          <div style="flex: 1; min-width: 0;"></div>
-          <div style="width: 90px; min-width: 90px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
-            ${repairCost > 0 ? `
-              <span style="background: rgba(251, 191, 36, 0.12); border: 1px solid rgba(251, 191, 36, 0.3); color: #fbbf24; font-weight: 800; font-size: 11.5px; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; gap: 3px; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
-                ${icon('coins', '', 11)} €${repairCost}
-              </span>
-            ` : ''}
-          </div>
-          <div style="width: 110px; min-width: 110px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end;">
-            <button id="btn-repair-dock" class="btn-buy" style="width: 100%; height: 30px; padding: 0 10px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 4px;" ${repairCost <= 0 || this.player.cash < repairCost ? 'disabled' : ''}>
-              ${icon('shield', '', 12)}
-              <span>${repairCost <= 0 ? 'Intakt' : 'Reparieren'}</span>
-            </button>
-          </div>
-        </div>
-
-        <div style="font-weight: 800; font-size: 12px; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 6px; display: flex; align-items: center; gap: 6px;">
-          ${icon('wrench', '', 14)} Modul-Aufrüstung
-        </div>
-
         ${tankSection}
         ${hullSection}
         ${drillSection}
@@ -3204,37 +3261,6 @@ export class BaseSystem {
         <span>HANGAR</span>
       </div>
     `, content);
-
-
-    const btnFuel = document.getElementById('btn-refuel-dock');
-    if (btnFuel) {
-      btnFuel.onclick = () => {
-        if (this.player.cash < fuelCost) {
-          this.scene.events.emit('notify', 'Nicht genug Geld!');
-          return;
-        }
-        this.player.cash -= fuelCost;
-        this.player.refuel();
-        soundFx.playPurchase();
-        this.openDockModal();
-        this.scene.events.emit('notify', 'Tank vollständig aufgeladen!');
-      };
-    }
-
-    const btnRepair = document.getElementById('btn-repair-dock');
-    if (btnRepair) {
-      btnRepair.onclick = () => {
-        if (this.player.cash < repairCost) {
-          this.scene.events.emit('notify', 'Nicht genug Geld!');
-          return;
-        }
-        this.player.cash -= repairCost;
-        this.player.repairHull();
-        soundFx.playPurchase();
-        this.openDockModal();
-        this.scene.events.emit('notify', 'Rumpf vollständig repariert!');
-      };
-    }
 
     // 1. Tank-Upgrade
     const btnUpgradeTank = document.getElementById('btn-upgrade-tank-dock');
@@ -3473,12 +3499,16 @@ export class BaseSystem {
         value: item.value,
         finishedAt: item.finishedAt || Date.now()
       })),
-      lastTimestamp: this.refinery.lastTimestamp
+      lastTimestamp: this.refinery.lastTimestamp,
+      fuelCoal: typeof this.refinery.fuelCoal === 'number' ? this.refinery.fuelCoal : 0,
+      machineTier: typeof this.refinery.machineTier === 'number' ? this.refinery.machineTier : 1
     };
   }
 
   loadRefinerySaveData(savedData) {
     if (!savedData) return;
+    this.refinery.fuelCoal = typeof savedData.fuelCoal === 'number' ? savedData.fuelCoal : 0;
+    this.refinery.machineTier = typeof savedData.machineTier === 'number' ? savedData.machineTier : 1;
     this.refinery.queue = (savedData.queue || []).map(item => ({
       id: item.id || `q_${Math.random().toString(36).substr(2, 9)}`,
       isProduct: !!item.isProduct,
@@ -3585,6 +3615,49 @@ export class BaseSystem {
     }
   }
 
+  addFuelCoal(amount = 1) {
+    const cargoCoal = this.player.cargo.filter(k => k === 'coal').length;
+    const depotCoal = this.depot?.ores?.['coal'] || 0;
+    const available = cargoCoal + depotCoal;
+
+    if (available <= 0) {
+      this.scene.events.emit('notify', 'Keine Kohle im Frachtraum oder Depot vorhanden!');
+      return;
+    }
+
+    const toAdd = Math.min(amount, available);
+    for (let i = 0; i < toAdd; i++) {
+      this.consumeSingleOre('coal');
+    }
+    this.refinery.fuelCoal = (this.refinery.fuelCoal || 0) + toAdd;
+
+    soundFx.playClick();
+    this.renderRefineryModalBody();
+    if (this.scene.hud) this.scene.hud.update();
+    this.scene.events.emit('notify', `🔥 ${toAdd}x Kohle in die Brennkammer eingefüllt (Aktuell: ${this.refinery.fuelCoal}x).`);
+  }
+
+  upgradeRefineryMachine() {
+    const currentTier = this.refinery.machineTier || 1;
+    const nextTierData = REFINERY_MACHINE_TIERS.find(t => t.tier === currentTier + 1);
+    if (!nextTierData) {
+      this.scene.events.emit('notify', 'Industrie-Maschine hat bereits die maximale Ausbaustufe erreicht!');
+      return;
+    }
+
+    if (this.player.cash < nextTierData.costCash) {
+      this.scene.events.emit('notify', `Nicht genug Geld! Benötigt: €${nextTierData.costCash.toLocaleString()}`);
+      return;
+    }
+
+    this.player.cash -= nextTierData.costCash;
+    this.refinery.machineTier = currentTier + 1;
+    soundFx.playPurchase();
+    this.renderRefineryModalBody();
+    if (this.scene.hud) this.scene.hud.update();
+    this.scene.events.emit('notify', `⚙️ Industrie-Maschine auf Stufe ${this.refinery.machineTier} aufgerüstet (${nextTierData.name})!`);
+  }
+
   renderRefineryModalBody() {
     const container = document.getElementById('refinery-modal-container');
     if (!container) return;
@@ -3599,6 +3672,11 @@ export class BaseSystem {
     });
 
     const availableCoal = (cargoCounts['coal'] || 0) + (this.depot?.ores?.['coal'] || 0);
+    const loadedCoal = typeof this.refinery.fuelCoal === 'number' ? this.refinery.fuelCoal : 0;
+    const currentTier = typeof this.refinery.machineTier === 'number' ? this.refinery.machineTier : 1;
+    const currentTierData = REFINERY_MACHINE_TIERS.find(t => t.tier === currentTier) || REFINERY_MACHINE_TIERS[0];
+    const nextTierData = REFINERY_MACHINE_TIERS.find(t => t.tier === currentTier + 1) || null;
+    const canAffordUpgrade = nextTierData ? (this.player.cash >= nextTierData.costCash) : false;
 
     // Aufteilung in 2 getrennte Produktionslinien
     const smeltQueue = queue.filter(item => !item.isProduct);
@@ -3614,130 +3692,121 @@ export class BaseSystem {
     const pctSmelt = currentSmelt ? Math.min(100, Math.max(0, Math.round(((currentSmelt.durationMs - currentSmelt.remainingMs) / currentSmelt.durationMs) * 100))) : 0;
     const pctCraft = currentCraft ? Math.min(100, Math.max(0, Math.round(((currentCraft.durationMs - currentCraft.remainingMs) / currentCraft.durationMs) * 100))) : 0;
 
+    const hasSmeltFuel = loadedCoal >= 1;
+    const hasCraftFuel = loadedCoal >= 2;
+
     let html = `
-      <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: flex; flex-direction: column; gap: 10px;">
 
-        <!-- 1. ZWEI VISUELLE PRODUKTIONSLINIEN (SCHMELZE & FERTIGUNG) -->
-        <div style="background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(10, 15, 26, 0.98) 100%); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px;">
-          
-          <!-- LINIE 1: SCHMELZOFEN (ROHERZ-SCHMELZE) -->
-          <div style="background: rgba(30, 41, 59, 0.35); border: 1px solid ${isSmelting ? 'rgba(249, 115, 22, 0.45)' : 'rgba(255,255,255,0.06)'}; border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px;">
-            <!-- Header mit Ofen-Brennstoffverbrauch -->
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <span style="display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: ${isSmelting ? '#f97316' : '#64748b'}; box-shadow: 0 0 6px ${isSmelting ? '#f97316' : 'transparent'};"></span>
-                <strong style="color: #f8fafc; font-size: 11px; letter-spacing: 0.5px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 4px;">
-                  ${icon('flame', '', 12)} SCHMELZOFEN
-                </strong>
-                ${smeltQueue.length > 1 ? `<span style="font-size: 10px; color: #94a3b8; background: rgba(0,0,0,0.35); padding: 1px 5px; border-radius: 4px;">+${smeltQueue.length - 1}</span>` : ''}
-              </div>
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <span style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3); color: #fbbf24; font-size: 10.5px; font-weight: 700; padding: 1px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
-                  ${icon('flame', '', 11)} 1x Kohle Brennstoff <strong style="color: ${availableCoal >= 1 ? '#10b981' : '#f87171'}; font-size: 10px;">(${availableCoal}x)</strong>
+        <!-- OBERER BEREICH: LINKS STATUS/PROGRESS, RECHTS KOHLE-EINFÜLLEN & UPGRADE -->
+        <div style="display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap;">
+
+          <!-- LINKE HÄLFTE: OFEN & MASCHINEN-ANZEIGE -->
+          <div style="flex: 1.15; min-width: 270px; display: flex; flex-direction: column; gap: 8px;">
+            <!-- 1. SCHMELZOFEN -->
+            <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid ${isSmelting ? 'rgba(249, 115, 22, 0.45)' : 'rgba(255,255,255,0.08)'}; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; justify-content: space-between; flex: 1; min-height: 72px; box-sizing: border-box; gap: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
+                <div style="display: flex; align-items: center; gap: 6px; min-width: 0;">
+                  <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: ${isSmelting ? '#f97316' : '#64748b'}; box-shadow: 0 0 6px ${isSmelting ? '#f97316' : 'transparent'}; flex-shrink: 0;"></span>
+                  <strong style="color: #f8fafc; font-size: 11.5px; letter-spacing: 0.5px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">
+                    ${icon('flame', isSmelting ? 'flame-anim' : '', 13)} SCHMELZOFEN
+                  </strong>
+                  ${isSmelting ? `
+                    <span style="font-size: 10.5px; font-weight: 700; color: #fbbf24; display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                      &bull; ${itemDisplayIcon('bar_' + currentSmelt.ore, 12)} ${currentSmelt.name}
+                    </span>
+                  ` : `
+                    <span style="background: ${hasSmeltFuel ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'}; border: 1px solid ${hasSmeltFuel ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'}; color: ${hasSmeltFuel ? '#34d399' : '#f87171'}; font-size: 10.5px; font-weight: 700; padding: 1.5px 6px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; margin-left: 2px;">
+                      ${itemDisplayIcon('coal', 12)} <span style="font-size: 9.5px; opacity: 0.9; font-variant-numeric: tabular-nums;">(${loadedCoal}/1)</span>
+                    </span>
+                  `}
+                  ${smeltQueue.length > 1 ? `<span style="font-size: 9.5px; color: #94a3b8; background: rgba(0,0,0,0.35); padding: 1px 5px; border-radius: 4px;">+${smeltQueue.length - 1}</span>` : ''}
+                </div>
+                <span id="smelt-timer" style="font-family: monospace; font-size: 11.5px; font-weight: 800; color: ${isSmelting ? '#fbbf24' : '#64748b'}; font-variant-numeric: tabular-nums; text-align: right; flex-shrink: 0;">
+                  ${isSmelting ? this.formatRefineryClock(currentSmelt.remainingMs) : '00:00'}
                 </span>
+              </div>
+              <!-- Fortschrittsbalken -->
+              <div style="height: 8px; background: #090d16; border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden;">
+                <div id="smelt-progress-fill" style="width: ${pctSmelt}%; height: 100%; background: linear-gradient(90deg, #ea580c 0%, #f59e0b 80%, #fde047 100%); box-shadow: ${isSmelting ? '0 0 8px rgba(245, 158, 11, 0.6)' : 'none'}; transition: width 0.15s linear;"></div>
               </div>
             </div>
 
-            <!-- Visuelle 3-Stationen-Strecke -->
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
-              <!-- 1. Zufuhr -->
-              <div style="width: 72px; height: 44px; box-sizing: border-box; background: rgba(15,23,42,0.65); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;">
-                <span style="color: #38bdf8;">${icon('container', '', 12)}</span>
-                <span style="font-size: 10px; font-weight: 700; color: ${smeltQueue.length > 0 ? '#38bdf8' : '#64748b'};">${smeltQueue.length > 0 ? `${smeltQueue.length} Erze` : 'Leer'}</span>
-              </div>
-
-              <!-- Förderpfeile -->
-              <div style="flex-shrink: 0; width: 14px; text-align: center;">
-                <div class="conveyor-arrow ${isSmelting ? 'running' : ''}" style="font-size: 10px;">▶▶</div>
-              </div>
-
-              <!-- 2. Ofen -->
-              <div class="${isSmelting ? 'furnace-active' : ''}" style="flex: 1.5; min-width: 0; height: 44px; box-sizing: border-box; background: ${isSmelting ? 'rgba(234, 88, 12, 0.12)' : 'rgba(15,23,42,0.5)'}; border: 1px solid ${isSmelting ? 'rgba(249, 115, 22, 0.4)' : 'rgba(255,255,255,0.06)'}; border-radius: 8px; padding: 4px 10px; display: flex; flex-direction: column; justify-content: center; gap: 4px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
-                  <span style="font-size: 11px; font-weight: 700; color: ${isSmelting ? '#f8fafc' : '#64748b'}; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                    ${isSmelting ? `${itemDisplayIcon('bar_' + currentSmelt.ore, 13)} ${currentSmelt.name}` : `${icon('power', '', 11)} Bereit`}
-                  </span>
-                  <span id="smelt-timer" style="font-size: 10.5px; font-weight: 700; color: ${isSmelting ? '#fbbf24' : '#64748b'}; font-variant-numeric: tabular-nums; flex-shrink: 0;">
-                    ${isSmelting ? this.formatRefineryClock(currentSmelt.remainingMs) : '00:00'}
-                  </span>
+            <!-- 2. INDUSTRIE-MASCHINE -->
+            <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid ${isCrafting ? 'rgba(56, 189, 248, 0.45)' : 'rgba(255,255,255,0.08)'}; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; justify-content: space-between; flex: 1; min-height: 72px; box-sizing: border-box; gap: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
+                <div style="display: flex; align-items: center; gap: 6px; min-width: 0;">
+                  <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: ${isCrafting ? '#38bdf8' : '#64748b'}; box-shadow: 0 0 6px ${isCrafting ? '#38bdf8' : 'transparent'}; flex-shrink: 0;"></span>
+                  <strong style="color: #f8fafc; font-size: 11.5px; letter-spacing: 0.5px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">
+                    ${icon('anvil', isCrafting ? 'craft-icon-active' : '', 13)} INDUSTRIE-MASCHINE
+                  </strong>
+                  ${isCrafting ? `
+                    <span style="font-size: 10.5px; font-weight: 700; color: #38bdf8; display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                      &bull; ${itemDisplayIcon(currentCraft.productId, 12)} ${currentCraft.name}
+                    </span>
+                  ` : `
+                    <span style="background: ${hasCraftFuel ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'}; border: 1px solid ${hasCraftFuel ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'}; color: ${hasCraftFuel ? '#34d399' : '#f87171'}; font-size: 10.5px; font-weight: 700; padding: 1.5px 6px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; margin-left: 2px;">
+                      ${itemDisplayIcon('coal', 12)} <span style="font-size: 9.5px; opacity: 0.9; font-variant-numeric: tabular-nums;">(${loadedCoal}/2)</span>
+                    </span>
+                  `}
+                  ${craftQueue.length > 1 ? `<span style="font-size: 9.5px; color: #94a3b8; background: rgba(0,0,0,0.35); padding: 1px 5px; border-radius: 4px;">+${craftQueue.length - 1}</span>` : ''}
                 </div>
-                <div style="width: 100%; height: 6px; background: #090d16; border-radius: 3px; overflow: hidden;">
-                  <div id="smelt-progress-fill" style="width: ${pctSmelt}%; height: 100%; background: linear-gradient(90deg, #ea580c 0%, #f59e0b 100%); transition: width 0.15s linear;"></div>
-                </div>
+                <span id="craft-timer" style="font-family: monospace; font-size: 11.5px; font-weight: 800; color: ${isCrafting ? '#38bdf8' : '#64748b'}; font-variant-numeric: tabular-nums; text-align: right; flex-shrink: 0;">
+                  ${isCrafting ? this.formatRefineryClock(currentCraft.remainingMs) : '00:00'}
+                </span>
               </div>
-
-              <!-- Förderpfeile -->
-              <div style="flex-shrink: 0; width: 14px; text-align: center;">
-                <div class="conveyor-arrow ${isSmelting ? 'running' : ''}" style="font-size: 10px;">▶▶</div>
-              </div>
-
-              <!-- 3. Ausgang (Depot) -->
-              <div style="width: 72px; height: 44px; box-sizing: border-box; background: ${finishedSmelt.length > 0 ? 'rgba(16, 185, 129, 0.12)' : 'rgba(15,23,42,0.65)'}; border: 1px solid ${finishedSmelt.length > 0 ? 'rgba(16, 185, 129, 0.4)' : 'rgba(255,255,255,0.06)'}; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;">
-                <span style="color: ${finishedSmelt.length > 0 ? '#34d399' : '#38bdf8'};">${icon('warehouse', '', 13)}</span>
-                <span style="font-size: 10px; font-weight: 700; color: ${finishedSmelt.length > 0 ? '#34d399' : '#38bdf8'};">${finishedSmelt.length > 0 ? `${finishedSmelt.length} Barren` : 'Depot'}</span>
+              <!-- Fortschrittsbalken -->
+              <div style="height: 8px; background: #090d16; border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden;">
+                <div id="craft-progress-fill" style="width: ${pctCraft}%; height: 100%; background: linear-gradient(90deg, #0284c7 0%, #38bdf8 80%, #bae6fd 100%); box-shadow: ${isCrafting ? '0 0 8px rgba(56, 189, 248, 0.6)' : 'none'}; transition: width 0.15s linear;"></div>
               </div>
             </div>
           </div>
 
-          <!-- LINIE 2: INDUSTRIE-FERTIGUNG (MONTAGELINIE) -->
-          <div style="background: rgba(30, 41, 59, 0.35); border: 1px solid ${isCrafting ? 'rgba(56, 189, 248, 0.45)' : 'rgba(255,255,255,0.06)'}; border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px;">
-            <!-- Header mit Fertigungs-Brennstoffverbrauch -->
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <span style="display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: ${isCrafting ? '#38bdf8' : '#64748b'}; box-shadow: 0 0 6px ${isCrafting ? '#38bdf8' : 'transparent'};"></span>
-                <strong style="color: #f8fafc; font-size: 11px; letter-spacing: 0.5px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 4px;">
-                  ${icon('anvil', '', 12)} INDUSTRIE-FERTIGUNG
-                </strong>
-                ${craftQueue.length > 1 ? `<span style="font-size: 10px; color: #94a3b8; background: rgba(0,0,0,0.35); padding: 1px 5px; border-radius: 4px;">+${craftQueue.length - 1}</span>` : ''}
-              </div>
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <span style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3); color: #fbbf24; font-size: 10.5px; font-weight: 700; padding: 1px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
-                  ${icon('flame', '', 11)} 2x Kohle Brennstoff <strong style="color: ${availableCoal >= 2 ? '#10b981' : '#f87171'}; font-size: 10px;">(${availableCoal}x)</strong>
+          <!-- RECHTE HÄLFTE: STEUERUNG (KOHLE EINFÜLLEN & MASCHINE UPGRADEN) -->
+          <div style="flex: 1; min-width: 250px; display: flex; flex-direction: column; gap: 8px;">
+
+            <!-- Box 1: Kohle-Brennkammer & Einfüll-Button -->
+            <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; justify-content: space-between; flex: 1; min-height: 72px; box-sizing: border-box; gap: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
+                <span style="font-size: 11px; font-weight: 700; color: #cbd5e1; display: inline-flex; align-items: center; gap: 4px;">
+                  ${itemDisplayIcon('coal', 13)} Brennkammer
+                </span>
+                <span style="background: ${loadedCoal > 0 ? 'rgba(16, 185, 129, 0.18)' : 'rgba(239, 68, 68, 0.18)'}; border: 1px solid ${loadedCoal > 0 ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)'}; color: ${loadedCoal > 0 ? '#34d399' : '#f87171'}; font-size: 11px; font-weight: 800; padding: 1px 8px; border-radius: 5px;">
+                  ${loadedCoal}x geladen
                 </span>
               </div>
-            </div>
-
-            <!-- Visuelle 3-Stationen-Strecke -->
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
-              <!-- 1. Zufuhr -->
-              <div style="width: 72px; height: 44px; box-sizing: border-box; background: rgba(15,23,42,0.65); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;">
-                <span style="color: #38bdf8;">${icon('container', '', 12)}</span>
-                <span style="font-size: 10px; font-weight: 700; color: ${craftQueue.length > 0 ? '#38bdf8' : '#64748b'};">${craftQueue.length > 0 ? `${craftQueue.length} Aufträge` : 'Leer'}</span>
-              </div>
-
-              <!-- Förderpfeile -->
-              <div style="flex-shrink: 0; width: 14px; text-align: center;">
-                <div class="conveyor-arrow ${isCrafting ? 'running' : ''}" style="font-size: 10px;">▶▶</div>
-              </div>
-
-              <!-- 2. Montage -->
-              <div style="flex: 1.5; min-width: 0; height: 44px; box-sizing: border-box; background: ${isCrafting ? 'rgba(56, 189, 248, 0.12)' : 'rgba(15,23,42,0.5)'}; border: 1px solid ${isCrafting ? 'rgba(56, 189, 248, 0.4)' : 'rgba(255,255,255,0.06)'}; border-radius: 8px; padding: 4px 10px; display: flex; flex-direction: column; justify-content: center; gap: 4px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
-                  <span style="font-size: 11px; font-weight: 700; color: ${isCrafting ? '#f8fafc' : '#64748b'}; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                    ${isCrafting ? `${itemDisplayIcon(currentCraft.productId, 13)} ${currentCraft.name}` : `${icon('power', '', 11)} Bereit`}
-                  </span>
-                  <span id="craft-timer" style="font-size: 10.5px; font-weight: 700; color: ${isCrafting ? '#38bdf8' : '#64748b'}; font-variant-numeric: tabular-nums; flex-shrink: 0;">
-                    ${isCrafting ? this.formatRefineryClock(currentCraft.remainingMs) : '00:00'}
-                  </span>
-                </div>
-                <div style="width: 100%; height: 6px; background: #090d16; border-radius: 3px; overflow: hidden;">
-                  <div id="craft-progress-fill" style="width: ${pctCraft}%; height: 100%; background: linear-gradient(90deg, #0284c7 0%, #38bdf8 100%); transition: width 0.15s linear;"></div>
-                </div>
-              </div>
-
-              <!-- Förderpfeile -->
-              <div style="flex-shrink: 0; width: 14px; text-align: center;">
-                <div class="conveyor-arrow ${isCrafting ? 'running' : ''}" style="font-size: 10px;">▶▶</div>
-              </div>
-
-              <!-- 3. Ausgang (Depot) -->
-              <div style="width: 72px; height: 44px; box-sizing: border-box; background: ${finishedCraft.length > 0 ? 'rgba(16, 185, 129, 0.12)' : 'rgba(15,23,42,0.65)'}; border: 1px solid ${finishedCraft.length > 0 ? 'rgba(16, 185, 129, 0.4)' : 'rgba(255,255,255,0.06)'}; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;">
-                <span style="color: ${finishedCraft.length > 0 ? '#34d399' : '#38bdf8'};">${icon('warehouse', '', 13)}</span>
-                <span style="font-size: 10px; font-weight: 700; color: ${finishedCraft.length > 0 ? '#34d399' : '#38bdf8'};">${finishedCraft.length > 0 ? `${finishedCraft.length} Waren` : 'Depot'}</span>
+              <div style="display: flex; gap: 6px; align-items: center;">
+                <button id="btn-add-fuel-coal" class="btn-buy" ${availableCoal > 0 ? '' : 'disabled'} style="flex: 1; height: 32px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 4px;" title="1x Kohle aus Fracht/Depot in die Brennkammer laden (${availableCoal}x vorrätig)">
+                  ${icon('flame', '', 12)} Kohle einfüllen (+1)
+                </button>
+                ${availableCoal > 1 ? `
+                  <button id="btn-add-fuel-all" class="btn-buy" style="height: 32px; font-size: 11px; font-weight: 700; padding: 0 10px; display: inline-flex; align-items: center; justify-content: center;" title="Alle verfügbare Kohle (${availableCoal}x) einfüllen">
+                    Alle (${availableCoal})
+                  </button>
+                ` : ''}
               </div>
             </div>
+
+            <!-- Box 2: Industrie-Maschine Upgrade -->
+            <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(56, 189, 248, 0.22); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; justify-content: space-between; flex: 1; min-height: 72px; box-sizing: border-box; gap: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
+                <span style="font-size: 11px; font-weight: 700; color: #38bdf8; display: inline-flex; align-items: center; gap: 4px;">
+                  ${icon('cpu', '', 12)} Industrie-Maschine: Stufe ${currentTier}/5
+                </span>
+                <span style="font-size: 10.5px; color: #94a3b8; font-weight: 600;">${currentTierData.name}</span>
+              </div>
+              ${nextTierData ? `
+                <button id="btn-upgrade-machine" class="btn-buy" ${canAffordUpgrade ? '' : 'disabled'} style="height: 32px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 5px;" title="Schaltet tiefere Erze & Bauteile frei: ${nextTierData.desc}">
+                  ${icon('chevrons-up', '', 13)} Upgrade auf Stufe ${nextTierData.tier} (€${nextTierData.costCash.toLocaleString()})
+                </button>
+              ` : `
+                <div style="height: 32px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: #34d399; gap: 5px;">
+                  ${icon('check-circle', '', 12)} Maximale Maschinenstufe erreicht
+                </div>
+              `}
+            </div>
+
           </div>
-
         </div>
     `;
 
@@ -3754,7 +3823,7 @@ export class BaseSystem {
       const finishedBadges = Object.entries(grouped).map(([name, data]) => `
         <span style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.5); padding: 3px 8px; border-radius: 6px; font-size: 11.5px; color: #a7f3d0; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
           ${itemDisplayIcon(data.itemKey, 13)}
-          <span>${data.count}x ${name} (+€${data.value})</span>
+          <span>${data.count}x ${name}</span>
         </span>
       `).join('');
 
@@ -3779,7 +3848,7 @@ export class BaseSystem {
       `;
     }
 
-    // 3. INDUSTRIE-FERTIGUNG (Neue Produkte aus Erzen herstellen - Brennstoff wird beim Ofen oben gezeigt!)
+    // 3. INDUSTRIE-FERTIGUNG (Neue Produkte aus Erzen herstellen)
     const visibleFactoryProducts = Object.entries(FACTORY_PRODUCTS).filter(([prodId, prod]) => {
       return Object.keys(prod.recipe).every(ore => this.player.isOreDiscovered(ore));
     });
@@ -3803,7 +3872,11 @@ export class BaseSystem {
       `;
     } else {
       for (const [prodId, prod] of visibleFactoryProducts) {
-        let canCraft = true;
+        const isTierLocked = (prod.minTier || 1) > currentTier;
+        const fuelNeeded = prod.fuelCoal || 2;
+        const hasFuel = loadedCoal >= fuelNeeded;
+
+        let canCraft = !isTierLocked && hasFuel;
         const ingBadges = Object.entries(prod.recipe).map(([ore, need]) => {
           const inCargo = cargoCounts[ore] || 0;
           const inDepot = this.depot?.ores?.[ore] || 0;
@@ -3814,14 +3887,9 @@ export class BaseSystem {
           return `<span style="background: ${isMet ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'}; border: 1px solid ${isMet ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'}; color: ${isMet ? '#34d399' : '#f87171'}; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">${itemDisplayIcon(ore, 13)} ${need}x ${oreName} <span style="font-size: 9.5px; opacity: 0.85; font-variant-numeric: tabular-nums;">(${have}/${need})</span></span>`;
         }).join('');
 
-        // Prüfung: Reicht die Kohle für den Ofen-Brennstoff (2x) + eventuelle Rezept-Kohle?
-        const recipeCoal = prod.recipe['coal'] || 0;
-        const totalCoalNeeded = recipeCoal + (prod.fuelCoal || 2);
-        if (availableCoal < totalCoalNeeded) canCraft = false;
-
         html += `
-          <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 12px; box-sizing: border-box;">
-            <!-- Spalte 1: Icon (32px) + Name (145px) -->
+          <div style="background: rgba(0,0,0,0.3); border: 1px solid ${isTierLocked ? 'rgba(245, 158, 11, 0.2)' : 'rgba(255,255,255,0.06)'}; border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 12px; box-sizing: border-box; opacity: ${isTierLocked ? '0.75' : '1'};">
+            <!-- Spalte 1: Icon (32px) + Name (185px) -->
             <div style="display: flex; align-items: center; gap: 10px; width: 185px; min-width: 185px; flex-shrink: 0;">
               <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.25); border-radius: 8px; flex-shrink: 0; color: #38bdf8;">
                 ${itemDisplayIcon(prodId, 18)}
@@ -3829,30 +3897,29 @@ export class BaseSystem {
               <strong style="color: #f8fafc; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${prod.name}</strong>
             </div>
 
-            <!-- Spalte 2: Wert / Börsenpreis (80px) -->
-            <div style="width: 80px; min-width: 80px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
-              <span style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.35); padding: 2px 8px; border-radius: 6px; font-size: 11px; color: #fbbf24; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 4px; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
-                ${icon('coins', '', 11)} €${prod.value}
-              </span>
-            </div>
-
-            <!-- Spalte 3: Fertigungs-Dauer (62px) -->
+            <!-- Spalte 2: Fertigungs-Dauer (62px) -->
             <div style="width: 62px; min-width: 62px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
               <span style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); padding: 2px 7px; border-radius: 6px; font-size: 10.5px; color: #94a3b8; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 3px; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
                 ${icon('clock', '', 10)} ${prod.durationSec}s
               </span>
             </div>
 
-            <!-- Spalte 4: Zutaten / Bauplan-Rezepte (flex: 1) -->
+            <!-- Spalte 3: Zutaten / Bauplan-Rezepte (flex: 1) -->
             <div style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
               ${ingBadges}
             </div>
 
-            <!-- Spalte 5: Herstellen-Button (110px) -->
-            <div style="width: 110px; min-width: 110px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end;">
-              <button class="btn-craft-product btn-buy" data-prod="${prodId}" ${canCraft ? '' : 'disabled'} style="width: 100%; height: 32px; padding: 0 10px; font-size: 11.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
-                ${icon('hammer', '', 13)} Herstellen
-              </button>
+            <!-- Spalte 4: Herstellen-Button / Sperre (120px) -->
+            <div style="width: 120px; min-width: 120px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end;">
+              ${isTierLocked ? `
+                <span style="font-size: 10px; font-weight: 800; color: #f59e0b; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 6px; padding: 4px 8px; display: inline-flex; align-items: center; gap: 4px; text-align: center; line-height: 1.2;">
+                  ${icon('lock', '', 11)} Stufe ${prod.minTier}
+                </span>
+              ` : `
+                <button class="btn-craft-product btn-buy" data-prod="${prodId}" ${canCraft ? '' : 'disabled'} style="width: 100%; height: 32px; padding: 0 10px; font-size: 11.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 6px;" title="${!hasFuel ? 'Brennkammer benötigt 2x Kohle!' : 'Produkt herstellen'}">
+                  ${icon('hammer', '', 13)} Herstellen
+                </button>
+              `}
             </div>
           </div>
         `;
@@ -3886,12 +3953,18 @@ export class BaseSystem {
         </div>
       `;
     } else {
+      const canSmeltAny = loadedCoal > 0 && totalAvailableOres > 0;
       html += `
         ${totalAvailableOres > 0 ? `
-          <button id="btn-deposit-all-ores" class="btn-buy" ${availableCoal > 0 ? '' : 'disabled'} style="width: 100%; height: 34px; font-size: 11.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+          <button id="btn-deposit-all-ores" class="btn-buy" ${canSmeltAny ? '' : 'disabled'} style="width: 100%; height: 34px; font-size: 11.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
             ${icon('flame', '', 14)}
-            <span>Alle Erze schmelzen (${totalAvailableOres})</span>
+            <span>Alle Erze schmelzen (${Math.min(totalAvailableOres, loadedCoal)} / ${totalAvailableOres})</span>
           </button>
+          ${loadedCoal === 0 ? `
+            <div style="color: #f87171; font-size: 11px; font-weight: 700; text-align: center; padding: 2px 0;">
+              ⚠️ Brennkammer leer! Bitte fülle oben erst Kohle mit dem Button ein.
+            </div>
+          ` : ''}
         ` : ''}
       `;
 
@@ -3902,18 +3975,17 @@ export class BaseSystem {
         const oreName = ORE_DATA[oreKey]?.name || oreKey;
         const refinedName = getRefinedOreName(oreKey);
         const durSec = REFINERY_DURATIONS_SEC[oreKey] || Math.max(20, Math.round((ORE_DATA[oreKey]?.value || 25) * 0.70));
-        const netVal = getRefinedOreNetValue(oreKey);
         const inCargo = cargoCounts[oreKey] || 0;
         const inDepot = this.depot?.ores?.[oreKey] || 0;
         const totalThisOre = inCargo + inDepot;
 
-        const canAffordFuel = (oreKey === 'coal') ? (availableCoal >= 2) : (availableCoal >= 1);
-        const canSmeltThis = canAffordFuel && totalThisOre > 0;
+        const hasFuel = loadedCoal >= 1;
+        const canSmeltThis = hasFuel && totalThisOre > 0;
 
         html += `
           <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 12px; box-sizing: border-box;">
-            <!-- Spalte 1: Icon + Erz ➔ Barren (250px) -->
-            <div style="display: flex; align-items: center; gap: 10px; width: 250px; min-width: 250px; flex-shrink: 0;">
+            <!-- Spalte 1: Icon + Erz ➔ Barren (flex: 1) -->
+            <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;">
               <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.25); border-radius: 8px; flex-shrink: 0;">
                 ${itemDisplayIcon(oreKey, 18)}
               </span>
@@ -3924,28 +3996,14 @@ export class BaseSystem {
               </strong>
             </div>
 
-            <!-- Spalte 2: Wert (80px) -->
-            <div style="width: 80px; min-width: 80px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
-              <span style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); padding: 2px 8px; border-radius: 6px; font-size: 11px; color: #fbbf24; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 4px; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
-                ${icon('coins', '', 11)} €${netVal}
-              </span>
-            </div>
-
-            <!-- Spalte 3: Dauer (62px) -->
+            <!-- Spalte 2: Dauer (62px) -->
             <div style="width: 62px; min-width: 62px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
               <span style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); padding: 2px 7px; border-radius: 6px; font-size: 10.5px; color: #94a3b8; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 3px; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
                 ${icon('clock', '', 10)} ${durSec}s
               </span>
             </div>
 
-            <!-- Spalte 4: Vorrat (flex: 1) -->
-            <div style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px;">
-              <span style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 6px; font-size: 11px; color: #94a3b8; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums;">
-                ${totalThisOre}x verfügbar
-              </span>
-            </div>
-
-            <!-- Spalte 5: Buttons -->
+            <!-- Spalte 3: Buttons -->
             <div style="display: flex; gap: 6px; align-items: center; justify-content: flex-end; flex-shrink: 0;">
               <button class="btn-deposit-one btn-3d-secondary" data-ore="${oreKey}" ${canSmeltThis ? '' : 'disabled'} style="height: 30px; padding: 0 10px; font-size: 11px; font-weight: 700; border-radius: 6px;">+1</button>
               <button class="btn-deposit-all-type btn-action" data-ore="${oreKey}" ${canSmeltThis ? '' : 'disabled'} style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 700; border-radius: 6px;">Alle (${totalThisOre})</button>
@@ -3965,6 +4023,21 @@ export class BaseSystem {
     refreshIcons(container);
 
     // Event Listener
+    const btnAddCoal = container.querySelector('#btn-add-fuel-coal');
+    if (btnAddCoal) {
+      btnAddCoal.onclick = () => this.addFuelCoal(1);
+    }
+
+    const btnAddCoalAll = container.querySelector('#btn-add-fuel-all');
+    if (btnAddCoalAll) {
+      btnAddCoalAll.onclick = () => this.addFuelCoal(9999);
+    }
+
+    const btnUpgradeMachine = container.querySelector('#btn-upgrade-machine');
+    if (btnUpgradeMachine) {
+      btnUpgradeMachine.onclick = () => this.upgradeRefineryMachine();
+    }
+
     const btnTransfer = document.getElementById('btn-transfer-to-storage');
     if (btnTransfer) {
       btnTransfer.onclick = () => {
@@ -4006,8 +4079,6 @@ export class BaseSystem {
         this.depositOreToRefinery(oreKey, 9999);
       };
     });
-
-
   }
 
   consumeSingleOre(oreKey) {
@@ -4027,23 +4098,25 @@ export class BaseSystem {
     const prod = FACTORY_PRODUCTS[productId];
     if (!prod) return;
 
+    const currentTier = this.refinery.machineTier || 1;
+    if (prod.minTier && prod.minTier > currentTier) {
+      this.scene.events.emit('notify', `🔒 Industrie-Maschine Stufe ${prod.minTier} erforderlich! (Aktuell: Stufe ${currentTier})`);
+      return;
+    }
+
+    const fuelNeeded = prod.fuelCoal || 2;
+    const loadedFuel = this.refinery.fuelCoal || 0;
+    if (loadedFuel < fuelNeeded) {
+      this.scene.events.emit('notify', `⚠️ Brennkammer benötigt ${fuelNeeded}x Kohle! Bitte erst oben rechts Kohle einfüllen.`);
+      return;
+    }
+
     const cargoCounts = {};
     this.player.cargo.forEach(ore => {
       cargoCounts[ore] = (cargoCounts[ore] || 0) + 1;
     });
 
-    const availableCoal = (cargoCounts['coal'] || 0) + (this.depot?.ores?.['coal'] || 0);
-    const fuelNeeded = prod.fuelCoal || 2;
-    const recipeCoal = prod.recipe['coal'] || 0;
-    const totalCoalNeeded = recipeCoal + fuelNeeded;
-
-    if (availableCoal < totalCoalNeeded) {
-      this.scene.events.emit('notify', `Nicht genug Kohle! Die Fertigungslinie benötigt ${fuelNeeded}x Kohle als Brennstoff.`);
-      return;
-    }
-
     for (const [ore, needed] of Object.entries(prod.recipe)) {
-      if (ore === 'coal') continue;
       const inCargo = cargoCounts[ore] || 0;
       const inDepot = this.depot?.ores?.[ore] || 0;
       if (inCargo + inDepot < needed) {
@@ -4059,10 +4132,8 @@ export class BaseSystem {
       }
     }
 
-    // 2. Ofen-Brennstoff verbrauchen (2x Kohle)
-    for (let i = 0; i < fuelNeeded; i++) {
-      this.consumeSingleOre('coal');
-    }
+    // 2. Brennstoff ausschließlich aus Brennkammer verbrauchen (nicht automatisch aus Fracht/Depot)
+    this.refinery.fuelCoal = Math.max(0, (this.refinery.fuelCoal || 0) - fuelNeeded);
 
     const durationMs = prod.durationSec * 1000;
     this.refinery.queue.push({
@@ -4135,58 +4206,22 @@ export class BaseSystem {
   }
 
   depositOreToRefinery(oreKey, count = 1) {
-    const availableCoal = (this.player.cargo.filter(k => k === 'coal').length) + (this.depot?.ores?.['coal'] || 0);
+    const loadedFuel = this.refinery.fuelCoal || 0;
+    if (loadedFuel <= 0) {
+      this.scene.events.emit('notify', '⚠️ Brennkammer ist leer! Bitte erst oben rechts Kohle mit dem Button einfüllen.');
+      return;
+    }
+
     const availableTarget = (this.player.cargo.filter(k => k === oreKey).length) + (this.depot?.ores?.[oreKey] || 0);
-
-    // Schmelzofen benötigt immer 1x Kohle als Brennstoff
-    if (oreKey === 'coal') {
-      // 1 Kohle zum Einschmelzen + 1 Kohle als Brennstoff = 2 Kohle pro Brikett
-      const maxPossible = Math.floor(availableCoal / 2);
-      const toSmelt = Math.min(count, maxPossible);
-      if (toSmelt <= 0) {
-        if (availableCoal < 2) {
-          this.scene.events.emit('notify', 'Mindestens 2x Kohle erforderlich (1x zum Veredeln + 1x als Brennstoff)!');
-        }
-        return;
-      }
-
-      for (let i = 0; i < toSmelt; i++) {
-        this.consumeSingleOre('coal'); // Material
-        this.consumeSingleOre('coal'); // Brennstoff
-        const durationMs = getRefinerySmeltDurationMs('coal');
-        const netVal = getRefinedOreNetValue('coal');
-        this.refinery.queue.push({
-          id: `q_${Date.now()}_${Math.random().toString(36).substr(2, 7)}`,
-          ore: 'coal',
-          name: getRefinedOreName('coal'),
-          durationMs,
-          remainingMs: durationMs,
-          value: netVal
-        });
-      }
-
-      soundFx.playFurnace();
-      this.renderRefineryModalBody();
-      if (this.scene.hud) this.scene.hud.update();
-      this.scene.events.emit('notify', `${toSmelt}x Kohle-Brikett in Ofen gegeben (${toSmelt}x Kohle als Brennstoff verbraucht).`);
-      return;
-    }
-
-    // Anderes Erz als Kohle:
-    if (availableCoal <= 0) {
-      this.scene.events.emit('notify', 'Keine Kohle vorhanden! Der Schmelzofen benötigt 1x Kohle als Brennstoff.');
-      return;
-    }
-
-    const toSmelt = Math.min(count, availableTarget, availableCoal);
+    const toSmelt = Math.min(count, availableTarget, loadedFuel);
     if (toSmelt <= 0) {
       this.scene.events.emit('notify', `Kein ${ORE_DATA[oreKey]?.name || oreKey} zum Einschmelzen vorhanden.`);
       return;
     }
 
     for (let i = 0; i < toSmelt; i++) {
-      this.consumeSingleOre(oreKey); // Erz
-      this.consumeSingleOre('coal');  // Brennstoff
+      this.consumeSingleOre(oreKey);
+      this.refinery.fuelCoal--;
       const durationMs = getRefinerySmeltDurationMs(oreKey);
       const netVal = getRefinedOreNetValue(oreKey);
       this.refinery.queue.push({
@@ -4202,13 +4237,14 @@ export class BaseSystem {
     soundFx.playFurnace();
     this.renderRefineryModalBody();
     if (this.scene.hud) this.scene.hud.update();
-    this.scene.events.emit('notify', `${toSmelt}x ${ORE_DATA[oreKey]?.name || oreKey} im Ofen (${toSmelt}x Kohle als Brennstoff verbraucht).`);
+    const oreDisplayName = oreKey === 'coal' ? 'Kohle-Brikett' : (ORE_DATA[oreKey]?.name || oreKey);
+    this.scene.events.emit('notify', `${toSmelt}x ${oreDisplayName} im Ofen (${toSmelt}x Kohle aus Brennkammer verbraucht).`);
   }
 
   depositAllOresToRefinery() {
-    let availableCoal = (this.player.cargo.filter(k => k === 'coal').length) + (this.depot?.ores?.['coal'] || 0);
-    if (availableCoal <= 0) {
-      this.scene.events.emit('notify', 'Keine Kohle vorhanden! Der Schmelzofen benötigt 1x Kohle als Brennstoff pro Vorgang.');
+    const loadedFuel = this.refinery.fuelCoal || 0;
+    if (loadedFuel <= 0) {
+      this.scene.events.emit('notify', '⚠️ Brennkammer ist leer! Bitte erst oben rechts Kohle mit dem Button einfüllen.');
       return;
     }
 
@@ -4223,22 +4259,17 @@ export class BaseSystem {
     }
 
     const allOres = [...cargoCopy, ...depotList];
-    // Kohle zuletzt, damit sie als Brennstoff für andere Erze genutzt wird
+    // Kohle zuletzt, damit wertvollere Erze Vorrang bei der Schmelze haben
     allOres.sort((a, b) => (a === 'coal' ? 1 : 0) - (b === 'coal' ? 1 : 0));
 
     let smelted = 0;
     for (const oreKey of allOres) {
-      if (oreKey === 'coal') {
-        if (availableCoal < 2) break;
-      } else {
-        if (availableCoal < 1) break;
-      }
+      if ((this.refinery.fuelCoal || 0) <= 0) break;
 
       const consumed = this.consumeSingleOre(oreKey);
       if (!consumed) continue;
 
-      this.consumeSingleOre('coal'); // Brennstoff
-      availableCoal--;
+      this.refinery.fuelCoal--;
 
       const durationMs = getRefinerySmeltDurationMs(oreKey);
       const netVal = getRefinedOreNetValue(oreKey);
@@ -4257,9 +4288,9 @@ export class BaseSystem {
       soundFx.playFurnace();
       this.renderRefineryModalBody();
       if (this.scene.hud) this.scene.hud.update();
-      this.scene.events.emit('notify', `${smelted} Erze in den Schmelzofen gegeben (${smelted}x Kohle als Brennstoff verbraucht)!`);
+      this.scene.events.emit('notify', `${smelted} Erze in den Schmelzofen gegeben (${smelted}x Kohle aus Brennkammer verbraucht)!`);
     } else {
-      this.scene.events.emit('notify', 'Nicht genug Kohle vorhanden, um Erze einzuschmelzen.');
+      this.scene.events.emit('notify', 'Keine Erze zum Einschmelzen vorhanden.');
     }
   }
 

@@ -1,7 +1,7 @@
 import { ORE_DATA } from '../core/GridSystem.js';
 import { soundFx } from '../core/SoundEffects.js';
 import { icon, refreshIcons, oreIcon, itemDisplayIcon, getRefinedOreName, drillerVehicleIcon } from './IconHelper.js';
-import { notifyModalClosed } from '../core/BaseSystem.js';
+import { notifyModalClosed, closeActiveModal } from '../core/BaseSystem.js';
 
 /**
  * DrillerMenuModal.js
@@ -30,14 +30,7 @@ export class DrillerMenuModal {
   }
 
   close() {
-    notifyModalClosed();
-    const modalEl = document.getElementById('building-modal');
-    if (modalEl) {
-      modalEl.style.display = 'none';
-    }
-    if (this.scene) {
-      this.scene.isPaused = false;
-    }
+    closeActiveModal(this.scene);
   }
 
   render() {
@@ -274,15 +267,8 @@ export class DrillerMenuModal {
       </div>
     `;
 
+    document.body.classList.add('modal-open');
     modalEl.style.display = 'flex';
     refreshIcons(modalEl);
-
-    const closeBtn = document.getElementById('modal-close-btn');
-    if (closeBtn) {
-      closeBtn.onclick = (e) => {
-        if (e) e.stopPropagation();
-        this.close();
-      };
-    }
   }
 }

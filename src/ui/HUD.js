@@ -4,7 +4,7 @@ import { MissionsProgressModal } from './MissionsProgressModal.js';
 import { DrillerMenuModal } from './DrillerMenuModal.js';
 import { icon, refreshIcons, oreIcon } from './IconHelper.js';
 import { ORE_DATA } from '../core/GridSystem.js';
-import { notifyModalClosed } from '../core/BaseSystem.js';
+import { notifyModalClosed, closeActiveModal } from '../core/BaseSystem.js';
 import { toastManager } from './ToastManager.js';
 
 const ORE_DESCRIPTIONS = {
@@ -108,13 +108,17 @@ export class HUD {
 
     // DOM-Referenzen
     this.fuelText = document.getElementById('hud-fuel-text');
+    this.fuelNum = document.getElementById('hud-fuel-num');
     this.fuelBar = document.getElementById('hud-fuel-bar');
     this.fuelBarContainer = document.getElementById('hud-fuel-bar-container');
     this.fuelReturnLine = document.getElementById('hud-fuel-return-line');
     this.hullText = document.getElementById('hud-hull-text');
+    this.hullNum = document.getElementById('hud-hull-num');
     this.hullBar = document.getElementById('hud-hull-bar');
     this.hullBarContainer = document.getElementById('hud-hull-bar-container');
     this.cargoText = document.getElementById('hud-cargo-text');
+    this.cargoNum = document.getElementById('hud-cargo-num');
+    this.cargoMax = document.getElementById('hud-cargo-max');
     this.cashText = document.getElementById('hud-cash');
     this.depthText = document.getElementById('hud-depth');
     this.recallBtn = document.getElementById('btn-recall');
@@ -178,9 +182,20 @@ export class HUD {
     }
 
     if (this.pauseBtn) {
-      this.pauseBtn.onclick = () => {
+      let lastPauseTrigger = 0;
+      const handlePause = (e) => {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        const now = Date.now();
+        if (now - lastPauseTrigger < 250) return;
+        lastPauseTrigger = now;
         this.togglePauseMenu();
       };
+      ['pointerdown', 'click'].forEach((evt) => {
+        this.pauseBtn.addEventListener(evt, handlePause, { passive: false });
+      });
     }
 
     this.scene.events.on('mission_updated', (info) => {
@@ -293,8 +308,14 @@ export class HUD {
     if (this.fuelBar) {
       this.fuelBar.style.width = `${fuelPercent}%`;
     }
-    if (this.fuelText) {
-      this.fuelText.innerText = `${Math.round(fuelPercent)}%`;
+    const roundedFuel = Math.round(fuelPercent);
+    if (this.fuelNum) {
+      if (this._lastFuel !== roundedFuel) {
+        this.fuelNum.textContent = roundedFuel;
+        this._lastFuel = roundedFuel;
+      }
+    } else if (this.fuelText) {
+      this.fuelText.textContent = `${roundedFuel}%`;
     }
 
     // Dynamischer Rückweg-Bedarf: Schwarzer Strich zur garantierten Rückkehr
@@ -323,8 +344,17 @@ export class HUD {
 
     // Karosserie / Rumpfintegrität (Reine Prozent-Anzeige)
     const hullPercent = Math.max(0, Math.min(100, (this.player.hull / this.player.maxHull) * 100));
+    const roundedHull = Math.round(hullPercent);
+    if (this.hullNum) {
+      if (this._lastHull !== roundedHull) {
+        this.hullNum.textContent = roundedHull;
+        this._lastHull = roundedHull;
+      }
+    } else if (this.hullText) {
+      this.hullText.textContent = `${roundedHull}%`;
+    }
+
     if (this.hullText) {
-      this.hullText.innerText = `${Math.round(hullPercent)}%`;
       if (hullPercent <= 20) {
         this.hullText.style.color = '#ef4444';
       } else if (hullPercent <= 45) {
@@ -344,8 +374,17 @@ export class HUD {
     }
 
     // Fracht (nur als Zahl)
-    if (this.cargoText) {
-      this.cargoText.innerText = `${this.player.cargoCount}/${this.player.maxCargo}`;
+    if (this.cargoNum && this.cargoMax) {
+      if (this._lastCargo !== this.player.cargoCount) {
+        this.cargoNum.textContent = this.player.cargoCount;
+        this._lastCargo = this.player.cargoCount;
+      }
+      if (this._lastMaxCargo !== this.player.maxCargo) {
+        this.cargoMax.textContent = this.player.maxCargo;
+        this._lastMaxCargo = this.player.maxCargo;
+      }
+    } else if (this.cargoText) {
+      this.cargoText.textContent = `${this.player.cargoCount}/${this.player.maxCargo}`;
     }
 
     // Level (links, nur als Zahl)
@@ -415,19 +454,16 @@ export class HUD {
 
   togglePauseMenu() {
     const modalEl = document.getElementById('building-modal');
-    if (modalEl && modalEl.style.display === 'flex' && this.isPauseMenuOpen) {
-      this.closePauseMenu();
+    const isModalOpen = modalEl && modalEl.style.display && modalEl.style.display !== 'none';
+    if (isModalOpen) {
+      closeActiveModal(this.scene);
     } else {
       this.openPauseMenu();
     }
   }
 
   closePauseMenu() {
-    notifyModalClosed();
-    const modalEl = document.getElementById('building-modal');
-    if (modalEl) modalEl.style.display = 'none';
-    if (this.scene) this.scene.isPaused = false;
-    this.isPauseMenuOpen = false;
+    closeActiveModal(this.scene);
   }
 
   openPauseMenu() {
@@ -446,20 +482,10 @@ export class HUD {
       </div>
     `;
 
-    const fuelPct = Math.max(0, Math.min(100, Math.round((this.player.fuel / this.player.maxFuel) * 100)));
     const freeCount = typeof this.player.freeRescues === 'number' ? this.player.freeRescues : 3;
 
     bodyEl.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 12px;">
-        <!-- Status-Übersicht -->
-        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; font-size: 11.5px;">
-          <span style="color: #94a3b8;">Tiefe: <strong style="color: #38bdf8;">${this.player.depthMeters} m</strong></span>
-          <span style="color: #94a3b8;">Konto: <strong style="color: #fbbf24;">€${this.player.cash}</strong></span>
-          <span style="color: #94a3b8;">Tank: <strong style="color: ${fuelPct < 25 ? '#ef4444' : '#34d399'};">${fuelPct}%</strong></span>
-          <span style="color: #94a3b8;">Level: <strong style="color: #c084fc;">${this.player.level || 1}</strong></span>
-        </div>
-
-
         <!-- 2. Rettungsknopf (3 kostenlos) -->
         <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 10px; padding: 10px 14px; display: flex; flex-direction: column; gap: 8px;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -833,8 +859,8 @@ export class HUD {
               <span style="color: #94a3b8;">Unten links berühren & ziehen</span>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11.5px;">
-              <span style="color: #cbd5e1;">Schnell-Aufstieg</span>
-              <span style="color: #94a3b8;">Button "HOCH" gedrückt halten</span>
+              <span style="color: #cbd5e1;">Jetpack-Aufstieg</span>
+              <span style="color: #94a3b8;">Joystick nach oben ziehen</span>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11.5px;">
               <span style="color: #cbd5e1;">Gebäude betreten</span>
