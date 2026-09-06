@@ -98,16 +98,16 @@ export function getRefinedOreNetValue(oreKey) {
 
 // Bohrkopf-Stufen & DPS (Entwicklung im Labor -> Montage im Hangar)
 export const DRILL_TIERS = [
-  { tier: 1, name: 'Stahl-Bohrkopf', stat: '34 DPS', cost: 0, comp: null, level: 1, desc: 'Solider Bohrkopf für Humus & lockere Erde (ca. 2.5s pro Block).' },
-  { tier: 2, name: 'Wolframkarbid-Spitze', stat: '45 DPS', cost: 520, comp: null, level: 1, desc: 'Fräst spürbar flüssiger durch Erde (ca. 1.9s) und Schiefer.' },
-  { tier: 3, name: 'Gehärteter Meißel Mk.III', stat: '60 DPS', cost: 1750, comp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 }, level: 1, desc: 'Schneidet zügig durch Stein und zerbröckelt Fels.' },
-  { tier: 4, name: 'Titan-Diamant-Kopf Mk.IV', stat: '82 DPS', cost: 4600, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 }, level: 2, desc: 'Hydraulisch verstärkte Fräse zermalmt harte Granitadern.' },
-  { tier: 5, name: 'Hochdruck-Fräse Mk.V', stat: '115 DPS', cost: 12000, comp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 2 }, level: 3, desc: 'Panzerung und Zahnkränze fräsen mühelos durch Granit und Basalt.' },
-  { tier: 6, name: 'Plasma-Schneidbrenner Mk.VI', stat: '165 DPS', cost: 27000, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 1 }, level: 4, desc: 'Fokussierter Plasmastrahl schmilzt Obsidian-Gestein.' },
-  { tier: 7, name: 'Laser-Kavitationsmeißel Mk.VII', stat: '240 DPS', cost: 58000, comp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 2 }, level: 5, desc: 'Höchste Schneidleistung für schwerste Tiefenerze.' },
-  { tier: 8, name: 'Antimaterie-Bohrer Mk.VIII', stat: '350 DPS', cost: 125000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 1 }, level: 6, desc: 'Fräst durch das härteste Urgestein wie Butter.' },
-  { tier: 9, name: 'Singularitäts-Fräse Mk.IX', stat: '500 DPS', cost: 245000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 }, level: 8, desc: 'Erzeugt Mikrogravitations-Kollapse vor dem Bohrkopf.' },
-  { tier: 10, name: 'Tachyonen-Disruptor X', stat: '700 DPS', cost: 480000, comp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 3 }, level: 10, desc: 'Zersetzt die Molekularstruktur des Erdkerns in Sekundenbruchteilen.' }
+  { tier: 1, name: 'Stahl-Bohrkopf', stat: '34 DPS', cost: 0, comp: null, mountComp: null, level: 1, desc: 'Solider Bohrkopf für Humus & lockere Erde (ca. 2.5s pro Block).' },
+  { tier: 2, name: 'Wolframkarbid-Spitze', stat: '45 DPS', cost: 520, comp: null, mountComp: { key: 'iron_tube', name: 'Stahl-Rohr', count: 1 }, level: 1, desc: 'Fräst spürbar flüssiger durch Erde (ca. 1.9s) und Schiefer.' },
+  { tier: 3, name: 'Gehärteter Meißel Mk.III', stat: '60 DPS', cost: 1750, comp: null, mountComp: { key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1 }, level: 1, desc: 'Schneidet zügig durch Stein und zerbröckelt Fels.' },
+  { tier: 4, name: 'Titan-Diamant-Kopf Mk.IV', stat: '82 DPS', cost: 4600, comp: null, mountComp: { key: 'silver_coil', name: 'Silber-Spule', count: 1 }, level: 2, desc: 'Hydraulisch verstärkte Fräse zermalmt harte Granitadern.' },
+  { tier: 5, name: 'Hochdruck-Fräse Mk.V', stat: '115 DPS', cost: 12000, comp: null, mountComp: { key: 'silver_coil', name: 'Silber-Spule', count: 2 }, level: 3, desc: 'Panzerung und Zahnkränze fräsen mühelos durch Granit und Basalt.' },
+  { tier: 6, name: 'Plasma-Schneidbrenner Mk.VI', stat: '165 DPS', cost: 27000, comp: null, mountComp: { key: 'crystal_lens', name: 'Kristall-Linse', count: 1 }, level: 4, desc: 'Fokussierter Plasmastrahl schmilzt Obsidian-Gestein.' },
+  { tier: 7, name: 'Laser-Kavitationsmeißel Mk.VII', stat: '240 DPS', cost: 58000, comp: null, mountComp: { key: 'crystal_lens', name: 'Kristall-Linse', count: 2 }, level: 5, desc: 'Höchste Schneidleistung für schwerste Tiefenerze.' },
+  { tier: 8, name: 'Antimaterie-Bohrer Mk.VIII', stat: '350 DPS', cost: 125000, comp: null, mountComp: { key: 'titan_bolt', name: 'Titan-Bolzen', count: 1 }, level: 6, desc: 'Fräst durch das härteste Urgestein wie Butter.' },
+  { tier: 9, name: 'Singularitäts-Fräse Mk.IX', stat: '500 DPS', cost: 245000, comp: null, mountComp: { key: 'titan_bolt', name: 'Titan-Bolzen', count: 2 }, level: 8, desc: 'Erzeugt Mikrogravitations-Kollapse vor dem Bohrkopf.' },
+  { tier: 10, name: 'Tachyonen-Disruptor X', stat: '700 DPS', cost: 480000, comp: null, mountComp: { key: 'quantum_core', name: 'Quanten-Kern', count: 2 }, level: 10, desc: 'Zersetzt die Molekularstruktur des Erdkerns in Sekundenbruchteilen.' }
 ];
 export const DRILL_DPS = [34, 45, 60, 82, 115, 165, 240, 350, 500, 700];
 export const DRILL_DATA = DRILL_TIERS;
@@ -128,10 +128,18 @@ export const DEPOT_TIERS = [
 
 // Spezial-Upgrade-Bauteile (Auftragsbelohnungen, als Plätze im Depot)
 export const COMPONENT_DATA = {
+  // Sammler-Bauteile (via Quests beim Geolögie-NPC)
   hydraulic_part: { name: 'Hydraulik-Zylinder', icon: 'cog', color: '#38bdf8' },
   titan_alloy: { name: 'Titan-Legierung', icon: 'shield-check', color: '#60a5fa' },
   laser_lens: { name: 'Kristall-Fokuslinse', icon: 'disc', color: '#c084fc' },
-  quantum_chip: { name: 'Quanten-Steuerkern', icon: 'atom', color: '#34d399' }
+  quantum_chip: { name: 'Quanten-Steuerkern', icon: 'atom', color: '#34d399' },
+  // Fabrik-Montage-Bauteile (herstellbar in der Fabrik)
+  iron_tube: { name: 'Stahl-Rohr', icon: 'pipe', color: '#94a3b8' },
+  bronze_gear: { name: 'Bronze-Getriebe', icon: 'settings', color: '#d97706' },
+  silver_coil: { name: 'Silber-Spule', icon: 'rotate-ccw', color: '#e2e8f0' },
+  crystal_lens: { name: 'Kristall-Linse', icon: 'aperture', color: '#a78bfa' },
+  titan_bolt: { name: 'Titan-Bolzen', icon: 'bolt', color: '#38bdf8' },
+  quantum_core: { name: 'Quanten-Kern', icon: 'orbit', color: '#34d399' }
 };
 
 // Fabrik-Maschinen Ausbaustufen (Schaltet Fertigung mit tieferen Erzen frei)
@@ -211,6 +219,85 @@ export const FACTORY_PRODUCTS = {
     minTier: 5,
     durationSec: 480,
     value: 24500
+  },
+  // ── Neue Montage-Bauteile (für Hangar-Upgrades) ──
+  iron_tube: {
+    id: 'iron_tube',
+    name: 'Stahl-Rohr',
+    desc: 'Robustes Nahtlos-Rohr für Anbauteile an Tier-2-Moduls. Aus 2x Eisen + 2x Kohle gefertigt.',
+    iconName: 'pipe',
+    recipe: { iron: 2, coal: 2 },
+    fuelCoal: 0,
+    minTier: 1,
+    durationSec: 40,
+    value: 0,
+    isComponent: true,
+    compKey: 'iron_tube'
+  },
+  bronze_gear: {
+    id: 'bronze_gear',
+    name: 'Bronze-Getriebe',
+    desc: 'Präzisionszahnrad für Tier-3-Mechanik. Aus 2x Kupfer + 2x Zinn legiert.',
+    iconName: 'settings',
+    recipe: { copper: 2, tin: 2 },
+    fuelCoal: 0,
+    minTier: 1,
+    durationSec: 55,
+    value: 0,
+    isComponent: true,
+    compKey: 'bronze_gear'
+  },
+  silver_coil: {
+    id: 'silver_coil',
+    name: 'Silber-Spule',
+    desc: 'Hochleitfähige Induktionsspule für Tier-4-5-Elektronik. Aus 3x Silber + 1x Kupfer.',
+    iconName: 'rotate-ccw',
+    recipe: { silver: 3, copper: 1 },
+    fuelCoal: 0,
+    minTier: 2,
+    durationSec: 100,
+    value: 0,
+    isComponent: true,
+    compKey: 'silver_coil'
+  },
+  crystal_lens: {
+    id: 'crystal_lens',
+    name: 'Kristall-Linse',
+    desc: 'Optische Präzisionslinse für Tier-6-7-Systeme. Aus 2x Smaragd + 1x Rubin poliert.',
+    iconName: 'aperture',
+    recipe: { emerald: 2, ruby: 1 },
+    fuelCoal: 0,
+    minTier: 3,
+    durationSec: 180,
+    value: 0,
+    isComponent: true,
+    compKey: 'crystal_lens'
+  },
+  titan_bolt: {
+    id: 'titan_bolt',
+    name: 'Titan-Bolzen',
+    desc: 'Hochfester Schraubenbolzen für Tier-8-9-Gehäuse. Aus 2x Titan + 1x Diamant geschmiedet.',
+    iconName: 'bolt',
+    recipe: { titanium: 2, diamond: 1 },
+    fuelCoal: 0,
+    minTier: 4,
+    durationSec: 280,
+    value: 0,
+    isComponent: true,
+    compKey: 'titan_bolt'
+  },
+  quantum_core: {
+    id: 'quantum_core',
+    name: 'Quanten-Kern',
+    desc: 'Quantenmechanischer Kern für Tier-10-Technologie. Aus 2x Uran + 1x Platin synthesiert.',
+    iconName: 'orbit',
+    recipe: { uranium: 2, platinum: 1 },
+    fuelCoal: 0,
+    minTier: 5,
+    durationSec: 420,
+    value: 0,
+    isComponent: true,
+    compKey: 'quantum_core'
   }
 };
 
@@ -2463,25 +2550,32 @@ export class BaseSystem {
         id: 'tank',
         title: 'TREIBSTOFF-TANK',
         iconName: 'fuel',
-        currentTier: p.tankTier || 1,
+        currentTier: p.researchedTankTier || p.tankTier || 1,
+        installedTier: p.tankTier || 1,
         maxTier: TANK_TIERS.length,
         tiers: TANK_TIERS,
-        apply: (tier) => p.upgradeTank(tier)
+        apply: (tier) => {
+          p.researchedTankTier = tier;
+        }
       },
       {
         id: 'hull',
         title: 'GEHÄUSESCHUTZ / PANZERUNG',
         iconName: 'shield-cog',
-        currentTier: p.hullTier || 1,
+        currentTier: p.researchedHullTier || p.hullTier || 1,
+        installedTier: p.hullTier || 1,
         maxTier: HULL_TIERS.length,
         tiers: HULL_TIERS,
-        apply: (tier) => p.upgradeHull(tier)
+        apply: (tier) => {
+          p.researchedHullTier = tier;
+        }
       },
       {
         id: 'drill',
         title: 'BOHRKOPF-BAUPLÄNE',
         iconName: 'pickaxe',
         currentTier: p.researchedDrillTier || p.drillTier || 1,
+        installedTier: p.drillTier || 1,
         maxTier: DRILL_DATA.length,
         tiers: DRILL_DATA,
         apply: (tier) => {
@@ -2492,28 +2586,37 @@ export class BaseSystem {
         id: 'engine',
         title: 'ANTRIEB & STEIGFLUG',
         iconName: 'zap',
-        currentTier: p.engineTier || 1,
+        currentTier: p.researchedEngineTier || p.engineTier || 1,
+        installedTier: p.engineTier || 1,
         maxTier: ENGINE_TIERS.length,
         tiers: ENGINE_TIERS,
-        apply: (tier) => p.upgradeEngine(tier)
+        apply: (tier) => {
+          p.researchedEngineTier = tier;
+        }
       },
       {
         id: 'cargo',
         title: 'FRACHTRAUM-KAPAZITÄT',
         iconName: 'container',
-        currentTier: p.cargoTier || 1,
+        currentTier: p.researchedCargoTier || p.cargoTier || 1,
+        installedTier: p.cargoTier || 1,
         maxTier: CARGO_TIERS.length,
         tiers: CARGO_TIERS,
-        apply: (tier) => p.upgradeCargo(tier)
+        apply: (tier) => {
+          p.researchedCargoTier = tier;
+        }
       },
       {
         id: 'sensor',
         title: 'GEO-SENSOR & RADAR',
         iconName: 'radio',
-        currentTier: p.sensorTier || 1,
+        currentTier: p.researchedSensorTier || p.sensorTier || 1,
+        installedTier: p.sensorTier || 1,
         maxTier: SENSOR_TIERS.length,
         tiers: SENSOR_TIERS,
-        apply: (tier) => p.upgradeSensor(tier)
+        apply: (tier) => {
+          p.researchedSensorTier = tier;
+        }
       }
     ];
 
@@ -2637,8 +2740,9 @@ export class BaseSystem {
               ${icon(track.iconName, '', 16)}
               <span>${track.title}</span>
             </div>
-            <div class="cat-status-pill" style="font-size: 11px; color: #94a3b8;">
-              Stufe ${track.currentTier}/${track.maxTier} • <strong style="color: #10b981;">${currentTierData.stat}</strong>
+            <div class="cat-status-pill" style="font-size: 11px; color: #94a3b8; display: flex; align-items: center; gap: 8px;">
+              <span>Erforscht: Stufe ${track.currentTier}/${track.maxTier} • <strong style="color: #10b981;">${currentTierData.stat}</strong></span>
+              ${(track.installedTier !== undefined && track.installedTier < track.currentTier) ? `<span style="color: #f59e0b; font-weight: 700; background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); padding: 2px 6px; border-radius: 4px; white-space: nowrap;">Montiert: Stufe ${track.installedTier} – Hangar!</span>` : ''}
             </div>
           </div>
 
@@ -2676,11 +2780,7 @@ export class BaseSystem {
             track.apply(track.currentTier + 1);
             soundFx.playPurchase();
             this.openLabModal();
-            if (track.id === 'drill') {
-              this.scene.events.emit('notify', `Bauplan für ${nextTier.name} erforscht! Im HANGAR montieren.`);
-            } else {
-              this.scene.events.emit('notify', `${track.title}: Stufe ${track.currentTier + 1} (${nextTier.name}) freigeschaltet!`);
-            }
+            this.scene.events.emit('notify', `Bauplan für ${nextTier.name} erforscht! Im HANGAR montieren.`);
           }
         };
       }
@@ -2948,64 +3048,156 @@ export class BaseSystem {
       return ` &bull; <span style="color: #f87171; font-weight: 600;">Ab Level ${nextData.level}</span>`;
     };
 
-    // 1. Treibstoff-Tank
-    const curTankTier = this.player.tankTier || 1;
-    const curTankData = this.player.getTankData ? this.player.getTankData() : (TANK_TIERS[curTankTier - 1] || TANK_TIERS[0]);
-    const canUpgradeTank = curTankTier < TANK_TIERS.length;
-    const nextTankData = canUpgradeTank ? TANK_TIERS[curTankTier] : null;
-    const canAffordTank = checkAfford(nextTankData);
+    // Helper: Prüft ob die nötigen Montage-Bauteile vorhanden sind
+    const checkMountComp = (tierData) => {
+      if (!tierData || !tierData.mountComp) return true; // kein Bauteil nötig
+      const have = this.player.components[tierData.mountComp.key] || 0;
+      return have >= tierData.mountComp.count;
+    };
 
-    // 2. Gehäuseschutz & Karosserie (Case-Schutz)
-    const curHullTier = this.player.hullTier || 1;
-    const curHullData = this.player.getHullData ? this.player.getHullData() : (HULL_TIERS[curHullTier - 1] || HULL_TIERS[0]);
-    const canUpgradeHull = curHullTier < HULL_TIERS.length;
-    const nextHullData = canUpgradeHull ? HULL_TIERS[curHullTier] : null;
-    const canAffordHull = checkAfford(nextHullData);
+    // Helper: Badge für benötigte Montage-Bauteile
+    const getMountCompBadge = (tierData) => {
+      if (!tierData || !tierData.mountComp) return '<span style="color: #94a3b8; font-size: 11px;">Keine Teile nötig</span>';
+      const mc = tierData.mountComp;
+      const have = this.player.components[mc.key] || 0;
+      const isMet = have >= mc.count;
+      const iconName = COMPONENT_ICONS[mc.key] || 'box';
+      return `<span style="background: ${isMet ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)'}; border: 1px solid ${isMet ? 'rgba(16,185,129,0.35)' : 'rgba(239,68,68,0.35)'}; color: ${isMet ? '#34d399' : '#f87171'}; font-weight: 700; font-size: 11px; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">${icon(iconName, '', 12)} ${mc.count}x ${mc.name} (${have}/${mc.count})</span>`;
+    };
 
-    // 3. Bohrkopf-Werkstatt (Montage erforschter Köpfe oder direktes Hangar-Upgrade)
-    const curDrillTier = this.player.drillTier || 1;
-    const resDrillTier = this.player.researchedDrillTier || curDrillTier;
-    const curDrillData = DRILL_DATA[curDrillTier - 1] || DRILL_DATA[0];
-    const canMount = resDrillTier > curDrillTier;
-    const mountDrillData = canMount ? (DRILL_DATA[resDrillTier - 1] || DRILL_DATA[0]) : null;
-    const canUpgradeDrill = curDrillTier < DRILL_DATA.length;
-    const nextDrillData = canUpgradeDrill ? DRILL_DATA[curDrillTier] : null;
-    const canAffordDrill = checkAfford(nextDrillData);
+    // Helper: Verbraucht die nötigen Montage-Bauteile
+    const consumeMountComp = (tierData) => {
+      if (!tierData || !tierData.mountComp) return;
+      const mc = tierData.mountComp;
+      this.player.components[mc.key] = Math.max(0, (this.player.components[mc.key] || 0) - mc.count);
+    };
 
-    // 4. Antrieb & Steigflug
-    const curEngineTier = this.player.engineTier || 1;
-    const curEngineData = this.player.getEngineData ? this.player.getEngineData() : (ENGINE_TIERS[curEngineTier - 1] || ENGINE_TIERS[0]);
-    const canUpgradeEngine = curEngineTier < ENGINE_TIERS.length;
-    const nextEngineData = canUpgradeEngine ? ENGINE_TIERS[curEngineTier] : null;
-    const canAffordEngine = checkAfford(nextEngineData);
+    // Die 6 Upgrade-Tracks
+    const tracks = [
+      {
+        id: 'tank',
+        mountBtnId: 'btn-mount-tank-dock',
+        iconName: 'fuel',
+        title: 'TREIBSTOFF-TANK',
+        curTier: this.player.tankTier || 1,
+        resTier: this.player.researchedTankTier || (this.player.tankTier || 1),
+        maxTier: TANK_TIERS.length,
+        tiers: TANK_TIERS,
+        onMount: (nextTier) => {
+          if (this.player.upgradeTank) {
+            this.player.upgradeTank(nextTier.tier);
+          } else {
+            this.player.tankTier = nextTier.tier;
+            this.player.maxFuel = nextTier.maxFuel;
+          }
+        }
+      },
+      {
+        id: 'hull',
+        mountBtnId: 'btn-mount-hull-dock',
+        iconName: 'shield-cog',
+        title: 'GEHÄUSESCHUTZ / PANZERUNG',
+        curTier: this.player.hullTier || 1,
+        resTier: this.player.researchedHullTier || (this.player.hullTier || 1),
+        maxTier: HULL_TIERS.length,
+        tiers: HULL_TIERS,
+        onMount: (nextTier) => {
+          if (this.player.upgradeHull) {
+            this.player.upgradeHull(nextTier.tier);
+          } else {
+            this.player.hullTier = nextTier.tier;
+            this.player.maxHull = nextTier.maxHull;
+            this.player.hull = this.player.maxHull;
+          }
+        }
+      },
+      {
+        id: 'drill',
+        mountBtnId: 'btn-mount-drill-dock',
+        iconName: 'pickaxe',
+        title: 'BOHRKOPF-WERKSTATT',
+        curTier: this.player.drillTier || 1,
+        resTier: this.player.researchedDrillTier || (this.player.drillTier || 1),
+        maxTier: DRILL_DATA.length,
+        tiers: DRILL_DATA,
+        onMount: (nextTier) => {
+          this.player.drillTier = nextTier.tier;
+          this.player.drillPower = DRILL_DPS[nextTier.tier - 1];
+        }
+      },
+      {
+        id: 'engine',
+        mountBtnId: 'btn-mount-engine-dock',
+        iconName: 'zap',
+        title: 'ANTRIEB & STEIGFLUG',
+        curTier: this.player.engineTier || 1,
+        resTier: this.player.researchedEngineTier || (this.player.engineTier || 1),
+        maxTier: ENGINE_TIERS.length,
+        tiers: ENGINE_TIERS,
+        onMount: (nextTier) => {
+          if (this.player.upgradeEngine) {
+            this.player.upgradeEngine(nextTier.tier);
+          } else {
+            this.player.engineTier = nextTier.tier;
+          }
+        }
+      },
+      {
+        id: 'cargo',
+        mountBtnId: 'btn-mount-cargo-dock',
+        iconName: 'container',
+        title: 'FRACHTRAUM-KAPAZITÄT',
+        curTier: this.player.cargoTier || 1,
+        resTier: this.player.researchedCargoTier || (this.player.cargoTier || 1),
+        maxTier: CARGO_TIERS.length,
+        tiers: CARGO_TIERS,
+        onMount: (nextTier) => {
+          if (this.player.upgradeCargo) {
+            this.player.upgradeCargo(nextTier.tier);
+          } else {
+            this.player.cargoTier = nextTier.tier;
+            this.player.maxCargo = nextTier.maxCargo;
+          }
+        }
+      },
+      {
+        id: 'sensor',
+        mountBtnId: 'btn-mount-sensor-dock',
+        iconName: 'radio',
+        title: 'GEO-SENSOR & RADAR',
+        curTier: this.player.sensorTier || 1,
+        resTier: this.player.researchedSensorTier || (this.player.sensorTier || 1),
+        maxTier: SENSOR_TIERS.length,
+        tiers: SENSOR_TIERS,
+        onMount: (nextTier) => {
+          if (this.player.upgradeSensor) {
+            this.player.upgradeSensor(nextTier.tier);
+          } else {
+            this.player.sensorTier = nextTier.tier;
+          }
+        }
+      }
+    ];
 
-    // 5. Frachtraum-Kapazität
-    const curCargoTier = this.player.cargoTier || 1;
-    const curCargoData = this.player.getCargoData ? this.player.getCargoData() : (CARGO_TIERS[curCargoTier - 1] || CARGO_TIERS[0]);
-    const canUpgradeCargo = curCargoTier < CARGO_TIERS.length;
-    const nextCargoData = canUpgradeCargo ? CARGO_TIERS[curCargoTier] : null;
-    const canAffordCargo = checkAfford(nextCargoData);
+    let sectionsHtml = '';
 
-    // 6. Geo-Sensor & Radar
-    const curSensorTier = this.player.sensorTier || 1;
-    const curSensorData = this.player.getSensorData ? this.player.getSensorData() : (SENSOR_TIERS[curSensorTier - 1] || SENSOR_TIERS[0]);
-    const canUpgradeSensor = curSensorTier < SENSOR_TIERS.length;
-    const nextSensorData = canUpgradeSensor ? SENSOR_TIERS[curSensorTier] : null;
-    const canAffordSensor = checkAfford(nextSensorData);
+    tracks.forEach((track) => {
+      const curData = track.tiers[track.curTier - 1] || track.tiers[0];
+      const hasNext = track.curTier < track.maxTier;
+      const nextData = hasNext ? (track.tiers[track.curTier] || null) : null;
+      const isResearched = hasNext && (track.resTier > track.curTier);
+      const hasMountComp = isResearched && checkMountComp(nextData);
 
-    const renderDockCard = (cfg) => {
-      const { id, iconName, title, curTier = 1, maxTier = 10, curData, canUpgrade, nextData, canAfford, specialAction } = cfg;
-
-      // Segmented Progress Bar wie im Labor
+      // Segmented Progress Bar
       let segmentsHtml = '<div class="segmented-progress-bar">';
-      for (let s = 1; s <= maxTier; s++) {
-        if (s <= curTier) {
+      for (let s = 1; s <= track.maxTier; s++) {
+        if (s <= track.curTier) {
           segmentsHtml += `
-            <div class="seg-step completed${s === curTier ? ' current' : ''}">
+            <div class="seg-step completed${s === track.curTier ? ' current' : ''}">
               <span><span class="step-label">Stufe </span>${s}</span>
             </div>
           `;
-        } else if (s === curTier + 1) {
+        } else if (s === track.curTier + 1) {
           segmentsHtml += `
             <div class="seg-step active">
               <span><span class="step-label">Stufe </span>${s}</span>
@@ -3021,143 +3213,93 @@ export class BaseSystem {
       }
       segmentsHtml += '</div>';
 
-      let compBadgeHtml = '';
-      let levelBadgeHtml = '';
-      let costBadgeHtml = '';
-      let actionBtnHtml = '';
-
-      if (specialAction) {
-        actionBtnHtml = specialAction;
-      } else if (canUpgrade && nextData) {
-        const isLevelMet = (this.player.level || 1) >= nextData.level;
-        if (nextData.comp) {
-          const have = this.player.components[nextData.comp.key] || 0;
-          const isMet = have >= nextData.comp.count;
-          const compIconName = COMPONENT_ICONS[nextData.comp.key] || 'box';
-          compBadgeHtml = `
-            <span style="background: rgba(192, 132, 252, 0.12); border: 1px solid ${isMet ? 'rgba(192, 132, 252, 0.3)' : 'rgba(239, 68, 68, 0.4)'}; color: ${isMet ? '#c084fc' : '#ef4444'}; font-weight: 700; font-size: 11px; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;">
-              ${icon(compIconName, '', 12)} ${nextData.comp.count}x ${nextData.comp.name} (${have}/${nextData.comp.count})
-            </span>
-          `;
-        }
-
-        if (!isLevelMet) {
-          levelBadgeHtml = `
-            <span style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; font-weight: 700; font-size: 11px; padding: 2px 6px; border-radius: 4px; white-space: nowrap;">
-              Lv. ${nextData.level}
-            </span>
-          `;
-        }
-
-        const isCashMet = this.player.cash >= nextData.cost;
-        costBadgeHtml = `
-          <span style="background: rgba(251, 191, 36, 0.12); border: 1px solid ${isCashMet ? 'rgba(251, 191, 36, 0.3)' : 'rgba(239, 68, 68, 0.4)'}; color: ${isCashMet ? '#fbbf24' : '#ef4444'}; font-weight: 800; font-size: 11.5px; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; gap: 3px; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
-            ${icon('coins', '', 11)} €${nextData.cost}
-          </span>
-        `;
-
-        actionBtnHtml = `
-          <button id="${id}" class="btn-buy" style="width: 100%; height: 30px; padding: 0 10px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 4px;" ${canAfford ? '' : 'disabled'}>
-            ${icon('wrench', '', 12)}
-            <span>Aufrüsten</span>
-          </button>
-        `;
-      } else {
-        actionBtnHtml = `
-          <span style="font-size: 11px; color: #10b981; font-weight: 700; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); padding: 3px 8px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box;">
-            Maximal
-          </span>
-        `;
-      }
-
       let actionRowHtml = '';
-      if (canUpgrade && nextData) {
+      if (!hasNext) {
         actionRowHtml = `
           <div class="cat-action-row" style="margin-top: 6px; display: flex; align-items: center; background: rgba(15,23,42,0.6); padding: 8px 12px; border-radius: 8px; gap: 10px; box-sizing: border-box;">
-            <!-- Spalte 1: Modul-Name (200px) -->
+            <div style="flex: 1; min-width: 0;">
+              <strong style="color: #10b981; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px;">
+                ${icon('award', '', 14)} Vollständig montiert
+              </strong>
+            </div>
+            <div style="width: 110px; min-width: 110px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end;">
+              <span style="font-size: 11px; color: #10b981; font-weight: 700; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); padding: 3px 8px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box;">MAX</span>
+            </div>
+          </div>
+        `;
+      } else if (!isResearched) {
+        // Noch nicht im Labor erforscht
+        actionRowHtml = `
+          <div class="cat-action-row" style="margin-top: 6px; display: flex; align-items: center; background: rgba(15,23,42,0.6); padding: 8px 12px; border-radius: 8px; gap: 10px; box-sizing: border-box;">
+            <div style="width: 200px; min-width: 200px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              <strong style="color: #94a3b8; font-size: 13px;">${nextData.name}</strong>
+            </div>
+            <div style="width: 100px; min-width: 100px; flex-shrink: 0;">
+              <span style="background: rgba(148, 163, 184, 0.1); border: 1px solid rgba(148, 163, 184, 0.2); color: #94a3b8; font-weight: 700; font-size: 11.5px; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
+                ${nextData.stat}
+              </span>
+            </div>
+            <div style="flex: 1; min-width: 0; display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
+              <span style="color: #f59e0b; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                ${icon('microscope', '', 12)} Erst im Labor erforschen
+              </span>
+            </div>
+            <div style="width: 90px; min-width: 90px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+              <span style="color: #64748b; font-size: 11px;">–</span>
+            </div>
+            <div style="width: 110px; min-width: 110px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end;">
+              <button class="btn-buy" disabled style="opacity: 0.45; background: #334155; color: #94a3b8; cursor: not-allowed; width: 100%; height: 30px; font-size: 11px; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+                ${icon('lock', '', 12)} Gesperrt
+              </button>
+            </div>
+          </div>
+        `;
+      } else {
+        // Erforscht! Kann montiert werden, wenn Bauteile vorhanden sind
+        const compBadge = getMountCompBadge(nextData);
+
+        const mountBtnHtml = hasMountComp ? `
+          <button id="${track.mountBtnId}" class="btn-buy" style="width: 100%; height: 30px; padding: 0 10px; font-size: 11px; font-weight: 800; background: linear-gradient(135deg, #10b981, #059669); display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+            ${icon('wrench', '', 12)} Montieren
+          </button>
+        ` : `
+          <button id="${track.mountBtnId}" class="btn-buy" style="width: 100%; height: 30px; padding: 0 6px; font-size: 10.5px; font-weight: 700; background: #334155; color: #f87171; border: 1px solid rgba(239,68,68,0.3); display: inline-flex; align-items: center; justify-content: center; gap: 4px;" title="Benötigt Bauteile aus der Fabrik oder vom Sammler">
+            ${icon('wrench', '', 12)} Fehlt Bauteil
+          </button>
+        `;
+
+        actionRowHtml = `
+          <div class="cat-action-row" style="margin-top: 6px; display: flex; align-items: center; background: rgba(15,23,42,0.6); padding: 8px 12px; border-radius: 8px; gap: 10px; box-sizing: border-box;">
             <div style="width: 200px; min-width: 200px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
               <strong style="color: #f8fafc; font-size: 13px;">${nextData.name}</strong>
             </div>
-
-            <!-- Spalte 2: Stat (100px) -->
             <div style="width: 100px; min-width: 100px; flex-shrink: 0;">
               <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-weight: 700; font-size: 11.5px; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
                 ${nextData.stat}
               </span>
             </div>
-
-            <!-- Spalte 3: Spezialbauteile & Level (flex: 1, rechtsbündig) -->
             <div style="flex: 1; min-width: 0; display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
-              ${levelBadgeHtml}
-              ${compBadgeHtml}
+              ${compBadge}
             </div>
-
-            <!-- Spalte 4: Preis-Badge (90px) -->
             <div style="width: 90px; min-width: 90px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
-              ${costBadgeHtml}
-            </div>
-
-            <!-- Spalte 5: Button (110px) -->
-            <div style="width: 110px; min-width: 110px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end;">
-              ${actionBtnHtml}
-            </div>
-          </div>
-        `;
-      } else if (specialAction && mountDrillData) {
-        actionRowHtml = `
-          <div class="cat-action-row" style="margin-top: 6px; display: flex; align-items: center; background: rgba(15,23,42,0.6); padding: 8px 12px; border-radius: 8px; gap: 10px; box-sizing: border-box;">
-            <!-- Spalte 1: Modul-Name (200px) -->
-            <div style="width: 200px; min-width: 200px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-              <strong style="color: #f8fafc; font-size: 13px;">${mountDrillData.name}</strong>
-            </div>
-
-            <!-- Spalte 2: Stat (100px) -->
-            <div style="width: 100px; min-width: 100px; flex-shrink: 0;">
-              <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-weight: 700; font-size: 11.5px; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
-                ${mountDrillData.stat}
-              </span>
-            </div>
-
-            <!-- Spalte 3: Bereit im Labor erforscht -->
-            <div style="flex: 1; min-width: 0; display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
-              <span style="color: #34d399; font-size: 11px; font-weight: 700;">Im Labor erforscht</span>
-            </div>
-
-            <!-- Spalte 4: Preis-Badge (90px) -->
-            <div style="width: 90px; min-width: 90px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
-              <span style="color: #64748b; font-size: 11px;">Kostenlos</span>
-            </div>
-
-            <!-- Spalte 5: Button (110px) -->
-            <div style="width: 110px; min-width: 110px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end;">
-              ${actionBtnHtml}
-            </div>
-          </div>
-        `;
-      } else {
-        actionRowHtml = `
-          <div class="cat-action-row" style="margin-top: 6px; display: flex; align-items: center; background: rgba(15,23,42,0.6); padding: 8px 12px; border-radius: 8px; gap: 10px; box-sizing: border-box;">
-            <div style="flex: 1; min-width: 0;">
-              <strong style="color: #10b981; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px;">
-                ${icon('award', '', 14)} Vollständig aufgerüstet
-              </strong>
+              <span style="color: #10b981; font-weight: 700; font-size: 11.5px;">Kostenlos</span>
             </div>
             <div style="width: 110px; min-width: 110px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end;">
-              ${actionBtnHtml}
+              ${mountBtnHtml}
             </div>
           </div>
         `;
       }
 
-      return `
+      sectionsHtml += `
         <div class="tech-category-card">
           <div class="cat-header-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
             <div class="cat-title-wrap" style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; color: #f8fafc;">
-              ${icon(iconName, '', 16)}
-              <span>${title}</span>
+              ${icon(track.iconName, '', 16)}
+              <span>${track.title}</span>
             </div>
             <div class="cat-status-pill" style="font-size: 11px; color: #94a3b8; background: rgba(255, 255, 255, 0.06); padding: 3px 8px; border-radius: 6px;">
-              Stufe ${curTier}/${maxTier} • <strong style="color: #10b981;">${curData.stat}</strong>
+              Stufe ${track.curTier}/${track.maxTier} • <strong style="color: #10b981;">${curData.stat}</strong>
             </div>
           </div>
 
@@ -3165,93 +3307,20 @@ export class BaseSystem {
           ${actionRowHtml}
         </div>
       `;
-    };
-
-    const tankSection = renderDockCard({
-      id: 'btn-upgrade-tank-dock',
-      iconName: 'fuel',
-      title: 'TREIBSTOFF-TANK',
-      curTier: curTankTier,
-      maxTier: TANK_TIERS.length,
-      curData: curTankData,
-      canUpgrade: canUpgradeTank,
-      nextData: nextTankData,
-      canAfford: canAffordTank
     });
 
-    const hullSection = renderDockCard({
-      id: 'btn-upgrade-hull-dock',
-      iconName: 'shield-cog',
-      title: 'GEHÄUSESCHUTZ / PANZERUNG',
-      curTier: curHullTier,
-      maxTier: HULL_TIERS.length,
-      curData: curHullData,
-      canUpgrade: canUpgradeHull,
-      nextData: nextHullData,
-      canAfford: canAffordHull
-    });
-
-    const drillSection = renderDockCard({
-      id: 'btn-upgrade-drill-dock',
-      iconName: 'pickaxe',
-      title: 'BOHRKOPF-WERKSTATT',
-      curTier: curDrillTier,
-      maxTier: DRILL_DATA.length,
-      curData: curDrillData,
-      canUpgrade: canUpgradeDrill,
-      nextData: canMount ? mountDrillData : nextDrillData,
-      canAfford: canAffordDrill,
-      specialAction: canMount ? `
-        <button id="btn-mount-drill-dock" class="btn-buy" style="width: 100%; height: 30px; padding: 0 10px; font-size: 11px; font-weight: 800; background: linear-gradient(135deg, #10b981, #059669); display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
-          ${icon('wrench', '', 12)} Montieren
-        </button>
-      ` : null
-    });
-
-    const engineSection = renderDockCard({
-      id: 'btn-upgrade-engine-dock',
-      iconName: 'zap',
-      title: 'ANTRIEB & STEIGFLUG',
-      curTier: curEngineTier,
-      maxTier: ENGINE_TIERS.length,
-      curData: curEngineData,
-      canUpgrade: canUpgradeEngine,
-      nextData: nextEngineData,
-      canAfford: canAffordEngine
-    });
-
-    const cargoSection = renderDockCard({
-      id: 'btn-upgrade-cargo-dock',
-      iconName: 'container',
-      title: 'FRACHTRAUM-KAPAZITÄT',
-      curTier: curCargoTier,
-      maxTier: CARGO_TIERS.length,
-      curData: curCargoData,
-      canUpgrade: canUpgradeCargo,
-      nextData: nextCargoData,
-      canAfford: canAffordCargo
-    });
-
-    const sensorSection = renderDockCard({
-      id: 'btn-upgrade-sensor-dock',
-      iconName: 'radio',
-      title: 'GEO-SENSOR & RADAR',
-      curTier: curSensorTier,
-      maxTier: SENSOR_TIERS.length,
-      curData: curSensorData,
-      canUpgrade: canUpgradeSensor,
-      nextData: nextSensorData,
-      canAfford: canAffordSensor
-    });
+    const infoNotice = `
+      <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(30, 41, 59, 0.6); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); margin-bottom: 8px;">
+        <span style="font-size: 11.5px; color: #94a3b8; display: inline-flex; align-items: center; gap: 6px;">
+          ${icon('info', '', 14)} <span><strong>Montage-Hangar:</strong> Erforsche neue Module im <strong>Labor</strong>. Die Montage ist <strong>kostenlos</strong> und benötigt Bauteile aus der <strong>Fabrik</strong> oder vom <strong>Sammler</strong>.</span>
+        </span>
+      </div>
+    `;
 
     const content = `
       <div style="display: flex; flex-direction: column; gap: 8px;">
-        ${tankSection}
-        ${hullSection}
-        ${drillSection}
-        ${engineSection}
-        ${cargoSection}
-        ${sensorSection}
+        ${infoNotice}
+        ${sectionsHtml}
       </div>
     `;
 
@@ -3262,139 +3331,33 @@ export class BaseSystem {
       </div>
     `, content);
 
-    // 1. Tank-Upgrade
-    const btnUpgradeTank = document.getElementById('btn-upgrade-tank-dock');
-    if (btnUpgradeTank && canUpgradeTank && nextTankData) {
-      btnUpgradeTank.onclick = () => {
-        if (!canAffordTank) return;
-        this.player.cash -= nextTankData.cost;
-        if (nextTankData.comp) {
-          this.player.components[nextTankData.comp.key] = (this.player.components[nextTankData.comp.key] || 0) - nextTankData.comp.count;
-        }
-        if (this.player.upgradeTank) {
-          this.player.upgradeTank(curTankTier + 1);
-        } else {
-          this.player.tankTier = curTankTier + 1;
-          this.player.maxFuel = nextTankData.maxFuel;
-        }
-        soundFx.playUpgrade();
-        this.scene.events.emit('notify', `Treibstoff-Tank vergrößert: ${nextTankData.name} (${nextTankData.maxFuel} L)!`);
-        this.openDockModal();
-      };
-    }
+    // Event-Handler für alle Montage-Buttons registrieren
+    tracks.forEach((track) => {
+      const hasNext = track.curTier < track.maxTier;
+      if (!hasNext) return;
+      const nextData = track.tiers[track.curTier] || null;
+      const isResearched = hasNext && (track.resTier > track.curTier);
 
-    // 2. Gehäuseschutz-Upgrade
-    const btnUpgradeHull = document.getElementById('btn-upgrade-hull-dock');
-    if (btnUpgradeHull && canUpgradeHull && nextHullData) {
-      btnUpgradeHull.onclick = () => {
-        if (!canAffordHull) return;
-        this.player.cash -= nextHullData.cost;
-        if (nextHullData.comp) {
-          this.player.components[nextHullData.comp.key] = (this.player.components[nextHullData.comp.key] || 0) - nextHullData.comp.count;
-        }
-        if (this.player.upgradeHull) {
-          this.player.upgradeHull(curHullTier + 1);
-        } else {
-          this.player.hullTier = curHullTier + 1;
-          this.player.maxHull = nextHullData.maxHull;
-          this.player.hull = this.player.maxHull;
-        }
-        soundFx.playUpgrade();
-        this.scene.events.emit('notify', `Case-Schutz verbessert: ${nextHullData.name} (${nextHullData.maxHull} HP)!`);
-        this.openDockModal();
-      };
-    }
-
-    // 3. Bohrkopf-Montage (kostenlos falls im Labor erforscht)
-    const btnMountDrill = document.getElementById('btn-mount-drill-dock');
-    if (btnMountDrill && mountDrillData) {
-      btnMountDrill.onclick = () => {
-        this.player.drillTier = resDrillTier;
-        this.player.drillPower = DRILL_DPS[resDrillTier - 1];
-        soundFx.playUpgrade();
-        this.openDockModal();
-        this.scene.events.emit('notify', `${mountDrillData.name} erfolgreich montiert!`);
-      };
-    }
-
-    // 3b. Bohrkopf direkt im Hangar aufrüsten & montieren
-    const btnUpgradeDrill = document.getElementById('btn-upgrade-drill-dock');
-    if (btnUpgradeDrill && canUpgradeDrill && nextDrillData) {
-      btnUpgradeDrill.onclick = () => {
-        if (!canAffordDrill) return;
-        this.player.cash -= nextDrillData.cost;
-        if (nextDrillData.comp) {
-          this.player.components[nextDrillData.comp.key] = (this.player.components[nextDrillData.comp.key] || 0) - nextDrillData.comp.count;
-        }
-        this.player.researchedDrillTier = Math.max(this.player.researchedDrillTier || 1, curDrillTier + 1);
-        this.player.drillTier = curDrillTier + 1;
-        this.player.drillPower = DRILL_DPS[curDrillTier];
-        soundFx.playUpgrade();
-        this.scene.events.emit('notify', `${nextDrillData.name} montiert & verbessert (${nextDrillData.stat})!`);
-        this.openDockModal();
-      };
-    }
-
-    // 4. Antrieb-Upgrade
-    const btnUpgradeEngine = document.getElementById('btn-upgrade-engine-dock');
-    if (btnUpgradeEngine && canUpgradeEngine && nextEngineData) {
-      btnUpgradeEngine.onclick = () => {
-        if (!canAffordEngine) return;
-        this.player.cash -= nextEngineData.cost;
-        if (nextEngineData.comp) {
-          this.player.components[nextEngineData.comp.key] = (this.player.components[nextEngineData.comp.key] || 0) - nextEngineData.comp.count;
-        }
-        if (this.player.upgradeEngine) {
-          this.player.upgradeEngine(curEngineTier + 1);
-        } else {
-          this.player.engineTier = curEngineTier + 1;
-        }
-        soundFx.playUpgrade();
-        this.scene.events.emit('notify', `Antrieb verbessert: ${nextEngineData.name} (${nextEngineData.stat})!`);
-        this.openDockModal();
-      };
-    }
-
-    // 5. Frachtraum-Upgrade
-    const btnUpgradeCargo = document.getElementById('btn-upgrade-cargo-dock');
-    if (btnUpgradeCargo && canUpgradeCargo && nextCargoData) {
-      btnUpgradeCargo.onclick = () => {
-        if (!canAffordCargo) return;
-        this.player.cash -= nextCargoData.cost;
-        if (nextCargoData.comp) {
-          this.player.components[nextCargoData.comp.key] = (this.player.components[nextCargoData.comp.key] || 0) - nextCargoData.comp.count;
-        }
-        if (this.player.upgradeCargo) {
-          this.player.upgradeCargo(curCargoTier + 1);
-        } else {
-          this.player.cargoTier = curCargoTier + 1;
-          this.player.maxCargo = nextCargoData.maxCargo;
-        }
-        soundFx.playUpgrade();
-        this.scene.events.emit('notify', `Frachtraum vergrößert: ${nextCargoData.name} (${nextCargoData.stat})!`);
-        this.openDockModal();
-      };
-    }
-
-    // 6. Sensor-Upgrade
-    const btnUpgradeSensor = document.getElementById('btn-upgrade-sensor-dock');
-    if (btnUpgradeSensor && canUpgradeSensor && nextSensorData) {
-      btnUpgradeSensor.onclick = () => {
-        if (!canAffordSensor) return;
-        this.player.cash -= nextSensorData.cost;
-        if (nextSensorData.comp) {
-          this.player.components[nextSensorData.comp.key] = (this.player.components[nextSensorData.comp.key] || 0) - nextSensorData.comp.count;
-        }
-        if (this.player.upgradeSensor) {
-          this.player.upgradeSensor(curSensorTier + 1);
-        } else {
-          this.player.sensorTier = curSensorTier + 1;
-        }
-        soundFx.playUpgrade();
-        this.scene.events.emit('notify', `Geo-Sensor aufgerüstet: ${nextSensorData.name} (${nextSensorData.stat})!`);
-        this.openDockModal();
-      };
-    }
+      const btn = document.getElementById(track.mountBtnId);
+      if (btn) {
+        btn.onclick = () => {
+          if (!isResearched) {
+            this.scene.events.emit('notify', `Dieser Bauplan muss zuerst im Labor erforscht werden!`);
+            return;
+          }
+          if (!checkMountComp(nextData)) {
+            const mc = nextData.mountComp;
+            this.scene.events.emit('notify', `Fehlende Bauteile: ${mc?.count}x ${mc?.name}! In der Fabrik herstellen oder beim Sammler erhalten.`);
+            return;
+          }
+          consumeMountComp(nextData);
+          track.onMount(nextData);
+          soundFx.playUpgrade();
+          this.scene.events.emit('notify', `${nextData.name} montiert (${nextData.stat})!`);
+          this.openDockModal();
+        };
+      }
+    });
 
 
   }
@@ -3461,11 +3424,18 @@ export class BaseSystem {
         currentCraft.remainingMs = 0;
         currentCraft.finishedAt = now - remCraft;
 
-        // Automatisch direkt ins Depot einlagern
+        // Automatisch einlagern: isComponent → player.components, sonst → Depot
         if (!this.depot) this.depot = { ores: {}, products: {}, capacity: 10, tier: 1 };
         if (!this.depot.products) this.depot.products = {};
         const prodId = currentCraft.productId;
-        this.depot.products[prodId] = (this.depot.products[prodId] || 0) + 1;
+        const prodDef = FACTORY_PRODUCTS[prodId];
+        if (prodDef && prodDef.isComponent && prodDef.compKey) {
+          // Montage-Bauteil → direkt in player.components
+          this.player.components[prodDef.compKey] = (this.player.components[prodDef.compKey] || 0) + 1;
+        } else {
+          // Normal-Produkt → ins Depot
+          this.depot.products[prodId] = (this.depot.products[prodId] || 0) + 1;
+        }
 
         finishedCount++;
       } else {

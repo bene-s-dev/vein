@@ -34,10 +34,18 @@ export function icon(name, extraClass = '', size = 15) {
  * Icon-Zuweisung für Bauteile
  */
 export const COMPONENT_ICONS = {
+  // Alte Sammler-Bauteile (Forschungskosten im Labor)
   hydraulic_part: 'cog',
   titan_alloy: 'shield-check',
   laser_lens: 'disc',
-  quantum_chip: 'atom'
+  quantum_chip: 'atom',
+  // Neue Fabrik-Montage-Bauteile (für Hangar-Montage)
+  iron_tube: 'pipe',
+  bronze_gear: 'settings',
+  silver_coil: 'rotate-ccw',
+  crystal_lens: 'aperture',
+  titan_bolt: 'bolt',
+  quantum_core: 'orbit'
 };
 
 /**

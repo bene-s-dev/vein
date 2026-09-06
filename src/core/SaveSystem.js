@@ -75,21 +75,26 @@ export class SaveSystem {
           maxFuel: p.maxFuel,
           fuelEfficiency: p.fuelEfficiency,
           tankTier: p.tankTier,
+          researchedTankTier: p.researchedTankTier || p.tankTier || 1,
           batteryTier: p.batteryTier || 1,
           hull: p.hull,
           maxHull: p.maxHull,
           hullTier: p.hullTier,
+          researchedHullTier: p.researchedHullTier || p.hullTier || 1,
           drillPower: p.drillPower,
           drillTier: p.drillTier,
           researchedDrillTier: p.researchedDrillTier || p.drillTier || 1,
           engineTier: p.engineTier || 1,
+          researchedEngineTier: p.researchedEngineTier || p.engineTier || 1,
           discoveredOres: Array.from(p.discoveredOres || []),
           maxCargo: p.maxCargo,
           cargoTier: p.cargoTier,
+          researchedCargoTier: p.researchedCargoTier || p.cargoTier || 1,
           cargo: [...p.cargo],
           components: { ...p.components },
           factoryProducts: { ...(p.factoryProducts || {}) },
           sensorTier: p.sensorTier,
+          researchedSensorTier: p.researchedSensorTier || p.sensorTier || 1,
           sensorRadius: p.sensorRadius,
           freeRescues: typeof p.freeRescues === 'number' ? p.freeRescues : 3
         },
@@ -135,6 +140,7 @@ export class SaveSystem {
       p.highestDepthReached = data.player.highestDepthReached || 0;
 
       p.tankTier = data.player.tankTier || p.tankTier;
+      p.researchedTankTier = data.player.researchedTankTier || p.tankTier || 1;
       if (p.upgradeTank) {
         p.upgradeTank(p.tankTier);
       }
@@ -144,6 +150,7 @@ export class SaveSystem {
       p.hull = typeof data.player.hull === 'number' ? data.player.hull : p.hull;
       p.maxHull = data.player.maxHull || p.maxHull;
       p.hullTier = data.player.hullTier || p.hullTier;
+      p.researchedHullTier = data.player.researchedHullTier || p.hullTier || 1;
       p.freeRescues = typeof data.player.freeRescues === 'number' ? data.player.freeRescues : 3;
 
       p.drillPower = data.player.drillPower || p.drillPower;
@@ -155,22 +162,23 @@ export class SaveSystem {
       if (p.upgradeEngine) {
         p.upgradeEngine(data.player.engineTier || 1);
       }
+      p.researchedEngineTier = data.player.researchedEngineTier || data.player.engineTier || 1;
 
       p.maxCargo = data.player.maxCargo || p.maxCargo;
       p.cargoTier = data.player.cargoTier || p.cargoTier;
+      p.researchedCargoTier = data.player.researchedCargoTier || p.cargoTier || 1;
       p.cargo = Array.isArray(data.player.cargo) ? [...data.player.cargo] : [];
 
       if (data.player.components) {
         p.components = {
-          hydraulic_part: data.player.components.hydraulic_part || 0,
-          titan_alloy: data.player.components.titan_alloy || 0,
-          laser_lens: data.player.components.laser_lens || 0,
-          quantum_chip: data.player.components.quantum_chip || 0
+          ...p.components,
+          ...data.player.components
         };
       }
 
       if (data.player.sensorTier) {
         p.sensorTier = data.player.sensorTier;
+        p.researchedSensorTier = data.player.researchedSensorTier || data.player.sensorTier || 1;
         p.sensorRadius = data.player.sensorRadius || 140;
       }
 
