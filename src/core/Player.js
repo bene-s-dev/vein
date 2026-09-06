@@ -1290,6 +1290,7 @@ export class Player {
   }
 
   moveTo(targetGx, targetGy, duration = null) {
+    this.scene.tweens.killTweensOf(this.sprite);
     this.state = PLAYER_STATES.MOVING;
     this.gx = targetGx;
     this.gy = targetGy;

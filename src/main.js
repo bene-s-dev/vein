@@ -11,14 +11,7 @@ const config = {
   type: Phaser.AUTO,
   parent: 'game-container',
   pixelArt: true,
-  roundPixels: false,
-  fps: {
-    min: 30,
-    target: 60,
-    limit: 60,
-    smoothStep: true,
-    deltaHistory: 10
-  },
+  roundPixels: true,
   backgroundColor: '#07090e',
   scale: {
     mode: Phaser.Scale.RESIZE,

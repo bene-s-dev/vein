@@ -527,17 +527,16 @@ export class GridSystem {
     const pY = player ? player.sprite.y : 0;
 
     const camMoved = this.lastCamX === null ||
-      Math.abs(camView.x - this.lastCamX) >= 0.25 ||
-      Math.abs(camView.y - this.lastCamY) >= 0.25 ||
-      Math.abs(camView.width - this.lastCamW) >= 1.0 ||
-      Math.abs(camView.height - this.lastCamH) >= 1.0;
+      camView.x !== this.lastCamX ||
+      camView.y !== this.lastCamY ||
+      camView.width !== this.lastCamW ||
+      camView.height !== this.lastCamH;
 
     const playerMoved = this.lastPlayerX === null ||
-      Math.abs(pX - this.lastPlayerX) >= 0.25 ||
-      Math.abs(pY - this.lastPlayerY) >= 0.25;
+      pX !== this.lastPlayerX ||
+      pY !== this.lastPlayerY;
 
-    // Wenn weder Kamera noch Spieler sich nennenswert bewegt haben und keine Kacheln zerstört wurden:
-    // Komplett überspringen! Das spart 600 Iterationen + GC + WebGL-Calls bei Standzeiten.
+    // Nur überspringen, wenn absolut kein Element bewegt wurde und Nebel sauber ist
     if (!camMoved && !playerMoved && !this.fogDirty) {
       return;
     }

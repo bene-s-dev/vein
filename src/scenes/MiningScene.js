@@ -87,8 +87,8 @@ export class MiningScene extends Phaser.Scene {
 
     // Endlose Kamera-Grenzen nach links, rechts und in die Tiefe
     cam.setBounds(-100000, -280, 200000, 500000);
-    cam.roundPixels = false;
-    cam.startFollow(this.player.sprite, false, 0.15, 0.15);
+    cam.roundPixels = true;
+    cam.startFollow(this.player.sprite, true, 0.08, 0.08);
 
     const screenW = this.scale.width || window.innerWidth;
     const screenH = this.scale.height || window.innerHeight;
