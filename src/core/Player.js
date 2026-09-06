@@ -364,6 +364,7 @@ export class Player {
       tint: [ 0xa8a29e, 0x78716c, 0x92400e, 0xb45309, 0x57534e, 0x44403c ],
       lifespan: { min: 220, max: 400 },
       gravityY: 60,
+      frequency: 25,
       emitting: false
     }).setDepth(11);
 
@@ -452,20 +453,25 @@ export class Player {
   update(delta, inputDir) {
     this.lastInputDir = inputDir;
 
-    // Scheinwerfer und Scanner synchronisieren
-    this.headlight.setPosition(this.sprite.x, this.sprite.y);
-    this.drawScanner();
+    // Scheinwerfer und Düsenpositionen nur bei echter Fahrzeug-Bewegung nachführen
+    const curX = this.sprite.x;
+    const curY = this.sprite.y;
+    if (this._lastSyncX !== curX || this._lastSyncY !== curY) {
+      this._lastSyncX = curX;
+      this._lastSyncY = curY;
 
-    // Position der Düsen am Unterflur-Fahrgestell
-    const n1X = this.sprite.x - 7;
-    const n1Y = this.sprite.y + 15;
-    const n2X = this.sprite.x + 7;
-    const n2Y = this.sprite.y + 15;
+      if (this.headlight) this.headlight.setPosition(curX, curY);
 
-    if (this.leftThrustParticles) this.leftThrustParticles.setPosition(n1X, n1Y);
-    if (this.rightThrustParticles) this.rightThrustParticles.setPosition(n2X, n2Y);
-    if (this.leftHoverParticles) this.leftHoverParticles.setPosition(n1X, n1Y);
-    if (this.rightHoverParticles) this.rightHoverParticles.setPosition(n2X, n2Y);
+      const n1X = curX - 7;
+      const n1Y = curY + 15;
+      const n2X = curX + 7;
+      const n2Y = curY + 15;
+
+      if (this.leftThrustParticles) this.leftThrustParticles.setPosition(n1X, n1Y);
+      if (this.rightThrustParticles) this.rightThrustParticles.setPosition(n2X, n2Y);
+      if (this.leftHoverParticles) this.leftHoverParticles.setPosition(n1X, n1Y);
+      if (this.rightHoverParticles) this.rightHoverParticles.setPosition(n2X, n2Y);
+    }
 
     if (this.state === PLAYER_STATES.FLYING) {
       // Voller Steigflug: Große Düsenstrahlen an, sanfte Schwebedüsen aus
@@ -650,10 +656,6 @@ export class Player {
 
   updateFuelArm(shouldDeploy, delta) {
     if (!this.refuelBeam) return;
-    this.refuelBeam.clear();
-
-    const now = Date.now();
-    const dt = Math.min(0.05, (delta || 16) / 1000);
 
     // Tanksäulen-Sockel an der Hangar-Bucht links (x=444, y=-28)
     const pumpBaseX = 15 * TILE_SIZE - 36;
@@ -665,9 +667,19 @@ export class Player {
         curTipY: pumpBaseY + 18,
         curMidX: pumpBaseX + 14,
         curMidY: pumpBaseY + 8,
-        activeWeight: 0
+        activeWeight: 0,
+        isParkedDrawn: false
       };
     }
+
+    if (!shouldDeploy && this.fuelArmState.isParkedDrawn) {
+      return;
+    }
+
+    this.refuelBeam.clear();
+
+    const now = Date.now();
+    const dt = Math.min(0.05, (delta || 16) / 1000);
 
     // Park-Position an der Tanksäule (Arm sauber angeklappt)
     const parkTipX = pumpBaseX + 6;
@@ -799,14 +811,16 @@ export class Player {
     const ledAlpha = isActivelyRefueling ? (0.6 + 0.4 * Math.sin(now * 0.008)) : (0.4 + 0.3 * Math.sin(now * 0.003));
     this.refuelBeam.fillStyle(ledColor, ledAlpha);
     this.refuelBeam.fillCircle(curTipX, curTipY, 2.0);
+
+    if (!shouldDeploy && this.fuelArmState.activeWeight < 0.01 && Math.abs(curTipX - parkTipX) < 0.4 && Math.abs(curTipY - parkTipY) < 0.4) {
+      this.fuelArmState.isParkedDrawn = true;
+    } else {
+      this.fuelArmState.isParkedDrawn = false;
+    }
   }
 
   updateRepairArm(shouldDeploy, delta) {
     if (!this.repairArm) return;
-    this.repairArm.clear();
-
-    const now = Date.now();
-    const dt = Math.min(0.05, (delta || 16) / 1000);
 
     // Roboterarm-Sockel an der Hangar-Überdachung rechts (x=512, y=-30)
     const armBaseX = 15 * TILE_SIZE + 32;
@@ -833,9 +847,19 @@ export class Player {
         phase: 'traveling', // 'traveling' | 'welding'
         timer: 0,
         isWelding: false,
-        lastSoundTime: 0
+        lastSoundTime: 0,
+        isParkedDrawn: false
       };
     }
+
+    if (!shouldDeploy && this.repairArmState.isParkedDrawn) {
+      return;
+    }
+
+    this.repairArm.clear();
+
+    const now = Date.now();
+    const dt = Math.min(0.05, (delta || 16) / 1000);
 
     if (typeof this.repairArmState.spotIndex !== 'number' || isNaN(this.repairArmState.spotIndex)) {
       this.repairArmState.spotIndex = 0;
@@ -1027,6 +1051,12 @@ export class Player {
       const pulse = 0.4 + 0.3 * Math.sin(now * 0.003);
       this.repairArm.fillStyle(0x0284c7, pulse);
       this.repairArm.fillCircle(curTipX, curTipY, 1.4);
+    }
+
+    if (!shouldDeploy && this.repairArmState.activeWeight < 0.01 && Math.abs(curTipX - parkTipX) < 0.4 && Math.abs(curTipY - parkTipY) < 0.4) {
+      this.repairArmState.isParkedDrawn = true;
+    } else {
+      this.repairArmState.isParkedDrawn = false;
     }
   }
 
@@ -1383,15 +1413,6 @@ export class Player {
       this.drillFrame = ((this.drillFrame || 0) + 1) % 6;
       const dirLower = (this.currentDirection || 'RIGHT').toLowerCase();
       this.sprite.setTexture(`player_drill_${dirLower}_${this.drillFrame}`);
-    }
-
-    // Welt bleibt komplett ruhig beim Bohren (kein Wackeln/Camera-Shake)
-    this.sprite.x = this.x;
-    this.sprite.y = this.y;
-
-    if (this.drillTarget) {
-      const bit = this.getDrillBitPosition(this.drillTarget.gx, this.drillTarget.gy);
-      this.drillParticles.setPosition(bit.x, bit.y);
     }
 
     // Geräusch: kontinuierlicher Schleifer (startDrilling kümmert sich darum)

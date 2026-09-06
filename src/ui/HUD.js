@@ -306,7 +306,10 @@ export class HUD {
     // Treibstoff & dynamische Rückkehr-Linie
     const fuelPercent = Math.max(0, (this.player.fuel / this.player.maxFuel) * 100);
     if (this.fuelBar) {
-      this.fuelBar.style.width = `${fuelPercent}%`;
+      if (this._lastFuelPercent === undefined || Math.abs(this._lastFuelPercent - fuelPercent) >= 0.15) {
+        this._lastFuelPercent = fuelPercent;
+        this.fuelBar.style.width = `${fuelPercent.toFixed(1)}%`;
+      }
     }
     const roundedFuel = Math.round(fuelPercent);
     if (this.fuelNum) {
@@ -315,31 +318,47 @@ export class HUD {
         this._lastFuel = roundedFuel;
       }
     } else if (this.fuelText) {
-      this.fuelText.textContent = `${roundedFuel}%`;
+      if (this._lastFuel !== roundedFuel) {
+        this.fuelText.textContent = `${roundedFuel}%`;
+        this._lastFuel = roundedFuel;
+      }
     }
 
     // Dynamischer Rückweg-Bedarf: Schwarzer Strich zur garantierten Rückkehr
     const returnPercent = this.player.getReturnFuelPercent ? this.player.getReturnFuelPercent() : 0;
 
     if (this.fuelReturnLine) {
-      if (returnPercent > 0.5 && returnPercent < 99.5) {
-        this.fuelReturnLine.style.display = 'block';
-        this.fuelReturnLine.style.left = `${returnPercent}%`;
-      } else {
+      const shouldShow = returnPercent > 0.5 && returnPercent < 99.5;
+      if (shouldShow) {
+        const roundedReturn = Math.round(returnPercent);
+        if (!this._lastReturnLineVisible || this._lastReturnPercent !== roundedReturn) {
+          this.fuelReturnLine.style.display = 'block';
+          this.fuelReturnLine.style.left = `${roundedReturn}%`;
+          this._lastReturnLineVisible = true;
+          this._lastReturnPercent = roundedReturn;
+        }
+      } else if (this._lastReturnLineVisible) {
         this.fuelReturnLine.style.display = 'none';
+        this._lastReturnLineVisible = false;
       }
     }
 
     if (this.fuelBarContainer) {
-      this.fuelBarContainer.title = `Tank: ${Math.round(fuelPercent)}% | Rückkehr-Schwelle: ${Math.round(returnPercent)}%`;
+      const roundedReturn = Math.round(returnPercent);
+      if (this._lastFuelTitleFuel !== roundedFuel || this._lastFuelTitleReturn !== roundedReturn) {
+        this._lastFuelTitleFuel = roundedFuel;
+        this._lastFuelTitleReturn = roundedReturn;
+        this.fuelBarContainer.title = `Tank: ${roundedFuel}% | Rückkehr-Schwelle: ${roundedReturn}%`;
+      }
     }
 
     // Tankwarnung auf Rot ab 15% (oder wenn aktueller Tank unter die garantierte Rückkehr fällt)
     const isReturnCritical = returnPercent > 0.5 && fuelPercent <= returnPercent;
-    if (fuelPercent <= 15 || isReturnCritical) {
-      this.cardGauges?.classList.add('fuel-warning');
-    } else {
-      this.cardGauges?.classList.remove('fuel-warning');
+    const needsFuelWarning = fuelPercent <= 15 || isReturnCritical;
+    if (this._lastFuelWarning !== needsFuelWarning) {
+      this._lastFuelWarning = needsFuelWarning;
+      if (needsFuelWarning) this.cardGauges?.classList.add('fuel-warning');
+      else this.cardGauges?.classList.remove('fuel-warning');
     }
 
     // Karosserie / Rumpfintegrität (Reine Prozent-Anzeige)
@@ -351,26 +370,35 @@ export class HUD {
         this._lastHull = roundedHull;
       }
     } else if (this.hullText) {
-      this.hullText.textContent = `${roundedHull}%`;
-    }
-
-    if (this.hullText) {
-      if (hullPercent <= 20) {
-        this.hullText.style.color = '#ef4444';
-      } else if (hullPercent <= 45) {
-        this.hullText.style.color = '#f59e0b';
-      } else {
-        this.hullText.style.color = '#10b981';
+      if (this._lastHull !== roundedHull) {
+        this.hullText.textContent = `${roundedHull}%`;
+        this._lastHull = roundedHull;
       }
     }
-    if (this.hullCluster) {
-      this.hullCluster.title = `Driller-Status & Panzerung: ${Math.round(hullPercent)}% (${Math.round(this.player.hull)}/${this.player.maxHull} HP) - Klick zum Öffnen`;
+
+    let hullColor = '#10b981';
+    if (hullPercent <= 20) hullColor = '#ef4444';
+    else if (hullPercent <= 45) hullColor = '#f59e0b';
+
+    if (this.hullText && this._lastHullColor !== hullColor) {
+      this._lastHullColor = hullColor;
+      this.hullText.style.color = hullColor;
     }
 
-    if (hullPercent <= 20) {
-      this.cardGauges?.classList.add('hull-warning');
-    } else {
-      this.cardGauges?.classList.remove('hull-warning');
+    if (this.hullCluster) {
+      const roundedHp = Math.round(this.player.hull);
+      if (this._lastHullTitleHp !== roundedHp || this._lastHullTitlePct !== roundedHull) {
+        this._lastHullTitleHp = roundedHp;
+        this._lastHullTitlePct = roundedHull;
+        this.hullCluster.title = `Driller-Status & Panzerung: ${roundedHull}% (${roundedHp}/${this.player.maxHull} HP) - Klick zum Öffnen`;
+      }
+    }
+
+    const needsHullWarning = hullPercent <= 20;
+    if (this._lastHullWarning !== needsHullWarning) {
+      this._lastHullWarning = needsHullWarning;
+      if (needsHullWarning) this.cardGauges?.classList.add('hull-warning');
+      else this.cardGauges?.classList.remove('hull-warning');
     }
 
     // Fracht (nur als Zahl)
@@ -384,17 +412,19 @@ export class HUD {
         this._lastMaxCargo = this.player.maxCargo;
       }
     } else if (this.cargoText) {
-      this.cargoText.textContent = `${this.player.cargoCount}/${this.player.maxCargo}`;
+      const cargoStr = `${this.player.cargoCount}/${this.player.maxCargo}`;
+      if (this._lastCargoStr !== cargoStr) {
+        this._lastCargoStr = cargoStr;
+        this.cargoText.textContent = cargoStr;
+      }
     }
 
-    // Level (links, nur als Zahl)
-    if (this.rankName) {
-      this.rankName.innerText = `${this.player.level || 1}`;
-    }
-
-    // Level (rechts oben, lila)
-    if (this.levelRight) {
-      this.levelRight.innerText = `${this.player.level || 1}`;
+    // Level (links & rechts, nur bei Änderung)
+    const lvl = this.player.level || 1;
+    if (this._lastLevel !== lvl) {
+      this._lastLevel = lvl;
+      if (this.rankName) this.rankName.textContent = lvl;
+      if (this.levelRight) this.levelRight.textContent = lvl;
     }
 
     // Adaptive Rückkehr-Warnung (oben rechts, rot pulsierend)
@@ -404,9 +434,9 @@ export class HUD {
     const isAtSurface = this.player.gy < 0 || currentY <= -8;
     const isBelowGround = !isAtSurface && (this.player.gy >= 0 || currentY >= 8);
 
-    // Adaptive Rückkehr-Warnung (oben rechts, rot pulsierend)
     const isReturnWarn = isBelowGround && returnPct > 0.5 && fuelPctRaw <= returnPct;
-    if (this.returnWarn) {
+    if (this.returnWarn && this._lastReturnWarn !== isReturnWarn) {
+      this._lastReturnWarn = isReturnWarn;
       this.returnWarn.style.display = isReturnWarn ? 'flex' : 'none';
     }
 
@@ -427,7 +457,6 @@ export class HUD {
     }
 
     // 2. Rückkehr-Vorwarnung: 2% vor Erreichen des Tankminimums zur Rückkehr (nur unter Tage)
-    // Tankminimum zur Rückkehr ist returnPct. 2% davor = returnPct + 2.
     const returnMinThreshold = returnPct + 2;
     if (isBelowGround && returnPct > 0.5) {
       if (!this.warnedReturn2Percent && fuelPctRaw <= returnMinThreshold) {
@@ -443,12 +472,14 @@ export class HUD {
       this.warnedReturn2Percent = false;
     }
 
-    // Cash & Tiefe
-    if (this.cashText) {
-      this.cashText.innerText = `€${this.player.cash}`;
+    // Cash & Tiefe (textContent + Dirty-Check verhindert teure Browser-Reflows)
+    if (this._lastCash !== this.player.cash) {
+      this._lastCash = this.player.cash;
+      if (this.cashText) this.cashText.textContent = `€${this.player.cash}`;
     }
-    if (this.depthText) {
-      this.depthText.innerText = `${this.player.depthMeters} m`;
+    if (this._lastDepth !== this.player.depthMeters) {
+      this._lastDepth = this.player.depthMeters;
+      if (this.depthText) this.depthText.textContent = `${this.player.depthMeters} m`;
     }
   }
 

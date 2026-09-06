@@ -113,14 +113,17 @@ export class MiningScene extends Phaser.Scene {
   }
 
   update(time, delta) {
+    if (typeof document !== 'undefined' && document.hidden) return;
     if (this.isPaused) return;
 
-    const inputDir = this.inputHandler.getDirection();
+    const isModalOpen = typeof document !== 'undefined' && document.body.classList.contains('modal-open');
 
-    // Spieler aktualisieren
-    this.player.update(delta, inputDir);
+    if (!isModalOpen) {
+      const inputDir = this.inputHandler.getDirection();
+      this.player.update(delta, inputDir);
+    }
 
-    // Basis-System, NPC & Gebäude-Funktionen aktualisieren
+    // Basis-System, NPC & Gebäude-Funktionen aktualisieren (Produktion läuft weiter)
     if (this.baseSystem && this.baseSystem.update) {
       this.baseSystem.update(delta);
     }
@@ -134,8 +137,10 @@ export class MiningScene extends Phaser.Scene {
       }
     }
 
-    // Viewport Culling & Sensor-Erz-Scanner
-    this.gridSystem.updateViewport(this.cameras.main, this.player);
+    // Viewport Culling & Sensor-Erz-Scanner (bei geöffnetem Modal pausiert)
+    if (!isModalOpen) {
+      this.gridSystem.updateViewport(this.cameras.main, this.player);
+    }
 
     // HUD synchronisieren
     this.hud.update();
