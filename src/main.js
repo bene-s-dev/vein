@@ -11,7 +11,7 @@ const config = {
   type: Phaser.AUTO,
   parent: 'game-container',
   pixelArt: true,
-  roundPixels: true,
+  roundPixels: false,
   backgroundColor: '#07090e',
   scale: {
     mode: Phaser.Scale.RESIZE,

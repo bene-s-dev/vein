@@ -263,6 +263,11 @@ export class Player {
     this.engineTier = 1;
     this.moveDuration = 260; // 260ms pro Kachel (~3.8 Kacheln/s für ruhiges, kontrolliertes Fahren auf Stufe 1)
     this.flightSpeed = 120;  // 120 px/s Steigflug (ca. 2.5 Kacheln/s)
+    this.moveTargetGx = this.gx;
+    this.moveTargetGy = this.gy;
+    this.moveTargetX = this.x;
+    this.moveTargetY = this.y;
+    this.moveSpeed = 125;
 
     this.maxCargo = 10;
     this.cargo = [];
@@ -450,12 +455,12 @@ export class Player {
     }
   }
 
-  update(delta, inputDir) {
-    this.lastInputDir = inputDir;
-
-    // Scheinwerfer und Düsenpositionen nur bei echter Fahrzeug-Bewegung nachführen
+  syncAttachments() {
     const curX = this.sprite.x;
     const curY = this.sprite.y;
+    this.x = curX;
+    this.y = curY;
+
     if (this._lastSyncX !== curX || this._lastSyncY !== curY) {
       this._lastSyncX = curX;
       this._lastSyncY = curY;
@@ -472,6 +477,12 @@ export class Player {
       if (this.leftHoverParticles) this.leftHoverParticles.setPosition(n1X, n1Y);
       if (this.rightHoverParticles) this.rightHoverParticles.setPosition(n2X, n2Y);
     }
+  }
+
+  update(delta, inputDir) {
+    this.lastInputDir = inputDir;
+
+    this.syncAttachments();
 
     if (this.state === PLAYER_STATES.FLYING) {
       // Voller Steigflug: Große Düsenstrahlen an, sanfte Schwebedüsen aus
@@ -500,8 +511,9 @@ export class Player {
     // Prüfen ob Spieler an der Oberfläche ist und auftankt
     this.checkDocking(delta);
 
-    // Wenn gerade im Move-Tween: keine neuen Eingaben
+    // Kontinuierliche, butterweiche Bewegung über Delta-Ticks (ohne Tween-Hänger)
     if (this.state === PLAYER_STATES.MOVING) {
+      this.processMoving(delta, inputDir);
       return;
     }
 
@@ -1239,6 +1251,7 @@ export class Player {
     this.sprite.y = nextY;
     this.y = nextY;
     this.gy = (this.y - TILE_SIZE / 2) / TILE_SIZE;
+    this.syncAttachments();
     this.checkDepthProgress();
   }
 
@@ -1290,44 +1303,92 @@ export class Player {
   }
 
   moveTo(targetGx, targetGy, duration = null) {
-    this.scene.tweens.killTweensOf(this.sprite);
+    if (this.scene?.tweens) {
+      this.scene.tweens.killTweensOf(this.sprite);
+    }
     this.state = PLAYER_STATES.MOVING;
-    this.gx = targetGx;
-    this.gy = targetGy;
+    this.moveTargetGx = targetGx;
+    this.moveTargetGy = targetGy;
+    this.moveTargetX = targetGx * TILE_SIZE + TILE_SIZE / 2;
+    this.moveTargetY = targetGy * TILE_SIZE + TILE_SIZE / 2;
 
-    const targetX = targetGx * TILE_SIZE + TILE_SIZE / 2;
-    const targetY = targetGy * TILE_SIZE + TILE_SIZE / 2;
     const moveDur = duration !== null ? duration : (this.moveDuration || 160);
+    this.moveSpeed = Math.max(80, TILE_SIZE / (moveDur / 1000));
+  }
 
-    this.scene.tweens.add({
-      targets: this.sprite,
-      x: targetX,
-      y: targetY,
-      duration: moveDur,
-      ease: 'Linear',
-      onUpdate: () => {
-        this.x = this.sprite.x;
-        this.y = this.sprite.y;
-      },
-      onComplete: () => {
-        this.x = targetX;
-        this.y = targetY;
-        this.state = PLAYER_STATES.IDLE;
+  processMoving(delta, inputDir) {
+    const dt = Math.min(delta, 50) / 1000;
+    let step = (this.moveSpeed || 200) * dt;
+
+    while (step > 0 && this.state === PLAYER_STATES.MOVING) {
+      const dx = this.moveTargetX - this.sprite.x;
+      const dy = this.moveTargetY - this.sprite.y;
+      const dist = Math.hypot(dx, dy);
+
+      if (dist <= 0.001 || step >= dist) {
+        // Zielkachel exakt erreicht
+        this.sprite.setPosition(this.moveTargetX, this.moveTargetY);
+        this.gx = this.moveTargetGx;
+        this.gy = this.moveTargetGy;
+        this.syncAttachments();
         this.checkDepthProgress();
 
-        // Flüssiges Weiterfahren: Wenn der Spieler die Richtung hält, bleibt der Motorsound nahtlos an!
-        const nextDir = this.scene.inputHandler ? this.scene.inputHandler.getDirection() : this.lastInputDir;
+        step -= dist;
+
+        // Nahtlose Weiterfahrt prüfen (kein 1-Frame-Hänger zwischen Kacheln!)
+        const nextDir = inputDir || (this.scene.inputHandler ? this.scene.inputHandler.getDirection() : this.lastInputDir);
         if (nextDir && this.fuel > 0) {
-          const continued = this.handleInput(nextDir);
-          if (!continued) {
+          let nextGx = this.gx;
+          let nextGy = this.gy;
+          if (nextDir === 'LEFT') nextGx--;
+          else if (nextDir === 'RIGHT') nextGx++;
+          else if (nextDir === 'DOWN') nextGy++;
+          else if (nextDir === 'UP') {
+            this.state = PLAYER_STATES.IDLE;
             soundFx.stopDrive();
+            this.handleInput(nextDir);
+            break;
+          }
+
+          if (nextGx < 0 || nextGx >= this.gridSystem.width) {
+            this.state = PLAYER_STATES.IDLE;
+            soundFx.stopDrive();
+            break;
+          }
+
+          const isTargetSolid = this.gridSystem.isSolid(nextGx, nextGy);
+          if (!isTargetSolid) {
+            // Freies Nachbarfeld: Nahtlos im selben Frame weiterfahren
+            this.setVisualDirection(nextDir);
+            this.moveTargetGx = nextGx;
+            this.moveTargetGy = nextGy;
+            this.moveTargetX = nextGx * TILE_SIZE + TILE_SIZE / 2;
+            this.moveTargetY = nextGy * TILE_SIZE + TILE_SIZE / 2;
+            const moveDur = this.moveDuration || 160;
+            this.moveSpeed = Math.max(80, TILE_SIZE / (moveDur / 1000));
+            this.consumeFuel(0.3);
+            soundFx.startDrive();
+          } else {
+            // Feste Wand / Gestein: Anhalten oder Bohren starten
+            this.state = PLAYER_STATES.IDLE;
+            soundFx.stopDrive();
+            this.handleInput(nextDir);
+            break;
           }
         } else {
-          // Keine weitere Bewegung: Motor sanft ausklingen lassen
+          // Keine Richtungstaste aktiv: sauber an Kachelmitte anhalten
+          this.state = PLAYER_STATES.IDLE;
           soundFx.stopDrive();
+          break;
         }
+      } else {
+        // Noch unterwegs zur aktuellen Kachelmitte
+        this.sprite.x += (dx / dist) * step;
+        this.sprite.y += (dy / dist) * step;
+        this.syncAttachments();
+        step = 0;
       }
-    });
+    }
   }
 
   getDrillBitPosition(targetGx, targetGy) {
@@ -1463,6 +1524,7 @@ export class Player {
     this.sprite.setTexture(`player_drill_${dirLower}`);
     this.sprite.x = this.x;
     this.sprite.y = this.y;
+    this.syncAttachments();
   }
 
   collectOre(oreType) {
