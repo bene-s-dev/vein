@@ -249,6 +249,10 @@ export class HUD {
     this.drillerModal.open(tab);
   }
 
+  showToast(message, type = 'info', duration = 3500) {
+    toastManager.showToast(message, type, duration);
+  }
+
   showDiscoveryModal(oreType) {
     const data = ORE_DATA[oreType];
     if (!data) return;

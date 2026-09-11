@@ -24,19 +24,23 @@ class ToastManager {
   }
 
   /**
-   * Zeigt einen kompakten roten Warn-Toast oben mittig an.
+   * Zeigt einen kompakten Toast oben mittig an.
    * @param {Object} options
    * @param {string} [options.id] - Eindeutige ID
-   * @param {string} [options.text] - Angezeigter Begriff (z. B. 'Tanken empfohlen' oder 'Rückkehrwarnung')
+   * @param {string} [options.text] - Angezeigter Begriff
+   * @param {string} [options.type='danger'] - 'danger' | 'warning' | 'info' | 'success'
    * @param {number} [options.duration=4000] - Anzeigedauer in ms
    * @param {boolean} [options.sound=true] - Ob ein Warnton ertönen soll
+   * @param {string} [options.emoji] - Optionales Emoji
    */
   show(options = {}) {
     const {
       id = 'toast_' + Date.now(),
       text = options.text || options.title || 'Warnung',
+      type = 'danger',
       duration = 4000,
-      sound = true
+      sound = true,
+      emoji = null
     } = options;
 
     const container = this.getContainer();
@@ -47,11 +51,19 @@ class ToastManager {
     }
 
     const toastEl = document.createElement('div');
-    toastEl.className = 'game-toast';
+    toastEl.className = `game-toast toast-${type}`;
     toastEl.id = `toast-item-${id}`;
 
+    let iconSpan = '';
+    if (emoji) {
+      iconSpan = `<span class="toast-emoji">${emoji}</span>`;
+    } else if (!/^(\p{Emoji}|\uD83C[\uDF00-\uDFFF]|\uD83D[\uDC00-\uDE4F]|\uD83E[\uDD00-\uDDFF])/u.test(text.trim())) {
+      const defaultEmoji = type === 'success' ? '✅' : (type === 'info' ? 'ℹ️' : '⚠️');
+      iconSpan = `<span class="toast-emoji">${defaultEmoji}</span>`;
+    }
+
     toastEl.innerHTML = `
-      <span class="toast-emoji">⚠️</span>
+      ${iconSpan}
       <span class="toast-label">${text}</span>
     `;
 
@@ -111,6 +123,17 @@ class ToastManager {
     } else {
       el.parentNode.removeChild(el);
     }
+  }
+
+  /**
+   * Universeller Kurzaufruf für Toasts
+   * @param {string} text
+   * @param {'info'|'success'|'warning'|'danger'} [type='info']
+   * @param {number} [duration=3500]
+   */
+  showToast(text, type = 'info', duration = 3500) {
+    const sound = (type === 'danger' || type === 'warning');
+    this.show({ text, type, duration, sound });
   }
 
   clearAll() {
