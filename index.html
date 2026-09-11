@@ -742,10 +742,9 @@
     }
 
     .fuel-warning #hud-fuel-icon,
-    .fuel-warning #hud-fuel-icon svg,
-    .fuel-warning #hud-fuel-icon i {
+    .fuel-warning #hud-fuel-icon svg {
       color: #ef4444 !important;
-      stroke: #ef4444 !important;
+      fill: #ef4444 !important;
       animation: fuel-text-flash 0.8s infinite alternate !important;
     }
 
@@ -756,26 +755,31 @@
       color: #ef4444 !important;
       animation: fuel-text-flash 0.8s infinite alternate;
     }
+    .hull-warning #hud-hull-icon,
+    .hull-warning #hud-hull-icon svg {
+      color: #ef4444 !important;
+      fill: #ef4444 !important;
+      animation: fuel-text-flash 0.8s infinite alternate !important;
+    }
 
-    /* Feste Icon-Farben im HUD: Standardzustand */
-    #hud-fuel-icon, #hud-fuel-cluster svg, #hud-fuel-cluster i {
+    /* Feste Icon-Farben im HUD: Standardzustand (gefüllt) */
+    #hud-fuel-icon, #hud-fuel-cluster svg {
       color: #fbbf24;
-      stroke: #fbbf24;
+      fill: #fbbf24;
     }
 
-    #hud-hull-icon, #hud-hull-cluster svg, #hud-hull-cluster i {
+    #hud-hull-icon, #hud-hull-cluster svg {
       color: #10b981 !important;
-      stroke: #10b981 !important;
+      fill: #10b981 !important;
     }
 
-    #hud-cargo-icon, #hud-cargo-cluster svg, #hud-cargo-cluster i {
+    #hud-cargo-icon, #hud-cargo-cluster svg {
       color: #38bdf8 !important;
-      stroke: #38bdf8 !important;
+      fill: #38bdf8 !important;
     }
 
-    #hud-level-icon, #hud-level-cluster svg, #hud-level-cluster i {
-      color: #c084fc !important;
-      stroke: #c084fc !important;
+    #card-status svg {
+      fill: currentColor;
     }
 
     /* Roter Strich im Tankbalken zur garantierten Rückkehr (Point of No Return) */
@@ -2104,7 +2108,7 @@
         <div class="hud-cluster-part" id="hud-fuel-cluster">
           <div class="stat-row">
             <span class="hud-value-badge" id="hud-fuel-text" style="color: #f8fafc;"><span class="hud-num-slot" id="hud-fuel-num">100</span></span>
-            <span id="hud-fuel-icon" style="display: inline-flex; align-items: center;"><i data-lucide="fuel" style="width: 14px; height: 14px;"></i></span>
+            <span id="hud-fuel-icon" style="display: inline-flex; align-items: center; color: #fbbf24;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16H3V5zm12 8h2a2 2 0 0 1 2 2v2a2 2 0 0 0 4 0v-7l-3-3V5h-1v2.5l2 2v6.5a1 1 0 0 1-2 0v-2a3 3 0 0 0-3-3h-1v-1zM5 6h7v4H5V6z"/></svg></span>
           </div>
           <div class="bar-container" id="hud-fuel-bar-container" style="position: relative;" title="Tank & garantierte Rückkehr">
             <!-- Aktueller Tank-Füllstand -->
@@ -2118,7 +2122,7 @@
         <div class="hud-cluster-part" id="hud-hull-cluster">
           <div class="stat-row">
             <span class="hud-value-badge" id="hud-hull-text" style="color: #f8fafc;"><span class="hud-num-slot" id="hud-hull-num">100</span></span>
-            <span id="hud-hull-icon" style="display: inline-flex; align-items: center;"><i data-lucide="shield-cog" style="width: 14px; height: 14px;"></i></span>
+            <span id="hud-hull-icon" style="display: inline-flex; align-items: center; color: #10b981;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg></span>
           </div>
         </div>
 
@@ -2126,7 +2130,7 @@
         <div class="hud-cluster-part" id="hud-cargo-cluster">
           <div class="stat-row">
             <span class="hud-value-badge" id="hud-cargo-text" style="color: #ffffff;"><span class="hud-num-slot" id="hud-cargo-num">0</span><span class="hud-cargo-slash">/</span><span id="hud-cargo-max">10</span></span>
-            <span id="hud-cargo-icon" style="display: inline-flex; align-items: center;"><i data-lucide="container" style="width: 14px; height: 14px;"></i></span>
+            <span id="hud-cargo-icon" style="display: inline-flex; align-items: center; color: #38bdf8;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M21 16.5l-9 5.2-9-5.2V7.5l9-5.2 9 5.2v9zM12 4.2L5.2 8.1 12 12l6.8-3.9L12 4.2zM4.5 9.7v6.6l6.5 3.7V13.5L4.5 9.7zm8.5 10.3l6.5-3.7V9.7l-6.5 3.8v6.5z"/></svg></span>
           </div>
         </div>
       </div>
@@ -2156,22 +2160,25 @@
       <div class="hud-card" id="card-status">
         <!-- Level display (purple) -->
         <div class="stat-row" title="Spieler-Level">
-          <span style="display: inline-flex; align-items: center; color: #c084fc;"><i data-lucide="award" style="width: 13px; height: 13px;"></i></span>
+          <span style="display: inline-flex; align-items: center; color: #c084fc;"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 15a6 6 0 1 0 0-12 6 6 0 0 0 0 12zm-3.5 1.5l-2 6.5L12 20l5.5 3-2-6.5A7.96 7.96 0 0 1 12 17c-1.25 0-2.43-.29-3.5-.8z"/></svg></span>
           <span class="hud-value-badge" id="hud-level-right" style="color: #f8fafc; font-weight: 800;">1</span>
         </div>
         <!-- Adaptive return warning (shown when current fuel <= return cost) -->
         <div id="hud-return-warn" class="hud-return-warn" title="Point of No Return: Nicht mehr genug Treibstoff für den Rückweg!">
-          <i data-lucide="triangle-alert" style="width: 11px; height: 11px;"></i>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
           <span>UMKEHREN!</span>
         </div>
         <!-- Cash -->
         <div class="stat-row">
-          <span id="hud-cash-icon" style="display: inline-flex; align-items: center; color: #fbbf24;"><i data-lucide="coins" style="width: 13px; height: 13px; color: #fbbf24;"></i></span>
+          <span id="hud-cash-icon" style="display: inline-flex; align-items: center; color: #fbbf24;"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><circle cx="15" cy="9" r="6"/><path d="M9 7a6 6 0 0 0 4.9 5.92A7.95 7.95 0 0 1 15 15a8 8 0 0 1-1.35.12 6 6 0 1 1-4.65-8.12z"/></svg></span>
           <span class="hud-value-badge cash-badge" id="hud-cash">€150</span>
         </div>
         <button id="btn-pause" class="btn-3d-secondary" title="Spielmenü (ESC / P)">
-          <i data-lucide="pause" id="icon-pause-state" style="width: 13px; height: 13px;"></i>
-          <svg id="icon-close-state" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: none; pointer-events: none;">
+          <svg id="icon-pause-state" width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+            <rect x="5" y="4" width="4.5" height="16" rx="1.5"/>
+            <rect x="14.5" y="4" width="4.5" height="16" rx="1.5"/>
+          </svg>
+          <svg id="icon-close-state" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: none; pointer-events: none;">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
