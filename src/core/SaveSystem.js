@@ -188,10 +188,12 @@ export class SaveSystem {
 
       if (data.player.gadgets) {
         p.gadgets = {
-          dynamite: typeof data.player.gadgets.dynamite === 'number' ? data.player.gadgets.dynamite : 1,
-          fuel_canister: typeof data.player.gadgets.fuel_canister === 'number' ? data.player.gadgets.fuel_canister : 1,
-          repair_kit: typeof data.player.gadgets.repair_kit === 'number' ? data.player.gadgets.repair_kit : 1
+          dynamite: Math.max(3, typeof data.player.gadgets.dynamite === 'number' ? data.player.gadgets.dynamite : 3),
+          fuel_canister: Math.max(2, typeof data.player.gadgets.fuel_canister === 'number' ? data.player.gadgets.fuel_canister : 2),
+          repair_kit: Math.max(2, typeof data.player.gadgets.repair_kit === 'number' ? data.player.gadgets.repair_kit : 2)
         };
+      } else {
+        p.gadgets = { dynamite: 3, fuel_canister: 2, repair_kit: 2 };
       }
 
       if (Array.isArray(data.player.discoveredArtifacts)) {

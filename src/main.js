@@ -49,7 +49,7 @@ function shieldUiElements() {
     });
   }
 
-  const elements = document.querySelectorAll('#hud-overlay, #orientation-tip, #mission-tracker');
+  const elements = document.querySelectorAll('#hud-overlay, #orientation-tip, #mission-tracker, #hud-gadget-bar, .btn-gadget');
   elements.forEach((el) => {
     ['pointerdown', 'pointerup', 'mousedown', 'mouseup', 'touchstart', 'touchend'].forEach((eventType) => {
       el.addEventListener(eventType, (e) => {

@@ -273,13 +273,15 @@ export class MiningScene extends Phaser.Scene {
 
   useDynamite() {
     if (!this.player) return false;
-    if (!this.player.gadgets) this.player.gadgets = { dynamite: 0, fuel_canister: 0, repair_kit: 0 };
+    if (!this.player.gadgets) this.player.gadgets = { dynamite: 3, fuel_canister: 2, repair_kit: 2 };
     if ((this.player.gadgets.dynamite || 0) <= 0) {
-      this.hud?.showToast('Kein Dynamit im Vorrat!', 'warning');
+      this.hud?.showToast('Kein Dynamit im Vorrat! (Im Hangar erhältlich)', 'warning');
       soundFx.playError();
       return false;
     }
-    if (this.player.gy < 0) {
+
+    const currentY = this.player.sprite ? this.player.sprite.y : (this.player.gy * TILE_SIZE + TILE_SIZE / 2);
+    if (currentY <= -8 || this.player.gy < 0) {
       this.hud?.showToast('Dynamit kann nur unter Tage platziert werden!', 'info');
       return false;
     }
@@ -292,8 +294,11 @@ export class MiningScene extends Phaser.Scene {
     this.isDynamiteActive = true;
     this.events.emit('player_updated');
 
-    const gx = this.player.gx;
-    const gy = this.player.gy;
+    // Exakte ganzzahlige Gitterkoordinaten (verhindert Fehltreffer bei Float-Werten im Flug)
+    const pX = this.player.sprite ? this.player.sprite.x : this.player.x;
+    const pY = this.player.sprite ? this.player.sprite.y : this.player.y;
+    const gx = Math.max(0, Math.min(this.gridSystem.width - 1, Math.round((pX - TILE_SIZE / 2) / TILE_SIZE)));
+    const gy = Math.max(1, Math.round((pY - TILE_SIZE / 2) / TILE_SIZE));
     const bombX = gx * TILE_SIZE + TILE_SIZE / 2;
     const bombY = gy * TILE_SIZE + TILE_SIZE / 2;
 
@@ -308,8 +313,8 @@ export class MiningScene extends Phaser.Scene {
 
     this.tweens.add({
       targets: bombSprite,
-      scaleX: 1.2,
-      scaleY: 1.2,
+      scaleX: 1.25,
+      scaleY: 1.25,
       yoyo: true,
       repeat: 3,
       duration: 175,
@@ -323,6 +328,8 @@ export class MiningScene extends Phaser.Scene {
   }
 
   explodeDynamite(centerGx, centerGy) {
+    centerGx = Math.round(centerGx);
+    centerGy = Math.round(centerGy);
     const bombX = centerGx * TILE_SIZE + TILE_SIZE / 2;
     const bombY = centerGy * TILE_SIZE + TILE_SIZE / 2;
 
@@ -350,6 +357,7 @@ export class MiningScene extends Phaser.Scene {
 
         // Oberfläche gy <= 0 Fundamente nicht sprengen
         if (tgy <= 0) continue;
+        if (tgx < 0 || tgx >= this.gridSystem.width) continue;
 
         const tile = this.gridSystem.getTile(tgx, tgy);
         if (tile && tile.type !== 'empty' && !tile.indestructible) {
@@ -359,13 +367,23 @@ export class MiningScene extends Phaser.Scene {
               oresCollected++;
             }
           }
-          this.gridSystem.damageTile(tgx, tgy, 99999);
+          this.gridSystem.damageTile(tgx, tgy, 999999);
         }
       }
     }
 
+    // Sofortige visuelle Aktualisierung der Kacheln und des Nebels
+    this.gridSystem.fogDirty = true;
+    this.gridSystem.lastCamX = null;
+    this.gridSystem.updateViewport(this.cameras.main, this.player);
+
     // Spieler-Schaden wenn noch im Explosionsradius
-    if (Math.abs(this.player.gx - centerGx) <= 1 && Math.abs(this.player.gy - centerGy) <= 1) {
+    const curPx = this.player.sprite ? this.player.sprite.x : this.player.x;
+    const curPy = this.player.sprite ? this.player.sprite.y : this.player.y;
+    const curGx = Math.round((curPx - TILE_SIZE / 2) / TILE_SIZE);
+    const curGy = Math.round((curPy - TILE_SIZE / 2) / TILE_SIZE);
+
+    if (Math.abs(curGx - centerGx) <= 1 && Math.abs(curGy - centerGy) <= 1) {
       this.player.takeDamage(20);
       this.hud?.showToast('💥 Autsch! Eigene Sprengung hat dich erwischt! (-20 HP)', 'danger');
     } else if (oresCollected > 0) {

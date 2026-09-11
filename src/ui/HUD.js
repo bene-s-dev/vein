@@ -141,24 +141,25 @@ export class HUD {
     this.countFuel = document.getElementById('gadget-count-fuel');
     this.countRepair = document.getElementById('gadget-count-repair');
 
-    if (this.btnDynamite) {
-      this.btnDynamite.addEventListener('pointerdown', (e) => {
-        e.stopPropagation();
-        this.scene.useDynamite?.();
-      });
-    }
-    if (this.btnFuel) {
-      this.btnFuel.addEventListener('pointerdown', (e) => {
-        e.stopPropagation();
-        this.player?.useFuelCanister();
-      });
-    }
-    if (this.btnRepair) {
-      this.btnRepair.addEventListener('pointerdown', (e) => {
-        e.stopPropagation();
-        this.player?.useRepairKit();
-      });
-    }
+    const bindGadgetBtn = (btn, action) => {
+      if (!btn) return;
+      let lastTrigger = 0;
+      const trigger = (e) => {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        const now = Date.now();
+        if (now - lastTrigger < 300) return;
+        lastTrigger = now;
+        action();
+      };
+      ['pointerdown', 'click'].forEach(evt => btn.addEventListener(evt, trigger));
+    };
+
+    bindGadgetBtn(this.btnDynamite, () => this.scene.useDynamite?.());
+    bindGadgetBtn(this.btnFuel, () => this.player?.useFuelCanister());
+    bindGadgetBtn(this.btnRepair, () => this.player?.useRepairKit());
 
     // Toast- und Alarm-Tracking (nur 1x beim Point of No Return)
     this.warnedPointOfNoReturn = false;

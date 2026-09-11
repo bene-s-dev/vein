@@ -227,9 +227,9 @@ export class Player {
 
     // Notfall-Kits & Gadgets (Verbrauchsgüter)
     this.gadgets = {
-      dynamite: 1,
-      fuel_canister: 1,
-      repair_kit: 1
+      dynamite: 3,
+      fuel_canister: 2,
+      repair_kit: 2
     };
 
     // Gefundene Relikte & Fossilien (Museum / Bergmann-Buch)
@@ -587,8 +587,12 @@ export class Player {
     return true;
   }
 
+  useDynamite() {
+    return this.scene?.useDynamite?.();
+  }
+
   useFuelCanister() {
-    if (!this.gadgets) this.gadgets = { dynamite: 0, fuel_canister: 0, repair_kit: 0 };
+    if (!this.gadgets) this.gadgets = { dynamite: 3, fuel_canister: 2, repair_kit: 2 };
     if ((this.gadgets.fuel_canister || 0) <= 0) {
       this.scene.hud?.showToast('Kein Treibstoff-Kanister im Vorrat!', 'warning');
       soundFx.playError();
