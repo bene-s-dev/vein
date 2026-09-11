@@ -7,7 +7,7 @@
 import Phaser from 'phaser';
 import { TILE_SIZE, ORE_DATA } from './GridSystem.js';
 import { soundFx } from './SoundEffects.js';
-import { FACTORY_PRODUCTS, GEOLOGIST_QUESTS, getRefinedOreNetValue, isModalActive } from './BaseSystem.js';
+import { FACTORY_PRODUCTS, GEOLOGIST_QUESTS, getRefinedOreNetValue, isModalActive, HANGAR_TIERS } from './BaseSystem.js';
 
 export const PLAYER_STATES = {
   IDLE: 'idle',
@@ -506,11 +506,27 @@ export class Player {
   }
 
   getChargeSpeed() {
-    let speed = 5;
     const baseSys = this.scene?.baseSystem;
-    const pp = baseSys?.buildings?.find(b => b.id === 'powerplant');
+    const tier = Math.max(1, Math.min(HANGAR_TIERS.length, baseSys?.hangarTier || 1));
+    const tierData = HANGAR_TIERS[tier - 1] || HANGAR_TIERS[0];
+    let speed = tierData.fuelSpeed || 20;
+
+    const pp = baseSys?.purchasableBuildings?.find(b => b.id === 'powerplant') || baseSys?.buildings?.find(b => b.id === 'powerplant');
     if (pp?.isBuilt) {
       speed *= 2;
+    }
+    return speed;
+  }
+
+  getRepairSpeed() {
+    const baseSys = this.scene?.baseSystem;
+    const tier = Math.max(1, Math.min(HANGAR_TIERS.length, baseSys?.hangarTier || 1));
+    const tierData = HANGAR_TIERS[tier - 1] || HANGAR_TIERS[0];
+    let speed = tierData.repairSpeed || 50;
+
+    const pp = baseSys?.purchasableBuildings?.find(b => b.id === 'powerplant') || baseSys?.buildings?.find(b => b.id === 'powerplant');
+    if (pp?.isBuilt) {
+      speed *= 1.5;
     }
     return speed;
   }
@@ -686,10 +702,11 @@ export class Player {
         this.isDocked = true;
       }
 
-      // Rumpfreparatur: Erhöht sich während des 1,5s Schweißens an den einzelnen Punkten (zügige Reparatur 32 HP/s)
-      const isRepairWelding = isParkedAtHangar && this.repairArmState && this.repairArmState.isWelding;
+      // Rumpfreparatur: Erhöht sich während des Schweißens bzw. angedocktem Reparaturarm
+      const isRepairWelding = isParkedAtHangar && this.repairArmState && (this.repairArmState.isWelding || this.repairArmState.activeWeight > 0.75);
       if (isRepairWelding && this.hull < this.maxHull) {
-        this.hull = Math.min(this.maxHull, this.hull + (delta / 1000) * 32);
+        const repairSpeed = this.getRepairSpeed();
+        this.hull = Math.min(this.maxHull, this.hull + (delta / 1000) * repairSpeed);
         if (this.hull >= this.maxHull - 0.05) {
           this.hull = this.maxHull;
           if (this.repairArmState) this.repairArmState.isWelding = false;
@@ -807,7 +824,11 @@ export class Player {
       targetMidX = (pumpBaseX + portX) / 2 - 4;
       targetMidY = Math.min(pumpBaseY, portY) - 14;
 
-      this.fuelArmState.activeWeight = Phaser.Math.Linear(this.fuelArmState.activeWeight, 1.0, dt * 2.2);
+      const hTier = this.scene?.baseSystem?.hangarTier || 1;
+      const deploySpeed = 3.5 + hTier * 0.7;
+      const lerpSpeed = 5.0 + hTier * 1.0;
+
+      this.fuelArmState.activeWeight = Phaser.Math.Linear(this.fuelArmState.activeWeight, 1.0, dt * deploySpeed);
     } else {
       // Wenn Tank voll oder Auto weiterfährt: Sofort zur Parkposition zurückfahren!
       targetTipX = parkTipX;
@@ -815,14 +836,18 @@ export class Player {
       targetMidX = parkMidX;
       targetMidY = parkMidY;
 
-      this.fuelArmState.activeWeight = Phaser.Math.Linear(this.fuelArmState.activeWeight, 0.0, dt * 2.8);
+      const hTier = this.scene?.baseSystem?.hangarTier || 1;
+      const deploySpeed = 3.5 + hTier * 0.7;
+      this.fuelArmState.activeWeight = Phaser.Math.Linear(this.fuelArmState.activeWeight, 0.0, dt * (deploySpeed * 1.2));
     }
 
     // Sanftes Nachführen der Gelenke (kinematisches Nachziehen, kein Springen oder Strecken)
-    this.fuelArmState.curTipX = Phaser.Math.Linear(this.fuelArmState.curTipX, targetTipX, dt * 3.8);
-    this.fuelArmState.curTipY = Phaser.Math.Linear(this.fuelArmState.curTipY, targetTipY, dt * 3.8);
-    this.fuelArmState.curMidX = Phaser.Math.Linear(this.fuelArmState.curMidX, targetMidX, dt * 3.8);
-    this.fuelArmState.curMidY = Phaser.Math.Linear(this.fuelArmState.curMidY, targetMidY, dt * 3.8);
+    const hTier = this.scene?.baseSystem?.hangarTier || 1;
+    const lerpSpeed = 5.0 + hTier * 1.0;
+    this.fuelArmState.curTipX = Phaser.Math.Linear(this.fuelArmState.curTipX, targetTipX, dt * lerpSpeed);
+    this.fuelArmState.curTipY = Phaser.Math.Linear(this.fuelArmState.curTipY, targetTipY, dt * lerpSpeed);
+    this.fuelArmState.curMidX = Phaser.Math.Linear(this.fuelArmState.curMidX, targetMidX, dt * lerpSpeed);
+    this.fuelArmState.curMidY = Phaser.Math.Linear(this.fuelArmState.curMidY, targetMidY, dt * lerpSpeed);
 
     const curTipX = this.fuelArmState.curTipX;
     const curTipY = this.fuelArmState.curTipY;
@@ -1026,8 +1051,10 @@ export class Player {
         targetTipX = spotX + microJitterX;
         targetTipY = spotY + microJitterY;
 
-        // Nach exakt 1.5 Sekunden Schweißanimation zum nächsten Punkt wechseln
-        if (this.repairArmState.timer >= 1500) {
+        // Schweißintervall pro Punkt an Hangar-Stufe anpassen
+        const hTier = this.scene?.baseSystem?.hangarTier || 1;
+        const spotDuration = Math.max(380, 1400 - (hTier - 1) * 110);
+        if (this.repairArmState.timer >= spotDuration) {
           this.repairArmState.spotIndex = (this.repairArmState.spotIndex + 1) % REPAIR_SPOTS.length;
           this.repairArmState.phase = 'traveling';
           this.repairArmState.timer = 0;
@@ -1039,7 +1066,9 @@ export class Player {
       targetMidX = (armBaseX + targetTipX) / 2 + 5;
       targetMidY = Math.min(armBaseY, targetTipY) - 15;
 
-      this.repairArmState.activeWeight = Phaser.Math.Linear(this.repairArmState.activeWeight, 1.0, dt * 2.5);
+      const hTier = this.scene?.baseSystem?.hangarTier || 1;
+      const deploySpeed = 3.5 + hTier * 0.7;
+      this.repairArmState.activeWeight = Phaser.Math.Linear(this.repairArmState.activeWeight, 1.0, dt * deploySpeed);
     } else {
       // Wenn Hülle repariert oder Auto weiterfährt: Sofort zur Parkposition zurückfahren!
       this.repairArmState.isWelding = false;
@@ -1052,11 +1081,14 @@ export class Player {
       targetMidX = parkMidX;
       targetMidY = parkMidY;
 
-      this.repairArmState.activeWeight = Phaser.Math.Linear(this.repairArmState.activeWeight, 0.0, dt * 2.8);
+      const hTier = this.scene?.baseSystem?.hangarTier || 1;
+      const deploySpeed = 3.5 + hTier * 0.7;
+      this.repairArmState.activeWeight = Phaser.Math.Linear(this.repairArmState.activeWeight, 0.0, dt * (deploySpeed * 1.2));
     }
 
     // Kinematische Nachführung der Gelenke
-    const moveSpeed = this.repairArmState.isWelding ? 14.0 : 6.5;
+    const hTier = this.scene?.baseSystem?.hangarTier || 1;
+    const moveSpeed = this.repairArmState.isWelding ? (14.0 + hTier * 1.5) : (7.0 + hTier * 1.0);
     this.repairArmState.curTipX = Phaser.Math.Linear(this.repairArmState.curTipX, targetTipX, dt * moveSpeed);
     this.repairArmState.curTipY = Phaser.Math.Linear(this.repairArmState.curTipY, targetTipY, dt * moveSpeed);
     this.repairArmState.curMidX = Phaser.Math.Linear(this.repairArmState.curMidX, targetMidX, dt * moveSpeed);

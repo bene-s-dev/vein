@@ -203,6 +203,7 @@ export class SaveSystem {
       buildings: buildingsData,
       refinery: bs && bs.getRefinerySaveData ? bs.getRefinerySaveData() : null,
       depot: bs && bs.getDepotSaveData ? bs.getDepotSaveData() : null,
+      hangar: bs && bs.getHangarSaveData ? bs.getHangarSaveData() : { tier: bs?.hangarTier || 1 },
       mission: missionData
     };
   }
@@ -430,6 +431,13 @@ export class SaveSystem {
           bs.depot.ores = {};
           bs.depot.products = {};
         }
+
+        if (data.hangar && bs.loadHangarSaveData) {
+          bs.loadHangarSaveData(data.hangar);
+        } else if (bs) {
+          bs.hangarTier = data.hangar?.tier || 1;
+          bs.updateHangarBuildingLabel?.();
+        }
       }
 
       // 4. Missionsfortschritt
@@ -584,6 +592,9 @@ export class SaveSystem {
           ores: { coal: 8, copper: 6, iron: 4, tin: 2 },
           products: { bar_coal: 4, bar_copper: 3, steel_beam: 2 }
         },
+        hangar: {
+          tier: 1
+        },
         mission: {
           id: 'tier2_iron_strike',
           progress: 2,
@@ -686,6 +697,9 @@ export class SaveSystem {
           capacity: 350,
           ores: { coal: 35, copper: 28, iron: 22, tin: 18, silver: 14, gold: 10, emerald: 5, sapphire: 3 },
           products: { bar_coal: 12, bar_copper: 10, bar_iron: 8, bar_silver: 6, bar_gold: 5, steel_beam: 5, bronze_ingot: 4, circuit_board: 3 }
+        },
+        hangar: {
+          tier: 4
         },
         mission: {
           id: 'deep_gold_strike',
@@ -806,6 +820,9 @@ export class SaveSystem {
             bar_coal: 25, bar_copper: 20, bar_iron: 18, bar_silver: 14, bar_gold: 12, bar_titanium: 8, bar_platinum: 5,
             steel_beam: 12, bronze_ingot: 10, circuit_board: 8, sapphire_glass: 6, polished_gem: 4, titan_plate: 3
           }
+        },
+        hangar: {
+          tier: 8
         },
         mission: {
           id: 'deep_core_master',

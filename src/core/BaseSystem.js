@@ -133,6 +133,100 @@ export const DEPOT_TIERS = [
   { tier: 10, capacity: 3000, costCash: 450000, costComp: { quantum_core: 2 }, compName: '2x Quanten-Kern', label: 'Interdimensionales Zentrallager' }
 ];
 
+// Zentrale Hangar-Ausbaustufen (Tank- und Reparaturrate am Oberflächen-Dock)
+export const HANGAR_TIERS = [
+  {
+    tier: 1,
+    name: 'Basis-Servicestation',
+    fuelSpeed: 20,
+    repairSpeed: 50,
+    costCash: 0,
+    costComps: null,
+    desc: 'Standard-Tankanlage mit Basisausleger und manueller Schweißtechnik.'
+  },
+  {
+    tier: 2,
+    name: 'Druckluft-Schnellbetankung Mk.II',
+    fuelSpeed: 40,
+    repairSpeed: 100,
+    costCash: 600,
+    costComps: [{ key: 'iron_tube', name: 'Stahl-Rohr', count: 1, source: 'Fabrik' }],
+    desc: 'Hochdruckpumpe für doppelte Durchflussrate und verstärkte Schweißleistung.'
+  },
+  {
+    tier: 3,
+    name: 'Turbinen-Servicebrücke Mk.III',
+    fuelSpeed: 75,
+    repairSpeed: 180,
+    costCash: 1800,
+    costComps: [{ key: 'microprocessor', name: 'Mikroprozessor', count: 1, source: 'Forscher' }],
+    desc: 'Mikroprozessor-gesteuerter Injektor & automatisierter Doppel-Schweißarm.'
+  },
+  {
+    tier: 4,
+    name: 'Industrie-Hochdruckdock Mk.IV',
+    fuelSpeed: 130,
+    repairSpeed: 300,
+    costCash: 4500,
+    costComps: [{ key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1, source: 'Fabrik' }, { key: 'capacitor', name: 'Druck-Kondensator', count: 1, source: 'Forscher' }],
+    desc: 'Industrielle Getriebepumpen und Hochspannungs-Schweißkondensatoren.'
+  },
+  {
+    tier: 5,
+    name: 'Plasma-Kompressionstankstelle Mk.V',
+    fuelSpeed: 220,
+    repairSpeed: 500,
+    costCash: 12000,
+    costComps: [{ key: 'silver_coil', name: 'Silber-Spule', count: 2, source: 'Fabrik' }],
+    desc: 'Plasmabeschleunigter Kerosinfluss füllt schwere Tanks in unter 2 Sekunden.'
+  },
+  {
+    tier: 6,
+    name: 'Nanit-Instandsetzungsdock Mk.VI',
+    fuelSpeed: 360,
+    repairSpeed: 800,
+    costCash: 28000,
+    costComps: [{ key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Forscher' }],
+    desc: 'Autonomer Naniten-Schwarm rekonstruiert Hüllenschäden in Sekundenschnelle.'
+  },
+  {
+    tier: 7,
+    name: 'Kryo-Quantenservicestation Mk.VII',
+    fuelSpeed: 580,
+    repairSpeed: 1250,
+    costCash: 60000,
+    costComps: [{ key: 'crystal_lens', name: 'Kristall-Linse', count: 1, source: 'Fabrik' }, { key: 'spectrometer', name: 'Sensor-Spektrometer', count: 1, source: 'Forscher' }],
+    desc: 'Kryogenische Kompression und Spektrometer-gesteuerte Molekularreparatur.'
+  },
+  {
+    tier: 8,
+    name: 'Subraum-Resonanzdock Mk.VIII',
+    fuelSpeed: 950,
+    repairSpeed: 1800,
+    costCash: 130000,
+    costComps: [{ key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Forscher' }, { key: 'titan_bolt', name: 'Titan-Bolzen', count: 1, source: 'Fabrik' }],
+    desc: 'Gravitationswellen-Transfer füllt auch riesige Tanks nahezu verzögerungsfrei.'
+  },
+  {
+    tier: 9,
+    name: 'Singularitäts-Dock Mk.IX',
+    fuelSpeed: 1500,
+    repairSpeed: 2700,
+    costCash: 250000,
+    costComps: [{ key: 'titan_bolt', name: 'Titan-Bolzen', count: 2, source: 'Fabrik' }],
+    desc: 'Hyperraum-Transfertankung und simultane Hüllen-Reparatur.'
+  },
+  {
+    tier: 10,
+    name: 'Chrono-Quanten-Zentraldock X',
+    fuelSpeed: 2500,
+    repairSpeed: 4000,
+    costCash: 480000,
+    costComps: [{ key: 'quantum_core', name: 'Quanten-Kern', count: 1, source: 'Fabrik' }, { key: 'quantum_processor', name: 'Quanten-Prozessor', count: 1, source: 'Forscher' }],
+    desc: 'Ultimative Versorgungsmatrix: Nullzeit-Betankung und augenblickliche Reparatur.'
+  }
+];
+
 // Spezial-Upgrade-Bauteile (Auftragsbelohnungen & Montagebauteile)
 export const COMPONENT_DATA = {
   // Fabrik-Montagebauteile (Mechanik & Struktur)
@@ -574,7 +668,8 @@ export class BaseSystem {
       tier: 1,
       currentTab: 'ores' // 'ores' | 'products' | 'upgrade'
     };
-    this.isDepotModalOpen = false;
+    // Hangar-Ausbaustufe (1-10) für Betankungs- und Reparaturrate
+    this.hangarTier = 1;
 
     this.initWorldSprites();
     this.initPurchasableWorldSprites();
@@ -637,6 +732,8 @@ export class BaseSystem {
       b.sprite = sprite;
       b.textLabel = text;
     });
+
+    this.updateHangarBuildingLabel();
 
     // Feste Gruben-Überdachung beim Minen-Schachteinstieg (gx: 19..20, x=640)
     const entranceX = 20 * TILE_SIZE;
@@ -1570,6 +1667,26 @@ export class BaseSystem {
       this.depot.capacity = data.capacity;
     }
     this.depot.currentTab = 'ores';
+  }
+
+  updateHangarBuildingLabel() {
+    const dockBuilding = this.buildings?.find(b => b.id === 'dock');
+    if (dockBuilding && dockBuilding.textLabel) {
+      const tier = this.hangarTier || 1;
+      dockBuilding.textLabel.setText(tier > 1 ? `HANGAR (Stufe ${tier})` : 'HANGAR');
+    }
+  }
+
+  getHangarSaveData() {
+    return {
+      tier: this.hangarTier || 1
+    };
+  }
+
+  loadHangarSaveData(data) {
+    if (!data) return;
+    this.hangarTier = Math.max(1, Math.min(HANGAR_TIERS.length, Number(data.tier) || 1));
+    this.updateHangarBuildingLabel();
   }
 
   openDepotModal() {
@@ -3472,6 +3589,138 @@ export class BaseSystem {
       `;
     });
 
+    // ── Hangar-Infrastruktur (Betankungs- & Reparaturrate) ──
+    const curHangarTier = Math.max(1, Math.min(HANGAR_TIERS.length, this.hangarTier || 1));
+    const curHangarData = HANGAR_TIERS[curHangarTier - 1] || HANGAR_TIERS[0];
+    const hasNextHangar = curHangarTier < HANGAR_TIERS.length;
+    const nextHangarData = hasNextHangar ? HANGAR_TIERS[curHangarTier] : null;
+
+    let canAffordHangar = false;
+    let missingHangarReason = '';
+    let compsBadgeHtml = '';
+
+    if (hasNextHangar && nextHangarData) {
+      const hasCash = this.player.cash >= nextHangarData.costCash;
+      let hasComps = true;
+      const missingComps = [];
+
+      if (nextHangarData.costComps && nextHangarData.costComps.length > 0) {
+        compsBadgeHtml = nextHangarData.costComps.map(mc => {
+          const count = this.player.components[mc.key] || 0;
+          const ok = count >= mc.count;
+          if (!ok) {
+            hasComps = false;
+            missingComps.push(`${mc.count}x ${mc.name} [${mc.source}]`);
+          }
+          const cData = COMPONENT_DATA[mc.key];
+          const iconStr = cData ? icon(cData.icon, '', 11) : '';
+          return `
+            <span style="background: ${ok ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'}; border: 1px solid ${ok ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'}; color: ${ok ? '#34d399' : '#f87171'}; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">
+              ${iconStr} ${mc.source ? `[${mc.source}] ` : ''}${mc.count}x ${mc.name} (${count}/${mc.count})
+            </span>
+          `;
+        }).join(' ');
+      }
+
+      canAffordHangar = hasCash && hasComps;
+      if (!hasCash) missingHangarReason = `Fehlendes Bargeld ($${nextHangarData.costCash.toLocaleString('de-DE')})`;
+      else if (!hasComps) missingHangarReason = `Fehlende Bauteile: ${missingComps.join(', ')}`;
+    }
+
+    // Segmentierte Fortschrittsanzeige für Hangar-Stufen
+    let hangarSegmentsHtml = '<div class="segmented-progress-bar" style="margin-top: 6px; margin-bottom: 8px;">';
+    for (let s = 1; s <= HANGAR_TIERS.length; s++) {
+      if (s <= curHangarTier) {
+        hangarSegmentsHtml += `
+          <div class="seg-step completed${s === curHangarTier ? ' current' : ''}">
+            <span><span class="step-label">Stufe </span>${s}</span>
+          </div>
+        `;
+      } else if (s === curHangarTier + 1) {
+        hangarSegmentsHtml += `
+          <div class="seg-step active">
+            <span><span class="step-label">Stufe </span>${s}</span>
+          </div>
+        `;
+      } else {
+        hangarSegmentsHtml += `
+          <div class="seg-step">
+            <span><span class="step-label">Stufe </span>${s}</span>
+          </div>
+        `;
+      }
+    }
+    hangarSegmentsHtml += '</div>';
+
+    const hasPowerplant = !!(this.purchasableBuildings?.find(b => b.id === 'powerplant')?.isBuilt);
+    const effFuelSpeed = curHangarData.fuelSpeed * (hasPowerplant ? 2 : 1);
+    const effRepairSpeed = Math.round(curHangarData.repairSpeed * (hasPowerplant ? 1.5 : 1));
+
+    let hangarUpgradeRowHtml = '';
+    if (hasNextHangar && nextHangarData) {
+      const upgradeBtnHtml = canAffordHangar ? `
+        <button id="btn-upgrade-hangar-dock" class="btn-buy" style="height: 30px; padding: 0 14px; font-size: 11px; font-weight: 800; background: linear-gradient(135deg, #0284c7, #0369a1); display: inline-flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap; color: #ffffff;">
+          ${icon('wrench', '', 12)} Hangar Ausbauen
+        </button>
+      ` : `
+        <button id="btn-upgrade-hangar-dock" class="btn-buy" style="height: 30px; padding: 0 10px; font-size: 10.5px; font-weight: 700; background: #334155; color: #f87171; border: 1px solid rgba(239,68,68,0.3); display: inline-flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap;" title="${missingHangarReason}">
+          ${icon('lock', '', 12)} Ausbau gesperrt
+        </button>
+      `;
+
+      hangarUpgradeRowHtml = `
+        <div class="cat-action-row" style="margin-top: 8px; display: flex; align-items: center; justify-content: space-between; background: rgba(15,23,42,0.7); padding: 8px 12px; border-radius: 8px; gap: 10px; box-sizing: border-box; flex-wrap: wrap;">
+          <div style="min-width: 180px; flex: 1;">
+            <div style="color: #f8fafc; font-weight: 700; font-size: 12.5px;">Nächste Stufe: ${nextHangarData.name}</div>
+            <div style="color: #38bdf8; font-size: 11px; margin-top: 2px;">
+              ⛽ Tank: <strong>${nextHangarData.fuelSpeed * (hasPowerplant ? 2 : 1)} L/s</strong> (+${(nextHangarData.fuelSpeed - curHangarData.fuelSpeed) * (hasPowerplant ? 2 : 1)}) • 🛡️ Reparatur: <strong>${Math.round(nextHangarData.repairSpeed * (hasPowerplant ? 1.5 : 1))} HP/s</strong> (+${Math.round((nextHangarData.repairSpeed - curHangarData.repairSpeed) * (hasPowerplant ? 1.5 : 1))})
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            ${compsBadgeHtml}
+            <span style="font-size: 11.5px; color: #f59e0b; font-weight: 800; background: rgba(245,158,11,0.12); padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(245,158,11,0.25);">
+              € ${nextHangarData.costCash.toLocaleString('de-DE')}
+            </span>
+            ${upgradeBtnHtml}
+          </div>
+        </div>
+      `;
+    } else {
+      hangarUpgradeRowHtml = `
+        <div style="margin-top: 6px; background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3); border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; gap: 8px; color: #10b981; font-size: 12px; font-weight: 700;">
+          ${icon('check', '', 14)} Maximale Hangar-Stufe erreicht! Höchste Betankungs- und Reparaturgeschwindigkeit aktiv.
+        </div>
+      `;
+    }
+
+    const hangarInfrastructureCardHtml = `
+      <div class="tech-category-card" style="border: 1px solid rgba(56,189,248,0.3); background: linear-gradient(180deg, rgba(15,23,42,0.85) 0%, rgba(30,41,59,0.7) 100%); margin-bottom: 2px;">
+        <div class="cat-header-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+          <div class="cat-title-wrap" style="display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 13.5px; color: #38bdf8;">
+            ${icon('wrench', '', 16)}
+            <span>HANGAR-INFRASTRUKTUR (SCHNELL-SERVICE & BETANKUNG)</span>
+          </div>
+          <div class="cat-status-pill" style="font-size: 11px; color: #94a3b8; background: rgba(255, 255, 255, 0.08); padding: 3px 8px; border-radius: 6px;">
+            Stufe ${curHangarTier}/${HANGAR_TIERS.length} • <strong style="color: #38bdf8;">${curHangarData.name}</strong>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px; margin-top: 4px; font-size: 11.5px; color: #cbd5e1; flex-wrap: wrap;">
+          <span style="display: inline-flex; align-items: center; gap: 4px; background: rgba(56,189,248,0.12); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(56,189,248,0.25);">
+            ⛽ Tankrate: <strong style="color: #38bdf8;">${effFuelSpeed} L/s</strong>
+          </span>
+          <span style="display: inline-flex; align-items: center; gap: 4px; background: rgba(16,185,129,0.12); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(16,185,129,0.25);">
+            🛡️ Reparaturrate: <strong style="color: #10b981;">${effRepairSpeed} HP/s</strong>
+          </span>
+          ${hasPowerplant ? '<span style="color: #f59e0b; font-size: 10.5px; font-weight: 700;">⚡ Kraftwerk x2 Boost aktiv</span>' : ''}
+          <span style="color: #94a3b8; font-size: 11px; margin-left: auto;">${curHangarData.desc}</span>
+        </div>
+
+        ${hangarSegmentsHtml}
+        ${hangarUpgradeRowHtml}
+      </div>
+    `;
+
     const infoNotice = `
       <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(30, 41, 59, 0.6); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); margin-bottom: 8px;">
         <span style="font-size: 11.5px; color: #94a3b8; display: inline-flex; align-items: center; gap: 6px;">
@@ -3484,21 +3733,21 @@ export class BaseSystem {
       {
         key: 'dynamite',
         name: 'Dynamit-Sprengsatz',
-        desc: 'Sprengt ein 3x3 Feld frei und birgt Erze sofort. (Hot-Key: B)',
+        desc: 'Sprengt ein 3x3 Feld frei und birgt Erze sofort. (Hot-Key: B, T oder 1)',
         price: 250,
         icon: '🧨'
       },
       {
         key: 'fuel_canister',
         name: 'Notfall-Treibstoffkanister',
-        desc: 'Füllt unter Tage sofort +20L Treibstoff nach. (Hot-Key: F)',
+        desc: 'Füllt unter Tage sofort +20L Treibstoff nach. (Hot-Key: F oder 2)',
         price: 120,
         icon: '⛽'
       },
       {
         key: 'repair_kit',
         name: 'Feld-Reparatur-Kit',
-        desc: 'Repariert im Notfall sofort +40 HP Panzerung. (Hot-Key: R)',
+        desc: 'Repariert im Notfall sofort +40 HP Panzerung. (Hot-Key: R oder 3)',
         price: 180,
         icon: '🧰'
       }
@@ -3544,6 +3793,7 @@ export class BaseSystem {
     const content = `
       <div style="display: flex; flex-direction: column; gap: 8px;">
         ${infoNotice}
+        ${hangarInfrastructureCardHtml}
         ${sectionsHtml}
         ${gadgetsSectionHtml}
       </div>
@@ -3555,6 +3805,30 @@ export class BaseSystem {
         <span>HANGAR</span>
       </div>
     `, content);
+
+    // Event-Handler für Hangar-Infrastruktur Ausbau
+    const hangarUpgradeBtn = document.getElementById('btn-upgrade-hangar-dock');
+    if (hangarUpgradeBtn) {
+      hangarUpgradeBtn.onclick = () => {
+        if (!canAffordHangar) {
+          this.scene.events.emit('notify', missingHangarReason);
+          soundFx.playError();
+          return;
+        }
+        this.player.cash -= nextHangarData.costCash;
+        if (nextHangarData.costComps) {
+          for (const c of nextHangarData.costComps) {
+            this.player.components[c.key] = Math.max(0, (this.player.components[c.key] || 0) - c.count);
+          }
+        }
+        this.hangarTier = curHangarTier + 1;
+        this.updateHangarBuildingLabel();
+        soundFx.playUpgrade();
+        this.scene.events.emit('player_updated');
+        this.scene.events.emit('notify', `Hangar auf Stufe ${this.hangarTier} ausgebaut! Tankrate: ${nextHangarData.fuelSpeed} L/s, Reparatur: ${nextHangarData.repairSpeed} HP/s`);
+        this.openDockModal();
+      };
+    }
 
     // Event-Handler für alle Montage-Buttons registrieren
     tracks.forEach((track) => {
