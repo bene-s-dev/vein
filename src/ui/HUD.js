@@ -485,8 +485,8 @@ export class HUD {
 
     if (this._lastHullColor !== hullColor) {
       this._lastHullColor = hullColor;
-      if (this.hullText) this.hullText.style.color = hullColor;
       if (this.hullIcon) this.hullIcon.style.color = hullColor;
+      if (this.hullText) this.hullText.style.color = '';
     }
 
     if (this.hullCluster) {
