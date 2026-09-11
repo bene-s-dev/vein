@@ -1081,11 +1081,22 @@
         background: rgba(7, 11, 19, 0.8) !important;
         backdrop-filter: blur(18px) saturate(180%) !important;
         -webkit-backdrop-filter: blur(18px) saturate(180%) !important;
-        display: flex !important;
         justify-content: center !important;
         align-items: flex-start !important;
         z-index: 250 !important; /* Unter HUD (z-index: 300), damit HUD oben voll sichtbar bleibt */
         transform: translateZ(0) !important;
+      }
+
+      /* Auf Mobilgeräten niemals verdecken, wenn kein Menü geöffnet ist */
+      body:not(.modal-open) .modal-backdrop,
+      .modal-backdrop[style*="display: none"] {
+        display: none !important;
+        pointer-events: none !important;
+      }
+
+      body.modal-open .modal-backdrop {
+        display: flex !important;
+        pointer-events: auto !important;
       }
 
       .modal-window {
@@ -2189,7 +2200,7 @@
     </div>
 
     <!-- Clean Material Modal Dialog -->
-    <div class="modal-backdrop" id="building-modal">
+    <div class="modal-backdrop" id="building-modal" style="display: none;">
       <div class="modal-window">
         <div class="modal-header">
           <div class="modal-title" id="modal-title">GEBÄUDE</div>
