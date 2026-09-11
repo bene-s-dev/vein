@@ -173,7 +173,7 @@ export class MinerBookModal {
         font-size: 11px;
         font-weight: 700;
         border-radius: 8px;
-        border: 1px solid ${this.activeTab === t.id ? 'rgba(251, 191, 36, 0.6)' : 'rgba(255,255,255,0.08)'};
+        border: none;
         background: ${this.activeTab === t.id ? 'linear-gradient(180deg, #d97706 0%, #b45309 100%)' : 'rgba(30, 41, 59, 0.5)'};
         color: ${this.activeTab === t.id ? '#ffffff' : '#94a3b8'};
         cursor: pointer;
@@ -201,18 +201,18 @@ export class MinerBookModal {
     }
 
     bodyEl.innerHTML = `
-      <div style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+      <div style="display: flex; flex-direction: column; gap: 12px; max-width: 620px; margin: 0 auto; width: 100%;">
         <!-- Zurück & Fortschritts-Kopf -->
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-          <button id="btn-book-back" class="btn-3d-secondary" style="height: 30px; padding: 0 12px; font-size: 11px; display: inline-flex; align-items: center; gap: 6px; border-radius: 6px;">
-            ${icon('arrow-left', '', 13)}
+          <button id="btn-book-back" class="btn-action" style="height: 32px; padding: 0 14px; font-size: 11.5px; display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: 8px;">
+            ${icon('arrow-left', '', 14)}
             <span>Zurück zum Spielmenü</span>
           </button>
 
           <!-- Gesamt-Fortschrittsbalken -->
           <div style="display: flex; align-items: center; gap: 8px; font-size: 11.5px; font-weight: 700; color: #94a3b8;">
             <span>Kartiert: <strong style="color: #fbbf24;">${stats.totalDiscovered} / ${stats.totalDiscoverables}</strong> (${stats.progressPercent}%)</span>
-            <div style="width: 80px; height: 6px; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.12); border-radius: 99px; overflow: hidden;">
+            <div style="width: 80px; height: 6px; background: rgba(0,0,0,0.6); border-radius: 99px; overflow: hidden;">
               <div style="width: ${stats.progressPercent}%; height: 100%; background: linear-gradient(90deg, #f59e0b, #10b981); border-radius: 99px; transition: width 0.3s ease;"></div>
             </div>
           </div>
@@ -271,7 +271,7 @@ export class MinerBookModal {
 
       if (isDiscovered) {
         html += `
-          <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
+          <div style="background: rgba(15, 23, 42, 0.75); border: none; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
               <div style="display: flex; align-items: center; gap: 8px;">
                 ${oreIcon(key, 22)}
@@ -290,7 +290,7 @@ export class MinerBookModal {
         `;
       } else {
         html += `
-          <div style="background: rgba(15, 23, 42, 0.4); border: 1px dashed rgba(255, 255, 255, 0.07); border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; opacity: 0.75;">
+          <div style="background: rgba(15, 23, 42, 0.4); border: none; border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; opacity: 0.75;">
             <div style="display: flex; align-items: center; gap: 8px;">
               <span style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; color: #64748b;">
                 ${icon('lock', '', 16)}
@@ -329,7 +329,7 @@ export class MinerBookModal {
         }).join(' ');
 
         html += `
-          <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-left: 4px solid ${layer.color}; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
+          <div style="background: rgba(15, 23, 42, 0.75); border: none; border-left: 4px solid ${layer.color}; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
               <strong style="color: #f8fafc; font-size: 13.5px; display: inline-flex; align-items: center; gap: 6px;">
                 ${icon('layers', '', 15)}
@@ -351,7 +351,7 @@ export class MinerBookModal {
         `;
       } else {
         html += `
-          <div style="background: rgba(15, 23, 42, 0.4); border: 1px dashed rgba(255, 255, 255, 0.07); border-radius: 10px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; opacity: 0.75;">
+          <div style="background: rgba(15, 23, 42, 0.4); border: none; border-radius: 10px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; opacity: 0.75;">
             <div style="display: flex; align-items: center; gap: 8px;">
               <span style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; color: #64748b;">
                 ${icon('lock', '', 16)}
@@ -380,7 +380,7 @@ export class MinerBookModal {
 
       if (isDiscovered) {
         html += `
-          <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
+          <div style="background: rgba(15, 23, 42, 0.75); border: none; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
               <div style="display: flex; align-items: center; gap: 8px;">
                 ${itemDisplayIcon(prod.id, 20)}
@@ -400,7 +400,7 @@ export class MinerBookModal {
         `;
       } else {
         html += `
-          <div style="background: rgba(15, 23, 42, 0.4); border: 1px dashed rgba(255, 255, 255, 0.07); border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; opacity: 0.75;">
+          <div style="background: rgba(15, 23, 42, 0.4); border: none; border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; opacity: 0.75;">
             <div style="display: flex; align-items: center; gap: 8px;">
               <span style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; color: #64748b;">
                 ${icon('lock', '', 15)}
@@ -421,7 +421,7 @@ export class MinerBookModal {
   renderCodexTab() {
     return `
       <div style="display: flex; flex-direction: column; gap: 8px;">
-        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="background: rgba(15, 23, 42, 0.75); border: none; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
           <div style="font-size: 12px; font-weight: 800; color: #f59e0b; display: flex; align-items: center; gap: 6px;">
             ${icon('fuel', '', 14)}
             <span>§ 1 TREIBSTOFF & BOHRVERBRAUCH</span>
@@ -432,7 +432,7 @@ export class MinerBookModal {
           </div>
         </div>
 
-        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="background: rgba(15, 23, 42, 0.75); border: none; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
           <div style="font-size: 12px; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 6px;">
             ${icon('rocket', '', 14)}
             <span>§ 2 STEIGFLUG & SCHUBDÜSEN</span>
@@ -443,7 +443,7 @@ export class MinerBookModal {
           </div>
         </div>
 
-        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="background: rgba(15, 23, 42, 0.75); border: none; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
           <div style="font-size: 12px; font-weight: 800; color: #10b981; display: flex; align-items: center; gap: 6px;">
             ${icon('wrench', '', 14)}
             <span>§ 3 HÜLLE & SCHACHT-INTEGRITÄT</span>
@@ -453,7 +453,7 @@ export class MinerBookModal {
           </div>
         </div>
 
-        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="background: rgba(15, 23, 42, 0.75); border: none; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
           <div style="font-size: 12px; font-weight: 800; color: #f87171; display: flex; align-items: center; gap: 6px;">
             ${icon('shield-alert', '', 14)}
             <span>§ 4 NOTFALL-RETTUNG</span>

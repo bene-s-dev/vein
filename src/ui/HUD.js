@@ -522,20 +522,20 @@ export class HUD {
     const freeCount = typeof this.player.freeRescues === 'number' ? this.player.freeRescues : 3;
 
     bodyEl.innerHTML = `
-      <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: flex; flex-direction: column; gap: 10px; max-width: 440px; margin: 0 auto; width: 100%;">
         <!-- 2. Rettungsknopf (3 kostenlos) -->
-        <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 10px; padding: 10px 14px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="background: rgba(239, 68, 68, 0.07); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <span style="font-size: 12px; font-weight: 700; color: #f87171; display: inline-flex; align-items: center; gap: 6px;">
               ${icon('shield-alert', '', 15)}
               NOTFALL-RETTUNG ZUR BASIS
             </span>
             ${freeCount > 0 ? `
-              <span style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.5); color: #34d399; font-size: 10.5px; font-weight: 800; padding: 2px 8px; border-radius: 6px;">
+              <span style="background: rgba(16, 185, 129, 0.18); color: #34d399; font-size: 10.5px; font-weight: 800; padding: 2px 8px; border-radius: 6px;">
                 ${freeCount}/3 KOSTENLOS
               </span>
             ` : `
-              <span style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.5); color: #f87171; font-size: 10.5px; font-weight: 800; padding: 2px 8px; border-radius: 6px;">
+              <span style="background: rgba(239, 68, 68, 0.18); color: #f87171; font-size: 10.5px; font-weight: 800; padding: 2px 8px; border-radius: 6px;">
                 €150 GEBÜHR
               </span>
             `}
@@ -545,15 +545,15 @@ export class HUD {
               ? `Teleportiert deinen Crawler sofort zur Oberfläche (noch <strong>${freeCount} kostenlose Rettung${freeCount === 1 ? '' : 'en'}</strong> übrig). Der Tank wird auf mindestens 20% aufgeladen.`
               : `Alle 3 kostenlosen Bergungen aufgebraucht. Kosten: <strong>€150</strong> (wird vom Guthaben abgebucht). Tank wird auf 20% aufgeladen.`}
           </div>
-          <button id="btn-menu-rescue" class="btn-3d-danger" style="height: 36px; width: 100%; font-size: 11.5px; font-weight: 800; justify-content: center; gap: 6px; border-radius: 8px;">
+          <button id="btn-menu-rescue" class="btn-3d-danger" style="height: 38px; width: 100%; font-size: 11.5px; font-weight: 800; justify-content: center; gap: 6px; border-radius: 8px; border: none;">
             ${icon('rocket', '', 14)}
             <span>${freeCount > 0 ? 'RETTUNG ZUR BASIS STARTEN' : 'RETTUNG ANFORDERN (€150)'}</span>
           </button>
         </div>
 
         <!-- 3. Einstellungen -->
-        <button id="btn-menu-settings" class="btn-3d-secondary" style="height: 44px; width: 100%; font-size: 12.5px; font-weight: 700; justify-content: flex-start; padding: 0 14px; gap: 12px; border-radius: 10px;">
-          <span style="color: #38bdf8; display: inline-flex;">${icon('settings', '', 17)}</span>
+        <button id="btn-menu-settings" class="btn-action" style="height: 48px; width: 100%; font-size: 12.5px; font-weight: 700; justify-content: flex-start; padding: 0 16px; gap: 14px; border-radius: 12px; background: rgba(30, 41, 59, 0.65); border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
+          <span style="color: #38bdf8; display: inline-flex;">${icon('settings', '', 18)}</span>
           <div style="display: flex; flex-direction: column; text-align: left; line-height: 1.2;">
             <span style="color: #f8fafc; font-weight: 700;">Einstellungen</span>
             <span style="color: #64748b; font-size: 10.5px; font-weight: 500;">Sound, Vollbild & Spielstand</span>
@@ -561,8 +561,8 @@ export class HUD {
         </button>
 
         <!-- 4. Bergmann-Buch -->
-        <button id="btn-menu-book" class="btn-3d-secondary" style="height: 44px; width: 100%; font-size: 12.5px; font-weight: 700; justify-content: flex-start; padding: 0 14px; gap: 12px; border-radius: 10px;">
-          <span style="color: #fbbf24; display: inline-flex;">${icon('book-open', '', 17)}</span>
+        <button id="btn-menu-book" class="btn-action" style="height: 48px; width: 100%; font-size: 12.5px; font-weight: 700; justify-content: flex-start; padding: 0 16px; gap: 14px; border-radius: 12px; background: rgba(30, 41, 59, 0.65); border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
+          <span style="color: #fbbf24; display: inline-flex;">${icon('book-open', '', 18)}</span>
           <div style="display: flex; flex-direction: column; text-align: left; line-height: 1.2;">
             <span style="color: #f8fafc; font-weight: 700;">Bergmann-Buch</span>
             <span style="color: #64748b; font-size: 10.5px; font-weight: 500;">Schacht-Logbuch, entdeckte Erze & Schichten</span>
@@ -570,8 +570,8 @@ export class HUD {
         </button>
 
         <!-- 5. Spielstand sichern -->
-        <button id="btn-menu-save" class="btn-3d-secondary" style="height: 44px; width: 100%; font-size: 12.5px; font-weight: 700; justify-content: flex-start; padding: 0 14px; gap: 12px; border-radius: 10px;">
-          <span style="color: #10b981; display: inline-flex;">${icon('save', '', 17)}</span>
+        <button id="btn-menu-save" class="btn-action" style="height: 48px; width: 100%; font-size: 12.5px; font-weight: 700; justify-content: flex-start; padding: 0 16px; gap: 14px; border-radius: 12px; background: rgba(30, 41, 59, 0.65); border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
+          <span style="color: #10b981; display: inline-flex;">${icon('save', '', 18)}</span>
           <div style="display: flex; flex-direction: column; text-align: left; line-height: 1.2;">
             <span style="color: #f8fafc; font-weight: 700;">Spielstand speichern</span>
             <span style="color: #64748b; font-size: 10.5px; font-weight: 500;">Fortschritt jetzt im Speicher sichern</span>
@@ -626,38 +626,38 @@ export class HUD {
     `;
 
     bodyEl.innerHTML = `
-      <div style="display: flex; flex-direction: column; gap: 14px;">
-        <button id="btn-back-to-menu" class="btn-3d-secondary" style="height: 30px; padding: 0 12px; font-size: 11px; align-self: flex-start; display: inline-flex; align-items: center; gap: 6px;">
-          ${icon('arrow-left', '', 13)}
+      <div style="display: flex; flex-direction: column; gap: 10px; max-width: 440px; margin: 0 auto; width: 100%;">
+        <button id="btn-back-to-menu" class="btn-action" style="height: 32px; padding: 0 14px; font-size: 11.5px; align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: 8px;">
+          ${icon('arrow-left', '', 14)}
           <span>Zurück zum Spielmenü</span>
         </button>
 
         <!-- Audio -->
-        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="background: rgba(15, 23, 42, 0.65); border: none; border-radius: 12px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 4px rgba(0,0,0,0.2);">
           <div>
             <strong style="color: #f8fafc; font-size: 12.5px; display: block;">Soundeffekte</strong>
             <span style="color: #94a3b8; font-size: 11px;">Bohren, Triebwerk, Erze & Gebäude</span>
           </div>
-          <button id="btn-toggle-sound" class="${soundFx.muted ? 'btn-3d-secondary' : 'btn-action'}" style="height: 32px; padding: 0 14px; font-size: 11.5px; display: inline-flex; align-items: center; gap: 6px;">
+          <button id="btn-toggle-sound" class="${soundFx.muted ? 'btn-3d-secondary' : 'btn-action'}" style="height: 32px; padding: 0 14px; font-size: 11.5px; display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: 8px;">
             ${icon(soundFx.muted ? 'volume-x' : 'volume-2', '', 14)}
             <span>Sound: ${soundFx.muted ? 'Aus' : 'An'}</span>
           </button>
         </div>
 
         <!-- Anzeige -->
-        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="background: rgba(15, 23, 42, 0.65); border: none; border-radius: 12px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 4px rgba(0,0,0,0.2);">
           <div>
             <strong style="color: #f8fafc; font-size: 12.5px; display: block;">Vollbildmodus</strong>
             <span style="color: #94a3b8; font-size: 11px;">Desktop & Mobilgeräte</span>
           </div>
-          <button id="btn-toggle-fullscreen" class="${document.fullscreenElement ? 'btn-3d-success' : 'btn-action'}" style="height: 32px; padding: 0 14px; font-size: 11.5px; display: inline-flex; align-items: center; gap: 6px;">
+          <button id="btn-toggle-fullscreen" class="${document.fullscreenElement ? 'btn-3d-success' : 'btn-action'}" style="height: 32px; padding: 0 14px; font-size: 11.5px; display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: 8px;">
             ${icon(document.fullscreenElement ? 'minimize' : 'maximize', '', 14)}
             <span>${document.fullscreenElement ? 'Beenden' : 'Aktivieren'}</span>
           </button>
         </div>
 
         <!-- Spielstand -->
-        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px;">
+        <div style="background: rgba(15, 23, 42, 0.65); border: none; border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.2);">
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
               <strong style="color: #f8fafc; font-size: 12.5px; display: block;">Automatisches Speichern</strong>
@@ -669,16 +669,16 @@ export class HUD {
           </div>
 
           <div id="save-buttons-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-            <button id="btn-manual-save" class="btn-action" style="height: 34px; font-size: 11.5px; justify-content: center;">
+            <button id="btn-manual-save" class="btn-action" style="height: 36px; font-size: 11.5px; justify-content: center; border: none; border-radius: 8px;">
               ${icon('save', '', 13)} Jetzt sichern
             </button>
-            <button id="btn-reset-save" class="btn-3d-danger" style="height: 34px; font-size: 11.5px; justify-content: center;">
+            <button id="btn-reset-save" class="btn-3d-danger" style="height: 36px; font-size: 11.5px; justify-content: center; border: none; border-radius: 8px;">
               ${icon('rotate-ccw', '', 13)} Spielstand löschen
             </button>
           </div>
 
           <!-- Sicherheitsabfrage mit Eingabe von "delete" -->
-          <div id="box-delete-confirm" style="display: none; margin-top: 10px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 10px; padding: 12px; flex-direction: column; gap: 8px;">
+          <div id="box-delete-confirm" style="display: none; margin-top: 10px; background: rgba(239, 68, 68, 0.08); border-radius: 10px; padding: 12px; flex-direction: column; gap: 8px;">
             <div style="display: flex; align-items: center; gap: 6px; color: #f87171; font-weight: 700; font-size: 12px;">
               ${icon('alert-triangle', '', 14)}
               <span>Sicherheitsabfrage: Spielstand löschen</span>
@@ -687,11 +687,11 @@ export class HUD {
               Der gesamte Fortschritt geht verloren. Tippe zur Bestätigung <strong style="color: #ffffff; background: rgba(0, 0, 0, 0.5); padding: 2px 6px; border-radius: 4px; font-family: monospace;">delete</strong> ein:
             </div>
             <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">
-              <input type="text" id="input-confirm-delete" placeholder="delete" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="flex: 1; height: 34px; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(239, 68, 68, 0.5); border-radius: 8px; color: #ffffff; padding: 0 10px; font-size: 13px; font-weight: 700; outline: none;" />
-              <button id="btn-confirm-delete-action" class="btn-3d-danger" disabled style="height: 34px; padding: 0 14px; font-size: 12px; font-weight: 800; opacity: 0.35; cursor: not-allowed; white-space: nowrap;">
+              <input type="text" id="input-confirm-delete" placeholder="delete" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="flex: 1; height: 34px; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 8px; color: #ffffff; padding: 0 10px; font-size: 13px; font-weight: 700; outline: none;" />
+              <button id="btn-confirm-delete-action" class="btn-3d-danger" disabled style="height: 34px; padding: 0 14px; font-size: 12px; font-weight: 800; opacity: 0.35; cursor: not-allowed; white-space: nowrap; border: none; border-radius: 8px;">
                 Löschen
               </button>
-              <button id="btn-cancel-delete" class="btn-action" style="height: 34px; padding: 0 12px; font-size: 12px; white-space: nowrap;">
+              <button id="btn-cancel-delete" class="btn-action" style="height: 34px; padding: 0 12px; font-size: 12px; white-space: nowrap; border: none; border-radius: 8px;">
                 Abbrechen
               </button>
             </div>
@@ -843,8 +843,8 @@ export class HUD {
         font-size: 11px;
         font-weight: 700;
         border-radius: 8px;
-        border: 1px solid ${activeTab === t.id ? 'rgba(56, 189, 248, 0.6)' : 'rgba(255,255,255,0.08)'};
-        background: ${activeTab === t.id ? 'linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%)' : 'rgba(30, 41, 59, 0.5)'};
+        border: none;
+        background: ${activeTab === t.id ? 'linear-gradient(180deg, #0284c7 0%, #0369a1 100%)' : 'rgba(30, 41, 59, 0.5)'};
         color: ${activeTab === t.id ? '#ffffff' : '#94a3b8'};
         cursor: pointer;
         display: inline-flex;
@@ -863,7 +863,7 @@ export class HUD {
     if (activeTab === 'controls') {
       contentHtml = `
         <div style="display: flex; flex-direction: column; gap: 10px;">
-          <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="background: rgba(15, 23, 42, 0.65); border: none; border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.2);">
             <div style="font-size: 12px; font-weight: 800; color: #38bdf8; text-transform: uppercase;">Desktop-Tastatur</div>
             <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11.5px;">
               <span style="color: #cbd5e1;">Fahren & Bohren</span>
@@ -889,7 +889,7 @@ export class HUD {
             </div>
           </div>
 
-          <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="background: rgba(15, 23, 42, 0.65); border: none; border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.2);">
             <div style="font-size: 12px; font-weight: 800; color: #38bdf8; text-transform: uppercase;">Touch & Mobile</div>
             <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11.5px;">
               <span style="color: #cbd5e1;">360° Floating Joystick</span>
@@ -909,27 +909,27 @@ export class HUD {
     } else if (activeTab === 'base') {
       contentHtml = `
         <div style="display: flex; flex-direction: column; gap: 8px;">
-          <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 9px; padding: 10px 12px;">
+          <div style="background: rgba(15, 23, 42, 0.65); border: none; border-radius: 10px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">
             <div style="font-size: 12px; font-weight: 700; color: #38bdf8; margin-bottom: 2px; display: flex; align-items: center; gap: 5px;">${icon('laptop-minimal', '', 14)} Büro</div>
             <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">Auftragszentrale. Erfülle Missionen (z. B. Erze abbauen oder Ziel-Tiefen erreichen) für hohes Extra-Guthaben und Level-Aufstiege.</div>
           </div>
-          <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 9px; padding: 10px 12px;">
+          <div style="background: rgba(15, 23, 42, 0.65); border: none; border-radius: 10px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">
             <div style="font-size: 12px; font-weight: 700; color: #fbbf24; margin-bottom: 2px;">💰 Erzbörse</div>
             <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">Verkaufe geförderte Rohstoffe und Fabrik-Erzeugnisse. Bietet freie Mengenauswahl und Sofort-Verkauf aller Erze.</div>
           </div>
-          <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 9px; padding: 10px 12px;">
+          <div style="background: rgba(15, 23, 42, 0.65); border: none; border-radius: 10px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">
             <div style="font-size: 12px; font-weight: 700; color: #34d399; margin-bottom: 2px;">🔧 Hangar (Crawler-Werkstatt)</div>
             <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">Tuning deines Bohrers, Treibstoff-Tanks, Frachtraums, Antriebs und Gehäuseschutzes. Automatisches Auftanken per Tankkabel an der Plattform.</div>
           </div>
-          <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 9px; padding: 10px 12px;">
+          <div style="background: rgba(15, 23, 42, 0.65); border: none; border-radius: 10px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">
             <div style="font-size: 12px; font-weight: 700; color: #fb923c; margin-bottom: 2px;">🔥 Fabrik & Raffinerie</div>
             <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">Schmelze Roherze zu Barren (+50% Erlös) oder kombiniere Erze zu High-Tech-Industriewaren wie Stahlträgern, Bronze und Platinen.</div>
           </div>
-          <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 9px; padding: 10px 12px;">
+          <div style="background: rgba(15, 23, 42, 0.65); border: none; border-radius: 10px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">
             <div style="font-size: 12px; font-weight: 700; color: #c084fc; margin-bottom: 2px;">🔬 Labor</div>
             <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">High-Tech Forschung. Schalte modernste Bohrköpfe und Sensor-Upgrades frei, um Erze durch Gestein hindurch aufzuspüren.</div>
           </div>
-          <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 9px; padding: 10px 12px;">
+          <div style="background: rgba(15, 23, 42, 0.65); border: none; border-radius: 10px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">
             <div style="font-size: 12px; font-weight: 700; color: #e2e8f0; margin-bottom: 2px;">🏠 Schachteinstieg & Steineforscher</div>
             <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">Die restliche Oberfläche ist unzerstörbar – der Schachteinstieg führt nach unten. Der Steineforscher am Hangar sucht seltene Gesteinsproben für wertvolle Bauteile.</div>
           </div>
@@ -938,7 +938,7 @@ export class HUD {
     } else if (activeTab === 'refinery') {
       contentHtml = `
         <div style="display: flex; flex-direction: column; gap: 8px;">
-          <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 9px; padding: 10px 12px;">
+          <div style="background: rgba(15, 23, 42, 0.65); border: none; border-radius: 10px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">
             <div style="font-size: 12px; font-weight: 700; color: #38bdf8; margin-bottom: 3px;">Tiefenschichten & Mineralien</div>
             <div style="font-size: 11px; color: #94a3b8; line-height: 1.5;">
               • <strong>0–40 m (Humus & Erde):</strong> Kohle, Kupfer<br>
@@ -948,7 +948,7 @@ export class HUD {
               • <strong>>800 m (Tiefenkern):</strong> Titan, Platin, Uran, Dunkelmaterie
             </div>
           </div>
-          <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 9px; padding: 10px 12px;">
+          <div style="background: rgba(15, 23, 42, 0.65); border: none; border-radius: 10px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">
             <div style="font-size: 12px; font-weight: 700; color: #fb923c; margin-bottom: 3px;">Fabrikstrecke (3 Stationen)</div>
             <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">
               1. <strong>Zufuhr:</strong> Erze unten einwerfen oder Produkt-Herstellung anstoßen.<br>
@@ -961,15 +961,15 @@ export class HUD {
     } else if (activeTab === 'tips') {
       contentHtml = `
         <div style="display: flex; flex-direction: column; gap: 8px;">
-          <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 9px; padding: 10px 12px;">
+          <div style="background: rgba(15, 23, 42, 0.65); border: none; border-radius: 10px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">
             <div style="font-size: 12px; font-weight: 700; color: #10b981; margin-bottom: 2px;">⛽ Treibstoff & Betankung</div>
             <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">Fahren, Steigflug und insbesondere das Bohren durch Gestein verbrauchen Treibstoff. Parke an der Hangar-Plattform an der Oberfläche – das Tankkabel füllt deinen Tank kostenlos auf.</div>
           </div>
-          <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 9px; padding: 10px 12px;">
+          <div style="background: rgba(15, 23, 42, 0.65); border: none; border-radius: 10px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">
             <div style="font-size: 12px; font-weight: 700; color: #38bdf8; margin-bottom: 2px;">🚀 Jetpack-Nutzung</div>
             <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">Halte <strong>W</strong> oder <strong>↑</strong> gedrückt, um mit dem Triebwerk aufzusteigen. Der Aufstieg verbraucht Treibstoff – plane deine Rückkehr rechtzeitig!</div>
           </div>
-          <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 9px; padding: 10px 12px;">
+          <div style="background: rgba(15, 23, 42, 0.65); border: none; border-radius: 10px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">
             <div style="font-size: 12px; font-weight: 700; color: #f87171; margin-bottom: 2px;">🚨 3 Kostenlose Notfall-Rettungen</div>
             <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">Wenn dein Tank tief unten leer wird oder du festsitzt, öffne das Spielmenü und nutze die Notfall-Rettung. Die ersten 3 Rettungen sind gratis!</div>
           </div>
@@ -978,9 +978,9 @@ export class HUD {
     }
 
     bodyEl.innerHTML = `
-      <div style="display: flex; flex-direction: column; gap: 12px;">
-        <button id="btn-back-to-menu" class="btn-3d-secondary" style="height: 30px; padding: 0 12px; font-size: 11px; align-self: flex-start; display: inline-flex; align-items: center; gap: 6px;">
-          ${icon('arrow-left', '', 13)}
+      <div style="display: flex; flex-direction: column; gap: 12px; max-width: 580px; margin: 0 auto; width: 100%;">
+        <button id="btn-back-to-menu" class="btn-action" style="height: 32px; padding: 0 14px; font-size: 11.5px; align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: 8px;">
+          ${icon('arrow-left', '', 14)}
           <span>Zurück zum Spielmenü</span>
         </button>
 

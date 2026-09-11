@@ -960,11 +960,11 @@ export class BaseSystem {
         const data = ORE_DATA[ore];
         const val = data ? data.value : 0;
         oreListHtml += `
-          <div class="market-ore-card" data-ore="${ore}" style="background: #141c2b; padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.07); display: flex; flex-direction: column; gap: 8px;">
+          <div class="market-ore-card" data-ore="${ore}" style="background: #141c2b; padding: 10px 14px; border-radius: 10px; border: none; display: flex; flex-direction: column; gap: 8px;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
               <div style="display: flex; align-items: center; gap: 8px;">
                 <span style="font-weight: 700; color: #f8fafc; font-size: 13.5px; display: inline-flex; align-items: center; gap: 6px;">${oreIcon(ore, 16)} ${data.name}</span>
-                <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); padding: 2px 8px; border-radius: 6px; font-size: 11px; color: #38bdf8; font-weight: 700;">${count}x</span>
+                <span style="background: rgba(56, 189, 248, 0.15); padding: 2px 8px; border-radius: 6px; font-size: 11px; color: #38bdf8; font-weight: 700;">${count}x</span>
                 <span style="font-size: 11px; color: #94a3b8;">(€${val}/Stk)</span>
               </div>
               <div style="display: flex; align-items: center; gap: 4px;">
@@ -985,7 +985,7 @@ export class BaseSystem {
                 
                 <input type="number" class="input-ore-qty" id="qty-input-${ore}" data-ore="${ore}" data-unit-val="${val}" data-max="${count}" min="1" max="${count}" value="${count}" style="
                   width: 50px; height: 32px; padding: 0 4px; box-sizing: border-box;
-                  background: #090d16; border: 1px solid rgba(255,255,255,0.18); border-radius: 8px;
+                  background: #090d16; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
                   color: #f8fafc; text-align: center; font-weight: 800; font-size: 13px;
                   display: inline-flex; align-items: center; justify-content: center;
                   outline: none; line-height: 30px;
@@ -1073,14 +1073,14 @@ export class BaseSystem {
         totalFpValue += subtotal;
 
         fpListHtml += `
-          <div class="market-fp-card" data-prod="${prodId}" style="background: #141c2b; padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.07); display: flex; flex-direction: column; gap: 8px;">
+          <div class="market-fp-card" data-prod="${prodId}" style="background: #141c2b; padding: 10px 14px; border-radius: 10px; border: none; display: flex; flex-direction: column; gap: 8px;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
               <div style="display: flex; align-items: center; gap: 8px;">
                 <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background: rgba(56,189,248,0.15); border-radius: 6px; color: #38bdf8;">
                   ${iconHtml}
                 </span>
                 <span style="font-weight: 700; color: #f8fafc; font-size: 13.5px;">${prodName}</span>
-                <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); padding: 2px 8px; border-radius: 6px; font-size: 11px; color: #10b981; font-weight: 700;">${count}x</span>
+                <span style="background: rgba(16, 185, 129, 0.15); padding: 2px 8px; border-radius: 6px; font-size: 11px; color: #10b981; font-weight: 700;">${count}x</span>
                 <span style="font-size: 11px; color: #94a3b8;">(€${val}/Stk)</span>
               </div>
               <div style="display: flex; align-items: center; gap: 4px;">
@@ -1092,7 +1092,7 @@ export class BaseSystem {
               <div style="display: flex; align-items: center; gap: 6px;">
                 <span style="font-size: 11.5px; color: #94a3b8; font-weight: 700;">Menge:</span>
                 <button class="btn-fp-qty-step btn-3d-secondary" data-prod="${prodId}" data-step="-1" style="width: 32px; height: 32px; padding: 0; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 800; border-radius: 8px;">-</button>
-                <input type="number" class="input-fp-qty" id="qty-input-fp-${prodId}" data-prod="${prodId}" data-unit-val="${val}" data-max="${count}" min="1" max="${count}" value="${count}" style="width: 50px; height: 32px; padding: 0 4px; box-sizing: border-box; background: #090d16; border: 1px solid rgba(255,255,255,0.18); border-radius: 8px; color: #f8fafc; text-align: center; font-weight: 800; font-size: 13px; outline: none;">
+                <input type="number" class="input-fp-qty" id="qty-input-fp-${prodId}" data-prod="${prodId}" data-unit-val="${val}" data-max="${count}" min="1" max="${count}" value="${count}" style="width: 50px; height: 32px; padding: 0 4px; box-sizing: border-box; background: #090d16; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #f8fafc; text-align: center; font-weight: 800; font-size: 13px; outline: none;">
                 <button class="btn-fp-qty-step btn-3d-secondary" data-prod="${prodId}" data-step="1" style="width: 32px; height: 32px; padding: 0; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 800; border-radius: 8px;">+</button>
                 <button class="btn-fp-qty-quick btn-3d-secondary" data-prod="${prodId}" data-set="1" style="height: 32px; padding: 0 10px; font-size: 11.5px; font-weight: 700; border-radius: 8px;">1x</button>
                 <button class="btn-fp-qty-quick btn-action" data-prod="${prodId}" data-set="${count}" style="height: 32px; padding: 0 10px; font-size: 11.5px; font-weight: 700; border-radius: 8px;">Alle (${count})</button>
@@ -1109,7 +1109,7 @@ export class BaseSystem {
     }
 
     factoryHtml = `
-      <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; margin-top: 14px;">
+      <div style="background: rgba(15, 23, 42, 0.7); border-radius: 10px; padding: 12px; margin-top: 14px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
           <strong style="color: #38bdf8; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
             ${icon('container', '', 15)} FABRIK-ERZEUGNISSE & BARREN
@@ -1122,7 +1122,7 @@ export class BaseSystem {
 
     const content = `
       <div style="display: flex; flex-direction: column; gap: 12px; padding-bottom: 54px;">
-        <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px;">
+        <div style="background: rgba(15, 23, 42, 0.7); border-radius: 10px; padding: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 4px;">
             <strong style="color: #38bdf8; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
               ${icon('coins', '', 15)} ROHERZE & MINERALIEN (${totalOreCount} Erze verfügbar)
@@ -1546,22 +1546,22 @@ export class BaseSystem {
         const compIconName = COMPONENT_ICONS[compKey] || 'box';
         const cName = COMPONENT_DATA[compKey]?.name || compKey;
         return `
-          <span style="background: rgba(192, 132, 252, 0.12); border: 1px solid ${isMet ? 'rgba(192, 132, 252, 0.3)' : 'rgba(239, 68, 68, 0.4)'}; color: ${isMet ? '#c084fc' : '#ef4444'}; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">
+          <span style="background: rgba(192, 132, 252, 0.14); color: ${isMet ? '#c084fc' : '#ef4444'}; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">
             ${icon(compIconName, '', 11)} ${need}x ${cName} <span style="font-size: 9.5px; opacity: 0.85; font-variant-numeric: tabular-nums;">(${have}/${need})</span>
           </span>
         `;
       }).join('') : '';
 
       upgradeSnippetHtml = `
-        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.06); padding: 8px 12px; border-radius: 8px; gap: 10px; flex-wrap: wrap;">
+        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 8px; gap: 10px; flex-wrap: wrap;">
           <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
             <strong style="color: #38bdf8; font-size: 12px;">Nächste Stufe ${nextTierData.tier}: ${nextTierData.label}</strong>
-            <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-weight: 800; font-size: 11px; padding: 1px 7px; border-radius: 6px;">
+            <span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-weight: 800; font-size: 11px; padding: 1px 7px; border-radius: 6px;">
               ${nextTierData.capacity} Plätze
             </span>
           </div>
           <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <span style="background: rgba(251, 191, 36, 0.12); border: 1px solid ${this.player.cash >= nextTierData.costCash ? 'rgba(251, 191, 36, 0.3)' : 'rgba(239, 68, 68, 0.4)'}; color: ${this.player.cash >= nextTierData.costCash ? '#fbbf24' : '#ef4444'}; font-weight: 800; font-size: 11px; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; font-variant-numeric: tabular-nums;">
+            <span style="background: rgba(251, 191, 36, 0.14); color: ${this.player.cash >= nextTierData.costCash ? '#fbbf24' : '#ef4444'}; font-weight: 800; font-size: 11px; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; font-variant-numeric: tabular-nums;">
               ${icon('coins', '', 11)} €${nextTierData.costCash.toLocaleString()}
             </span>
             ${compBadgesHtml}
@@ -1582,8 +1582,7 @@ export class BaseSystem {
 
     const headerHtml = `
       <div style="
-        background: rgba(15, 23, 42, 0.85);
-        border: 1px solid ${isFull ? 'rgba(239, 68, 68, 0.5)' : 'rgba(56, 189, 248, 0.25)'};
+        background: rgba(15, 23, 42, 0.7);
         border-radius: 12px;
         padding: 10px 14px;
         display: flex;
@@ -1594,7 +1593,7 @@ export class BaseSystem {
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
           <div style="display: flex; align-items: center; gap: 6px;">
             <span style="font-weight: 800; color: #f8fafc; font-size: 13px; letter-spacing: 0.5px;">LAGERKAPAZITÄT</span>
-            <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-size: 10.5px; font-weight: 800; padding: 1px 7px; border-radius: 99px;">
+            <span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-size: 10.5px; font-weight: 800; padding: 1px 7px; border-radius: 99px;">
               STUFE ${this.depot.tier || 1}
             </span>
             ${isFull ? `<span style="background: #ef4444; color: #ffffff; font-size: 9.5px; font-weight: 800; padding: 1px 6px; border-radius: 4px;">VOLL</span>` : ''}
@@ -1606,7 +1605,7 @@ export class BaseSystem {
           </div>
         </div>
 
-        <div style="height: 6px; background: rgba(0,0,0,0.6); border-radius: 99px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
+        <div style="height: 6px; background: rgba(0,0,0,0.5); border-radius: 99px; overflow: hidden;">
           <div style="width: ${occPct}%; height: 100%; background: ${isFull ? '#ef4444' : occPct >= 80 ? '#f59e0b' : '#38bdf8'}; border-radius: 99px; transition: width 0.2s ease;"></div>
         </div>
 
@@ -1635,8 +1634,8 @@ export class BaseSystem {
       oresItemsHtml += `
         <div class="depot-ore-card" data-key="${key}" style="
           position: relative;
-          background: rgba(15, 23, 42, 0.9);
-          border: 1px solid ${canDeposit ? 'rgba(56, 189, 248, 0.45)' : 'rgba(56, 189, 248, 0.25)'};
+          background: rgba(18, 26, 42, 0.85);
+          border: ${canDeposit ? '1px solid rgba(56, 189, 248, 0.4)' : 'none'};
           border-radius: 10px;
           padding: 10px 6px 8px 6px;
           display: flex;
@@ -1646,10 +1645,9 @@ export class BaseSystem {
           gap: 6px;
           min-height: 84px;
           box-sizing: border-box;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
           cursor: ${canDeposit ? 'pointer' : 'default'};
           user-select: none;
-          transition: transform 0.1s ease, border-color 0.15s ease;
+          transition: transform 0.1s ease;
         " title="${data.name}: ${depotCount}x im Depot${inCargo > 0 ? ` · ${inCargo}x im Bohrer (Klick = 1x einlagern, Shift-Klick = Alle)` : ''}">
           <!-- Anzahl Badge -->
           <span style="
@@ -1657,7 +1655,6 @@ export class BaseSystem {
             top: 5px;
             right: 5px;
             background: #0284c7;
-            border: 1px solid #38bdf8;
             color: #ffffff;
             font-size: 10px;
             font-weight: 800;
@@ -1709,8 +1706,7 @@ export class BaseSystem {
     for (let i = 0; i < emptyOreSlots; i++) {
       oresItemsHtml += `
         <div style="
-          background: rgba(15, 23, 42, 0.3);
-          border: 1px dashed rgba(255, 255, 255, 0.08);
+          background: rgba(255, 255, 255, 0.02);
           border-radius: 10px;
           min-height: 84px;
           box-sizing: border-box;
@@ -1718,7 +1714,7 @@ export class BaseSystem {
           align-items: center;
           justify-content: center;
         ">
-          <span style="color: rgba(255, 255, 255, 0.08); font-size: 16px; font-weight: 700;">+</span>
+          <span style="color: rgba(255, 255, 255, 0.06); font-size: 14px; font-weight: 700;">•</span>
         </div>
       `;
     }
@@ -1902,8 +1898,7 @@ export class BaseSystem {
     for (let i = 0; i < emptyGoodsSlots; i++) {
       goodsItemsHtml += `
         <div style="
-          background: rgba(15, 23, 42, 0.3);
-          border: 1px dashed rgba(255, 255, 255, 0.08);
+          background: rgba(255, 255, 255, 0.02);
           border-radius: 10px;
           min-height: 64px;
           box-sizing: border-box;
@@ -1911,7 +1906,7 @@ export class BaseSystem {
           align-items: center;
           justify-content: center;
         ">
-          <span style="color: rgba(255, 255, 255, 0.08); font-size: 16px; font-weight: 700;">+</span>
+          <span style="color: rgba(255, 255, 255, 0.06); font-size: 14px; font-weight: 700;">•</span>
         </div>
       `;
     }
@@ -1925,7 +1920,7 @@ export class BaseSystem {
         ${headerHtml}
 
         <!-- 1. OBERES INVENTAR: ERZE & MINERALIEN -->
-        <div style="display: flex; flex-direction: column; gap: 6px; background: rgba(15, 23, 42, 0.55); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 12px; padding: 10px;">
+        <div style="display: flex; flex-direction: column; gap: 6px; background: rgba(15, 23, 42, 0.55); border-radius: 12px; padding: 10px;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <span style="font-size: 11.5px; font-weight: 800; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 5px;">
               ${icon('stone', '', 14)} Erze & Mineralien
@@ -1941,7 +1936,7 @@ export class BaseSystem {
         </div>
 
         <!-- 2. UNTERES INVENTAR: WAREN & BAUTEILE -->
-        <div style="display: flex; flex-direction: column; gap: 6px; background: rgba(15, 23, 42, 0.55); border: 1px solid rgba(192, 132, 252, 0.2); border-radius: 12px; padding: 10px;">
+        <div style="display: flex; flex-direction: column; gap: 6px; background: rgba(15, 23, 42, 0.55); border-radius: 12px; padding: 10px;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <span style="font-size: 11.5px; font-weight: 800; color: #c084fc; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 5px;">
               ${icon('layers', '', 14)} Waren & Bauteile

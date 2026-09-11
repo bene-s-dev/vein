@@ -70,8 +70,7 @@ export class DrillerMenuModal {
       ">
         <!-- Tank -->
         <div style="
-          background: rgba(15, 23, 42, 0.8);
-          border: 1px solid rgba(245, 158, 11, 0.25);
+          background: rgba(15, 23, 42, 0.7);
           border-radius: 10px;
           padding: 8px 10px;
           display: flex;
@@ -86,7 +85,7 @@ export class DrillerMenuModal {
               ${fuelPct}%
             </span>
           </div>
-          <div style="height: 6px; background: rgba(0, 0, 0, 0.6); border-radius: 99px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.08);">
+          <div style="height: 6px; background: rgba(0, 0, 0, 0.5); border-radius: 99px; overflow: hidden;">
             <div style="width: ${fuelPct}%; height: 100%; background: #f59e0b; border-radius: 99px; transition: width 0.2s ease;"></div>
           </div>
           <div style="font-size: 9.5px; color: #64748b; text-align: right; font-variant-numeric: tabular-nums;">
@@ -96,8 +95,7 @@ export class DrillerMenuModal {
 
         <!-- Hülle -->
         <div style="
-          background: rgba(15, 23, 42, 0.8);
-          border: 1px solid ${hullPct <= 25 ? 'rgba(239, 68, 68, 0.35)' : 'rgba(16, 185, 129, 0.25)'};
+          background: rgba(15, 23, 42, 0.7);
           border-radius: 10px;
           padding: 8px 10px;
           display: flex;
@@ -112,7 +110,7 @@ export class DrillerMenuModal {
               ${hullPct}%
             </span>
           </div>
-          <div style="height: 6px; background: rgba(0, 0, 0, 0.6); border-radius: 99px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.08);">
+          <div style="height: 6px; background: rgba(0, 0, 0, 0.5); border-radius: 99px; overflow: hidden;">
             <div style="width: ${hullPct}%; height: 100%; background: ${hullPct <= 25 ? '#ef4444' : hullPct <= 50 ? '#f59e0b' : '#10b981'}; border-radius: 99px; transition: width 0.2s ease;"></div>
           </div>
           <div style="font-size: 9.5px; color: #64748b; text-align: right; font-variant-numeric: tabular-nums;">
@@ -122,8 +120,7 @@ export class DrillerMenuModal {
 
         <!-- Fracht -->
         <div style="
-          background: rgba(15, 23, 42, 0.8);
-          border: 1px solid ${cargoPct >= 100 ? 'rgba(239, 68, 68, 0.35)' : 'rgba(56, 189, 248, 0.25)'};
+          background: rgba(15, 23, 42, 0.7);
           border-radius: 10px;
           padding: 8px 10px;
           display: flex;
@@ -138,7 +135,7 @@ export class DrillerMenuModal {
               ${cargoPct}%
             </span>
           </div>
-          <div style="height: 6px; background: rgba(0, 0, 0, 0.6); border-radius: 99px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.08);">
+          <div style="height: 6px; background: rgba(0, 0, 0, 0.5); border-radius: 99px; overflow: hidden;">
             <div style="width: ${cargoPct}%; height: 100%; background: ${cargoPct >= 100 ? '#ef4444' : '#38bdf8'}; border-radius: 99px; transition: width 0.2s ease;"></div>
           </div>
           <div style="font-size: 9.5px; color: #64748b; text-align: right; font-variant-numeric: tabular-nums;">
@@ -169,8 +166,7 @@ export class DrillerMenuModal {
       gridItemsHtml += `
         <div style="
           position: relative;
-          background: rgba(15, 23, 42, 0.9);
-          border: 1px solid rgba(56, 189, 248, 0.3);
+          background: rgba(18, 26, 42, 0.85);
           border-radius: 10px;
           padding: 10px 6px 8px 6px;
           display: flex;
@@ -180,7 +176,6 @@ export class DrillerMenuModal {
           gap: 6px;
           min-height: 84px;
           box-sizing: border-box;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
         ">
           <!-- Anzahl Badge -->
           <span style="
@@ -188,7 +183,6 @@ export class DrillerMenuModal {
             top: 5px;
             right: 5px;
             background: #0284c7;
-            border: 1px solid #38bdf8;
             color: #ffffff;
             font-size: 10px;
             font-weight: 800;
@@ -217,14 +211,11 @@ export class DrillerMenuModal {
       `;
     });
 
-
-
     // Leere Slots für den echten Inventar-Grid-Look
     for (let i = 0; i < emptySlotsCount; i++) {
       gridItemsHtml += `
         <div style="
-          background: rgba(15, 23, 42, 0.3);
-          border: 1px dashed rgba(255, 255, 255, 0.08);
+          background: rgba(255, 255, 255, 0.02);
           border-radius: 10px;
           min-height: 84px;
           box-sizing: border-box;
@@ -232,7 +223,7 @@ export class DrillerMenuModal {
           align-items: center;
           justify-content: center;
         ">
-          <span style="color: rgba(255, 255, 255, 0.08); font-size: 16px; font-weight: 700;">+</span>
+          <span style="color: rgba(255, 255, 255, 0.06); font-size: 14px; font-weight: 700;">•</span>
         </div>
       `;
     }
@@ -244,7 +235,7 @@ export class DrillerMenuModal {
             ${icon('stone', '', 12)} Inventar (${cargoCount}/${maxCargo})
           </span>
           ${cargoCount >= maxCargo ? `
-            <span style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #ef4444; font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 4px;">
+            <span style="background: rgba(239, 68, 68, 0.2); color: #ef4444; font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 4px;">
               VOLL
             </span>
           ` : ''}
@@ -261,7 +252,7 @@ export class DrillerMenuModal {
     `;
 
     bodyEl.innerHTML = `
-      <div style="display: flex; flex-direction: column;">
+      <div style="display: flex; flex-direction: column; max-width: 620px; margin: 0 auto; width: 100%;">
         ${statusBarsHtml}
         ${inventoryHtml}
       </div>
