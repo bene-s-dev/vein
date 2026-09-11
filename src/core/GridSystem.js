@@ -793,18 +793,13 @@ export class GridSystem {
     const pX = player ? player.sprite.x : 0;
     const pY = player ? player.sprite.y : 0;
 
-    const camMoved = this.lastCamX === null ||
-      camView.x !== this.lastCamX ||
-      camView.y !== this.lastCamY ||
-      camView.width !== this.lastCamW ||
-      camView.height !== this.lastCamH;
+    const viewThresholdSq = 16 * 16; // 16px (halbe Kachel) Bewegungsschwelle
+    const camDistSq = this.lastCamX !== null ? ((camView.x - this.lastCamX) ** 2 + (camView.y - this.lastCamY) ** 2) : 99999;
+    const playerDistSq = this.lastPlayerX !== null ? ((pX - this.lastPlayerX) ** 2 + (pY - this.lastPlayerY) ** 2) : 99999;
+    const sizeChanged = camView.width !== this.lastCamW || camView.height !== this.lastCamH;
 
-    const playerMoved = this.lastPlayerX === null ||
-      pX !== this.lastPlayerX ||
-      pY !== this.lastPlayerY;
-
-    // Nur überspringen, wenn absolut kein Element bewegt wurde und Nebel sauber ist
-    if (!camMoved && !playerMoved && !this.fogDirty) {
+    // Nur überspringen, wenn Schwellenwert nicht erreicht und Nebel sauber ist
+    if (this.lastCamX !== null && !this.fogDirty && !sizeChanged && camDistSq < viewThresholdSq && playerDistSq < viewThresholdSq) {
       return;
     }
 

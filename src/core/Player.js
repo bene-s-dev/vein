@@ -1249,7 +1249,8 @@ export class Player {
       return;
     }
 
-    const dt = Math.min(delta, 33.33) / 1000;
+    // Erlaube bis zu 50ms Delta-Kompensation (wie bei processMoving), um Geschwindigkeitseinbrüche bei 20-30 FPS zu verhindern
+    const dt = Math.min(delta, 50) / 1000;
 
     // Sanfter, gleichmäßiger Treibstoffverbrauch im Flug
     this.consumeFuel(dt * 1.8);
@@ -1273,32 +1274,46 @@ export class Player {
       soundFx.startJetpack();
     }
 
-    // Flüssiger, kraftvoller Aufstieg mit kontinuierlicher Geschwindigkeit
+    // Flüssiger, stabiler Aufstieg mit kontinuierlicher Geschwindigkeit
     const flightSpeed = this.flightSpeed || 175;
     const dy = flightSpeed * dt;
     const nextY = this.sprite.y - dy;
 
-    // Sanfte horizontale Steuerung während des Flugs ermöglichen
+    // Horizontale Steuerung während des Flugs
+    let isSteeringHoriz = false;
     if (inputHandler) {
       const isLeft = inputHandler.cursors?.left?.isDown || inputHandler.wasd?.A?.isDown || inputHandler.touchDirection === 'LEFT';
       const isRight = inputHandler.cursors?.right?.isDown || inputHandler.wasd?.D?.isDown || inputHandler.touchDirection === 'RIGHT';
       const horizSpeed = (flightSpeed * 0.7) * dt;
 
+      const topGy = Math.floor((this.sprite.y - 10) / TILE_SIZE);
+      const bottomGy = Math.floor((this.sprite.y + 10) / TILE_SIZE);
+
       if (isLeft) {
+        isSteeringHoriz = true;
         const nextX = this.sprite.x - horizSpeed;
         const leftGx = Math.floor((nextX - 10) / TILE_SIZE);
-        const curGy = Math.round((this.sprite.y - TILE_SIZE / 2) / TILE_SIZE);
-        if (leftGx >= 0 && (!this.gridSystem.isSolid(leftGx, curGy) || this.sprite.y <= -16)) {
+        const canMoveLeft = leftGx >= 0 && (
+          this.sprite.y <= -16 ||
+          ((topGy < 0 || !this.gridSystem.isSolid(leftGx, topGy)) &&
+           (bottomGy < 0 || !this.gridSystem.isSolid(leftGx, bottomGy)))
+        );
+        if (canMoveLeft) {
           this.sprite.x = nextX;
           this.x = nextX;
           this.gx = Math.round((this.x - TILE_SIZE / 2) / TILE_SIZE);
           this.setVisualDirection('LEFT');
         }
       } else if (isRight) {
+        isSteeringHoriz = true;
         const nextX = this.sprite.x + horizSpeed;
         const rightGx = Math.floor((nextX + 10) / TILE_SIZE);
-        const curGy = Math.round((this.sprite.y - TILE_SIZE / 2) / TILE_SIZE);
-        if (rightGx < this.gridSystem.width && (!this.gridSystem.isSolid(rightGx, curGy) || this.sprite.y <= -16)) {
+        const canMoveRight = rightGx < this.gridSystem.width && (
+          this.sprite.y <= -16 ||
+          ((topGy < 0 || !this.gridSystem.isSolid(rightGx, topGy)) &&
+           (bottomGy < 0 || !this.gridSystem.isSolid(rightGx, bottomGy)))
+        );
+        if (canMoveRight) {
           this.sprite.x = nextX;
           this.x = nextX;
           this.gx = Math.round((this.x - TILE_SIZE / 2) / TILE_SIZE);
@@ -1307,18 +1322,37 @@ export class Player {
       }
     }
 
-    // Kollisionsprüfung mit der Decke über dem Fahrzeug
+    // Sanfte Zentrierung im Schacht bei geradem Aufstieg (verhindert Hängenbleiben an Schachtwänden)
+    if (!isSteeringHoriz && this.sprite.y > -16) {
+      const targetCenterX = this.gx * TILE_SIZE + TILE_SIZE / 2;
+      const diffX = targetCenterX - this.sprite.x;
+      if (Math.abs(diffX) > 0.4) {
+        this.sprite.x += Math.sign(diffX) * Math.min(Math.abs(diffX), flightSpeed * 0.3 * dt);
+        this.x = this.sprite.x;
+      }
+    }
+
+    // Kollisionsprüfung mit der Decke über dem Fahrzeug (unter Berücksichtigung der Fahrzeugbreite)
     const headY = nextY - TILE_SIZE / 2;
     const checkGy = Math.floor(headY / TILE_SIZE);
 
-    if (checkGy >= 0 && this.gridSystem.isSolid(this.gx, checkGy)) {
-      // Decke berührt: Sanft direkt unter der festen Kachel stoppen
-      const clampedY = (checkGy + 1) * TILE_SIZE + TILE_SIZE / 2;
-      this.sprite.y = clampedY;
-      this.y = clampedY;
-      this.gy = Math.round((this.y - TILE_SIZE / 2) / TILE_SIZE);
-      this.stopFlying();
-      return;
+    if (checkGy >= 0) {
+      const headLeftGx = Math.floor((this.sprite.x - 7) / TILE_SIZE);
+      const headRightGx = Math.floor((this.sprite.x + 7) / TILE_SIZE);
+      const hitCeiling = (
+        (headLeftGx >= 0 && this.gridSystem.isSolid(headLeftGx, checkGy)) ||
+        (headRightGx < this.gridSystem.width && this.gridSystem.isSolid(headRightGx, checkGy))
+      );
+
+      if (hitCeiling) {
+        // Decke berührt: Sanft direkt unter der festen Kachel stoppen
+        const clampedY = (checkGy + 1) * TILE_SIZE + TILE_SIZE / 2;
+        this.sprite.y = clampedY;
+        this.y = clampedY;
+        this.gy = Math.round((this.y - TILE_SIZE / 2) / TILE_SIZE);
+        this.stopFlying();
+        return;
+      }
     }
 
     // Erreichen der Erdoberfläche (Boden-Niveau gy = -1, y = -16)
@@ -1331,7 +1365,7 @@ export class Player {
       return;
     }
 
-    // Kontinuierliche Positionsänderung bei 60 FPS
+    // Kontinuierliche Positionsänderung mit konstanter Geschwindigkeit
     this.sprite.y = nextY;
     this.y = nextY;
     this.gy = (this.y - TILE_SIZE / 2) / TILE_SIZE;
@@ -1690,8 +1724,11 @@ export class Player {
     if (depthMeters > this.highestDepthReached) {
       this.highestDepthReached = depthMeters;
     }
-    if (this.scene && this.scene.events) {
-      this.scene.events.emit('depth_changed', depthMeters);
+    if (this._lastEmittedDepth !== depthMeters) {
+      this._lastEmittedDepth = depthMeters;
+      if (this.scene && this.scene.events) {
+        this.scene.events.emit('depth_changed', depthMeters);
+      }
     }
   }
 

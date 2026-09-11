@@ -25,6 +25,11 @@ const config = {
       capture: false
     }
   },
+  fps: {
+    min: 10,
+    target: 60,
+    smoothStep: true
+  },
   scene: [BootScene, MiningScene]
 };
 
