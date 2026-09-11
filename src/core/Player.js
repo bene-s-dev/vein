@@ -148,6 +148,8 @@ export class Player {
     this.discoveredOres = new Set(['coal']);
     // Set aller bisher hergestellten/entdeckten Fabrikprodukte und Barren
     this.discoveredProducts = new Set();
+    // Set aller bisher entdeckten Spezialfelder (Felsbrocken, Kapseln, Fossilien, Lava)
+    this.discoveredSpecialTiles = new Set();
 
     // Dynamischer Scheinwerfer (Über der Erde komplett unsichtbar)
     this.headlight = scene.add.circle(this.x, this.y, 64, 0xfffbeb, 0.08)
@@ -1362,6 +1364,15 @@ export class Player {
         this.y = clampedY;
         this.gy = Math.round((this.y - TILE_SIZE / 2) / TILE_SIZE);
         this.stopFlying();
+
+        // Wenn Spieler weiter nach oben steuert: nahtlos Deckenbohren einleiten!
+        if (isUpActive && this.gridSystem.isSolid(this.gx, checkGy)) {
+          const tile = this.gridSystem.getTile(this.gx, checkGy);
+          if (tile && !tile.indestructible && checkGy > 0) {
+            this.setVisualDirection('UP');
+            this.startDrilling(this.gx, checkGy);
+          }
+        }
         return;
       }
     }
@@ -1559,6 +1570,10 @@ export class Player {
     if (!tile || tile.indestructible) return;
     // Sicherheit: nicht bohren wenn der Block schon leer ist (bereits abgebaut)!
     if (!this.gridSystem.isSolid(targetGx, targetGy)) return;
+
+    if (tile.type && ['tile_boulder', 'tile_cache', 'tile_fossil', 'tile_lava'].includes(tile.type)) {
+      this.discoverSpecialTile(tile.type);
+    }
 
     this.state = PLAYER_STATES.DRILLING;
     this.drillTarget = { gx: targetGx, gy: targetGy };
@@ -1786,6 +1801,21 @@ export class Player {
         this.scene.events.emit('product_discovered', prodId);
       }
     }
+  }
+
+  discoverSpecialTile(type) {
+    if (!this.discoveredSpecialTiles) this.discoveredSpecialTiles = new Set();
+    if (this.discoveredSpecialTiles.has(type)) return false;
+    this.discoveredSpecialTiles.add(type);
+    if (this.scene && this.scene.events) {
+      this.scene.events.emit('special_tile_discovered', type);
+    }
+    return true;
+  }
+
+  isSpecialTileDiscovered(type) {
+    if (!this.discoveredSpecialTiles) this.discoveredSpecialTiles = new Set();
+    return this.discoveredSpecialTiles.has(type);
   }
 
   checkDepthProgress() {

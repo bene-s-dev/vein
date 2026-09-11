@@ -8,7 +8,7 @@
 import Phaser from 'phaser';
 import { isModalActive, closeActiveModal } from './BaseSystem.js';
 import { TILE_SIZE, TILE_TYPES } from './GridSystem.js';
-import { showOreInfoModal } from '../ui/OreInfoModal.js';
+import { showOreInfoModal, showSpecialTileInfoModal } from '../ui/OreInfoModal.js';
 
 export class InputHandler {
   constructor(scene) {
@@ -259,11 +259,15 @@ export class InputHandler {
           const gy = Math.floor(startWorldY / TILE_SIZE);
           if (gy >= 1) {
             const tile = this.scene.gridSystem.getTile(gx, gy);
-            const key = `${gx},${gy}`;
             const isExplored = tile && (tile.explored || (this.scene.gridSystem.exploredTiles && this.scene.gridSystem.exploredTiles.has(key)));
-            if (tile && tile.ore && tile.type !== TILE_TYPES.EMPTY && isExplored) {
-              showOreInfoModal(tile.ore, this.scene);
-              return;
+            if (tile && tile.type !== TILE_TYPES.EMPTY && isExplored) {
+              if (tile.ore) {
+                showOreInfoModal(tile.ore, this.scene);
+                return;
+              } else if (['tile_boulder', 'tile_cache', 'tile_fossil', 'tile_lava'].includes(tile.type)) {
+                showSpecialTileInfoModal(tile.type, this.scene, false);
+                return;
+              }
             }
           }
         }

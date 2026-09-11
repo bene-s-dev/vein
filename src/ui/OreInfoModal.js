@@ -3,6 +3,7 @@ import { soundFx } from '../core/SoundEffects.js';
 import { icon, refreshIcons, oreIcon } from './IconHelper.js';
 import { ORE_DESCRIPTIONS, GEOLOGICAL_LAYERS } from './MinerBookModal.js';
 import { isModalActive, notifyModalClosed } from '../core/BaseSystem.js';
+import { launchConfetti } from './HUD.js';
 
 export const ORE_USAGE_INFO = {
   coal: 'Brennstoff im Schmelzofen, Herstellung von Kohle-Briketts & Graphit-Dichtungen.',
@@ -20,6 +21,69 @@ export const ORE_USAGE_INFO = {
   uranium: 'Reaktorbrennstoff & Nuklearantriebe für tiefste Expeditionen.',
   obsidian_gem: 'Druckfeste Schutzschilde für den extremen Tiefenkern.',
   dark_matter: 'Exotische Energiequelle höchster Stufe & absolut höchste Erlöse an der Börse.'
+};
+
+export const SPECIAL_TILE_DATA = {
+  tile_boulder: {
+    id: 'tile_boulder',
+    name: 'Felsbrocken & Geröll',
+    badge: 'GEFAHR & HINDERNIS',
+    badgeColor: '#f59e0b',
+    icon: 'mountain',
+    sprite: 'tile_boulder',
+    stats: [
+      { label: 'Eigenschaft', val: 'Instabil', color: '#ef4444' },
+      { label: 'Gesteinshärte', val: '110 HP', color: '#38bdf8' },
+      { label: 'Taktik', val: 'Sprengen (B) / Umgehen', color: '#fbbf24' }
+    ],
+    desc: 'Ein massiver, abgerundeter Felsbrocken im Schacht. Wenn du den Boden direkt unter ihm wegbohrst, stürzt er ungebremst herab und zerschmettert alles darunter! Kann mit starkem Bohrkopf abgebaut oder mit Dynamit (Taste B) gesprengt werden.',
+    hint: '💡 Tipp: Stehe niemals unter einem untergrabenen Felsbrocken! Nutze Dynamit, um Schächte schnell freizusprengen.'
+  },
+  tile_cache: {
+    id: 'tile_cache',
+    name: 'Expeditions-Kapsel',
+    badge: 'WERTVOLLER FUND',
+    badgeColor: '#10b981',
+    icon: 'package',
+    sprite: 'tile_cache',
+    stats: [
+      { label: 'Inhalt', val: 'Bargeld & Gadgets', color: '#10b981' },
+      { label: 'Hülle', val: '45 HP', color: '#38bdf8' },
+      { label: 'Bonus', val: 'Dynamit / Treibstoff', color: '#a855f7' }
+    ],
+    desc: 'Eine verschollene Bergungskapsel früherer Minen-Expeditionen. Beim Anbohren bergen deine Scanner wertvolle Notfall-Gelder sowie nützliche Gadgets wie Dynamit, Treibstoffkanister oder Reparatur-Kits.',
+    hint: '💡 Tipp: Jede Kapsel füllt dein Konto auf und stockt deine Gadgets auf – halte nach diesen Kisten Ausschau!'
+  },
+  tile_fossil: {
+    id: 'tile_fossil',
+    name: 'Prähistorisches Fossil',
+    badge: 'SELTENES RELIKT',
+    badgeColor: '#a855f7',
+    icon: 'sparkles',
+    sprite: 'tile_fossil',
+    stats: [
+      { label: 'Kategorie', val: 'Museums-Artefakt', color: '#a855f7' },
+      { label: 'Härte', val: '90 HP', color: '#38bdf8' },
+      { label: 'Effekt', val: 'Dauerhafte Perks', color: '#fbbf24' }
+    ],
+    desc: 'Eine uralte Versteinerung prähistorischer Urzeit- und Tiefseewesen. Das Freilegen dieser Schichten birgt einzigartige Relikte (wie Ammoniten, Trilobiten oder Dino-Zähne), die dauerhafte Fahrzeug-Boni verleihen.',
+    hint: '💡 Tipp: Gefundene Fossilien werden im Bergmannbuch archiviert und verbessern deine Bohrer-Attribute.'
+  },
+  tile_lava: {
+    id: 'tile_lava',
+    name: 'Glühende Lava-Ader',
+    badge: 'EXTREME HITZE',
+    badgeColor: '#ef4444',
+    icon: 'flame',
+    sprite: 'tile_lava',
+    stats: [
+      { label: 'Gefahr', val: 'Hitzeschaden (-16 HP)', color: '#ef4444' },
+      { label: 'Zone', val: 'Tiefengestein (> 160m)', color: '#fbbf24' },
+      { label: 'Schutz', val: 'Meteoriten-Relikt', color: '#38bdf8' }
+    ],
+    desc: 'Unterirdische Adern aus flüssigem Magma unter gewaltigem Druck. Das Anbohren von Lava führt zu plötzlichen Hitzewallungen und beschädigt die Panzerung deines Bohrers!',
+    hint: '💡 Tipp: Umgehe Lava-Adern großräumig oder rüste hitzeresistente Panzerungs-Upgrades aus.'
+  }
 };
 
 /**
@@ -271,6 +335,207 @@ export function showOreInfoModal(oreKey, scene) {
   }
 
   // Escape-Taste schließt das Modal
+  if (activeKeydownListener) {
+    window.removeEventListener('keydown', activeKeydownListener);
+  }
+  activeKeydownListener = (e) => {
+    if (e.key === 'Escape') {
+      closeModal();
+    }
+  };
+  window.addEventListener('keydown', activeKeydownListener);
+}
+
+/**
+ * Zeigt das Informations-Popup für Spezialfelder (Felsbrocken, Kapseln, Fossilien, Lava).
+ */
+export function showSpecialTileInfoModal(tileType, scene, isDiscovery = false) {
+  if (!tileType || !scene) return;
+  const tileInfo = SPECIAL_TILE_DATA[tileType];
+  if (!tileInfo) return;
+
+  if (isDiscovery) {
+    soundFx.playPurchase();
+    try {
+      launchConfetti();
+    } catch (e) {}
+  } else {
+    soundFx.playClick();
+  }
+
+  // Spiel pausieren, falls es lief (unter Tage)
+  const wasAlreadyPaused = Boolean(scene.isPaused);
+  if (!wasAlreadyPaused) {
+    scene.isPaused = true;
+    soundFx.stopDrive();
+    soundFx.stopDrilling();
+    soundFx.stopJetpack();
+    if (soundFx.stopRefuel) soundFx.stopRefuel();
+  }
+
+  // DOM Container erstellen oder wiederverwenden
+  let backdropEl = document.getElementById('ore-info-backdrop');
+  if (!backdropEl) {
+    backdropEl = document.createElement('div');
+    backdropEl.id = 'ore-info-backdrop';
+    backdropEl.style.cssText = `
+      display: none;
+      position: fixed;
+      inset: 0;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+      background: rgba(3, 7, 18, 0.78);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      z-index: 10050;
+      box-sizing: border-box;
+    `;
+    document.body.appendChild(backdropEl);
+  }
+
+  const closeModal = () => {
+    notifyModalClosed();
+    backdropEl.style.display = 'none';
+    if (activeKeydownListener) {
+      window.removeEventListener('keydown', activeKeydownListener);
+      activeKeydownListener = null;
+    }
+
+    if (!wasAlreadyPaused && !isModalActive()) {
+      scene.isPaused = false;
+    }
+  };
+
+  // Textur-DataURL für kristallklares Pixelart im Popup
+  let textureImgHtml = '';
+  try {
+    if (scene.textures && scene.textures.exists(tileInfo.sprite)) {
+      const srcCanvas = scene.textures.get(tileInfo.sprite).getSourceImage();
+      if (srcCanvas && srcCanvas.toDataURL) {
+        const dataUrl = srcCanvas.toDataURL();
+        textureImgHtml = `<img src="${dataUrl}" style="width: 44px; height: 44px; image-rendering: pixelated; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.6);" alt="${tileInfo.name}" />`;
+      }
+    }
+  } catch (e) {}
+
+  if (!textureImgHtml) {
+    textureImgHtml = `<div style="color: ${tileInfo.badgeColor};">${icon(tileInfo.icon, '', 36)}</div>`;
+  }
+
+  const statsPills = tileInfo.stats.map(s => `
+    <span style="background: ${s.color}15; border: 1px solid ${s.color}35; color: ${s.color}; font-weight: 700; padding: 4px 10px; border-radius: 8px; font-size: 11.5px;">
+      <strong>${s.label}:</strong> ${s.val}
+    </span>
+  `).join('');
+
+  backdropEl.innerHTML = `
+    <div class="ore-info-window" style="
+      width: 90%;
+      max-width: 380px;
+      max-height: 88vh;
+      overflow-y: auto;
+      background: rgba(15, 23, 42, 0.96);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85), 0 0 35px ${tileInfo.badgeColor}25;
+      padding: 22px 18px 18px 18px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 12px;
+      position: relative;
+      animation: oreInfoPopIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    ">
+      <!-- Schließen X-Button oben rechts -->
+      <button id="btn-ore-info-x" style="
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: rgba(255, 255, 255, 0.08);
+        border: none;
+        border-radius: 99px;
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #94a3b8;
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s;
+      ">
+        ${icon('x', '', 14)}
+      </button>
+
+      <!-- Kopf-Badge: NEUE ENTDECKUNG / SPEZIALFELD -->
+      <div style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; color: ${tileInfo.badgeColor}; background: ${tileInfo.badgeColor}18; padding: 4px 12px; border-radius: 9999px; border: 1px solid ${tileInfo.badgeColor}35;">
+        ${icon(isDiscovery ? 'sparkles' : tileInfo.icon, '', 13)}
+        <span>${isDiscovery ? 'NEUE ENTDECKUNG · ' : ''}${tileInfo.badge}</span>
+      </div>
+
+      <!-- Icon & Name -->
+      <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 2px;">
+        ${textureImgHtml}
+        <h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #f8fafc; letter-spacing: 0.5px;">
+          ${tileInfo.name.toUpperCase()}
+        </h2>
+      </div>
+
+      <!-- Stat-Pills -->
+      <div style="display: flex; justify-content: center; gap: 6px; font-size: 12px; flex-wrap: wrap;">
+        ${statsPills}
+      </div>
+
+      <!-- Beschreibung / Lore -->
+      <p style="margin: 2px 0 4px 0; font-size: 13px; line-height: 1.5; color: #cbd5e1; max-width: 330px; text-align: center;">
+        ${tileInfo.desc}
+      </p>
+
+      <!-- Taktischer Hinweis / Tipp -->
+      <div style="width: 100%; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 10px; padding: 8px 12px; text-align: left; box-sizing: border-box; display: flex; flex-direction: column; gap: 3px;">
+        <span style="font-size: 11.5px; line-height: 1.4; color: #94a3b8;">
+          ${tileInfo.hint}
+        </span>
+      </div>
+
+      <!-- OK Button -->
+      <div style="display: flex; gap: 8px; width: 100%; justify-content: center; margin-top: 4px;">
+        <button id="btn-ore-info-ok" class="btn-buy" style="height: 38px; width: 100%; max-width: 200px; font-size: 13px; font-weight: 800; border-radius: 10px;">
+          VERSTANDEN
+        </button>
+      </div>
+    </div>
+  `;
+
+  backdropEl.style.display = 'flex';
+  refreshIcons(backdropEl);
+
+  backdropEl.onclick = (e) => {
+    if (e.target === backdropEl) {
+      closeModal();
+    }
+  };
+
+  const btnOk = document.getElementById('btn-ore-info-ok');
+  if (btnOk) {
+    btnOk.onclick = () => {
+      soundFx.playClick();
+      closeModal();
+    };
+  }
+
+  const btnX = document.getElementById('btn-ore-info-x');
+  if (btnX) {
+    btnX.onclick = () => {
+      soundFx.playClick();
+      closeModal();
+    };
+  }
+
   if (activeKeydownListener) {
     window.removeEventListener('keydown', activeKeydownListener);
   }

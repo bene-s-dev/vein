@@ -181,6 +181,7 @@ export class SaveSystem {
         researchedEngineTier: p.researchedEngineTier || p.engineTier || 1,
         discoveredOres: Array.from(p.discoveredOres || []),
         discoveredProducts: Array.from(p.discoveredProducts || []),
+        discoveredSpecialTiles: Array.from(p.discoveredSpecialTiles || []),
         maxCargo: p.maxCargo,
         cargoTier: p.cargoTier,
         researchedCargoTier: p.researchedCargoTier || p.cargoTier || 1,
@@ -354,6 +355,7 @@ export class SaveSystem {
 
       p.discoveredOres = new Set(data.player.discoveredOres && data.player.discoveredOres.length ? data.player.discoveredOres : ['coal']);
       p.discoveredProducts = new Set(data.player.discoveredProducts && data.player.discoveredProducts.length ? data.player.discoveredProducts : []);
+      p.discoveredSpecialTiles = new Set(Array.isArray(data.player.discoveredSpecialTiles) ? data.player.discoveredSpecialTiles : []);
       p.discoveredArtifacts = Array.isArray(data.player.discoveredArtifacts) ? [...data.player.discoveredArtifacts] : [];
 
       if (p.recalculateArtifactPerks) {

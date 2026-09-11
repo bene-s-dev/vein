@@ -606,33 +606,43 @@ export class AssetLoader {
     // =======================================================
     for (let stage = 1; stage <= 4; stage++) {
       createTexture(`crack_${stage}`, TILE_SIZE, TILE_SIZE, (ctx) => {
+        const drawPaths = () => {
+          ctx.beginPath();
+          ctx.moveTo(16, 16);
+          ctx.lineTo(8, 6);
+          ctx.lineTo(4, 12);
+          if (stage >= 2) {
+            ctx.moveTo(16, 16);
+            ctx.lineTo(24, 8);
+            ctx.lineTo(28, 16);
+          }
+          if (stage >= 3) {
+            ctx.moveTo(16, 16);
+            ctx.lineTo(12, 26);
+            ctx.lineTo(6, 28);
+            ctx.moveTo(16, 16);
+            ctx.lineTo(22, 24);
+          }
+          if (stage >= 4) {
+            ctx.moveTo(22, 24);
+            ctx.lineTo(28, 28);
+            ctx.moveTo(8, 6);
+            ctx.lineTo(2, 2);
+            ctx.moveTo(24, 8);
+            ctx.lineTo(30, 2);
+          }
+          ctx.stroke();
+        };
+
+        // 1. Heller Glanzrand für exzellente Sichtbarkeit auf dunklen Felsen/Erzen
+        ctx.strokeStyle = '#f8fafc';
+        ctx.lineWidth = 2.6;
+        drawPaths();
+
+        // 2. Tiefer Risskern
         ctx.strokeStyle = '#0f172a';
-        ctx.lineWidth = 1.8;
-        ctx.beginPath();
-        ctx.moveTo(16, 16);
-        ctx.lineTo(8, 6);
-        ctx.lineTo(4, 12);
-        if (stage >= 2) {
-          ctx.moveTo(16, 16);
-          ctx.lineTo(24, 8);
-          ctx.lineTo(28, 16);
-        }
-        if (stage >= 3) {
-          ctx.moveTo(16, 16);
-          ctx.lineTo(12, 26);
-          ctx.lineTo(6, 28);
-          ctx.moveTo(16, 16);
-          ctx.lineTo(22, 24);
-        }
-        if (stage >= 4) {
-          ctx.moveTo(22, 24);
-          ctx.lineTo(28, 28);
-          ctx.moveTo(8, 6);
-          ctx.lineTo(2, 2);
-          ctx.moveTo(24, 8);
-          ctx.lineTo(30, 2);
-        }
-        ctx.stroke();
+        ctx.lineWidth = 1.2;
+        drawPaths();
       });
     }
 

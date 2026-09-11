@@ -7,6 +7,7 @@ import { icon, refreshIcons, oreIcon } from './IconHelper.js';
 import { ORE_DATA } from '../core/GridSystem.js';
 import { notifyModalClosed, closeActiveModal } from '../core/BaseSystem.js';
 import { toastManager } from './ToastManager.js';
+import { showSpecialTileInfoModal } from './OreInfoModal.js';
 
 const ORE_DESCRIPTIONS = {
   coal: 'Fossiler Kohlenstoff aus den oberen Schichten. Solide Einnahmequelle für den Einstieg.',
@@ -26,7 +27,7 @@ const ORE_DESCRIPTIONS = {
   dark_matter: 'Rätselhafte Energiepartikel aus den tiefsten Schichten der Erde. Höchster Marktwert im gesamten Minensektor.'
 };
 
-function launchConfetti() {
+export function launchConfetti() {
   let canvas = document.getElementById('confetti-canvas');
   if (!canvas) {
     canvas = document.createElement('canvas');
@@ -237,6 +238,11 @@ export class HUD {
     // Neu entdeckte Steinsorte: Konfetti & Info-Popup anzeigen
     this.scene.events.on('ore_discovered', (oreType) => {
       this.showDiscoveryModal(oreType);
+    });
+
+    // Neu entdecktes Spezialfeld (Felsbrocken, Kapsel, Fossil, Lava): Info-Popup anzeigen
+    this.scene.events.on('special_tile_discovered', (tileType) => {
+      showSpecialTileInfoModal(tileType, this.scene, true);
     });
   }
 

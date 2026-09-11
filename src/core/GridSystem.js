@@ -430,16 +430,32 @@ export class GridSystem {
     let isSpecial = false;
 
     if (gy >= 8 && !isEntranceCol) {
-      // Expeditions-Kapseln (seltene Beutebehälter)
-      if (gy >= 25 && hashCoord(gx, gy, 777) < 0.007) {
+      // 1. Expeditions-Kapseln (Fundkisten):
+      // Zell-basiertes Spacing (8x8 Kacheln) - garantiert, dass Fundkisten niemals dicht beieinander spawnen!
+      const cacheCellSize = 8;
+      const cCellX = Math.floor(gx / cacheCellSize);
+      const cCellY = Math.floor(gy / cacheCellSize);
+      const cCandidateGx = cCellX * cacheCellSize + Math.floor(hashCoord(cCellX, cCellY, 711) * cacheCellSize);
+      const cCandidateGy = cCellY * cacheCellSize + Math.floor(hashCoord(cCellX, cCellY, 712) * cacheCellSize);
+      const hasCacheInCell = hashCoord(cCellX, cCellY, 777) < 0.35;
+
+      // 2. Fossilien & Relikte:
+      // Zell-basiertes Spacing (10x10 Kacheln)
+      const fossilCellSize = 10;
+      const fCellX = Math.floor(gx / fossilCellSize);
+      const fCellY = Math.floor(gy / fossilCellSize);
+      const fCandidateGx = fCellX * fossilCellSize + Math.floor(hashCoord(fCellX, fCellY, 811) * fossilCellSize);
+      const fCandidateGy = fCellY * fossilCellSize + Math.floor(hashCoord(fCellX, fCellY, 812) * fossilCellSize);
+      const hasFossilInCell = hashCoord(fCellX, fCellY, 888) < 0.30;
+
+      if (gy >= 15 && hasCacheInCell && gx === cCandidateGx && gy === cCandidateGy) {
         type = TILE_TYPES.CACHE;
-        baseHp = 130;
+        baseHp = 45;
         isSpecial = true;
       }
-      // Fossilien & Relikte (geheime Museumsstücke)
-      else if (gy >= 32 && hashCoord(gx, gy, 888) < 0.009) {
+      else if (gy >= 32 && hasFossilInCell && gx === fCandidateGx && gy === fCandidateGy) {
         type = TILE_TYPES.FOSSIL;
-        baseHp = 110;
+        baseHp = 90;
         isSpecial = true;
       }
       // Magma- & Lava-Adern (in tieferen Zonen ab 160m)
@@ -449,9 +465,9 @@ export class GridSystem {
         isSpecial = true;
       }
       // Instabiles Geröll / Felsbrocken (fallen herunter bei Untergrabung)
-      else if (gy >= 12 && hashCoord(gx, gy, 444) < 0.040) {
+      else if (gy >= 12 && hashCoord(gx, gy, 444) < 0.035) {
         type = TILE_TYPES.BOULDER;
-        baseHp = 220;
+        baseHp = 110;
         isSpecial = true;
       }
     }
@@ -552,6 +568,12 @@ export class GridSystem {
         this.handleCacheFound(gx, gy);
       } else if (prevType === TILE_TYPES.FOSSIL) {
         this.handleFossilFound(gx, gy);
+      } else if (prevType === TILE_TYPES.BOULDER) {
+        if (this.scene.player) {
+          this.scene.player.cash += 25;
+          this.scene.player.addXp?.(8);
+          this.scene.hud?.showToast('🪨 Felsbrocken zerkleinert! (+€25, +8 XP)', 'info');
+        }
       } else if (prevType === TILE_TYPES.LAVA) {
         if (this.scene.player) {
           const res = this.scene.player.hasArtifact?.('artifact_meteorite') ? 0.5 : 1.0;
@@ -733,13 +755,16 @@ export class GridSystem {
         const landedTile = {
           type: TILE_TYPES.BOULDER,
           ore: null,
-          maxHp: 220,
-          hp: 220,
+          maxHp: 110,
+          hp: 110,
           indestructible: false,
           explored: true
         };
         this.tiles.set(`${gx},${targetGy}`, landedTile);
         this.fogDirty = true;
+        if (this.scene.player) {
+          this.scene.player.discoverSpecialTile?.(TILE_TYPES.BOULDER);
+        }
 
         // Aufprallgeräusch & Erschütterung
         soundFx.playTileDestroy();
@@ -843,6 +868,9 @@ export class GridSystem {
           if (!tile.explored) {
             tile.explored = true;
             this.fogDirty = true;
+            if (this.scene.player && ['tile_boulder', 'tile_cache', 'tile_fossil', 'tile_lava'].includes(tile.type)) {
+              this.scene.player.discoverSpecialTile?.(tile.type);
+            }
           }
           if (this.exploredTiles) this.exploredTiles.add(key);
         }
