@@ -133,7 +133,7 @@ export class DrillerMenuModal {
               ${icon('container', '', 12)} Fracht
             </span>
             <span style="font-size: 13px; font-weight: 800; color: ${cargoPct >= 100 ? '#ef4444' : '#38bdf8'}; width: 44px; min-width: 44px; text-align: right; font-variant-numeric: tabular-nums; display: inline-block;">
-              ${cargoPct}%
+              ${cargoCount}
             </span>
           </div>
           <div style="height: 6px; background: rgba(0, 0, 0, 0.5); border-radius: 99px; overflow: hidden;">
