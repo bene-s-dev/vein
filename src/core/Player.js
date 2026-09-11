@@ -44,16 +44,16 @@ export const TANK_TIERS = [
 ];
 
 export const HULL_TIERS = [
-  { tier: 1, name: 'Leichtmetall-Gehäuse', shortName: 'Leichtmetall', maxHull: 100, stat: '100 HP', cost: 0, comp: null, mountComps: null, level: 1, desc: 'Basis-Gehäuse für normale Bohrungen in oberflächennahem Erdreich.' },
-  { tier: 2, name: 'Kevlar-Verbundschutz Mk.II', shortName: 'Kevlar Mk.II', maxHull: 140, stat: '140 HP', cost: 240, comp: null, mountComps: [{ key: 'iron_tube', name: 'Stahl-Rohr', count: 1, source: 'Fabrik' }, { key: 'microprocessor', name: 'Mikroprozessor', count: 1, source: 'Forscher' }], level: 1, desc: 'Verstärkte Verbundstruktur gegen Stoß- und Reibungsverschleiß beim Bohren.' },
-  { tier: 3, name: 'Gehärtetes Stahl-Chassis Mk.III', shortName: 'Stahl Mk.III', maxHull: 190, stat: '190 HP', cost: 1400, comp: null, mountComps: [{ key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1, source: 'Fabrik' }, { key: 'capacitor', name: 'Druck-Kondensator', count: 1, source: 'Forscher' }], level: 1, desc: 'Widerstandsfähiger Gehäuseschutz für tiefere Schiefer- und Granitschichten.' },
-  { tier: 4, name: 'Titan-Panzergehäuse Mk.IV', shortName: 'Titan Mk.IV', maxHull: 260, stat: '260 HP', cost: 3900, comp: null, mountComps: [{ key: 'silver_coil', name: 'Silber-Spule', count: 1, source: 'Fabrik' }, { key: 'spectrometer', name: 'Sensor-Spektrometer', count: 1, source: 'Forscher' }], level: 2, desc: 'Widersteht hohem Gesteinsdruck und Reibungshitze.' },
+  { tier: 1, name: 'Leichtmetall-Gehäuse', shortName: 'Leichtmetall', maxHull: 50, stat: '50 HP', cost: 0, comp: null, mountComps: null, level: 1, desc: 'Dünnes Basis-Chassis für oberflächennahe Schürfungen. Vorsicht vor Reibung und Erschütterungen!' },
+  { tier: 2, name: 'Kevlar-Verbundschutz Mk.II', shortName: 'Kevlar Mk.II', maxHull: 90, stat: '90 HP', cost: 240, comp: null, mountComps: [{ key: 'iron_tube', name: 'Stahl-Rohr', count: 1, source: 'Fabrik' }, { key: 'microprocessor', name: 'Mikroprozessor', count: 1, source: 'Forscher' }], level: 1, desc: 'Verstärkte Verbundstruktur gegen Stoß- und Reibungsverschleiß beim Bohren.' },
+  { tier: 3, name: 'Gehärtetes Stahl-Chassis Mk.III', shortName: 'Stahl Mk.III', maxHull: 150, stat: '150 HP', cost: 1400, comp: null, mountComps: [{ key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1, source: 'Fabrik' }, { key: 'capacitor', name: 'Druck-Kondensator', count: 1, source: 'Forscher' }], level: 1, desc: 'Widerstandsfähiger Gehäuseschutz für tiefere Schiefer- und Granitschichten.' },
+  { tier: 4, name: 'Titan-Panzergehäuse Mk.IV', shortName: 'Titan Mk.IV', maxHull: 240, stat: '240 HP', cost: 3900, comp: null, mountComps: [{ key: 'silver_coil', name: 'Silber-Spule', count: 1, source: 'Fabrik' }, { key: 'spectrometer', name: 'Sensor-Spektrometer', count: 1, source: 'Forscher' }], level: 2, desc: 'Widersteht hohem Gesteinsdruck und Reibungshitze.' },
   { tier: 5, name: 'Magma-Hitzeschild Mk.V', shortName: 'Hitzeschild Mk.V', maxHull: 350, stat: '350 HP', cost: 10500, comp: null, mountComps: [{ key: 'silver_coil', name: 'Silber-Spule', count: 2, source: 'Fabrik' }, { key: 'spectrometer', name: 'Sensor-Spektrometer', count: 1, source: 'Forscher' }], level: 3, desc: 'Schützt das Gehäuse vor extremen Tiefentemperaturen und Erschütterungen.' },
-  { tier: 6, name: 'Schwere Verbundpanzerung Mk.VI', shortName: 'Verbund Mk.VI', maxHull: 470, stat: '470 HP', cost: 24000, comp: null, mountComps: [{ key: 'crystal_lens', name: 'Kristall-Linse', count: 1, source: 'Fabrik' }, { key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Forscher' }], level: 4, desc: 'Extrem schlagfester Case-Schutz für härtestes Basaltgestein.' },
-  { tier: 7, name: 'Kraftfeld-Deflektor Mk.VII', shortName: 'Deflektor Mk.VII', maxHull: 620, stat: '620 HP', cost: 52000, comp: null, mountComps: [{ key: 'crystal_lens', name: 'Kristall-Linse', count: 2, source: 'Fabrik' }, { key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Forscher' }], level: 5, desc: 'Aktives Energieschild fängt Reibungsenergie ab und stärkt das Gehäuse.' },
-  { tier: 8, name: 'Nanit-Matrix-Chassis Mk.VIII', shortName: 'Nanit Mk.VIII', maxHull: 800, stat: '800 HP', cost: 110000, comp: null, mountComps: [{ key: 'titan_bolt', name: 'Titan-Bolzen', count: 1, source: 'Fabrik' }, { key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Forscher' }], level: 6, desc: 'Selbstreparierendes Naniten-Gehäuse für maximale Tiefen-Integrität.' },
-  { tier: 9, name: 'Adamantit-Panzer Mk.IX', shortName: 'Adamantit Mk.IX', maxHull: 1050, stat: '1050 HP', cost: 220000, comp: null, mountComps: [{ key: 'titan_bolt', name: 'Titan-Bolzen', count: 2, source: 'Fabrik' }, { key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Forscher' }], level: 8, desc: 'Unerreichte Dichte schützt zuverlässig gegen Einstürze im Urgestein.' },
-  { tier: 10, name: 'Quanten-Aura-Chassis X', shortName: 'Quanten-Aura X', maxHull: 1400, stat: '1400 HP', cost: 440000, comp: null, mountComps: [{ key: 'quantum_core', name: 'Quanten-Kern', count: 2, source: 'Fabrik' }, { key: 'quantum_processor', name: 'Quanten-Prozessor', count: 1, source: 'Forscher' }], level: 10, desc: 'Permanentes quantenmechanisches Schutzfeld für tiefste Kernzonen.' }
+  { tier: 6, name: 'Schwere Verbundpanzerung Mk.VI', shortName: 'Verbund Mk.VI', maxHull: 500, stat: '500 HP', cost: 24000, comp: null, mountComps: [{ key: 'crystal_lens', name: 'Kristall-Linse', count: 1, source: 'Fabrik' }, { key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Forscher' }], level: 4, desc: 'Extrem schlagfester Case-Schutz für härtestes Basaltgestein.' },
+  { tier: 7, name: 'Kraftfeld-Deflektor Mk.VII', shortName: 'Deflektor Mk.VII', maxHull: 700, stat: '700 HP', cost: 52000, comp: null, mountComps: [{ key: 'crystal_lens', name: 'Kristall-Linse', count: 2, source: 'Fabrik' }, { key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Forscher' }], level: 5, desc: 'Aktives Energieschild fängt Reibungsenergie ab und stärkt das Gehäuse.' },
+  { tier: 8, name: 'Nanit-Matrix-Chassis Mk.VIII', shortName: 'Nanit Mk.VIII', maxHull: 950, stat: '950 HP', cost: 110000, comp: null, mountComps: [{ key: 'titan_bolt', name: 'Titan-Bolzen', count: 1, source: 'Fabrik' }, { key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Forscher' }], level: 6, desc: 'Selbstreparierendes Naniten-Gehäuse für maximale Tiefen-Integrität.' },
+  { tier: 9, name: 'Adamantit-Panzer Mk.IX', shortName: 'Adamantit Mk.IX', maxHull: 1250, stat: '1250 HP', cost: 220000, comp: null, mountComps: [{ key: 'titan_bolt', name: 'Titan-Bolzen', count: 2, source: 'Fabrik' }, { key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Forscher' }], level: 8, desc: 'Unerreichte Dichte schützt zuverlässig gegen Einstürze im Urgestein.' },
+  { tier: 10, name: 'Quanten-Aura-Chassis X', shortName: 'Quanten-Aura X', maxHull: 1600, stat: '1600 HP', cost: 440000, comp: null, mountComps: [{ key: 'quantum_core', name: 'Quanten-Kern', count: 2, source: 'Fabrik' }, { key: 'quantum_processor', name: 'Quanten-Prozessor', count: 1, source: 'Forscher' }], level: 10, desc: 'Permanentes quantenmechanisches Schutzfeld für tiefste Kernzonen.' }
 ];
 
 export const ENGINE_TIERS = [
@@ -194,8 +194,8 @@ export class Player {
       fusion_rod: 0
     };
 
-    this.maxHull = 100;
-    this.hull = 100;
+    this.maxHull = 50;
+    this.hull = 50;
     this.hullTier = 1;
     this.researchedHullTier = 1; // Im Labor erforschter Bauplan (Montage im Hangar erforderlich)
 
@@ -1551,7 +1551,10 @@ export class Player {
 
   startDrilling(targetGx, targetGy) {
     if (targetGy === 0) return;
-    if (this.hull <= 0) return; // Karosserie beschädigt - Bohrer blockiert
+    if (this.hull <= 0) {
+      this.scene.hud?.showToast('⚠️ Karosserie kritisch beschädigt (0 HP)! Bohrer blockiert – zur Basis zurückkehren oder Notfall-Reparatur (Taste R)!', 'danger');
+      return;
+    }
     const tile = this.gridSystem.getTile(targetGx, targetGy);
     if (!tile || tile.indestructible) return;
     // Sicherheit: nicht bohren wenn der Block schon leer ist (bereits abgebaut)!
@@ -1589,14 +1592,21 @@ export class Player {
     this.consumeFuel(1.5 * (delta / 1000));
 
     // Karosserie-Verschleiß beim Bohren (nur beim Bohren, nicht beim Fahren)
-    // Auf Level 1 besonders robust (nur ca. 0.35 HP/s statt 1.5 HP/s, mehr als 4x langsamer kaputt)
-    const baseWear = (this.level || 1) === 1 ? 0.35 : Math.max(0.4, 1.2 - ((this.level || 1) * 0.08));
-    // Höhere Gehäuseschutz-Stufen (hullTier) reduzieren Reibungsverschleiß zusätzlich
-    const tierReduction = Math.max(0.4, 1.0 - ((this.hullTier || 1) - 1) * 0.08);
+    // Grundverschleiß: 1.8 HP/s beim Fräsen durch die Gesteinsschichten
+    // Zähere Erze und tiefere Schichten erhöhen den Reibungsdruck zusätzlich
+    const targetTile = this.gridSystem.getTile(this.drillTarget.gx, this.drillTarget.gy);
+    let hardnessMult = 1.0;
+    if (targetTile && targetTile.ore && ORE_DATA[targetTile.ore]) {
+      hardnessMult = Math.min(2.0, Math.max(1.0, ORE_DATA[targetTile.ore].hardness * 0.85));
+    }
+    const baseWear = 1.8 * hardnessMult;
+    // Höhere Gehäuseschutz-Stufen (hullTier) reduzieren Reibungsverschleiß spürbar (Tier 1: 100%, Tier 2: 92%, Tier 3: 84%, ..., Tier 10: 25%)
+    const tierReduction = Math.max(0.25, 1.0 - ((this.hullTier || 1) - 1) * 0.08);
     const hullWearPerSec = baseWear * tierReduction;
     this.hull = Math.max(0, this.hull - hullWearPerSec * (delta / 1000));
     if (this.hull <= 0) {
       this.cancelDrilling();
+      this.scene.hud?.showToast('⚠️ Karosserie kritisch beschädigt (0 HP)! Bohrer blockiert – zur Basis zurückkehren oder Notfall-Reparatur (Taste R)!', 'danger');
       return;
     }
 

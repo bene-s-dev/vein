@@ -150,10 +150,12 @@ export class SaveSystem {
       p.fuel = Math.min(p.maxFuel, typeof data.player.fuel === 'number' ? data.player.fuel : p.maxFuel);
       p.batteryTier = data.player.batteryTier || 1;
 
-      p.hull = typeof data.player.hull === 'number' ? data.player.hull : p.hull;
-      p.maxHull = data.player.maxHull || p.maxHull;
-      p.hullTier = data.player.hullTier || p.hullTier;
+      p.hullTier = data.player.hullTier || p.hullTier || 1;
       p.researchedHullTier = data.player.researchedHullTier || p.hullTier || 1;
+      if (p.recalculateArtifactPerks) {
+        p.recalculateArtifactPerks();
+      }
+      p.hull = Math.min(p.maxHull, typeof data.player.hull === 'number' ? data.player.hull : p.maxHull);
       p.freeRescues = typeof data.player.freeRescues === 'number' ? data.player.freeRescues : 3;
 
       p.drillPower = data.player.drillPower || p.drillPower;
