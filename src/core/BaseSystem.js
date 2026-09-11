@@ -2960,36 +2960,30 @@ export class BaseSystem {
         `;
 
         actionHtml = `
-          <div class="cat-action-row" style="margin-top: 8px; display: flex; align-items: center; background: rgba(15,23,42,0.6); padding: 8px 12px; border-radius: 8px; gap: 10px; box-sizing: border-box;">
-            <!-- Spalte 1: Modul-Name (200px) -->
-            <div style="width: 200px; min-width: 200px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-              <strong style="color: #f8fafc; font-size: 13px;">${nextTier.name}</strong>
-            </div>
-
-            <!-- Spalte 2: Stat (100px) -->
-            <div style="width: 100px; min-width: 100px; flex-shrink: 0;">
-              <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-weight: 700; font-size: 11.5px; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; white-space: nowrap;">
+          <div class="cat-action-row" style="margin-top: 8px; display: flex; align-items: center; justify-content: space-between; background: rgba(15,23,42,0.6); padding: 8px 12px; border-radius: 8px; gap: 8px 12px; box-sizing: border-box; flex-wrap: wrap;">
+            <!-- Linke Seite: Name, Stat, Level und Komponenten -->
+            <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 220px; flex-wrap: wrap;">
+              <strong style="color: #f8fafc; font-size: 13px; white-space: nowrap;">${nextTier.name}</strong>
+              <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 6px; white-space: nowrap; font-variant-numeric: tabular-nums;">
                 ${nextTier.stat}
               </span>
-            </div>
-
-            <!-- Spalte 3: Spezialbauteile & Level (flex: 1, rechtsbündig) -->
-            <div style="flex: 1; min-width: 0; display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
               ${levelBadge}
-              ${compBadge}
+              <div style="display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                ${compBadge}
+              </div>
             </div>
 
-            <!-- Spalte 4: Preis (90px) -->
-            <div style="width: 90px; min-width: 90px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
-              ${costBadge}
-            </div>
-
-            <!-- Spalte 5: Button (110px) -->
-            <div style="width: 110px; min-width: 110px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end;">
-              <button class="btn-buy" id="btn-buy-track-${track.id}" ${canBuy ? '' : 'disabled'} style="width: 100%; height: 30px; padding: 0 10px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
-                ${icon('cpu', '', 12)}
-                <span>Erforschen</span>
-              </button>
+            <!-- Rechte Seite: Preis und Erforschen-Button -->
+            <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0; margin-left: auto;">
+              <div style="min-width: 80px;">
+                ${costBadge}
+              </div>
+              <div style="width: 110px; min-width: 110px;">
+                <button class="btn-buy" id="btn-buy-track-${track.id}" ${canBuy ? '' : 'disabled'} style="width: 100%; height: 30px; padding: 0 10px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+                  ${icon('cpu', '', 12)}
+                  <span>Erforschen</span>
+                </button>
+              </div>
             </div>
           </div>
         `;
@@ -3496,7 +3490,7 @@ export class BaseSystem {
       let actionRowHtml = '';
       if (!hasNext) {
         actionRowHtml = `
-          <div class="cat-action-row" style="margin-top: 6px; display: flex; align-items: center; background: rgba(15,23,42,0.6); padding: 8px 12px; border-radius: 8px; gap: 10px; box-sizing: border-box;">
+          <div class="cat-action-row" style="margin-top: 6px; display: flex; align-items: center; justify-content: space-between; background: rgba(15,23,42,0.6); padding: 8px 12px; border-radius: 8px; gap: 10px; box-sizing: border-box;">
             <div style="flex: 1; min-width: 0;">
               <strong style="color: #10b981; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px;">
                 ${icon('award', '', 14)} Vollständig montiert
@@ -3510,27 +3504,23 @@ export class BaseSystem {
       } else if (!isResearched) {
         // Noch nicht im Labor erforscht
         actionRowHtml = `
-          <div class="cat-action-row" style="margin-top: 6px; display: flex; align-items: center; background: rgba(15,23,42,0.6); padding: 8px 12px; border-radius: 8px; gap: 10px; box-sizing: border-box;">
-            <div style="width: 200px; min-width: 200px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-              <strong style="color: #94a3b8; font-size: 13px;">${nextData.name}</strong>
-            </div>
-            <div style="width: 100px; min-width: 100px; flex-shrink: 0;">
-              <span style="background: rgba(148, 163, 184, 0.1); border: 1px solid rgba(148, 163, 184, 0.2); color: #94a3b8; font-weight: 700; font-size: 11.5px; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
+          <div class="cat-action-row" style="margin-top: 6px; display: flex; align-items: center; justify-content: space-between; background: rgba(15,23,42,0.6); padding: 8px 12px; border-radius: 8px; gap: 8px 12px; box-sizing: border-box; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 220px; flex-wrap: wrap;">
+              <strong style="color: #94a3b8; font-size: 13px; white-space: nowrap;">${nextData.name}</strong>
+              <span style="background: rgba(148, 163, 184, 0.1); border: 1px solid rgba(148, 163, 184, 0.2); color: #94a3b8; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 6px; white-space: nowrap; font-variant-numeric: tabular-nums;">
                 ${nextData.stat}
               </span>
-            </div>
-            <div style="flex: 1; min-width: 0; display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
-              <span style="color: #f59e0b; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+              <span style="color: #f59e0b; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25); padding: 2px 7px; border-radius: 6px; white-space: nowrap;">
                 ${icon('microscope', '', 12)} Erst im Labor erforschen
               </span>
             </div>
-            <div style="width: 90px; min-width: 90px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+            <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0; margin-left: auto;">
               <span style="color: #64748b; font-size: 11px;">–</span>
-            </div>
-            <div style="width: 110px; min-width: 110px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end;">
-              <button class="btn-buy" disabled style="opacity: 0.45; background: #334155; color: #94a3b8; cursor: not-allowed; width: 100%; height: 30px; font-size: 11px; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
-                ${icon('lock', '', 12)} Gesperrt
-              </button>
+              <div style="width: 110px; min-width: 110px;">
+                <button class="btn-buy" disabled style="opacity: 0.45; background: #334155; color: #94a3b8; cursor: not-allowed; width: 100%; height: 30px; font-size: 11px; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+                  ${icon('lock', '', 12)} Gesperrt
+                </button>
+              </div>
             </div>
           </div>
         `;
@@ -3549,23 +3539,21 @@ export class BaseSystem {
         `;
 
         actionRowHtml = `
-          <div class="cat-action-row" style="margin-top: 6px; display: flex; align-items: center; background: rgba(15,23,42,0.6); padding: 8px 12px; border-radius: 8px; gap: 10px; box-sizing: border-box;">
-            <div style="width: 200px; min-width: 200px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-              <strong style="color: #f8fafc; font-size: 13px;">${nextData.name}</strong>
-            </div>
-            <div style="width: 100px; min-width: 100px; flex-shrink: 0;">
-              <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-weight: 700; font-size: 11.5px; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
+          <div class="cat-action-row" style="margin-top: 6px; display: flex; align-items: center; justify-content: space-between; background: rgba(15,23,42,0.6); padding: 8px 12px; border-radius: 8px; gap: 8px 12px; box-sizing: border-box; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 220px; flex-wrap: wrap;">
+              <strong style="color: #f8fafc; font-size: 13px; white-space: nowrap;">${nextData.name}</strong>
+              <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 6px; white-space: nowrap; font-variant-numeric: tabular-nums;">
                 ${nextData.stat}
               </span>
+              <div style="display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                ${compBadge}
+              </div>
             </div>
-            <div style="flex: 1; min-width: 0; display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
-              ${compBadge}
-            </div>
-            <div style="width: 90px; min-width: 90px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
-              <span style="color: #10b981; font-weight: 700; font-size: 11.5px;">Kostenlos</span>
-            </div>
-            <div style="width: 110px; min-width: 110px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end;">
-              ${mountBtnHtml}
+            <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0; margin-left: auto;">
+              <span style="color: #10b981; font-weight: 700; font-size: 11.5px; white-space: nowrap;">Kostenlos</span>
+              <div style="width: 110px; min-width: 110px;">
+                ${mountBtnHtml}
+              </div>
             </div>
           </div>
         `;
