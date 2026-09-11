@@ -309,7 +309,13 @@ export const FACTORY_PRODUCT_ICONS = {
   silver_coil: 'rotate-ccw',
   crystal_lens: 'aperture',
   titan_bolt: 'bolt',
-  quantum_core: 'orbit'
+  quantum_core: 'orbit',
+  microprocessor: 'cpu',
+  capacitor: 'battery-charging',
+  spectrometer: 'activity',
+  plasma_regulator: 'flame',
+  graviton_core: 'compass',
+  quantum_processor: 'atom'
 };
 
 /**

@@ -7,7 +7,7 @@
 import Phaser from 'phaser';
 import { TILE_SIZE, ORE_DATA } from './GridSystem.js';
 import { soundFx } from './SoundEffects.js';
-import { FACTORY_PRODUCTS, getRefinedOreNetValue, isModalActive } from './BaseSystem.js';
+import { FACTORY_PRODUCTS, GEOLOGIST_QUESTS, getRefinedOreNetValue, isModalActive } from './BaseSystem.js';
 
 export const PLAYER_STATES = {
   IDLE: 'idle',
@@ -1723,10 +1723,58 @@ export class Player {
       this.discoveredProducts.add(prodId);
       return true;
     }
+    if ((this.components?.[prodId] || 0) > 0) {
+      this.discoveredProducts.add(prodId);
+      return true;
+    }
+    if (this.cargo && this.cargo.includes(prodId)) {
+      this.discoveredProducts.add(prodId);
+      return true;
+    }
     if ((this.scene?.baseSystem?.depot?.products?.[prodId] || 0) > 0) {
       this.discoveredProducts.add(prodId);
       return true;
     }
+    if ((this.scene?.baseSystem?.depot?.bars?.[prodId] || 0) > 0) {
+      this.discoveredProducts.add(prodId);
+      return true;
+    }
+    if ((this.stats?.totalCrafted?.[prodId] || 0) > 0) {
+      this.discoveredProducts.add(prodId);
+      return true;
+    }
+
+    // 1. Schmelz-Barren: Freigeschaltet, sobald das Roherz entdeckt wurde
+    if (prodId.startsWith('bar_')) {
+      const ore = prodId.replace('bar_', '');
+      if (this.isOreDiscovered(ore)) {
+        this.discoveredProducts.add(prodId);
+        return true;
+      }
+    }
+
+    // 2. Fabrik-Produkte & Montage-Bauteile: Freigeschaltet, sobald alle Erze des Rezepts entdeckt sind
+    if (FACTORY_PRODUCTS && FACTORY_PRODUCTS[prodId]) {
+      const recipe = FACTORY_PRODUCTS[prodId].recipe || {};
+      const allOresFound = Object.keys(recipe).length > 0 && Object.keys(recipe).every(ore => this.isOreDiscovered(ore));
+      if (allOresFound) {
+        this.discoveredProducts.add(prodId);
+        return true;
+      }
+    }
+
+    // 3. Forscher-Bauteile: Freigeschaltet, sobald alle Erze der Forscher-Aufgabe entdeckt sind
+    if (GEOLOGIST_QUESTS) {
+      const quest = GEOLOGIST_QUESTS.find(q => q.rewardComp && q.rewardComp.key === prodId);
+      if (quest && quest.reqs) {
+        const allReqsFound = Object.keys(quest.reqs).length > 0 && Object.keys(quest.reqs).every(ore => this.isOreDiscovered(ore));
+        if (allReqsFound) {
+          this.discoveredProducts.add(prodId);
+          return true;
+        }
+      }
+    }
+
     return false;
   }
 

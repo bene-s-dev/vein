@@ -30,8 +30,8 @@ export const GEOLOGICAL_LAYERS = [
     baseHardness: '48 HP',
     hardnessMultiplier: '1.0x (Basis)',
     color: '#d97706',
-    ores: ['coal', 'copper'],
-    report: 'Die oberste Sedimentschicht aus weicher Erde, Lehm und Humus. Jeder Einsteigerbohrer dringt hier mühelos vor. Ausgezeichnete Fundstelle für Kohleflöze und frühe Kupferadern.'
+    ores: ['coal', 'copper', 'iron'],
+    report: 'Die oberste Sedimentschicht aus weicher Erde, Lehm und Humus. Jeder Einsteigerbohrer dringt hier mühelos vor. Ausgezeichnete Fundstelle für Kohle, frühe Kupferadern und ab 18m Tiefe die ersten Eisenerzvorkommen.'
   },
   {
     id: 'schist',
@@ -41,8 +41,8 @@ export const GEOLOGICAL_LAYERS = [
     baseHardness: '160 HP',
     hardnessMultiplier: '3.3x zäher',
     color: '#64748b',
-    ores: ['iron', 'tin'],
-    report: 'Dicht gelagertes Schiefergestein unter spürbarem Gebirgsdruck. Die Bohrkopf-Reibung steigt markant an. Liefert das für die industrielle Produktion fundamentale Eisen- und Zinnerz.'
+    ores: ['iron', 'tin', 'silver'],
+    report: 'Dicht gelagertes Schiefergestein unter spürbarem Gebirgsdruck. Die Bohrkopf-Reibung steigt markant an. Liefert fundamentale Eisen- und Zinnerze (ab 65m) sowie im unteren Bereich erste Silberadern (ab 130m).'
   },
   {
     id: 'granite',
@@ -52,8 +52,8 @@ export const GEOLOGICAL_LAYERS = [
     baseHardness: '320 HP',
     hardnessMultiplier: '6.7x zäher',
     color: '#38bdf8',
-    ores: ['silver', 'gold'],
-    report: 'Massives magmatisches Tiefengestein. Einfache Bohrer blockieren hier regelmäßig. Verlangt aufgerüstete Triebwerke und gehärtete Spitzen. Belohnt Expeditionen mit Silber und reinem Gold.'
+    ores: ['silver', 'gold', 'emerald'],
+    report: 'Massives magmatisches Tiefengestein. Einfache Bohrer blockieren hier regelmäßig. Verlangt aufgerüstete Triebwerke und gehärtete Spitzen. Belohnt Expeditionen mit Silber, reinem Gold (ab 220m) und seltenen Smaragden (ab 340m).'
   },
   {
     id: 'obsidian',
@@ -63,8 +63,8 @@ export const GEOLOGICAL_LAYERS = [
     baseHardness: '600 HP',
     hardnessMultiplier: '12.5x zäher',
     color: '#a855f7',
-    ores: ['emerald', 'sapphire', 'ruby', 'diamond'],
-    report: 'Vulkanisches Glas und ultra-dichter Basalt unter titanischen Drücken. Hier entstehen die edelsten kristallinen Schätze der Erde: Smaragde, Saphire, Rubine und Diamanten.'
+    ores: ['sapphire', 'ruby', 'diamond'],
+    report: 'Vulkanisches Glas und ultra-dichter Basalt unter titanischen Drücken. Hier entstehen die edelsten kristallinen Schätze der Erde: Tiefblaue Saphire (ab 480m), Rubine (ab 650m) und kostbare Diamanten (ab 850m).'
   },
   {
     id: 'core',
@@ -75,29 +75,282 @@ export const GEOLOGICAL_LAYERS = [
     hardnessMultiplier: '23x – 37x zäher',
     color: '#ef4444',
     ores: ['titanium', 'platinum', 'uranium', 'obsidian_gem', 'dark_matter'],
-    report: 'Die geologische Kernzone des Planeten. Glühende Hitze, tektonische Strahlung und unbegreifliche Gesteinsdichte. Beherbergt Titan, Platin, Uran und exotische Dunkelmaterie.'
+    report: 'Die geologische Kernzone des Planeten. Glühende Hitze, tektonische Strahlung und unbegreifliche Gesteinsdichte. Beherbergt Titan (ab 1050m), Platin (ab 1250m), Uran (ab 1400m), Obsidian-Kerne (ab 1550m) und exotische Dunkelmaterie (ab 1700m).'
   }
 ];
 
 export const BOOK_PRODUCTS = [
-  // Schmelz-Barren
-  { id: 'bar_coal', name: 'Kohle-Brikett', value: 29, req: '1x Kohle (im Schmelzofen)', desc: 'Gepresster, hochreiner Kohlenstoff mit maximaler Brenndauer.' },
-  { id: 'bar_copper', name: 'Kupfer-Barren', value: 53, req: '1x Kupfer (im Schmelzofen)', desc: 'Feingegossenes Elektrokupfer für Schaltkreise und Spulen.' },
-  { id: 'bar_iron', name: 'Eisen-Barren', value: 88, req: '1x Eisen (im Schmelzofen)', desc: 'Veredeltes Schmiedeeisen für Gerüste und Fahrwerks-Umbauten.' },
-  { id: 'bar_tin', name: 'Zinn-Barren', value: 122, req: '1x Zinn (im Schmelzofen)', desc: 'Weiches Glanzmetall zur Veredelung robuster Legierungen.' },
-  { id: 'bar_silver', name: 'Silber-Barren', value: 200, req: '1x Silber (im Schmelzofen)', desc: 'Sterlingsilber für Sensorik und hochleitende Kontakte.' },
-  { id: 'bar_gold', name: 'Gold-Barren', value: 345, req: '1x Gold (im Schmelzofen)', desc: '999er Feingoldbarren. Höchst geschätzt an der Erzbörse.' },
-  { id: 'bar_titanium', name: 'Titan-Barren', value: 3200, req: '1x Titan (im Schmelzofen)', desc: 'Raumfahrt-zertifizierter Titanblock für schwerste Tiefenrümpfe.' },
-  { id: 'bar_platinum', name: 'Platin-Barren', value: 5100, req: '1x Platin (im Schmelzofen)', desc: 'Das edelste aller Metalle. Korrosionsfrei und extrem wertvoll.' },
-  // Fabrik-Erzeugnisse
-  { id: 'steel_beam', name: 'Stahlträger', value: 280, req: '2x Eisen + 2x Kohle (Fabrik)', desc: 'Schwerer Industriestahl für Schachtgerüste und Maschinensockel.' },
-  { id: 'bronze_ingot', name: 'Bronze-Barren', value: 360, req: '2x Kupfer + 1x Zinn (Fabrik)', desc: 'Korrosionsfreie Legierung für Antriebszahnräder und Motoren.' },
-  { id: 'circuit_board', name: 'Elektronik-Platine', value: 1150, req: '2x Kupfer + 1x Zinn + 1x Gold (Fabrik)', desc: 'Präzisions-Leiterplatte mit Zinn-Lötbahnen und Gold-Kontakten.' },
-  { id: 'sapphire_glass', name: 'Saphir-Panzerglas', value: 2300, req: '2x Saphir + 1x Silber (Fabrik)', desc: 'Kratzfestes und hochdruckstabiles Panzerglas aus Saphirkristallen.' },
-  { id: 'polished_gem', name: 'Schmuck-Diamant', value: 4400, req: '1x Smaragd + 1x Rubin + 1x Diamant (Fabrik)', desc: 'Präzisionsgeschliffener Dreifach-Edelstein für Luxus und Hochleistungs-Laser.' },
-  { id: 'titan_plate', name: 'Titan-Panzerung', value: 9800, req: '2x Titan + 1x Diamant (Fabrik)', desc: 'Verbundpanzerung für den Vorstoß in tiefste Basaltzonen.' },
-  { id: 'obsidian_matrix', name: 'Obsidian-Superleiter', value: 19500, req: '1x Obsidian-Kern + 2x Platin (Fabrik)', desc: 'Hochdichte vulkanische Kristallmatrix für extremste Energiedichten.' },
-  { id: 'fusion_rod', name: 'Quanten-Brennstab', value: 32000, req: '2x Uran + 1x Dunkelmaterie (Fabrik)', desc: 'Ultimative Fusions-Energiequelle mit astronomischem Erlös.' }
+  // ── 1. Schmelz-Barren (Schmelzofen in der Basis) ──
+  {
+    id: 'bar_coal',
+    name: 'Kohle-Brikett',
+    category: 'bar',
+    categoryLabel: 'Schmelzofen',
+    value: 29,
+    req: '1x Kohle (im Schmelzofen)',
+    desc: 'Gepresster, hochreiner Kohlenstoff mit maximaler Brenndauer für Prozesshitze.'
+  },
+  {
+    id: 'bar_copper',
+    name: 'Kupfer-Barren',
+    category: 'bar',
+    categoryLabel: 'Schmelzofen',
+    value: 53,
+    req: '1x Kupfer (im Schmelzofen)',
+    desc: 'Feingegossenes Elektrokupfer für Schaltkreise, Spulen und Legierungen.'
+  },
+  {
+    id: 'bar_iron',
+    name: 'Eisen-Barren',
+    category: 'bar',
+    categoryLabel: 'Schmelzofen',
+    value: 88,
+    req: '1x Eisen (im Schmelzofen)',
+    desc: 'Veredeltes Schmiedeeisen für Gerüste, Werkstatt-Umbauten und Träger.'
+  },
+  {
+    id: 'bar_tin',
+    name: 'Zinn-Barren',
+    category: 'bar',
+    categoryLabel: 'Schmelzofen',
+    value: 122,
+    req: '1x Zinn (im Schmelzofen)',
+    desc: 'Weiches Glanzmetall zur Veredelung robuster Bronze-Legierungen.'
+  },
+  {
+    id: 'bar_silver',
+    name: 'Silber-Barren',
+    category: 'bar',
+    categoryLabel: 'Schmelzofen',
+    value: 200,
+    req: '1x Silber (im Schmelzofen)',
+    desc: 'Sterlingsilber für Sensorik und hochleitende Induktionsspulen.'
+  },
+  {
+    id: 'bar_gold',
+    name: 'Gold-Barren',
+    category: 'bar',
+    categoryLabel: 'Schmelzofen',
+    value: 345,
+    req: '1x Gold (im Schmelzofen)',
+    desc: '999er Feingoldbarren. Höchst geschätzt an der Erzbörse und für Kontakte.'
+  },
+  {
+    id: 'bar_titanium',
+    name: 'Titan-Barren',
+    category: 'bar',
+    categoryLabel: 'Schmelzofen',
+    value: 3200,
+    req: '1x Titan (im Schmelzofen)',
+    desc: 'Raumfahrt-zertifizierter Titanblock für schwerste Tiefenrümpfe.'
+  },
+  {
+    id: 'bar_platinum',
+    name: 'Platin-Barren',
+    category: 'bar',
+    categoryLabel: 'Schmelzofen',
+    value: 5100,
+    req: '1x Platin (im Schmelzofen)',
+    desc: 'Das edelste aller Metalle. Korrosionsfrei und extrem wertvoll an der Börse.'
+  },
+
+  // ── 2. Industrielle Handelsgüter (Fabrik: hoher Börsenverkauf) ──
+  {
+    id: 'steel_beam',
+    name: 'Stahlträger',
+    category: 'goods',
+    categoryLabel: 'Fabrik · Handelsgut',
+    value: 280,
+    req: '2x Eisen + 2x Kohle (Fabrik)',
+    desc: 'Schwerer Industriestahl für Schachtgerüste und Maschinensockel.'
+  },
+  {
+    id: 'bronze_ingot',
+    name: 'Bronze-Barren',
+    category: 'goods',
+    categoryLabel: 'Fabrik · Handelsgut',
+    value: 360,
+    req: '2x Kupfer + 1x Zinn (Fabrik)',
+    desc: 'Korrosionsfreie Legierung für Antriebszahnräder und Motoren.'
+  },
+  {
+    id: 'circuit_board',
+    name: 'Elektronik-Platine',
+    category: 'goods',
+    categoryLabel: 'Fabrik · Handelsgut',
+    value: 1150,
+    req: '2x Kupfer + 1x Zinn + 1x Gold (Fabrik)',
+    desc: 'Präzisions-Leiterplatte mit Zinn-Lötbahnen und Gold-Kontakten.'
+  },
+  {
+    id: 'sapphire_glass',
+    name: 'Saphir-Panzerglas',
+    category: 'goods',
+    categoryLabel: 'Fabrik · Handelsgut',
+    value: 2300,
+    req: '2x Saphir + 1x Silber (Fabrik)',
+    desc: 'Kratzfestes und hochdruckstabiles Panzerglas aus Saphirkristallen.'
+  },
+  {
+    id: 'polished_gem',
+    name: 'Schmuck-Diamant',
+    category: 'goods',
+    categoryLabel: 'Fabrik · Handelsgut',
+    value: 4400,
+    req: '1x Smaragd + 1x Rubin + 1x Diamant (Fabrik)',
+    desc: 'Präzisionsgeschliffener Dreifach-Edelstein für Luxus und Hochleistungs-Laser.'
+  },
+  {
+    id: 'titan_plate',
+    name: 'Titan-Panzerung',
+    category: 'goods',
+    categoryLabel: 'Fabrik · Handelsgut',
+    value: 9800,
+    req: '2x Titan + 1x Diamant (Fabrik)',
+    desc: 'Verbundpanzerung für den Vorstoß in tiefste Basaltzonen.'
+  },
+  {
+    id: 'obsidian_matrix',
+    name: 'Obsidian-Superleiter',
+    category: 'goods',
+    categoryLabel: 'Fabrik · Handelsgut',
+    value: 19500,
+    req: '1x Obsidian-Kern + 2x Platin (Fabrik)',
+    desc: 'Hochdichte vulkanische Kristallmatrix für extremste Energiedichten.'
+  },
+  {
+    id: 'fusion_rod',
+    name: 'Quanten-Brennstab',
+    category: 'goods',
+    categoryLabel: 'Fabrik · Handelsgut',
+    value: 32000,
+    req: '2x Uran + 1x Dunkelmaterie (Fabrik)',
+    desc: 'Ultimative Fusions-Energiequelle mit astronomischem Erlös an der Börse.'
+  },
+
+  // ── 3. Fabrik-Montagebauteile (Für Fahrzeug- & Bohrer-Upgrades) ──
+  {
+    id: 'iron_tube',
+    name: 'Stahl-Rohr',
+    category: 'component',
+    categoryLabel: 'Fabrik · Bauteil',
+    value: 0,
+    usage: 'Tier-2-Fahrzeugmodule (Hangar)',
+    req: '2x Eisen + 1x Kupfer (Fabrik)',
+    desc: 'Nahtlos gezogenes Hochdruckrohr für Tank- und Triebwerksleitungen.'
+  },
+  {
+    id: 'bronze_gear',
+    name: 'Bronze-Getriebe',
+    category: 'component',
+    categoryLabel: 'Fabrik · Bauteil',
+    value: 0,
+    usage: 'Tier-3-Fahrzeugmodule (Hangar)',
+    req: '2x Zinn + 1x Eisen (Fabrik)',
+    desc: 'Präzisionszahnrad für Schaltung und Antriebsübersetzung.'
+  },
+  {
+    id: 'silver_coil',
+    name: 'Silber-Spule',
+    category: 'component',
+    categoryLabel: 'Fabrik · Bauteil',
+    value: 0,
+    usage: 'Tier-4-5-Fahrzeugmodule (Hangar)',
+    req: '2x Silber + 1x Gold (Fabrik)',
+    desc: 'Induktionsspule mit hoher Leitfähigkeit für Scanner und Bordcomputer.'
+  },
+  {
+    id: 'crystal_lens',
+    name: 'Kristall-Linse',
+    category: 'component',
+    categoryLabel: 'Fabrik · Bauteil',
+    value: 0,
+    usage: 'Tier-6-7-Fahrzeugmodule (Hangar)',
+    req: '1x Saphir + 1x Smaragd (Fabrik)',
+    desc: 'Prismatisch geschliffene Linse für Tiefenscanner und Laseroptik.'
+  },
+  {
+    id: 'titan_bolt',
+    name: 'Titan-Bolzen',
+    category: 'component',
+    categoryLabel: 'Fabrik · Bauteil',
+    value: 0,
+    usage: 'Tier-8-9-Fahrzeugmodule (Hangar)',
+    req: '2x Titan + 1x Platin (Fabrik)',
+    desc: 'Zugfeste Schwerlast-Gewindebolzen für gigantische Druckrümpfe.'
+  },
+  {
+    id: 'quantum_core',
+    name: 'Quanten-Kern',
+    category: 'component',
+    categoryLabel: 'Fabrik · Bauteil',
+    value: 0,
+    usage: 'Tier-10-Fahrzeugmodule (Hangar)',
+    req: '1x Uran + 1x Obsidian-Kern (Fabrik)',
+    desc: 'Subatomarer Magnetfeld-Kern für ultimative Tiefseebohrungen.'
+  },
+
+  // ── 4. Steineforscher-Spezialelektronik (Aufträge beim Forscher) ──
+  {
+    id: 'microprocessor',
+    name: 'Mikroprozessor',
+    category: 'research',
+    categoryLabel: 'Forscher · Elektronik',
+    value: 0,
+    usage: 'Tier-2-Fahrzeugmodule (Hangar)',
+    req: 'Forscher-Auftrag: 3x Kohle + 2x Eisen',
+    desc: 'Hochintegrierter Silizium-Rechenchip für verbesserte Motor- und Tanksteuerung.'
+  },
+  {
+    id: 'capacitor',
+    name: 'Druck-Kondensator',
+    category: 'research',
+    categoryLabel: 'Forscher · Elektronik',
+    value: 0,
+    usage: 'Tier-3-Fahrzeugmodule (Hangar)',
+    req: 'Forscher-Auftrag: 3x Kupfer + 3x Zinn',
+    desc: 'Kompakter Puffer-Energiespeicher für Spitzenlasten der Schubeinheit.'
+  },
+  {
+    id: 'spectrometer',
+    name: 'Sensor-Spektrometer',
+    category: 'research',
+    categoryLabel: 'Forscher · Elektronik',
+    value: 0,
+    usage: 'Tier-4-5-Fahrzeugmodule (Hangar)',
+    req: 'Forscher-Auftrag: 3x Silber + 2x Gold',
+    desc: 'Präzisions-Sensoreinheit zur Echtzeit-Analyse von Erzadern und Gestein.'
+  },
+  {
+    id: 'plasma_regulator',
+    name: 'Plasma-Injektor',
+    category: 'research',
+    categoryLabel: 'Forscher · Elektronik',
+    value: 0,
+    usage: 'Tier-6-7-Fahrzeugmodule (Hangar)',
+    req: 'Forscher-Auftrag: 2x Smaragd + 2x Saphir',
+    desc: 'Thermodynamischer Injektor zur Erhitzung von Tiefen-Schneidköpfen.'
+  },
+  {
+    id: 'graviton_core',
+    name: 'Gravitations-Modulator',
+    category: 'research',
+    categoryLabel: 'Forscher · Elektronik',
+    value: 0,
+    usage: 'Tier-8-9-Fahrzeugmodule (Hangar)',
+    req: 'Forscher-Auftrag: 2x Titan + 1x Diamant',
+    desc: 'Feldmodulator zur Reduktion des Eigengewichts bei massiven Bohrerpanzern.'
+  },
+  {
+    id: 'quantum_processor',
+    name: 'Quanten-Prozessor',
+    category: 'research',
+    categoryLabel: 'Forscher · Elektronik',
+    value: 0,
+    usage: 'Tier-10-Fahrzeugmodule (Hangar)',
+    req: 'Forscher-Auftrag: 2x Uran + 1x Platin',
+    desc: 'Subatomarer Quanten-Rechner zur Koordination der Kernantriebs-Systeme.'
+  }
 ];
 
 export class MinerBookModal {
@@ -395,6 +648,14 @@ export class MinerBookModal {
       const isDiscovered = this.player.isProductDiscovered(prod.id);
 
       if (isDiscovered) {
+        const valueBadge = prod.value > 0
+          ? `<span style="background: rgba(251, 191, 36, 0.12); color: #fbbf24; font-weight: 800; padding: 2px 8px; border-radius: 6px;">Wert: +€${prod.value.toLocaleString()}</span>`
+          : `<span style="background: rgba(168, 85, 247, 0.15); color: #c084fc; font-weight: 800; padding: 2px 8px; border-radius: 6px;">${prod.usage || 'Upgrade-Bauteil'}</span>`;
+
+        const categoryBadge = prod.categoryLabel
+          ? `<span style="background: rgba(56, 189, 248, 0.12); color: #38bdf8; font-weight: 700; padding: 2px 8px; border-radius: 6px;">${prod.categoryLabel}</span>`
+          : '';
+
         html += `
           <div style="background: rgba(15, 23, 42, 0.75); border: none; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
@@ -402,12 +663,13 @@ export class MinerBookModal {
                 ${itemDisplayIcon(prod.id, 20)}
                 <strong style="color: #f8fafc; font-size: 13px;">${prod.name}</strong>
               </div>
-              <div style="display: flex; gap: 6px; font-size: 11px;">
-                <span style="background: rgba(251, 191, 36, 0.12); color: #fbbf24; font-weight: 800; padding: 2px 8px; border-radius: 6px;">Wert: +€${prod.value.toLocaleString()}</span>
+              <div style="display: flex; gap: 6px; font-size: 11px; flex-wrap: wrap;">
+                ${categoryBadge}
+                ${valueBadge}
               </div>
             </div>
             <div style="font-size: 11px; color: #38bdf8;">
-              <strong>Rezept:</strong> ${prod.req}
+              <strong>Rezept / Erhalt:</strong> ${prod.req}
             </div>
             <p style="margin: 0; font-size: 11.5px; line-height: 1.45; color: #94a3b8;">
               ${prod.desc}
@@ -480,10 +742,12 @@ export class MinerBookModal {
             <span>§ 5 OBERFLÄCHEN-STATIONEN</span>
           </div>
           <div style="font-size: 11px; color: #94a3b8; line-height: 1.45;">
+            • <strong>Depot:</strong> Sichere Lagerstätte für Erze, Barren & Bauteile. Schützt vor Frachtverlust.<br>
             • <strong>Büro:</strong> Schacht-Aufträge für dicke Barprämien und Rang-Aufstiege.<br>
             • <strong>Erzbörse:</strong> Verkaufe Roherze oder nutze den Sofort-Verkauf.<br>
-            • <strong>Hangar:</strong> Montiere erforschte Bohrköpfe, größere Tanks und Motoren.<br>
-            • <strong>Fabrik & Raffinerie:</strong> Schmelze Barren (+50% Erlös) und fertige Produkte.<br>
+            • <strong>Hangar:</strong> Montiere erforschte Bohrköpfe, größere Tanks und Motoren mit gesammelten Bauteilen.<br>
+            • <strong>Fabrik & Raffinerie:</strong> Schmelze Barren (+50% Erlös) und fertige Montage-Bauteile & Güter.<br>
+            • <strong>Steineforscher:</strong> Tausche geförderte Erze gegen seltene Mikroprozessoren und Spezialelektronik.<br>
             • <strong>Labor:</strong> High-Tech-Forschung für neue Stufen und Radar-Sensoren.
           </div>
         </div>
