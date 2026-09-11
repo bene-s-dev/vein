@@ -40,11 +40,22 @@ class SoundManager {
     this._driveActive = false;
     this._driveNodes = null;
 
+    this._refuelGen = 0;
+    this._refuelActive = false;
+    this._refuelNodes = null;
+
     // Auto-Unlock Listener
     this._setupAutoUnlock();
   }
 
   // Kompatibilitäts-Getter für Player.js
+  get _refuelRunning() {
+    return this._refuelActive;
+  }
+  set _refuelRunning(val) {
+    this._refuelActive = !!val;
+  }
+
   get _jetpackRunning() {
     return this._jetpackActive;
   }
@@ -842,6 +853,139 @@ class SoundManager {
       noise.start(now);
       noise.stop(now + 0.09);
     }
+  }
+
+  // -----------------------------------------------------------------------
+  // 15. BETANKUNG (Pumpe & Treibstoff-Durchfluss)
+  // -----------------------------------------------------------------------
+  startRefuel() {
+    this.ensureContext();
+    if (!this.ctx) return;
+
+    if (this._refuelActive && this._refuelNodes) {
+      const now = this.ctx.currentTime;
+      this._refuelNodes.gain.gain.cancelScheduledValues(now);
+      this._refuelNodes.gain.gain.setTargetAtTime(0.065, now, 0.04);
+      return;
+    }
+
+    this._refuelActive = true;
+    const gen = ++this._refuelGen;
+    const now = this.ctx.currentTime;
+
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.setTargetAtTime(0.065, now, 0.06);
+    gain.connect(this.masterGain);
+
+    // 1. Sanfter Niederfrequenz-Pumpen-Puls (48 Hz Dreieckswelle mit sanfter Amplitudenmodulation)
+    const pumpOsc = this.ctx.createOscillator();
+    pumpOsc.type = 'triangle';
+    pumpOsc.frequency.setValueAtTime(48, now);
+
+    const pumpFlt = this.ctx.createBiquadFilter();
+    pumpFlt.type = 'lowpass';
+    pumpFlt.frequency.setValueAtTime(95, now);
+
+    const pumpGain = this.ctx.createGain();
+    pumpGain.gain.setValueAtTime(0.35, now);
+
+    const lfo = this.ctx.createOscillator();
+    lfo.type = 'sine';
+    lfo.frequency.setValueAtTime(4.5, now);
+    const lfoGain = this.ctx.createGain();
+    lfoGain.gain.setValueAtTime(0.08, now);
+    lfo.connect(pumpGain.gain);
+
+    pumpOsc.connect(pumpFlt);
+    pumpFlt.connect(pumpGain);
+    pumpGain.connect(gain);
+    pumpOsc.start(now);
+    lfo.start(now);
+
+    // 2. Flüssigkeits-Durchfluss im Schlauch (Rosa Rauschen durch resonanten Bandpass bei 440 Hz)
+    const flowNoise = this.createNoiseBufferSource('pink');
+    if (flowNoise) {
+      const flowFlt = this.ctx.createBiquadFilter();
+      flowFlt.type = 'bandpass';
+      flowFlt.frequency.setValueAtTime(440, now);
+      flowFlt.Q.setValueAtTime(1.8, now);
+
+      const flowGain = this.ctx.createGain();
+      flowGain.gain.setValueAtTime(0.24, now);
+
+      flowNoise.connect(flowFlt);
+      flowFlt.connect(flowGain);
+      flowGain.connect(gain);
+      flowNoise.start(now);
+    }
+
+    // 3. Dezenter Lade-Summton (elektrisches Feld der Tanksäule, 176 Hz)
+    const humOsc = this.ctx.createOscillator();
+    humOsc.type = 'sine';
+    humOsc.frequency.setValueAtTime(176, now);
+    const humGain = this.ctx.createGain();
+    humGain.gain.setValueAtTime(0.08, now);
+    humOsc.connect(humGain);
+    humGain.connect(gain);
+    humOsc.start(now);
+
+    this._refuelNodes = { gain, pumpOsc, lfo, flowNoise, humOsc };
+  }
+
+  stopRefuel() {
+    if (!this._refuelActive) return;
+    this._refuelActive = false;
+    const currentGen = this._refuelGen;
+    const nodes = this._refuelNodes;
+    if (!nodes || !this.ctx) return;
+
+    const now = this.ctx.currentTime;
+    nodes.gain.gain.cancelScheduledValues(now);
+    nodes.gain.gain.setTargetAtTime(0.0001, now, 0.04);
+
+    setTimeout(() => {
+      if (this._refuelGen === currentGen) {
+        try {
+          if (nodes.pumpOsc) nodes.pumpOsc.stop();
+          if (nodes.lfo) nodes.lfo.stop();
+          if (nodes.flowNoise) nodes.flowNoise.stop();
+          if (nodes.humOsc) nodes.humOsc.stop();
+          nodes.gain.disconnect();
+        } catch (_) {}
+        this._refuelNodes = null;
+      }
+    }, 120);
+  }
+
+  playRefuelComplete() {
+    if (this.muted) return;
+    this.ensureContext();
+    if (!this.ctx) return;
+
+    const now = this.ctx.currentTime;
+    // Harmonischer Aufwärts-Doppelakkord (C6 1046.5 Hz -> E6 1318.5 Hz) als klares "Voll!"-Signal
+    const tones = [
+      { freq: 1046.50, delay: 0.0, gain: 0.09, decay: 0.22 },
+      { freq: 1318.51, delay: 0.08, gain: 0.12, decay: 0.35 }
+    ];
+
+    tones.forEach(({ freq, delay, gain: vol, decay }) => {
+      const startTime = now + delay;
+      const osc = this.ctx.createOscillator();
+      const oscGain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, startTime);
+
+      oscGain.gain.setValueAtTime(vol, startTime);
+      oscGain.gain.exponentialRampToValueAtTime(0.0001, startTime + decay);
+
+      osc.connect(oscGain);
+      oscGain.connect(this.masterGain);
+      osc.start(startTime);
+      osc.stop(startTime + decay + 0.02);
+    });
   }
 }
 

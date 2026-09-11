@@ -21,6 +21,7 @@ export class DrillerMenuModal {
     soundFx.stopDrive();
     soundFx.stopJetpack();
     soundFx.stopDrilling();
+    if (soundFx.stopRefuel) soundFx.stopRefuel();
 
     if (this.scene) {
       this.scene.isPaused = true;

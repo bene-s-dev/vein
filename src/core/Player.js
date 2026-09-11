@@ -550,27 +550,57 @@ export class Player {
         this.isDocked = true;
       }
 
-      // Rumpfreparatur: Erhöht sich während des 1,5s Schweißens an den einzelnen Punkten
+      // Rumpfreparatur: Erhöht sich während des 1,5s Schweißens an den einzelnen Punkten (zügige Reparatur 32 HP/s)
       const isRepairWelding = isParkedAtHangar && this.repairArmState && this.repairArmState.isWelding;
       if (isRepairWelding && this.hull < this.maxHull) {
-        this.hull = Math.min(this.maxHull, this.hull + (delta / 1000) * 12);
+        this.hull = Math.min(this.maxHull, this.hull + (delta / 1000) * 32);
         if (this.hull >= this.maxHull - 0.05) {
           this.hull = this.maxHull;
+          if (this.repairArmState) this.repairArmState.isWelding = false;
         }
       }
 
       // Betankung über Kabel: Verlängerte Betankungszeit (7 L/s = ~14s für 100L)
       const isFuelReady = isParkedAtHangar && this.fuelArmState && this.fuelArmState.activeWeight > 0.8;
       const chargeSpeed = this.getChargeSpeed();
+      const wasFuelFull = this.fuel >= this.maxFuel;
+
       if (isFuelReady && this.fuel < this.maxFuel) {
         this.fuel = Math.min(this.maxFuel, this.fuel + (delta / 1000) * chargeSpeed);
         if (this.fuel >= this.maxFuel - 0.05) {
           this.fuel = this.maxFuel;
         }
+
+        // Tank-Sound aktivieren, solange aktiv Treibstoff fließt
+        if (soundFx && !soundFx._refuelActive && soundFx.startRefuel) {
+          soundFx.startRefuel();
+        }
+
+        // Wenn das Tanken gerade fertiggestellt wurde
+        if (this.fuel >= this.maxFuel && !wasFuelFull) {
+          if (soundFx) {
+            if (soundFx.stopRefuel) soundFx.stopRefuel();
+            if (soundFx.playRefuelComplete) soundFx.playRefuelComplete();
+          }
+          // Falls Hülle nahezu fertig repariert ist, zusammen abschließen
+          if (this.hull >= this.maxHull - 2.0) {
+            this.hull = this.maxHull;
+            if (this.repairArmState) this.repairArmState.isWelding = false;
+          }
+          this.scene.events.emit('notify', '⛽ Treibstoff-Tank vollständig aufgeladen (100%)');
+        }
+      } else {
+        // Nicht am Tanken oder Tank bereits voll: Tank-Sound sofort beenden!
+        if (soundFx && soundFx._refuelActive && soundFx.stopRefuel) {
+          soundFx.stopRefuel();
+        }
       }
     } else {
       if (this.isDocked) {
         this.isDocked = false;
+      }
+      if (soundFx && soundFx._refuelActive && soundFx.stopRefuel) {
+        soundFx.stopRefuel();
       }
     }
 
@@ -579,6 +609,10 @@ export class Player {
     // fahren die Arme sofort einzeln zur Parkposition ein, anstatt dem Auto hinterherzugehen!
     const shouldDeployFuel = isParkedAtHangar && (this.fuel < this.maxFuel);
     const shouldDeployRepair = isParkedAtHangar && (this.hull < this.maxHull);
+
+    if (!shouldDeployFuel && soundFx && soundFx._refuelActive && soundFx.stopRefuel) {
+      soundFx.stopRefuel();
+    }
 
     this.updateFuelArm(shouldDeployFuel, delta);
     this.updateRepairArm(shouldDeployRepair, delta);
@@ -602,8 +636,13 @@ export class Player {
       };
     }
 
-    if (!shouldDeploy && this.fuelArmState.isParkedDrawn) {
-      return;
+    if (!shouldDeploy) {
+      if (soundFx && soundFx._refuelActive && soundFx.stopRefuel) {
+        soundFx.stopRefuel();
+      }
+      if (this.fuelArmState.isParkedDrawn) {
+        return;
+      }
     }
 
     this.refuelBeam.clear();
@@ -870,6 +909,7 @@ export class Player {
       this.repairArmState.isWelding = false;
       this.repairArmState.phase = 'traveling';
       this.repairArmState.timer = 0;
+      this.repairArmState.lastSoundTime = 0;
 
       targetTipX = parkTipX;
       targetTipY = parkTipY;
@@ -936,7 +976,7 @@ export class Player {
     this.repairArm.fillRect(curTipX - 2, curTipY - 3, 4, 5);
 
     // 7. Effekte: 1,5s Schweißanimation an diesem Punkt (kompakt & dezent skaliert)
-    if (this.repairArmState.isWelding) {
+    if (this.repairArmState.isWelding && shouldDeploy && this.hull < this.maxHull) {
       // 1. Zarter Schweißlichtbogen-Aura (hellblau / cyan)
       const arcRadius = 1.6 + Math.random() * 1.6;
       this.repairArm.fillStyle(0x38bdf8, 0.6);
@@ -991,6 +1031,9 @@ export class Player {
   }
 
   handleInput(dir) {
+    if (soundFx && soundFx._refuelActive && soundFx.stopRefuel) {
+      soundFx.stopRefuel();
+    }
     if (this.fuel <= 0) {
       soundFx.stopDrive();
       return false; // Kein Treibstoff
@@ -1197,6 +1240,9 @@ export class Player {
   stopFlying() {
     this.flySoundTimer = 0;
     soundFx.stopJetpack();
+    if (soundFx && soundFx.stopRefuel) {
+      soundFx.stopRefuel();
+    }
     if (this.leftThrustParticles) {
       this.leftThrustParticles.stop();
     }
@@ -1704,6 +1750,9 @@ export class Player {
     soundFx.stopJetpack();
     soundFx.stopDrilling();
     soundFx.stopDrive();
+    if (soundFx && soundFx.stopRefuel) {
+      soundFx.stopRefuel();
+    }
     if (this.leftThrustParticles) this.leftThrustParticles.stop();
     if (this.rightThrustParticles) this.rightThrustParticles.stop();
     if (this.leftHoverParticles) this.leftHoverParticles.stop();
