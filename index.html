@@ -742,11 +742,9 @@
       animation: fuel-text-flash 0.8s infinite alternate !important;
     }
 
-    .fuel-warning #hud-fuel-icon,
-    .fuel-warning #hud-fuel-icon svg {
-      color: #ef4444 !important;
+    .fuel-warning #hud-fuel-icon svg rect:first-child {
       fill: #ef4444 !important;
-      animation: fuel-text-flash 0.8s infinite alternate !important;
+      animation: fuel-bar-flash 0.8s infinite alternate !important;
     }
 
     .hull-warning #hud-hull-bar {
@@ -756,31 +754,9 @@
       color: #ef4444 !important;
       animation: fuel-text-flash 0.8s infinite alternate;
     }
-    .hull-warning #hud-hull-icon,
-    .hull-warning #hud-hull-icon svg {
-      color: #ef4444 !important;
+    .hull-warning #hud-hull-icon svg path#hud-hull-icon-path {
       fill: #ef4444 !important;
       animation: fuel-text-flash 0.8s infinite alternate !important;
-    }
-
-    /* Feste Icon-Farben im HUD: Standardzustand (gefüllt) */
-    #hud-fuel-icon, #hud-fuel-cluster svg {
-      color: #fbbf24;
-      fill: #fbbf24;
-    }
-
-    #hud-hull-icon, #hud-hull-cluster svg {
-      color: #10b981 !important;
-      fill: #10b981 !important;
-    }
-
-    #hud-cargo-icon, #hud-cargo-cluster svg {
-      color: #38bdf8 !important;
-      fill: #38bdf8 !important;
-    }
-
-    #card-status svg {
-      fill: currentColor;
     }
 
     /* Roter Strich im Tankbalken zur garantierten Rückkehr (Point of No Return) */
@@ -931,15 +907,14 @@
         transition: background 0.15s ease, backdrop-filter 0.15s ease, border-bottom 0.15s ease;
       }
 
-      /* Im Menü: Durchgehende, schlanke Blurry-Leiste auf exakt derselben Höhe */
+      /* Im Menü: Durchgehender solider dunkler Hintergrund über den ganzen Screen ohne Blur */
       body.modal-open #hud-overlay {
-        background: rgba(14, 22, 38, 0.72) !important;
-        backdrop-filter: blur(20px) saturate(190%) contrast(110%) !important;
-        -webkit-backdrop-filter: blur(20px) saturate(190%) contrast(110%) !important;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
-        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5) !important;
+        background: #080c16 !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6) !important;
         transform: translateZ(0) !important;
-        will-change: backdrop-filter;
       }
 
       /* Tankanzeige & Gauges: Natürliche, transparente Position mit passenden Abständen */
@@ -1070,7 +1045,7 @@
         gap: 4px;
       }
 
-      /* Vollbild-Menü auf Mobilgeräten & HUD im Blick behalten - zentriert & sichere Ränder */
+      /* Vollbild-Menü auf Mobilgeräten: Solider dunkler Hintergrund über den ganzen Screen */
       .modal-backdrop {
         position: fixed !important;
         top: 0 !important;
@@ -1079,13 +1054,13 @@
         height: 100vh !important;
         padding: 0 !important;
         margin: 0 !important;
-        background: rgba(7, 11, 19, 0.8) !important;
-        backdrop-filter: blur(18px) saturate(180%) !important;
-        -webkit-backdrop-filter: blur(18px) saturate(180%) !important;
+        background: #080c16 !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
         justify-content: center !important;
         align-items: flex-start !important;
         z-index: 250 !important; /* Unter HUD (z-index: 300), damit HUD oben voll sichtbar bleibt */
-        transform: translateZ(0) !important;
+        transform: none !important;
       }
 
       /* Auf Mobilgeräten niemals verdecken, wenn kein Menü geöffnet ist */
@@ -1101,16 +1076,18 @@
       }
 
       .modal-window {
-        width: 100% !important;
-        max-width: min(620px, calc(100vw - max(48px, env(safe-area-inset-left) + env(safe-area-inset-right) + 16px))) !important;
+        width: 100vw !important;
+        max-width: 100vw !important;
         height: 100vh !important;
         max-height: 100vh !important;
         border-radius: 0 !important;
         border: none !important;
         box-shadow: none !important;
-        background: transparent !important;
-        margin: 0 auto !important;
-        padding: 0 6px max(12px, env(safe-area-inset-bottom)) 6px !important;
+        background: #080c16 !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
         box-sizing: border-box !important;
         display: flex !important;
         flex-direction: column !important;
@@ -1123,15 +1100,15 @@
       }
 
       .modal-content {
-        padding-top: calc(max(10px, env(safe-area-inset-top)) + 42px) !important;
-        padding-right: 4px !important;
-        padding-bottom: 24px !important;
+        padding: calc(max(10px, env(safe-area-inset-top)) + 46px) max(16px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)) !important;
         font-size: 11px !important;
         flex: 1 1 auto !important;
         max-height: none !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
         -webkit-overflow-scrolling: touch !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
       }
 
       .modal-floating-actions {
@@ -1353,64 +1330,61 @@
       text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
     }
 
-    /* Clean Material Dialog / Modal */
+    /* Clean Full-Screen Modal mit solidem dunklem Hintergrund über den ganzen Screen */
     .modal-backdrop {
-      position: absolute;
+      position: fixed;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(8, 12, 22, 0.7);
-      backdrop-filter: blur(16px) saturate(180%);
-      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      width: 100vw;
+      height: 100vh;
+      background: #080c16;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
       display: none;
       justify-content: center;
-      align-items: center;
-      z-index: 200;
+      align-items: flex-start;
+      z-index: 250;
       pointer-events: auto !important;
       touch-action: pan-y !important;
-      padding: 64px 16px 20px 16px;
+      padding: 0;
       box-sizing: border-box;
-      transform: translateZ(0);
+      transform: none;
     }
 
     .modal-window {
-      background: rgba(16, 24, 40, 0.88);
-      backdrop-filter: blur(24px) saturate(180%) contrast(105%);
-      -webkit-backdrop-filter: blur(24px) saturate(180%) contrast(105%);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 16px;
-      width: 92%;
-      max-width: 780px;
-      max-height: calc(100vh - 80px);
+      background: #080c16;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      border: none;
+      border-radius: 0;
+      width: 100vw;
+      max-width: 100vw;
+      height: 100vh;
+      max-height: 100vh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
       box-sizing: border-box;
-      padding: 0 4px 16px 20px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), 0 0 35px rgba(14, 165, 233, 0.08);
+      padding: 0;
+      box-shadow: none;
       position: relative;
       pointer-events: auto !important;
       touch-action: pan-y !important;
-      transform: translateZ(0);
+      transform: none;
     }
 
     .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 14px 20px 12px 20px;
-      margin: 0 -4px 12px -20px;
-      position: sticky;
-      top: 0;
-      z-index: 20;
-      background: rgba(14, 22, 38, 0.82);
-      backdrop-filter: blur(20px) saturate(190%) contrast(110%);
-      -webkit-backdrop-filter: blur(20px) saturate(190%) contrast(110%);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
-      flex-shrink: 0;
-      transform: translateZ(0);
+      display: none !important;
+    }
+
+    .modal-content {
+      padding: 68px 24px 30px 24px;
+      max-width: 880px;
+      margin: 0 auto;
+      width: 100%;
+      box-sizing: border-box;
+      flex: 1 1 auto;
+      overflow-y: auto;
     }
 
     .modal-title {
@@ -2109,7 +2083,14 @@
         <div class="hud-cluster-part" id="hud-fuel-cluster">
           <div class="stat-row">
             <span class="hud-value-badge" id="hud-fuel-text" style="color: #f8fafc;"><span class="hud-num-slot" id="hud-fuel-num">100</span></span>
-            <span id="hud-fuel-icon" style="display: inline-flex; align-items: center; color: #fbbf24;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16H3V5zm12 8h2a2 2 0 0 1 2 2v2a2 2 0 0 0 4 0v-7l-3-3V5h-1v2.5l2 2v6.5a1 1 0 0 1-2 0v-2a3 3 0 0 0-3-3h-1v-1zM5 6h7v4H5V6z"/></svg></span>
+            <span id="hud-fuel-icon" style="display: inline-flex; align-items: center;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="4" width="10" height="17" rx="2" fill="#fbbf24" stroke="#000000" stroke-width="1.2"/>
+                <rect x="5.5" y="7" width="5" height="4" rx="0.5" fill="#000000" fill-opacity="0.3"/>
+                <path d="M13 8h2a2 2 0 0 1 2 2v3a1.5 1.5 0 0 0 3 0V9l-2-3" fill="none" stroke="#000000" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                <line x1="2" y1="21" x2="14" y2="21" stroke="#000000" stroke-width="1.2" stroke-linecap="round"/>
+              </svg>
+            </span>
           </div>
           <div class="bar-container" id="hud-fuel-bar-container" style="position: relative;" title="Tank & garantierte Rückkehr">
             <!-- Aktueller Tank-Füllstand -->
@@ -2123,7 +2104,12 @@
         <div class="hud-cluster-part" id="hud-hull-cluster">
           <div class="stat-row">
             <span class="hud-value-badge" id="hud-hull-text" style="color: #f8fafc;"><span class="hud-num-slot" id="hud-hull-num">100</span></span>
-            <span id="hud-hull-icon" style="display: inline-flex; align-items: center; color: #10b981;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg></span>
+            <span id="hud-hull-icon" style="display: inline-flex; align-items: center;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path id="hud-hull-icon-path" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="#10b981" stroke="#000000" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M12 7v7M9 10.5h6" stroke="#000000" stroke-width="1.2" stroke-linecap="round"/>
+              </svg>
+            </span>
           </div>
         </div>
 
@@ -2131,7 +2117,12 @@
         <div class="hud-cluster-part" id="hud-cargo-cluster">
           <div class="stat-row">
             <span class="hud-value-badge" id="hud-cargo-text" style="color: #ffffff;"><span class="hud-num-slot" id="hud-cargo-num">0</span><span class="hud-cargo-slash">/</span><span id="hud-cargo-max">10</span></span>
-            <span id="hud-cargo-icon" style="display: inline-flex; align-items: center; color: #38bdf8;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M21 16.5l-9 5.2-9-5.2V7.5l9-5.2 9 5.2v9zM12 4.2L5.2 8.1 12 12l6.8-3.9L12 4.2zM4.5 9.7v6.6l6.5 3.7V13.5L4.5 9.7zm8.5 10.3l6.5-3.7V9.7l-6.5 3.8v6.5z"/></svg></span>
+            <span id="hud-cargo-icon" style="display: inline-flex; align-items: center;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" fill="#38bdf8" stroke="#000000" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="m3.3 7 8.7 5 8.7-5M12 22V12" fill="none" stroke="#000000" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
           </div>
         </div>
       </div>
@@ -2161,25 +2152,40 @@
       <div class="hud-card" id="card-status">
         <!-- Level display (purple) -->
         <div class="stat-row" title="Spieler-Level">
-          <span style="display: inline-flex; align-items: center; color: #c084fc;"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 15a6 6 0 1 0 0-12 6 6 0 0 0 0 12zm-3.5 1.5l-2 6.5L12 20l5.5 3-2-6.5A7.96 7.96 0 0 1 12 17c-1.25 0-2.43-.29-3.5-.8z"/></svg></span>
+          <span id="hud-level-icon" style="display: inline-flex; align-items: center;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+              <path d="m15.5 13 2 8-5.5-2.5L6.5 21l2-8" fill="#a855f7" stroke="#000000" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="12" cy="8" r="6" fill="#c084fc" stroke="#000000" stroke-width="1.2"/>
+              <circle cx="12" cy="8" r="2.8" fill="#ffffff" fill-opacity="0.35"/>
+            </svg>
+          </span>
           <span class="hud-value-badge" id="hud-level-right" style="color: #f8fafc; font-weight: 800;">1</span>
         </div>
         <!-- Adaptive return warning (shown when current fuel <= return cost) -->
-        <div id="hud-return-warn" class="hud-return-warn" title="Point of No Return: Nicht mehr genug Treibstoff für den Rückweg!">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+        <div id="hud-return-warn" class="hud-return-warn" title="Tankwarnung: Treibstoff reicht nur noch für den Rückweg!">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2 1 21h22L12 2z" fill="#ef4444" stroke="#000000" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 9v4M12 17h.01" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+          </svg>
           <span>UMKEHREN!</span>
         </div>
         <!-- Cash -->
         <div class="stat-row">
-          <span id="hud-cash-icon" style="display: inline-flex; align-items: center; color: #fbbf24;"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><circle cx="15" cy="9" r="6"/><path d="M9 7a6 6 0 0 0 4.9 5.92A7.95 7.95 0 0 1 15 15a8 8 0 0 1-1.35.12 6 6 0 1 1-4.65-8.12z"/></svg></span>
+          <span id="hud-cash-icon" style="display: inline-flex; align-items: center;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+              <ellipse cx="9" cy="12" rx="6" ry="6" fill="#f59e0b" stroke="#000000" stroke-width="1.2"/>
+              <ellipse cx="15" cy="12" rx="6" ry="6" fill="#fbbf24" stroke="#000000" stroke-width="1.2"/>
+              <ellipse cx="15" cy="12" rx="3.5" ry="3.5" fill="none" stroke="#000000" stroke-width="1"/>
+            </svg>
+          </span>
           <span class="hud-value-badge cash-badge" id="hud-cash">€150</span>
         </div>
         <button id="btn-pause" class="btn-3d-secondary" title="Spielmenü (ESC / P)">
-          <svg id="icon-pause-state" width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-            <rect x="5" y="4" width="4.5" height="16" rx="1.5"/>
-            <rect x="14.5" y="4" width="4.5" height="16" rx="1.5"/>
+          <svg id="icon-pause-state" width="12" height="12" viewBox="0 0 24 24" fill="none">
+            <rect x="5" y="4" width="4.5" height="16" rx="1.2" fill="#cbd5e1" stroke="#000000" stroke-width="1.2"/>
+            <rect x="14.5" y="4" width="4.5" height="16" rx="1.2" fill="#cbd5e1" stroke="#000000" stroke-width="1.2"/>
           </svg>
-          <svg id="icon-close-state" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: none; pointer-events: none;">
+          <svg id="icon-close-state" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: none; pointer-events: none;">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>

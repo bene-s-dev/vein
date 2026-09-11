@@ -1475,7 +1475,7 @@ export class Player {
       const nextGx = this.drillTarget.gx;
       const nextGy = this.drillTarget.gy;
       this.drillTarget = null;
-      this.moveTo(nextGx, nextGy, Math.max(70, Math.round(this.moveDuration * 0.75)));
+      this.moveTo(nextGx, nextGy, this.moveDuration);
     }
   }
 
@@ -1596,15 +1596,15 @@ export class Player {
     const efficiency = Math.max(0.1, this.fuelEfficiency || 1.0);
     const entranceGx = 19.5;
     const atSurface = this.gy <= -1 || (this.sprite && this.sprite.y <= -16);
+    const baseReserve = 1.2; // Mindestreserve für sichere Landung
 
     if (atSurface) {
-      // Überirdisch: nur horizontaler Rückweg zur Einfahrt (gx ~19.5)
+      // Überirdisch: horizontaler Rückweg zur Einfahrt + Reserve
       const tilesX = Math.abs(this.gx - entranceGx);
-      if (tilesX < 1) return 0; // Schon nah genug an der Basis
-      return (tilesX * (0.3 / efficiency)) * 1.10;
+      return (tilesX * (0.3 / efficiency) * 1.10) + baseReserve;
     }
 
-    // Unterirdisch: Steigflug + horizontaler Weg
+    // Unterirdisch: Steigflug + horizontaler Weg + Reserve
     const currentY = this.sprite ? this.sprite.y : (this.gy * TILE_SIZE + TILE_SIZE / 2);
     const distY = Math.max(0, currentY - (-16));
     const flightSpeed = Math.max(1, this.flightSpeed || 120);
@@ -1615,7 +1615,7 @@ export class Player {
     const tilesX = Math.abs(this.gx - entranceGx);
     const horizontalFuel = tilesX * (0.3 / efficiency);
 
-    return (verticalFuel + horizontalFuel) * 1.10;
+    return ((verticalFuel + horizontalFuel) * 1.10) + baseReserve;
   }
 
   getReturnFuelPercent() {

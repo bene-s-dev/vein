@@ -335,20 +335,15 @@ export class HUD {
       }
     }
 
-    // Point of No Return Linie auf dem Tankbalken
+    // Point of No Return Linie auf dem Tankbalken (stets sichtbar, dynamisch angepasst)
     if (this.fuelReturnLine) {
-      const shouldShow = returnPercent > 0.5 && returnPercent < 99.5;
-      if (shouldShow) {
-        const pct = Math.min(99, Math.max(1, returnPercent)).toFixed(1);
-        if (!this._lastReturnLineVisible || this._lastReturnPercent !== pct) {
-          this.fuelReturnLine.style.display = 'block';
-          this.fuelReturnLine.style.left = `${pct}%`;
-          this._lastReturnLineVisible = true;
-          this._lastReturnPercent = pct;
-        }
-      } else if (this._lastReturnLineVisible) {
-        this.fuelReturnLine.style.display = 'none';
-        this._lastReturnLineVisible = false;
+      const displayPct = Math.min(98, Math.max(2.5, returnPercent));
+      const pct = displayPct.toFixed(1);
+      if (!this._lastReturnLineVisible || this._lastReturnPercent !== pct) {
+        this.fuelReturnLine.style.display = 'block';
+        this.fuelReturnLine.style.left = `${pct}%`;
+        this._lastReturnLineVisible = true;
+        this._lastReturnPercent = pct;
       }
     }
 
@@ -357,16 +352,18 @@ export class HUD {
       if (this._lastFuelTitleFuel !== roundedFuel || this._lastFuelTitleReturn !== roundedReturn) {
         this._lastFuelTitleFuel = roundedFuel;
         this._lastFuelTitleReturn = roundedReturn;
-        this.fuelBarContainer.title = `Tank: ${roundedFuel}% | Point of No Return: ${roundedReturn}%`;
+        this.fuelBarContainer.title = `Tank: ${roundedFuel}% | Rückkehr-Bedarf: ${roundedReturn}%`;
       }
     }
 
-    // Point of No Return Status (Kritisch: aktueller Tank reicht nicht mehr für den Aufstieg)
-    const isReturnCritical = isBelowGround && returnPercent > 0.5 && fuelPercent <= returnPercent;
-    const needsFuelWarning = isReturnCritical;
-    if (this._lastFuelWarning !== needsFuelWarning) {
-      this._lastFuelWarning = needsFuelWarning;
-      if (needsFuelWarning) this.cardGauges?.classList.add('fuel-warning');
+    // Rückkehr-Status (Kritisch: aktueller Tank reicht nur noch für den Aufstieg)
+    const isReturnCritical = isBelowGround && returnPercent > 2 && fuelPercent <= returnPercent;
+
+    // Tankwarnung: NUR wenn der Tank tatsächlich niedrig ist (<= 15%), NICHT bei Point of No Return!
+    const isFuelLow = fuelPercent <= 15;
+    if (this._lastFuelWarning !== isFuelLow) {
+      this._lastFuelWarning = isFuelLow;
+      if (isFuelLow) this.cardGauges?.classList.add('fuel-warning');
       else this.cardGauges?.classList.remove('fuel-warning');
     }
 
@@ -376,15 +373,15 @@ export class HUD {
       this.returnWarn.style.display = isReturnCritical ? 'inline-flex' : 'none';
     }
 
-    // --- Einzige Tankwarnung: Genau einmal beim Point of No Return ---
+    // --- Einzige Warnung bei kritischem Rückweg: Sofort umkehren ---
     if (isAtSurface) {
       this.warnedPointOfNoReturn = false;
     } else if (isBelowGround) {
       if (isReturnCritical && !this.warnedPointOfNoReturn) {
         this.warnedPointOfNoReturn = true;
         toastManager.show({
-          id: 'point-of-no-return',
-          text: 'Point of No Return: Sofort umkehren!',
+          id: 'tank-warning-return',
+          text: 'Tankwarnung: Sofort umkehren!',
           duration: 5000,
           sound: 'cockpit'
         });
@@ -412,7 +409,11 @@ export class HUD {
 
     if (this._lastHullColor !== hullColor) {
       this._lastHullColor = hullColor;
-      if (this.hullIcon) this.hullIcon.style.color = hullColor;
+      if (this.hullIcon) {
+        this.hullIcon.style.color = hullColor;
+        const path = document.getElementById('hud-hull-icon-path');
+        if (path) path.setAttribute('fill', hullColor);
+      }
       if (this.hullText) this.hullText.style.color = '';
     }
 
