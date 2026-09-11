@@ -564,7 +564,7 @@ export class HUD {
     const freeCount = typeof this.player.freeRescues === 'number' ? this.player.freeRescues : 3;
 
     bodyEl.innerHTML = `
-      <div style="display: flex; flex-direction: column; gap: 10px; max-width: 440px; margin: 0 auto; width: 100%;">
+      <div style="display: flex; flex-direction: column; gap: 10px; max-width: 440px; margin: 0 auto; width: 100%; box-sizing: border-box; padding: 0 4px 36px 4px;">
         <!-- 2. Rettungsknopf (3 kostenlos) -->
         <div style="background: rgba(239, 68, 68, 0.07); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -668,7 +668,7 @@ export class HUD {
     `;
 
     bodyEl.innerHTML = `
-      <div style="display: flex; flex-direction: column; gap: 10px; max-width: 440px; margin: 0 auto; width: 100%;">
+      <div style="display: flex; flex-direction: column; gap: 10px; max-width: 440px; margin: 0 auto; width: 100%; box-sizing: border-box; padding: 0 4px 36px 4px;">
         <button id="btn-back-to-menu" class="btn-action" style="height: 32px; padding: 0 14px; font-size: 11.5px; align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: 8px;">
           ${icon('arrow-left', '', 14)}
           <span>Zurück zum Spielmenü</span>
@@ -1020,7 +1020,7 @@ export class HUD {
     }
 
     bodyEl.innerHTML = `
-      <div style="display: flex; flex-direction: column; gap: 12px; max-width: 580px; margin: 0 auto; width: 100%;">
+      <div style="display: flex; flex-direction: column; gap: 12px; max-width: 580px; margin: 0 auto; width: 100%; box-sizing: border-box; padding: 0 4px 36px 4px;">
         <button id="btn-back-to-menu" class="btn-action" style="height: 32px; padding: 0 14px; font-size: 11.5px; align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: 8px;">
           ${icon('arrow-left', '', 14)}
           <span>Zurück zum Spielmenü</span>

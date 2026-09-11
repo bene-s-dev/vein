@@ -253,7 +253,7 @@ export class DrillerMenuModal {
     `;
 
     bodyEl.innerHTML = `
-      <div style="display: flex; flex-direction: column; max-width: 620px; margin: 0 auto; width: 100%;">
+      <div style="display: flex; flex-direction: column; max-width: 620px; margin: 0 auto; width: 100%; box-sizing: border-box; padding: 0 4px 36px 4px; gap: 14px;">
         ${statusBarsHtml}
         ${inventoryHtml}
       </div>

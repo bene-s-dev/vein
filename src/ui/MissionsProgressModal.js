@@ -104,7 +104,7 @@ export class MissionsProgressModal {
     }
 
     bodyEl.innerHTML = `
-      <div style="display: flex; flex-direction: column;">
+      <div style="display: flex; flex-direction: column; max-width: 620px; margin: 0 auto; width: 100%; box-sizing: border-box; padding: 0 4px 36px 4px; gap: 12px;">
         ${tabNavHtml}
         <div id="modal-tab-content">
           ${contentHtml}

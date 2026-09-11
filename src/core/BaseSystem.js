@@ -938,7 +938,11 @@ export class BaseSystem {
     if (!this.modalEl || !this.modalTitleEl || !this.modalBodyEl) return;
     this.clearFloatingAction();
     this.modalTitleEl.innerHTML = title;
-    this.modalBodyEl.innerHTML = contentHtml;
+    this.modalBodyEl.innerHTML = `
+      <div style="display: flex; flex-direction: column; max-width: 620px; margin: 0 auto; width: 100%; box-sizing: border-box; padding: 0 4px 36px 4px; gap: 12px;">
+        ${contentHtml}
+      </div>
+    `;
     document.body.classList.add('modal-open');
     this.modalEl.style.display = 'flex';
     refreshIcons(this.modalEl);
@@ -1618,7 +1622,95 @@ export class BaseSystem {
     }
     const canAffordDepot = nextTierData && (this.player.cash >= nextTierData.costCash) && canAffordDepotComp;
 
-    // Kopfzeile: Statusanzeige, Auslastungsbalken & Ausbau-Aktion
+    // 1. Oben: Drei Status-Karten (wie im Bohrermenü)
+    const totalStoredOresCount = Object.values(this.depot.ores || {}).reduce((s, v) => s + v, 0);
+    const totalStoredGoodsCount = Object.values(this.depot.products || {}).reduce((s, v) => s + v, 0) + Object.values(this.player.components || {}).reduce((s, v) => s + v, 0);
+
+    const statusBarsHtml = `
+      <div style="
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 2px;
+      ">
+        <!-- Kapazität -->
+        <div style="
+          background: rgba(15, 23, 42, 0.7);
+          border-radius: 10px;
+          padding: 8px 10px;
+          display: flex;
+          flex-direction: column;
+          gap: 5px;
+        ">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 11px; font-weight: 700; color: #94a3b8; display: inline-flex; align-items: center; gap: 4px;">
+              ${icon('warehouse', '', 12)} Belegung
+            </span>
+            <span style="font-size: 13px; font-weight: 800; color: ${isFull ? '#ef4444' : occPct >= 80 ? '#f59e0b' : '#38bdf8'}; width: 44px; min-width: 44px; text-align: right; font-variant-numeric: tabular-nums; display: inline-block;">
+              ${occPct}%
+            </span>
+          </div>
+          <div style="height: 6px; background: rgba(0, 0, 0, 0.5); border-radius: 99px; overflow: hidden;">
+            <div style="width: ${occPct}%; height: 100%; background: ${isFull ? '#ef4444' : occPct >= 80 ? '#f59e0b' : '#38bdf8'}; border-radius: 99px; transition: width 0.2s ease;"></div>
+          </div>
+          <div style="font-size: 9.5px; color: #64748b; text-align: right; font-variant-numeric: tabular-nums;">
+            ${totalStored} / ${capacity} Plätze
+          </div>
+        </div>
+
+        <!-- Gesamtwert -->
+        <div style="
+          background: rgba(15, 23, 42, 0.7);
+          border-radius: 10px;
+          padding: 8px 10px;
+          display: flex;
+          flex-direction: column;
+          gap: 5px;
+        ">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 11px; font-weight: 700; color: #94a3b8; display: inline-flex; align-items: center; gap: 4px;">
+              ${icon('coins', '', 12)} Depotwert
+            </span>
+            <span style="font-size: 13px; font-weight: 800; color: #fbbf24; text-align: right; font-variant-numeric: tabular-nums; display: inline-block;">
+              €${totalVal.toLocaleString()}
+            </span>
+          </div>
+          <div style="height: 6px; background: rgba(0, 0, 0, 0.5); border-radius: 99px; overflow: hidden;">
+            <div style="width: 100%; height: 100%; background: #fbbf24; border-radius: 99px;"></div>
+          </div>
+          <div style="font-size: 9.5px; color: #64748b; text-align: right; font-variant-numeric: tabular-nums;">
+            ${totalStoredOresCount} Erze · ${totalStoredGoodsCount} Waren
+          </div>
+        </div>
+
+        <!-- Fracht im Bohrer -->
+        <div style="
+          background: rgba(15, 23, 42, 0.7);
+          border-radius: 10px;
+          padding: 8px 10px;
+          display: flex;
+          flex-direction: column;
+          gap: 5px;
+        ">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 11px; font-weight: 700; color: #94a3b8; display: inline-flex; align-items: center; gap: 4px;">
+              ${icon('container', '', 12)} Fracht
+            </span>
+            <span style="font-size: 13px; font-weight: 800; color: ${playerCargoOreLength > 0 ? '#34d399' : '#64748b'}; width: 44px; min-width: 44px; text-align: right; font-variant-numeric: tabular-nums; display: inline-block;">
+              ${playerCargoOreLength > 0 ? `+${playerCargoOreLength}` : '0'}
+            </span>
+          </div>
+          <div style="height: 6px; background: rgba(0, 0, 0, 0.5); border-radius: 99px; overflow: hidden;">
+            <div style="width: ${Math.min(100, Math.round((playerCargoOreLength / Math.max(1, this.player.maxCargo || 10)) * 100))}%; height: 100%; background: #34d399; border-radius: 99px; transition: width 0.2s ease;"></div>
+          </div>
+          <div style="font-size: 9.5px; color: #64748b; text-align: right; font-variant-numeric: tabular-nums;">
+            ${playerCargoOreLength} / ${this.player.maxCargo} im Bohrer
+          </div>
+        </div>
+      </div>
+    `;
+
+    // 2. Depot-Ausbau Banner / Card
     let upgradeSnippetHtml = '';
     if (nextTierData) {
       const compBadgesHtml = nextTierData.costComp ? Object.entries(nextTierData.costComp).map(([compKey, need]) => {
@@ -1634,11 +1726,11 @@ export class BaseSystem {
       }).join('') : '';
 
       upgradeSnippetHtml = `
-        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 8px; gap: 10px; flex-wrap: wrap;">
+        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.7); padding: 8px 12px; border-radius: 10px; gap: 10px; flex-wrap: wrap;">
           <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <strong style="color: #38bdf8; font-size: 12px;">Nächste Stufe ${nextTierData.tier}: ${nextTierData.label}</strong>
+            <strong style="color: #38bdf8; font-size: 12px;">Stufe ${nextTierData.tier}: ${nextTierData.label}</strong>
             <span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-weight: 800; font-size: 11px; padding: 1px 7px; border-radius: 6px;">
-              ${nextTierData.capacity} Plätze
+              +${nextTierData.capacity - capacity} Plätze (${nextTierData.capacity})
             </span>
           </div>
           <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
@@ -1655,47 +1747,13 @@ export class BaseSystem {
       `;
     } else {
       upgradeSnippetHtml = `
-        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 6px 12px; text-align: center; color: #10b981; font-weight: 800; font-size: 11.5px;">
+        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; padding: 6px 12px; text-align: center; color: #10b981; font-weight: 800; font-size: 11.5px;">
           MAXIMALER DEPOT-AUSBAU ERREICHT (${capacity} PLÄTZE)
         </div>
       `;
     }
 
-    const headerHtml = `
-      <div style="
-        background: rgba(15, 23, 42, 0.7);
-        border-radius: 12px;
-        padding: 10px 14px;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        box-sizing: border-box;
-      ">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <span style="font-weight: 800; color: #f8fafc; font-size: 13px; letter-spacing: 0.5px;">LAGERKAPAZITÄT</span>
-            <span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-size: 10.5px; font-weight: 800; padding: 1px 7px; border-radius: 99px;">
-              STUFE ${this.depot.tier || 1}
-            </span>
-            ${isFull ? `<span style="background: #ef4444; color: #ffffff; font-size: 9.5px; font-weight: 800; padding: 1px 6px; border-radius: 4px;">VOLL</span>` : ''}
-          </div>
-          <div style="display: flex; align-items: center; gap: 10px; font-size: 12.5px; font-weight: 800;">
-            <span style="color: ${isFull ? '#ef4444' : '#f8fafc'}; font-variant-numeric: tabular-nums;">
-              ${totalStored}/${capacity}
-            </span>
-          </div>
-        </div>
-
-        <div style="height: 6px; background: rgba(0,0,0,0.5); border-radius: 99px; overflow: hidden;">
-          <div style="width: ${occPct}%; height: 100%; background: ${isFull ? '#ef4444' : occPct >= 80 ? '#f59e0b' : '#38bdf8'}; border-radius: 99px; transition: width 0.2s ease;"></div>
-        </div>
-
-        ${upgradeSnippetHtml}
-      </div>
-    `;
-
-
-    // 1. OBERES INVENTAR: ERZE & MINERALIEN
+    // 3. OBERES INVENTAR: ERZE & MINERALIEN
     let oresItemsHtml = '';
     let filledOresCount = 0;
 
@@ -1782,7 +1840,7 @@ export class BaseSystem {
 
     // Leere Slots für das Erze-Grid
     const minOreSlots = 12;
-    const totalOreSlots = Math.max(minOreSlots, Math.ceil(filledOresCount / 4) * 4);
+    const totalOreSlots = Math.max(minOreSlots, Math.ceil(Math.max(1, filledOresCount) / 4) * 4);
     const emptyOreSlots = Math.max(0, totalOreSlots - filledOresCount);
     for (let i = 0; i < emptyOreSlots; i++) {
       oresItemsHtml += `
@@ -1800,7 +1858,7 @@ export class BaseSystem {
       `;
     }
 
-    // 2. UNTERES INVENTAR: WAREN & BAUTEILE
+    // 4. UNTERES INVENTAR: WAREN & BAUTEILE
     let goodsItemsHtml = '';
     let filledGoodsCount = 0;
 
@@ -1817,45 +1875,49 @@ export class BaseSystem {
       goodsItemsHtml += `
         <div class="depot-goods-card" data-type="product" data-key="${key}" style="
           position: relative;
-          background: rgba(15, 23, 42, 0.9);
-          border: 1px solid rgba(245, 158, 11, 0.4);
+          background: rgba(18, 26, 42, 0.85);
           border-radius: 10px;
-          padding: 8px 12px;
+          padding: 10px 6px 8px 6px;
           display: flex;
+          flex-direction: column;
           align-items: center;
-          gap: 10px;
-          min-height: 64px;
+          justify-content: center;
+          gap: 6px;
+          min-height: 84px;
           box-sizing: border-box;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-          cursor: default;
           user-select: none;
+          cursor: default;
         " title="${name}: ${depotCount}x im Depot">
           <!-- Anzahl Badge -->
           <span style="
             position: absolute;
-            top: 6px;
-            right: 6px;
+            top: 5px;
+            right: 5px;
             background: #d97706;
-            border: 1px solid #f59e0b;
             color: #ffffff;
             font-size: 10px;
             font-weight: 800;
-            padding: 1px 6px;
+            padding: 1px 5px;
             border-radius: 99px;
             line-height: 1.2;
           ">${depotCount}x</span>
 
           <!-- Icon -->
-          <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; min-width: 34px; border-radius: 8px; background: rgba(0, 0, 0, 0.35);">
-            ${itemDisplayIcon(key, 24)}
+          <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; margin-top: 2px;">
+            ${itemDisplayIcon(key, 26)}
           </div>
 
           <!-- Name -->
-          <div style="display: flex; flex-direction: column; min-width: 0; flex: 1; padding-right: 28px;">
-            <span style="font-size: 11.5px; font-weight: 700; color: #f8fafc; line-height: 1.25; white-space: normal; word-break: break-word;">
-              ${name}
-            </span>
-          </div>
+          <span style="
+            font-size: 11px;
+            font-weight: 700;
+            color: #f8fafc;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+          ">${name}</span>
         </div>
       `;
     });
@@ -1873,45 +1935,49 @@ export class BaseSystem {
       goodsItemsHtml += `
         <div class="depot-goods-card" data-type="product" data-key="${key}" style="
           position: relative;
-          background: rgba(15, 23, 42, 0.9);
-          border: 1px solid rgba(192, 132, 252, 0.4);
+          background: rgba(18, 26, 42, 0.85);
           border-radius: 10px;
-          padding: 8px 12px;
+          padding: 10px 6px 8px 6px;
           display: flex;
+          flex-direction: column;
           align-items: center;
-          gap: 10px;
-          min-height: 64px;
+          justify-content: center;
+          gap: 6px;
+          min-height: 84px;
           box-sizing: border-box;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-          cursor: default;
           user-select: none;
+          cursor: default;
         " title="${name}: ${depotCount}x im Depot">
           <!-- Anzahl Badge -->
           <span style="
             position: absolute;
-            top: 6px;
-            right: 6px;
+            top: 5px;
+            right: 5px;
             background: #7c3aed;
-            border: 1px solid #c084fc;
             color: #ffffff;
             font-size: 10px;
             font-weight: 800;
-            padding: 1px 6px;
+            padding: 1px 5px;
             border-radius: 99px;
             line-height: 1.2;
           ">${depotCount}x</span>
 
           <!-- Icon -->
-          <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; min-width: 34px; border-radius: 8px; background: rgba(0, 0, 0, 0.35);">
-            ${itemDisplayIcon(key, 24)}
+          <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; margin-top: 2px;">
+            ${itemDisplayIcon(key, 26)}
           </div>
 
           <!-- Name -->
-          <div style="display: flex; flex-direction: column; min-width: 0; flex: 1; padding-right: 28px;">
-            <span style="font-size: 11.5px; font-weight: 700; color: #f8fafc; line-height: 1.25; white-space: normal; word-break: break-word;">
-              ${name}
-            </span>
-          </div>
+          <span style="
+            font-size: 11px;
+            font-weight: 700;
+            color: #f8fafc;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+          ">${name}</span>
         </div>
       `;
     });
@@ -1929,59 +1995,63 @@ export class BaseSystem {
       goodsItemsHtml += `
         <div class="depot-goods-card" data-type="component" data-key="${key}" style="
           position: relative;
-          background: rgba(15, 23, 42, 0.9);
-          border: 1px solid rgba(168, 85, 247, 0.45);
+          background: rgba(18, 26, 42, 0.85);
           border-radius: 10px;
-          padding: 8px 12px;
+          padding: 10px 6px 8px 6px;
           display: flex;
+          flex-direction: column;
           align-items: center;
-          gap: 10px;
-          min-height: 64px;
+          justify-content: center;
+          gap: 6px;
+          min-height: 84px;
           box-sizing: border-box;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
           user-select: none;
           cursor: default;
         " title="${compInfo.name}: ${count}x vorhanden (Spezial-Bauteil)">
           <!-- Anzahl Badge -->
           <span style="
             position: absolute;
-            top: 6px;
-            right: 6px;
+            top: 5px;
+            right: 5px;
             background: #7c3aed;
-            border: 1px solid #c084fc;
             color: #ffffff;
             font-size: 10px;
             font-weight: 800;
-            padding: 1px 6px;
+            padding: 1px 5px;
             border-radius: 99px;
             line-height: 1.2;
           ">${count}x</span>
 
           <!-- Icon -->
-          <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; min-width: 34px; border-radius: 8px; background: rgba(0, 0, 0, 0.35); color: ${compInfo.color || '#c084fc'};">
-            ${icon(compInfo.icon, '', 22)}
+          <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; margin-top: 2px; color: ${compInfo.color || '#c084fc'};">
+            ${icon(compInfo.icon, '', 24)}
           </div>
 
           <!-- Name -->
-          <div style="display: flex; flex-direction: column; min-width: 0; flex: 1; padding-right: 28px;">
-            <span style="font-size: 11.5px; font-weight: 700; color: #f8fafc; line-height: 1.25; white-space: normal; word-break: break-word;">
-              ${compInfo.name}
-            </span>
-          </div>
+          <span style="
+            font-size: 11px;
+            font-weight: 700;
+            color: #f8fafc;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+          ">${compInfo.name}</span>
         </div>
       `;
     });
 
-    // Leere 2x1 Slots für das Waren-Grid
-    const minGoodsSlots = 6;
-    const totalGoodsSlots = Math.max(minGoodsSlots, Math.ceil(filledGoodsCount / 2) * 2);
+    // Leere Slots für das Waren-Grid
+    const minGoodsSlots = 8;
+    const totalGoodsSlots = Math.max(minGoodsSlots, Math.ceil(Math.max(1, filledGoodsCount) / 4) * 4);
     const emptyGoodsSlots = Math.max(0, totalGoodsSlots - filledGoodsCount);
     for (let i = 0; i < emptyGoodsSlots; i++) {
       goodsItemsHtml += `
         <div style="
           background: rgba(255, 255, 255, 0.02);
           border-radius: 10px;
-          min-height: 64px;
+          min-height: 84px;
           box-sizing: border-box;
           display: flex;
           align-items: center;
@@ -1992,45 +2062,54 @@ export class BaseSystem {
       `;
     }
 
-    const totalStoredOresCount = Object.values(this.depot.ores || {}).reduce((s, v) => s + v, 0);
-    const totalStoredGoodsCount = Object.values(this.depot.products || {}).reduce((s, v) => s + v, 0) + Object.values(this.player.components || {}).reduce((s, v) => s + v, 0);
+    const oresSectionHtml = `
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 11.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 5px;">
+            ${icon('stone', '', 12)} Erze & Mineralien (${totalStoredOresCount})
+          </span>
+          ${isFull ? `
+            <span style="background: rgba(239, 68, 68, 0.2); color: #ef4444; font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 4px;">
+              DEPOT VOLL
+            </span>
+          ` : ''}
+        </div>
 
-    // Zusammenbau des scrollbaren Modals mit ZWEI Inventaren untereinander
+        <div style="
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+          gap: 8px;
+        ">
+          ${oresItemsHtml}
+        </div>
+      </div>
+    `;
+
+    const goodsSectionHtml = `
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 11.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 5px;">
+            ${icon('layers', '', 12)} Barren, Produkte & Bauteile (${totalStoredGoodsCount})
+          </span>
+        </div>
+
+        <div style="
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+          gap: 8px;
+        ">
+          ${goodsItemsHtml}
+        </div>
+      </div>
+    `;
+
+    // Zusammenbau des scrollbaren Modals genau wie beim Bohrermenü
     this.modalBodyEl.innerHTML = `
-      <div style="display: flex; flex-direction: column; gap: 12px; padding-bottom: 54px;">
-        ${headerHtml}
-
-        <!-- 1. OBERES INVENTAR: ERZE & MINERALIEN -->
-        <div style="display: flex; flex-direction: column; gap: 6px; background: rgba(15, 23, 42, 0.55); border-radius: 12px; padding: 10px;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 11.5px; font-weight: 800; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 5px;">
-              ${icon('stone', '', 14)} Erze & Mineralien
-            </span>
-          </div>
-          <div style="
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
-            gap: 8px;
-          ">
-            ${oresItemsHtml}
-          </div>
-        </div>
-
-        <!-- 2. UNTERES INVENTAR: WAREN & BAUTEILE -->
-        <div style="display: flex; flex-direction: column; gap: 6px; background: rgba(15, 23, 42, 0.55); border-radius: 12px; padding: 10px;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 11.5px; font-weight: 800; color: #c084fc; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 5px;">
-              ${icon('layers', '', 14)} Waren & Bauteile
-            </span>
-          </div>
-          <div style="
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
-            gap: 8px;
-          ">
-            ${goodsItemsHtml}
-          </div>
-        </div>
+      <div style="display: flex; flex-direction: column; max-width: 620px; margin: 0 auto; width: 100%; box-sizing: border-box; padding: 0 4px 54px 4px; gap: 14px;">
+        ${statusBarsHtml}
+        ${upgradeSnippetHtml}
+        ${oresSectionHtml}
+        ${goodsSectionHtml}
       </div>
     `;
 

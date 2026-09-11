@@ -211,7 +211,7 @@ export class MinerBookModal {
     }
 
     bodyEl.innerHTML = `
-      <div style="display: flex; flex-direction: column; gap: 12px; max-width: 620px; margin: 0 auto; width: 100%;">
+      <div style="display: flex; flex-direction: column; gap: 12px; max-width: 620px; margin: 0 auto; width: 100%; box-sizing: border-box; padding: 0 4px 36px 4px;">
         <!-- Zurück & Fortschritts-Kopf -->
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
           <button id="btn-book-back" class="btn-action" style="height: 32px; padding: 0 14px; font-size: 11.5px; display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: 8px;">
