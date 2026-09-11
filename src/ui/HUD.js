@@ -133,6 +133,33 @@ export class HUD {
     this.levelRight = document.getElementById('hud-level-right');
     this.returnWarn = document.getElementById('hud-return-warn');
 
+    // Gadget Buttons
+    this.btnDynamite = document.getElementById('btn-gadget-dynamite');
+    this.btnFuel = document.getElementById('btn-gadget-fuel');
+    this.btnRepair = document.getElementById('btn-gadget-repair');
+    this.countDynamite = document.getElementById('gadget-count-dynamite');
+    this.countFuel = document.getElementById('gadget-count-fuel');
+    this.countRepair = document.getElementById('gadget-count-repair');
+
+    if (this.btnDynamite) {
+      this.btnDynamite.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+        this.scene.useDynamite?.();
+      });
+    }
+    if (this.btnFuel) {
+      this.btnFuel.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+        this.player?.useFuelCanister();
+      });
+    }
+    if (this.btnRepair) {
+      this.btnRepair.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+        this.player?.useRepairKit();
+      });
+    }
+
     // Toast- und Alarm-Tracking (nur 1x beim Point of No Return)
     this.warnedPointOfNoReturn = false;
 
@@ -357,6 +384,29 @@ export class HUD {
         this._lastFuelTitleFuel = roundedFuel;
         this._lastFuelTitleReturn = roundedReturn;
         this.fuelBarContainer.title = `Tank: ${roundedFuel}% | Rückkehr-Schwelle (inkl. Puffer): ${roundedReturn}%`;
+      }
+    }
+
+    // Gadget-Zähler aktualisieren
+    if (this.player.gadgets) {
+      const dCount = this.player.gadgets.dynamite || 0;
+      const fCount = this.player.gadgets.fuel_canister || 0;
+      const rCount = this.player.gadgets.repair_kit || 0;
+
+      if (this.countDynamite && this._lastCountDyn !== dCount) {
+        this.countDynamite.textContent = dCount;
+        this._lastCountDyn = dCount;
+        if (this.btnDynamite) this.btnDynamite.classList.toggle('empty', dCount <= 0);
+      }
+      if (this.countFuel && this._lastCountFuel !== fCount) {
+        this.countFuel.textContent = fCount;
+        this._lastCountFuel = fCount;
+        if (this.btnFuel) this.btnFuel.classList.toggle('empty', fCount <= 0);
+      }
+      if (this.countRepair && this._lastCountRepair !== rCount) {
+        this.countRepair.textContent = rCount;
+        this._lastCountRepair = rCount;
+        if (this.btnRepair) this.btnRepair.classList.toggle('empty', rCount <= 0);
       }
     }
 

@@ -6,6 +6,7 @@ import { BaseSystem } from '../core/BaseSystem.js';
 import { MissionSystem } from '../core/MissionSystem.js';
 import { HUD } from '../ui/HUD.js';
 import { SaveSystem } from '../core/SaveSystem.js';
+import { soundFx } from '../core/SoundEffects.js';
 
 export class MiningScene extends Phaser.Scene {
   constructor() {
@@ -268,5 +269,114 @@ export class MiningScene extends Phaser.Scene {
 
     // HUD synchronisieren
     this.hud.update();
+  }
+
+  useDynamite() {
+    if (!this.player) return false;
+    if (!this.player.gadgets) this.player.gadgets = { dynamite: 0, fuel_canister: 0, repair_kit: 0 };
+    if ((this.player.gadgets.dynamite || 0) <= 0) {
+      this.hud?.showToast('Kein Dynamit im Vorrat!', 'warning');
+      soundFx.playError();
+      return false;
+    }
+    if (this.player.gy < 0) {
+      this.hud?.showToast('Dynamit kann nur unter Tage platziert werden!', 'info');
+      return false;
+    }
+    if (this.isDynamiteActive) {
+      this.hud?.showToast('Ein Sprengsatz zündet bereits!', 'warning');
+      return false;
+    }
+
+    this.player.gadgets.dynamite--;
+    this.isDynamiteActive = true;
+    this.events.emit('player_updated');
+
+    const gx = this.player.gx;
+    const gy = this.player.gy;
+    const bombX = gx * TILE_SIZE + TILE_SIZE / 2;
+    const bombY = gy * TILE_SIZE + TILE_SIZE / 2;
+
+    // Dynamit-Sprite platzieren
+    const bombSprite = this.add.image(bombX, bombY, 'item_dynamite')
+      .setDepth(15)
+      .setScale(0.95);
+
+    // Zündschnur-Ticken & Blinken
+    soundFx.playClick();
+    this.hud?.showToast('🧨 Dynamit scharf gemacht! Detonation in 1.4s!', 'warning');
+
+    this.tweens.add({
+      targets: bombSprite,
+      scaleX: 1.2,
+      scaleY: 1.2,
+      yoyo: true,
+      repeat: 3,
+      duration: 175,
+      onComplete: () => {
+        bombSprite.destroy();
+        this.explodeDynamite(gx, gy);
+        this.isDynamiteActive = false;
+      }
+    });
+    return true;
+  }
+
+  explodeDynamite(centerGx, centerGy) {
+    const bombX = centerGx * TILE_SIZE + TILE_SIZE / 2;
+    const bombY = centerGy * TILE_SIZE + TILE_SIZE / 2;
+
+    // Sound & Erschütterung
+    soundFx.playExplosion();
+    this.cameras.main.shake(380, 0.028);
+
+    // Explosions-Flash
+    const blast = this.add.circle(bombX, bombY, 56, 0xfef08a, 0.95).setDepth(20);
+    this.tweens.add({
+      targets: blast,
+      scale: 1.6,
+      alpha: 0,
+      duration: 320,
+      onComplete: () => blast.destroy()
+    });
+
+    let oresCollected = 0;
+
+    // 3x3 Kacheln um das Zentrum sprengen
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        const tgx = centerGx + dx;
+        const tgy = centerGy + dy;
+
+        // Oberfläche gy <= 0 Fundamente nicht sprengen
+        if (tgy <= 0) continue;
+
+        const tile = this.gridSystem.getTile(tgx, tgy);
+        if (tile && tile.type !== 'empty' && !tile.indestructible) {
+          if (tile.ore) {
+            if (this.player.cargo.length < this.player.maxCargo) {
+              this.player.collectOre(tile.ore);
+              oresCollected++;
+            }
+          }
+          this.gridSystem.damageTile(tgx, tgy, 99999);
+        }
+      }
+    }
+
+    // Spieler-Schaden wenn noch im Explosionsradius
+    if (Math.abs(this.player.gx - centerGx) <= 1 && Math.abs(this.player.gy - centerGy) <= 1) {
+      this.player.takeDamage(20);
+      this.hud?.showToast('💥 Autsch! Eigene Sprengung hat dich erwischt! (-20 HP)', 'danger');
+    } else if (oresCollected > 0) {
+      this.hud?.showToast(`💥 BOOM! Sprengung erfolgreich: +${oresCollected} Erze geborgen!`, 'success');
+    } else {
+      this.hud?.showToast('💥 BOOM! Felsbereich freigesprengt!', 'info');
+    }
+
+    // Geröll über dem Krater prüfen
+    for (let dx = -1; dx <= 1; dx++) {
+      this.gridSystem.checkBoulderFall(centerGx + dx, centerGy - 2);
+    }
   }
 }

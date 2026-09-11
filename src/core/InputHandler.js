@@ -27,6 +27,11 @@ export class InputHandler {
     this.keyEsc = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC, false);
     this.keyP = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.P, false);
 
+    // Gadget Hotkeys
+    this.keyB = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.B, false);
+    this.keyF = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F, false);
+    this.keyR = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R, false);
+
     // Tastatur-Capture für Buchstaben freigeben, damit Texteingaben (z. B. 'delete') überall funktionieren
     if (scene.input.keyboard.removeCapture) {
       scene.input.keyboard.removeCapture([
@@ -35,7 +40,10 @@ export class InputHandler {
         Phaser.Input.Keyboard.KeyCodes.S,
         Phaser.Input.Keyboard.KeyCodes.D,
         Phaser.Input.Keyboard.KeyCodes.ESC,
-        Phaser.Input.Keyboard.KeyCodes.P
+        Phaser.Input.Keyboard.KeyCodes.P,
+        Phaser.Input.Keyboard.KeyCodes.B,
+        Phaser.Input.Keyboard.KeyCodes.F,
+        Phaser.Input.Keyboard.KeyCodes.R
       ]);
     }
 
@@ -56,6 +64,24 @@ export class InputHandler {
 
     this.keyEsc.on('down', handlePauseKey);
     this.keyP.on('down', handlePauseKey);
+
+    this.keyB.on('down', () => {
+      if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
+      if (isModalActive()) return;
+      this.scene.useDynamite?.();
+    });
+
+    this.keyF.on('down', () => {
+      if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
+      if (isModalActive()) return;
+      this.scene.player?.useFuelCanister();
+    });
+
+    this.keyR.on('down', () => {
+      if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
+      if (isModalActive()) return;
+      this.scene.player?.useRepairKit();
+    });
 
     this.setupControls();
   }

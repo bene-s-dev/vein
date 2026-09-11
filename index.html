@@ -455,6 +455,93 @@
       display: none !important;
     }
 
+    /* Quick Gadget Bar */
+    #hud-gadget-bar {
+      position: absolute;
+      bottom: 20px;
+      right: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 310;
+      pointer-events: auto;
+      transition: opacity 0.2s ease;
+    }
+
+    body.modal-open #hud-gadget-bar {
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+
+    .btn-gadget {
+      width: 44px;
+      height: 44px;
+      background: rgba(15, 23, 42, 0.88);
+      border: 1.2px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+      padding: 0;
+    }
+
+    .btn-gadget:hover {
+      background: rgba(30, 41, 59, 0.98);
+      border-color: rgba(56, 189, 248, 0.55);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
+    }
+
+    .btn-gadget:active {
+      transform: translateY(1px) scale(0.96);
+    }
+
+    .btn-gadget .gadget-icon {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .btn-gadget .gadget-count {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: #38bdf8;
+      color: #090d16;
+      font-size: 10px;
+      font-weight: 800;
+      min-width: 17px;
+      height: 17px;
+      border-radius: 99px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+      border: 1.5px solid #090d16;
+    }
+
+    .btn-gadget.empty {
+      opacity: 0.45;
+    }
+
+    .btn-gadget.empty .gadget-count {
+      background: #64748b;
+    }
+
+    .btn-gadget .gadget-hotkey {
+      font-size: 8px;
+      color: #94a3b8;
+      font-weight: 700;
+      line-height: 1;
+      margin-top: 2px;
+    }
+
     .mission-header {
       display: flex;
       align-items: center;
@@ -2207,6 +2294,25 @@
       <div id="joystick-base">
         <div id="joystick-knob"></div>
       </div>
+    </div>
+
+    <!-- Quick Gadget Bar (Dynamit, Treibstoff, Reparatur) -->
+    <div id="hud-gadget-bar">
+      <button id="btn-gadget-dynamite" class="btn-gadget" title="Dynamit zünden (Taste B)">
+        <span class="gadget-icon">🧨</span>
+        <span class="gadget-count" id="gadget-count-dynamite">0</span>
+        <span class="gadget-hotkey">B</span>
+      </button>
+      <button id="btn-gadget-fuel" class="btn-gadget" title="Notfall-Treibstoff nutzen (Taste F)">
+        <span class="gadget-icon">⛽</span>
+        <span class="gadget-count" id="gadget-count-fuel">0</span>
+        <span class="gadget-hotkey">F</span>
+      </button>
+      <button id="btn-gadget-repair" class="btn-gadget" title="Reparatur-Kit nutzen (Taste R)">
+        <span class="gadget-icon">🧰</span>
+        <span class="gadget-count" id="gadget-count-repair">0</span>
+        <span class="gadget-hotkey">R</span>
+      </button>
     </div>
 
     <!-- Clean Material Modal Dialog -->

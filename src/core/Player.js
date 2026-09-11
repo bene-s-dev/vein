@@ -223,6 +223,16 @@ export class Player {
       quantum_core: 0     // Quanten-Kern: 2x Uran + 1x Platin → Tier 10
     };
 
+    // Notfall-Kits & Gadgets (Verbrauchsgüter)
+    this.gadgets = {
+      dynamite: 1,
+      fuel_canister: 1,
+      repair_kit: 1
+    };
+
+    // Gefundene Relikte & Fossilien (Museum / Bergmann-Buch)
+    this.discoveredArtifacts = [];
+
     // Sensor-Modul (Erze im Umkreis sichtbar machen)
     this.sensorTier = 1;
     this.researchedSensorTier = 1; // Im Labor erforschter Bauplan (Montage im Hangar erforderlich)
@@ -423,6 +433,11 @@ export class Player {
     // Prüfen ob Spieler an der Oberfläche ist und auftankt
     this.checkDocking(delta);
 
+    // Lava-Nähe Hitze-Gefahr (ab 140m Tiefe)
+    if (this.gy >= 140 && this.state !== PLAYER_STATES.DOCKING) {
+      this.checkLavaProximity(delta);
+    }
+
     // Kontinuierliche, butterweiche Bewegung über Delta-Ticks (ohne Tween-Hänger)
     if (this.state === PLAYER_STATES.MOVING) {
       this.processMoving(delta, inputDir);
@@ -513,7 +528,7 @@ export class Player {
     this.hullTier = tier;
     const data = HULL_TIERS[tier - 1] || HULL_TIERS[0];
     const prevMax = this.maxHull || 100;
-    this.maxHull = data.maxHull;
+    this.recalculateArtifactPerks();
     this.hull = Math.min(this.maxHull, this.hull + (this.maxHull - prevMax));
   }
 
@@ -529,8 +544,114 @@ export class Player {
 
   upgradeCargo(tier) {
     this.cargoTier = tier;
-    const data = CARGO_TIERS[tier - 1] || CARGO_TIERS[0];
-    this.maxCargo = data.maxCargo || 10;
+    this.recalculateArtifactPerks();
+  }
+
+  recalculateArtifactPerks() {
+    // 1. Hull Perk: Trilobit (+15 Max HP)
+    const hullData = HULL_TIERS[(this.hullTier || 1) - 1] || HULL_TIERS[0];
+    let newMaxHull = hullData.maxHull;
+    if (this.hasArtifact('artifact_trilobite')) {
+      newMaxHull += 15;
+    }
+    this.maxHull = newMaxHull;
+    this.hull = Math.min(this.maxHull, this.hull);
+
+    // 2. Cargo Perk: Precursor Mech-Kern (+20% Frachtraum)
+    const cargoData = CARGO_TIERS[(this.cargoTier || 1) - 1] || CARGO_TIERS[0];
+    let newMaxCargo = cargoData.maxCargo;
+    if (this.hasArtifact('artifact_mech_core')) {
+      newMaxCargo = Math.round(newMaxCargo * 1.20);
+    }
+    this.maxCargo = newMaxCargo;
+
+    // 3. Fuel Perk: Spiral-Ammonit (+10% Effizienz)
+    let eff = 1.0;
+    if (this.hasArtifact('artifact_ammonite')) {
+      eff *= 1.10;
+    }
+    this.fuelEfficiency = eff;
+  }
+
+  hasArtifact(id) {
+    return Array.isArray(this.discoveredArtifacts) && this.discoveredArtifacts.includes(id);
+  }
+
+  addArtifact(id) {
+    if (!Array.isArray(this.discoveredArtifacts)) this.discoveredArtifacts = [];
+    if (this.discoveredArtifacts.includes(id)) return false;
+    this.discoveredArtifacts.push(id);
+    this.recalculateArtifactPerks();
+    return true;
+  }
+
+  useFuelCanister() {
+    if (!this.gadgets) this.gadgets = { dynamite: 0, fuel_canister: 0, repair_kit: 0 };
+    if ((this.gadgets.fuel_canister || 0) <= 0) {
+      this.scene.hud?.showToast('Kein Treibstoff-Kanister im Vorrat!', 'warning');
+      soundFx.playError();
+      return false;
+    }
+    if (this.fuel >= this.maxFuel) {
+      this.scene.hud?.showToast('Treibstofftank ist bereits voll!', 'info');
+      return false;
+    }
+    this.gadgets.fuel_canister--;
+    const added = Math.min(20, this.maxFuel - this.fuel);
+    this.fuel += added;
+    soundFx.playItemUse();
+    this.scene.hud?.showToast(`⛽ +${Math.round(added)}L Notfall-Treibstoff nachgefüllt!`, 'success');
+    this.scene.events?.emit('player_updated');
+    return true;
+  }
+
+  useRepairKit() {
+    if (!this.gadgets) this.gadgets = { dynamite: 0, fuel_canister: 0, repair_kit: 0 };
+    if ((this.gadgets.repair_kit || 0) <= 0) {
+      this.scene.hud?.showToast('Kein Reparatur-Kit im Vorrat!', 'warning');
+      soundFx.playError();
+      return false;
+    }
+    if (this.hull >= this.maxHull) {
+      this.scene.hud?.showToast('Panzerung ist bereits intakt!', 'info');
+      return false;
+    }
+    this.gadgets.repair_kit--;
+    const repaired = Math.min(40, this.maxHull - this.hull);
+    this.hull += repaired;
+    soundFx.playItemUse();
+    this.scene.hud?.showToast(`🧰 +${Math.round(repaired)} HP Notfall-Reparatur durchgeführt!`, 'success');
+    this.scene.events?.emit('player_updated');
+    return true;
+  }
+
+  checkLavaProximity(delta) {
+    this.lavaCheckTimer = (this.lavaCheckTimer || 0) + delta;
+    if (this.lavaCheckTimer < 1100) return;
+    this.lavaCheckTimer = 0;
+
+    const neighbors = [
+      { gx: this.gx + 1, gy: this.gy },
+      { gx: this.gx - 1, gy: this.gy },
+      { gx: this.gx, gy: this.gy + 1 },
+      { gx: this.gx, gy: this.gy - 1 }
+    ];
+
+    let nearLava = false;
+    for (const n of neighbors) {
+      const tile = this.gridSystem.getTile(n.gx, n.gy);
+      if (tile && tile.type === 'tile_lava') {
+        nearLava = true;
+        break;
+      }
+    }
+
+    if (nearLava) {
+      const res = this.hasArtifact('artifact_meteorite') ? 0.5 : 1.0;
+      const heatDmg = Math.round(7 * res);
+      this.takeDamage(heatDmg);
+      this.scene.hud?.showToast(`🔥 Gluthitze nahe Magma-Ader! -${heatDmg} HP`, 'danger');
+    }
   }
 
   getSensorData() {
@@ -1444,7 +1565,9 @@ export class Player {
     // Geräusch: kontinuierlicher Schleifer (startDrilling kümmert sich darum)
     // Kein per-frame playDrillTick() nötig
 
-    const damage = this.drillPower * (delta / 1000);
+    // Artefakt Dino-Zahn: +10% Bohr-DPS
+    const drillMultiplier = this.hasArtifact?.('artifact_dino_tooth') ? 1.10 : 1.0;
+    const damage = this.drillPower * drillMultiplier * (delta / 1000);
     const result = this.gridSystem.damageTile(this.drillTarget.gx, this.drillTarget.gy, damage);
 
     if (!result) {
@@ -1637,11 +1760,26 @@ export class Player {
     this.fuel = this.maxFuel;
   }
 
+  getOreSellMultiplier(oreKey) {
+    let mult = 1.0;
+    // Geode-Artefakt: +15% auf alle Edelsteine
+    const gems = ['emerald', 'sapphire', 'ruby', 'diamond', 'obsidian_gem'];
+    if (gems.includes(oreKey) && this.hasArtifact?.('artifact_geode')) {
+      mult += 0.15;
+    }
+    // Börsen-Boom: 2.0x auf boomendes Erz
+    if (this.scene?.baseSystem?.activeBoom?.oreKey === oreKey) {
+      mult *= 2.0;
+    }
+    return mult;
+  }
+
   sellCargo() {
     let total = 0;
     for (const ore of this.cargo) {
       if (ORE_DATA[ore]) {
-        total += ORE_DATA[ore].value;
+        const mult = this.getOreSellMultiplier(ore);
+        total += Math.round(ORE_DATA[ore].value * mult);
       }
     }
     this.cash += total;
@@ -1662,7 +1800,8 @@ export class Player {
     }
     this.cargo = remaining;
     const val = ORE_DATA[oreType] ? ORE_DATA[oreType].value : 0;
-    const totalEarned = count * val;
+    const mult = this.getOreSellMultiplier(oreType);
+    const totalEarned = Math.round(count * val * mult);
     this.cash += totalEarned;
     this.stats.totalCashEarned = (this.stats.totalCashEarned || 0) + totalEarned;
     return { count, totalEarned };

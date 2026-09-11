@@ -97,7 +97,9 @@ export class SaveSystem {
           sensorTier: p.sensorTier,
           researchedSensorTier: p.researchedSensorTier || p.sensorTier || 1,
           sensorRadius: p.sensorRadius,
-          freeRescues: typeof p.freeRescues === 'number' ? p.freeRescues : 3
+          freeRescues: typeof p.freeRescues === 'number' ? p.freeRescues : 3,
+          gadgets: { ...(p.gadgets || { dynamite: 1, fuel_canister: 1, repair_kit: 1 }) },
+          discoveredArtifacts: [...(p.discoveredArtifacts || [])]
         },
         grid: {
           destroyedTiles,
@@ -182,6 +184,21 @@ export class SaveSystem {
         p.sensorTier = data.player.sensorTier;
         p.researchedSensorTier = data.player.researchedSensorTier || data.player.sensorTier || 1;
         p.sensorRadius = data.player.sensorRadius || 140;
+      }
+
+      if (data.player.gadgets) {
+        p.gadgets = {
+          dynamite: typeof data.player.gadgets.dynamite === 'number' ? data.player.gadgets.dynamite : 1,
+          fuel_canister: typeof data.player.gadgets.fuel_canister === 'number' ? data.player.gadgets.fuel_canister : 1,
+          repair_kit: typeof data.player.gadgets.repair_kit === 'number' ? data.player.gadgets.repair_kit : 1
+        };
+      }
+
+      if (Array.isArray(data.player.discoveredArtifacts)) {
+        p.discoveredArtifacts = [...data.player.discoveredArtifacts];
+        if (p.recalculateArtifactPerks) {
+          p.recalculateArtifactPerks();
+        }
       }
 
       // Spielerposition

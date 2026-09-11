@@ -1,4 +1,4 @@
-import { ORE_DATA } from '../core/GridSystem.js';
+import { ORE_DATA, ARTIFACT_CATALOG } from '../core/GridSystem.js';
 import { soundFx } from '../core/SoundEffects.js';
 import { icon, refreshIcons, oreIcon, itemDisplayIcon } from './IconHelper.js';
 import { closeActiveModal } from '../core/BaseSystem.js';
@@ -125,13 +125,18 @@ export class MinerBookModal {
 
     const discoveredProductsCount = BOOK_PRODUCTS.filter(p => this.player.isProductDiscovered(p.id)).length;
 
-    const totalDiscoverables = allOres.length + GEOLOGICAL_LAYERS.length + BOOK_PRODUCTS.length;
-    const totalDiscovered = discoveredOresCount + unlockedLayersCount + discoveredProductsCount;
+    const allArtifacts = Object.keys(ARTIFACT_CATALOG);
+    const discoveredArtifactsCount = (this.player.discoveredArtifacts || []).length;
+
+    const totalDiscoverables = allOres.length + GEOLOGICAL_LAYERS.length + BOOK_PRODUCTS.length + allArtifacts.length;
+    const totalDiscovered = discoveredOresCount + unlockedLayersCount + discoveredProductsCount + discoveredArtifactsCount;
     const progressPercent = Math.min(100, Math.round((totalDiscovered / totalDiscoverables) * 100));
 
     return {
       allOresCount: allOres.length,
       discoveredOresCount,
+      allArtifactsCount: allArtifacts.length,
+      discoveredArtifactsCount,
       totalLayersCount: GEOLOGICAL_LAYERS.length,
       unlockedLayersCount,
       totalProductsCount: BOOK_PRODUCTS.length,
@@ -161,6 +166,7 @@ export class MinerBookModal {
     // Tabs
     const tabs = [
       { id: 'ores', label: `Erze (${stats.discoveredOresCount}/${stats.allOresCount})`, icon: 'gem' },
+      { id: 'relics', label: `Relikte (${stats.discoveredArtifactsCount}/${stats.allArtifactsCount})`, icon: 'award' },
       { id: 'layers', label: `Schichten (${stats.unlockedLayersCount}/${stats.totalLayersCount})`, icon: 'mountain' },
       { id: 'products', label: `Waren (${stats.discoveredProductsCount}/${stats.totalProductsCount})`, icon: 'factory' },
       { id: 'codex', label: 'Kodex', icon: 'shield-check' }
@@ -192,6 +198,8 @@ export class MinerBookModal {
     let contentHtml = '';
     if (this.activeTab === 'ores') {
       contentHtml = this.renderOresTab();
+    } else if (this.activeTab === 'relics') {
+      contentHtml = this.renderRelicsTab();
     } else if (this.activeTab === 'layers') {
       contentHtml = this.renderLayersTab();
     } else if (this.activeTab === 'products') {
@@ -232,6 +240,25 @@ export class MinerBookModal {
 
     modalEl.style.display = 'flex';
     refreshIcons(modalEl);
+
+    // Relikte Canvases zeichnen
+    if (this.activeTab === 'relics') {
+      const list = Object.values(ARTIFACT_CATALOG);
+      const known = this.player.discoveredArtifacts || [];
+      list.forEach(art => {
+        if (known.includes(art.id)) {
+          const can = document.getElementById(`canvas-${art.id}`);
+          if (can && this.scene && this.scene.textures && this.scene.textures.exists(art.sprite)) {
+            const img = this.scene.textures.get(art.sprite).getSourceImage();
+            if (img) {
+              const ctx = can.getContext('2d');
+              ctx.clearRect(0, 0, 32, 32);
+              ctx.drawImage(img, 0, 0, 32, 32);
+            }
+          }
+        }
+      });
+    }
 
     // Tab-Klicks binden
     modalEl.querySelectorAll('.book-tab-btn').forEach(btn => {
@@ -458,6 +485,69 @@ export class MinerBookModal {
             • <strong>Labor:</strong> High-Tech-Forschung für neue Stufen und Radar-Sensoren.
           </div>
         </div>
+      </div>
+    `;
+  }
+
+  renderRelicsTab() {
+    const list = Object.values(ARTIFACT_CATALOG);
+    const known = this.player.discoveredArtifacts || [];
+
+    const cardsHtml = list.map(art => {
+      const isFound = known.includes(art.id);
+      if (isFound) {
+        return `
+          <div style="background: rgba(15,23,42,0.7); border: 1.5px solid rgba(56,189,248,0.3); border-radius: 12px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="width: 44px; height: 44px; background: rgba(30,41,59,0.8); border: 1px solid rgba(56,189,248,0.4); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 0 12px rgba(56,189,248,0.15);">
+                <canvas id="canvas-${art.id}" width="32" height="32" style="width: 32px; height: 32px; image-rendering: pixelated;"></canvas>
+              </div>
+              <div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <strong style="color: #f8fafc; font-size: 13.5px;">${art.name}</strong>
+                  <span style="background: rgba(16,185,129,0.15); color: #10b981; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(16,185,129,0.3);">MUSEUM</span>
+                </div>
+                <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">${art.description}</div>
+                <div style="font-size: 11.5px; color: #38bdf8; font-weight: 700; margin-top: 4px; display: inline-flex; align-items: center; gap: 4px;">
+                  ${icon('zap', '', 12)} <span>Aktiv: ${art.perk}</span>
+                </div>
+              </div>
+            </div>
+            <div style="text-align: right; flex-shrink: 0;">
+              <span style="color: #64748b; font-size: 10.5px;">Ab ${art.minDepth}m</span>
+            </div>
+          </div>
+        `;
+      } else {
+        return `
+          <div style="background: rgba(15,23,42,0.4); border: 1px dashed rgba(148,163,184,0.2); border-radius: 12px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; opacity: 0.65;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="width: 44px; height: 44px; background: rgba(15,23,42,0.6); border: 1px solid rgba(148,163,184,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <span style="font-size: 20px; color: #64748b;">❓</span>
+              </div>
+              <div>
+                <strong style="color: #94a3b8; font-size: 13px;">Unentdecktes Relikt</strong>
+                <div style="font-size: 11px; color: #64748b; margin-top: 2px;">Grabe in Schichten ab ${art.minDepth}m Tiefe, um dieses Fossil zu bergen.</div>
+                <div style="font-size: 11px; color: #f59e0b; font-weight: 600; margin-top: 4px;">Perk: ${art.perk}</div>
+              </div>
+            </div>
+            <div style="text-align: right; flex-shrink: 0;">
+              <span style="background: rgba(100,116,139,0.15); color: #94a3b8; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px;">UNBEKANNT</span>
+            </div>
+          </div>
+        `;
+      }
+    }).join('');
+
+    return `
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div style="background: rgba(30,41,59,0.5); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); margin-bottom: 4px;">
+          <span style="font-size: 11.5px; color: #94a3b8; display: inline-flex; align-items: center; gap: 6px;">
+            ${icon('info', '', 14)}
+            <span><strong>Fossilien & Relikte:</strong> Schalte permanente passive Boni frei, indem du vergrabene Fossil-Gesteine im Erdreich abbaust.</span>
+          </span>
+        </div>
+        ${cardsHtml}
       </div>
     `;
   }

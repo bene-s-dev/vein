@@ -134,6 +134,304 @@ export class AssetLoader {
       ctx.strokeRect(0.5, 0.5, 31, 31);
     });
 
+    // 1A-1. Felsbrocken / Geröll (32x32) - Schwerer abgerundeter Fels
+    createTexture('tile_boulder', TILE_SIZE, TILE_SIZE, (ctx) => {
+      // Dunkler Schattenwurf im Kachelfeld
+      ctx.fillStyle = '#070a10';
+      ctx.beginPath();
+      ctx.arc(16, 17, 14.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Felskörper (massiver Granit-Schotter)
+      ctx.fillStyle = '#475569';
+      ctx.beginPath();
+      ctx.arc(16, 15.5, 14, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Oberflächen-Facetten & Riss-Struktur
+      ctx.fillStyle = '#64748b';
+      ctx.beginPath();
+      ctx.arc(13, 12, 9, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(16, 16, 8, 7);
+      ctx.fillRect(8, 20, 9, 5);
+
+      // Bruchlinien / Risse
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(9, 10);
+      ctx.lineTo(15, 15);
+      ctx.lineTo(21, 12);
+      ctx.moveTo(15, 15);
+      ctx.lineTo(17, 23);
+      ctx.stroke();
+
+      // Lichtkante oben
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(16, 15.5, 13, Math.PI * 1.1, Math.PI * 1.8);
+      ctx.stroke();
+    });
+
+    // 1A-2. Lava-Ader (32x32) - Glühende Magmaschicht
+    createTexture('tile_lava', TILE_SIZE, TILE_SIZE, (ctx) => {
+      // Dunkles Basalt-Bett
+      ctx.fillStyle = '#180d09';
+      ctx.fillRect(0, 0, 32, 32);
+
+      // Glühendes Magma-Feld
+      ctx.fillStyle = '#dc2626';
+      ctx.fillRect(2, 2, 28, 28);
+
+      // Fließende orange Hitze-Ströme
+      ctx.fillStyle = '#f97316';
+      ctx.beginPath();
+      ctx.arc(10, 12, 7, 0, Math.PI * 2);
+      ctx.arc(22, 18, 8, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Weiß-Gelber glutheißer Kern
+      ctx.fillStyle = '#fef08a';
+      ctx.beginPath();
+      ctx.arc(11, 12, 3.5, 0, Math.PI * 2);
+      ctx.arc(22, 18, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Schwimmende Krusten-Schollen
+      ctx.fillStyle = '#451a03';
+      ctx.fillRect(4, 5, 6, 3);
+      ctx.fillRect(18, 6, 7, 4);
+      ctx.fillRect(12, 23, 8, 4);
+    });
+
+    // 1A-3. Verlassene Expeditions-Kapsel / Schatz-Wrack (32x32)
+    createTexture('tile_cache', TILE_SIZE, TILE_SIZE, (ctx) => {
+      // Gesteinsrand
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(0, 0, 32, 32);
+
+      // Titan-Panzerkiste
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(3, 4, 26, 24);
+
+      // Goldener/Gelber Behälter-Kern
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillRect(6, 7, 20, 18);
+
+      // Warnstreifen (Hazard Stripes)
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.moveTo(7, 7); ctx.lineTo(12, 7); ctx.lineTo(7, 12); ctx.fill();
+      ctx.moveTo(14, 7); ctx.lineTo(19, 7); ctx.lineTo(7, 19); ctx.lineTo(7, 14); ctx.fill();
+      ctx.moveTo(21, 7); ctx.lineTo(26, 7); ctx.lineTo(7, 25); ctx.lineTo(7, 21); ctx.fill();
+      ctx.moveTo(26, 12); ctx.lineTo(26, 17); ctx.lineTo(14, 25); ctx.lineTo(9, 25); ctx.fill();
+
+      // Zentrales Schloss / Datenmodul (Cyan leuchtend)
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(13, 13, 6, 6);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(15, 15, 2, 2);
+
+      // Rahmen-Kontur
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 1.2;
+      ctx.strokeRect(3.5, 4.5, 25, 23);
+    });
+
+    // 1A-3b. Fossil-Gestein (32x32) - Altes Sedimentgestein mit Knochen-/Fossilienabdrücken
+    createTexture('tile_fossil', TILE_SIZE, TILE_SIZE, (ctx) => {
+      // Warmes Schiefer- / Kalksteinbett
+      ctx.fillStyle = '#44403c';
+      ctx.fillRect(0, 0, 32, 32);
+      ctx.fillStyle = '#292524';
+      ctx.fillRect(2, 3, 28, 12);
+      ctx.fillRect(4, 17, 24, 12);
+
+      // Gold-bernsteinfarbener Schimmer & Gesteinsrisse
+      ctx.fillStyle = '#78716c';
+      ctx.fillRect(5, 5, 22, 2);
+      ctx.fillRect(6, 26, 20, 2);
+
+      // Fossilien-Skelett / Spirale (Helles Knochenweiß & Bernstein)
+      ctx.fillStyle = '#fef08a';
+      ctx.beginPath();
+      ctx.arc(16, 16, 9, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Knochenmuster innen
+      ctx.fillStyle = '#e2e8f0';
+      ctx.beginPath();
+      ctx.arc(16, 16, 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Spiralfurche / Wirbel
+      ctx.strokeStyle = '#78350f';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.arc(16, 16, 4.5, 0, Math.PI * 1.5);
+      ctx.stroke();
+
+      // Kleine Knochen-Ausläufer
+      ctx.strokeStyle = '#f8fafc';
+      ctx.lineWidth = 1.2;
+      for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 3) {
+        ctx.beginPath();
+        ctx.moveTo(16 + Math.cos(angle) * 5, 16 + Math.sin(angle) * 5);
+        ctx.lineTo(16 + Math.cos(angle) * 8.5, 16 + Math.sin(angle) * 8.5);
+        ctx.stroke();
+      }
+    });
+
+    // 1A-4. Dynamit (32x32)
+    createTexture('item_dynamite', 32, 32, (ctx) => {
+      // Rote Dynamitstangen
+      ctx.fillStyle = '#dc2626';
+      ctx.fillRect(8, 8, 16, 18);
+      // Haltebänder
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(7, 12, 18, 3);
+      ctx.fillRect(7, 20, 18, 3);
+      // Beschriftung TNT
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 8px monospace';
+      ctx.fillText('TNT', 9, 18);
+      // Zündschnur
+      ctx.strokeStyle = '#d97706';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(16, 8);
+      ctx.quadraticCurveTo(18, 3, 23, 4);
+      ctx.stroke();
+      // Funke
+      ctx.fillStyle = '#fef08a';
+      ctx.beginPath();
+      ctx.arc(23, 4, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // 1A-5. Notfall-Treibstoffkanister (32x32)
+    createTexture('item_fuel_canister', 32, 32, (ctx) => {
+      ctx.fillStyle = '#15803d'; // Militär-Grün / Notfall
+      ctx.fillRect(7, 9, 18, 19);
+      // Griff oben
+      ctx.fillRect(10, 4, 12, 5);
+      ctx.fillStyle = '#070a10';
+      ctx.fillRect(13, 6, 6, 3);
+      // Füllstand / Kreuz
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillRect(14, 13, 4, 11);
+      ctx.fillRect(10, 16, 12, 4);
+    });
+
+    // 1A-6. Reparatur-Kit (32x32)
+    createTexture('item_repair_kit', 32, 32, (ctx) => {
+      ctx.fillStyle = '#0284c7'; // Techniker-Blau
+      ctx.fillRect(6, 8, 20, 18);
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(11, 4, 10, 4);
+      // Weißes Sanitäts-Kreuz
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(14, 12, 4, 10);
+      ctx.fillRect(11, 15, 10, 4);
+    });
+
+    // 1A-7. 6 Artefakte für das Bergmann-Buch (je 32x32)
+    // 1. Ammonit (Spiral-Fossil)
+    createTexture('artifact_ammonite', 32, 32, (ctx) => {
+      ctx.fillStyle = '#d97706';
+      ctx.beginPath();
+      ctx.arc(16, 16, 12, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#78350f';
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.arc(16, 16, 9, 0, Math.PI * 1.6);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(16, 16, 5, 0, Math.PI * 1.4);
+      ctx.stroke();
+    });
+
+    // 2. Trilobit
+    createTexture('artifact_trilobite', 32, 32, (ctx) => {
+      ctx.fillStyle = '#0284c7';
+      ctx.beginPath();
+      ctx.ellipse(16, 16, 10, 13, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#082f49';
+      ctx.lineWidth = 1.5;
+      for (let y = 8; y <= 24; y += 4) {
+        ctx.beginPath();
+        ctx.moveTo(8, y);
+        ctx.lineTo(24, y);
+        ctx.stroke();
+      }
+    });
+
+    // 3. Dino-Zahn
+    createTexture('artifact_dino_tooth', 32, 32, (ctx) => {
+      ctx.fillStyle = '#f8fafc';
+      ctx.beginPath();
+      ctx.moveTo(9, 7);
+      ctx.quadraticCurveTo(11, 22, 23, 27);
+      ctx.quadraticCurveTo(18, 17, 21, 7);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = '#94a3b8';
+      ctx.stroke();
+    });
+
+    // 4. Kristall-Geode
+    createTexture('artifact_geode', 32, 32, (ctx) => {
+      ctx.fillStyle = '#475569';
+      ctx.beginPath();
+      ctx.arc(16, 16, 12, 0, Math.PI * 2);
+      ctx.fill();
+      // Kristalle innen
+      ctx.fillStyle = '#a855f7';
+      ctx.beginPath();
+      ctx.arc(16, 16, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#e9d5ff';
+      ctx.fillRect(15, 12, 2, 8);
+      ctx.fillRect(12, 15, 8, 2);
+    });
+
+    // 5. Meteoriten-Fragment
+    createTexture('artifact_meteorite', 32, 32, (ctx) => {
+      ctx.fillStyle = '#1e1b4b';
+      ctx.beginPath();
+      ctx.moveTo(7, 12); ctx.lineTo(14, 5); ctx.lineTo(26, 9);
+      ctx.lineTo(27, 23); ctx.lineTo(16, 27); ctx.lineTo(5, 20);
+      ctx.closePath();
+      ctx.fill();
+      // Schmelzkrater
+      ctx.fillStyle = '#4338ca';
+      ctx.beginPath();
+      ctx.arc(13, 14, 3, 0, Math.PI * 2);
+      ctx.arc(20, 19, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // 6. Uralter Mech-Kern
+    createTexture('artifact_mech_core', 32, 32, (ctx) => {
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(6, 6, 20, 20);
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(7, 7, 18, 18);
+      ctx.fillStyle = '#06b6d4';
+      ctx.beginPath();
+      ctx.arc(16, 16, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(15, 15, 2, 2);
+    });
+
     // =======================================================
     // 1B. SCHACHT-HINTERGRUNDWÄNDE (AUSGEHÖHLTES GESTEIN MIT STRUKTUR)
     // =======================================================

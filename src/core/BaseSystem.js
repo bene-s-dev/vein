@@ -393,6 +393,10 @@ export class BaseSystem {
     this.player = player;
     this.missionSystem = missionSystem;
 
+    // Börsen-Boom Event System
+    this.activeBoom = null;
+    this.boomTimer = 0;
+
     // Basis-Gebäude (Standard an der Oberfläche)
     this.buildings = [
       {
@@ -870,6 +874,30 @@ export class BaseSystem {
         this.renderRefineryModalBody();
       }
     }
+
+    // 4. Börsen-Boom Event Timer (alle 5 Minuten 180s Boom auf zufälliges Erz)
+    if (!this.activeBoom) {
+      this.boomTimer = (this.boomTimer || 0) + delta;
+      if (this.boomTimer >= 300000) { // 5 Minuten
+        this.boomTimer = 0;
+        const candidates = ['coal', 'copper', 'iron', 'tin', 'silver', 'gold', 'emerald'];
+        const picked = candidates[Math.floor(Math.random() * candidates.length)];
+        this.activeBoom = {
+          oreKey: picked,
+          remainingMs: 180000 // 3 Minuten
+        };
+        soundFx.playPurchase();
+        const oreName = ORE_DATA[picked]?.name || picked;
+        this.scene.hud?.showToast(`📈 BÖRSEN-BOOM! Hohe Industrienachfrage nach ${oreName}: 2x Verkaufspreis an der Börse!`, 'success');
+      }
+    } else {
+      this.activeBoom.remainingMs -= delta;
+      if (this.activeBoom.remainingMs <= 0) {
+        const endName = ORE_DATA[this.activeBoom.oreKey]?.name || this.activeBoom.oreKey;
+        this.activeBoom = null;
+        this.scene.hud?.showToast(`📉 Börsen-Boom für ${endName} ist beendet. Preise normalisieren sich.`, 'info');
+      }
+    }
   }
 
   openModal(title, contentHtml) {
@@ -945,20 +973,42 @@ export class BaseSystem {
     let totalOreCount = 0;
     for (const [ore, count] of Object.entries(combinedCounts)) {
       if (count > 0 && ORE_DATA[ore]) {
-        totalOreValue += ORE_DATA[ore].value * count;
+        const mult = this.player.getOreSellMultiplier ? this.player.getOreSellMultiplier(ore) : 1.0;
+        totalOreValue += Math.round(ORE_DATA[ore].value * mult) * count;
         totalOreCount += count;
       }
     }
 
+    let boomBannerHtml = '';
+    if (this.activeBoom && ORE_DATA[this.activeBoom.oreKey]) {
+      const boomOre = ORE_DATA[this.activeBoom.oreKey];
+      const secLeft = Math.max(0, Math.ceil(this.activeBoom.remainingMs / 1000));
+      boomBannerHtml = `
+        <div style="background: linear-gradient(90deg, rgba(234, 88, 12, 0.28), rgba(245, 158, 11, 0.28)); border: 1.5px solid #f97316; border-radius: 12px; padding: 12px 16px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 0 20px rgba(249, 115, 22, 0.25);">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="font-size: 24px;">🔥</span>
+            <div>
+              <div style="font-size: 13px; font-weight: 800; color: #fbbf24; text-transform: uppercase; letter-spacing: 0.5px;">Börsen-Boom Aktiv (200% Kurs)!</div>
+              <div style="font-size: 12px; color: #f8fafc;">Industrie kauft <strong>${boomOre.name}</strong> zum doppelten Marktpreis!</div>
+            </div>
+          </div>
+          <div style="background: rgba(0,0,0,0.4); padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 13px; color: #fdba74;">${secLeft}s</div>
+        </div>
+      `;
+    }
+
     let oreListHtml = '';
     if (totalOreCount === 0) {
-      oreListHtml = '<p style="color: #94a3b8; font-style: italic; margin: 18px 0; text-align: center;">Keine Erze im Frachtraum oder Depot vorhanden. Baue Erze im Schacht ab!</p>';
+      oreListHtml = `${boomBannerHtml}<p style="color: #94a3b8; font-style: italic; margin: 18px 0; text-align: center;">Keine Erze im Frachtraum oder Depot vorhanden. Baue Erze im Schacht ab!</p>`;
     } else {
-      oreListHtml = '<div style="display: flex; flex-direction: column; gap: 10px; margin: 12px 0;">';
+      oreListHtml = `${boomBannerHtml}<div style="display: flex; flex-direction: column; gap: 10px; margin: 12px 0;">`;
       for (const [ore, count] of Object.entries(combinedCounts)) {
         if (count <= 0) continue;
         const data = ORE_DATA[ore];
-        const val = data ? data.value : 0;
+        const mult = this.player.getOreSellMultiplier ? this.player.getOreSellMultiplier(ore) : 1.0;
+        const val = data ? Math.round(data.value * mult) : 0;
+        const isBoom = this.activeBoom && this.activeBoom.oreKey === ore;
+        const boomBadge = isBoom ? `<span style="background: #ea580c; color: #fff; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; margin-left: 6px;">2X BOOM</span>` : '';
         oreListHtml += `
           <div class="market-ore-card" data-ore="${ore}" style="background: #141c2b; padding: 10px 14px; border-radius: 10px; border: none; display: flex; flex-direction: column; gap: 8px;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -3301,10 +3351,72 @@ export class BaseSystem {
       </div>
     `;
 
+    const gadgetsData = [
+      {
+        key: 'dynamite',
+        name: 'Dynamit-Sprengsatz',
+        desc: 'Sprengt ein 3x3 Feld frei und birgt Erze sofort. (Hot-Key: B)',
+        price: 250,
+        icon: '🧨'
+      },
+      {
+        key: 'fuel_canister',
+        name: 'Notfall-Treibstoffkanister',
+        desc: 'Füllt unter Tage sofort +20L Treibstoff nach. (Hot-Key: F)',
+        price: 120,
+        icon: '⛽'
+      },
+      {
+        key: 'repair_kit',
+        name: 'Feld-Reparatur-Kit',
+        desc: 'Repariert im Notfall sofort +40 HP Panzerung. (Hot-Key: R)',
+        price: 180,
+        icon: '🧰'
+      }
+    ];
+
+    const currentGadgets = this.player.gadgets || { dynamite: 0, fuel_canister: 0, repair_kit: 0 };
+    const gadgetsCardsHtml = gadgetsData.map(g => {
+      const count = currentGadgets[g.key] || 0;
+      const canAfford = this.player.cash >= g.price;
+      return `
+        <div style="background: rgba(15,23,42,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="font-size: 22px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); border-radius: 8px;">${g.icon}</div>
+            <div>
+              <div style="font-size: 13px; font-weight: 700; color: #f8fafc;">${g.name}</div>
+              <div style="font-size: 11px; color: #94a3b8;">${g.desc}</div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
+            <span style="font-size: 11px; background: rgba(56,189,248,0.15); color: #38bdf8; font-weight: 700; padding: 2px 8px; border-radius: 6px;">Vorrat: ${count}</span>
+            <button class="btn-buy-gadget btn-buy" data-gadget="${g.key}" data-price="${g.price}" style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 800; background: ${canAfford ? 'linear-gradient(135deg, #10b981, #059669)' : '#334155'}; color: ${canAfford ? '#ffffff' : '#94a3b8'};" ${canAfford ? '' : 'disabled'}>
+              + Kaufen ($${g.price})
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    const gadgetsSectionHtml = `
+      <div class="tech-category-card" style="margin-top: 10px;">
+        <div class="cat-header-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <div class="cat-title-wrap" style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; color: #f8fafc;">
+            ${icon('package', '', 16)}
+            <span>EXPEDITIONS-AUSRÜSTUNG & VERBRAUCHSGÜTER</span>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          ${gadgetsCardsHtml}
+        </div>
+      </div>
+    `;
+
     const content = `
       <div style="display: flex; flex-direction: column; gap: 8px;">
         ${infoNotice}
         ${sectionsHtml}
+        ${gadgetsSectionHtml}
       </div>
     `;
 
@@ -3342,6 +3454,29 @@ export class BaseSystem {
         };
       }
     });
+
+    // Gadget-Kauf Handler
+    const modalEl = document.getElementById('building-modal');
+    if (modalEl) {
+      modalEl.querySelectorAll('.btn-buy-gadget').forEach(btn => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          const key = btn.getAttribute('data-gadget');
+          const price = parseInt(btn.getAttribute('data-price'), 10);
+          if (this.player.cash < price) {
+            soundFx.playError();
+            this.scene.events.emit('notify', 'Nicht genug Geld!');
+            return;
+          }
+          this.player.cash -= price;
+          this.player.gadgets = this.player.gadgets || { dynamite: 0, fuel_canister: 0, repair_kit: 0 };
+          this.player.gadgets[key] = (this.player.gadgets[key] || 0) + 1;
+          soundFx.playPurchase();
+          this.scene.events.emit('player_updated');
+          this.openDockModal();
+        };
+      });
+    }
 
 
   }

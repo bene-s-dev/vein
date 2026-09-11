@@ -7,6 +7,8 @@
  * - Dynamisches Culling & Sprite-Pooling
  */
 
+import { soundFx } from './SoundEffects.js';
+
 export const TILE_SIZE = 32;
 
 export const TILE_TYPES = {
@@ -15,7 +17,11 @@ export const TILE_TYPES = {
   DIRT: 'tile_dirt',
   STONE: 'tile_stone',
   GRANITE: 'tile_granite',
-  OBSIDIAN: 'tile_obsidian'
+  OBSIDIAN: 'tile_obsidian',
+  BOULDER: 'tile_boulder',
+  LAVA: 'tile_lava',
+  CACHE: 'tile_cache',
+  FOSSIL: 'tile_fossil'
 };
 
 export const MINE_ENTRANCE_GX_START = 19;
@@ -164,6 +170,69 @@ export const ORE_DATA = {
     hardness: 5.5,
     minDepth: 1700,
     rarityWeight: 1.0
+  }
+};
+
+export const ARTIFACT_CATALOG = {
+  artifact_ammonite: {
+    id: 'artifact_ammonite',
+    name: 'Spiral-Ammonit',
+    sprite: 'artifact_ammonite',
+    description: 'Uraltes versteinertes Kopffüßer-Gehäuse aus Ur-Meeren.',
+    perk: '+10% Treibstoff-Effizienz beim Bohren',
+    bonusType: 'fuelEfficiency',
+    bonusValue: 0.10,
+    minDepth: 35
+  },
+  artifact_trilobite: {
+    id: 'artifact_trilobite',
+    name: 'Gepanzerter Trilobit',
+    sprite: 'artifact_trilobite',
+    description: 'Robuster Urzeit-Gliederfüßer mit unzerbrechlichem Chitin-Panzer.',
+    perk: '+15 Max-Panzerung / HP',
+    bonusType: 'maxHp',
+    bonusValue: 15,
+    minDepth: 80
+  },
+  artifact_dino_tooth: {
+    id: 'artifact_dino_tooth',
+    name: 'Säbelzahn-Fossil',
+    sprite: 'artifact_dino_tooth',
+    description: 'Rasiermesserscharfer Raubtier-Fangzahn aus tiefsten Sedimentschichten.',
+    perk: '+10% Bohrgeschwindigkeit',
+    bonusType: 'drillSpeed',
+    bonusValue: 0.10,
+    minDepth: 160
+  },
+  artifact_geode: {
+    id: 'artifact_geode',
+    name: 'Amethyst-Geode',
+    sprite: 'artifact_geode',
+    description: 'Perfekt kristallisierter Basalthohlraum voll leuchtender Bergkristalle.',
+    perk: '+15% Verkaufswert für alle Edelsteine',
+    bonusType: 'gemValue',
+    bonusValue: 0.15,
+    minDepth: 280
+  },
+  artifact_meteorite: {
+    id: 'artifact_meteorite',
+    name: 'Sternen-Meteorit',
+    sprite: 'artifact_meteorite',
+    description: 'Außerirdischer Nickel-Eisen-Meteorit mit enormer Thermoresistenz.',
+    perk: '-50% Hitze-Schaden durch Lava',
+    bonusType: 'lavaResistance',
+    bonusValue: 0.50,
+    minDepth: 450
+  },
+  artifact_mech_core: {
+    id: 'artifact_mech_core',
+    name: 'Precursor Mech-Kern',
+    sprite: 'artifact_mech_core',
+    description: 'Funktionierendes Gravitations-Relikt einer untergegangenen Hochkultur.',
+    perk: '+20% Ladekapazität (Frachtraum)',
+    bonusType: 'cargoCapacity',
+    bonusValue: 0.20,
+    minDepth: 750
   }
 };
 
@@ -356,29 +425,61 @@ export class GridSystem {
       baseHp = 1800;
     }
 
-    // 2. Kumulative Erz-Generierung (Alle bisherigen Erze bleiben erhalten!)
+    // 1b. Spezielle Gefahren- & Schatzkacheln (Geröll, Lava, Kapseln, Fossilien)
+    const isEntranceCol = gx >= MINE_ENTRANCE_GX_START - 2 && gx <= MINE_ENTRANCE_GX_END + 2;
+    let isSpecial = false;
+
+    if (gy >= 8 && !isEntranceCol) {
+      // Expeditions-Kapseln (seltene Beutebehälter)
+      if (gy >= 25 && hashCoord(gx, gy, 777) < 0.007) {
+        type = TILE_TYPES.CACHE;
+        baseHp = 130;
+        isSpecial = true;
+      }
+      // Fossilien & Relikte (geheime Museumsstücke)
+      else if (gy >= 32 && hashCoord(gx, gy, 888) < 0.009) {
+        type = TILE_TYPES.FOSSIL;
+        baseHp = 110;
+        isSpecial = true;
+      }
+      // Magma- & Lava-Adern (in tieferen Zonen ab 160m)
+      else if (gy >= 160 && hashCoord(gx, gy, 555) < 0.045) {
+        type = TILE_TYPES.LAVA;
+        baseHp = 320;
+        isSpecial = true;
+      }
+      // Instabiles Geröll / Felsbrocken (fallen herunter bei Untergrabung)
+      else if (gy >= 12 && hashCoord(gx, gy, 444) < 0.040) {
+        type = TILE_TYPES.BOULDER;
+        baseHp = 220;
+        isSpecial = true;
+      }
+    }
+
+    // 2. Kumulative Erz-Generierung (nur wenn keine Spezialkachel)
     let ore = null;
-    const oreChance = hashCoord(gx, gy, 201);
+    if (!isSpecial && gy > 0) {
+      const oreChance = hashCoord(gx, gy, 201);
+      // Ca. 28% Wahrscheinlichkeit für Erz in einem Block
+      if (oreChance < 0.28) {
+        // Gültigen Erz-Pool für aktuelle Tiefe ermitteln
+        const availableOres = Object.entries(ORE_DATA).filter(([, data]) => gy >= data.minDepth);
 
-    // Ca. 28% Wahrscheinlichkeit für Erz in einem Block
-    if (gy > 0 && oreChance < 0.28) {
-      // Gültigen Erz-Pool für aktuelle Tiefe ermitteln
-      const availableOres = Object.entries(ORE_DATA).filter(([, data]) => gy >= data.minDepth);
+        if (availableOres.length > 0) {
+          // Gewichtete Zufallsauswahl nach Seltenheit
+          const totalWeight = availableOres.reduce((sum, [, data]) => sum + data.rarityWeight, 0);
+          let roll = hashCoord(gx, gy, 303) * totalWeight;
 
-      if (availableOres.length > 0) {
-        // Gewichtete Zufallsauswahl nach Seltenheit
-        const totalWeight = availableOres.reduce((sum, [, data]) => sum + data.rarityWeight, 0);
-        let roll = hashCoord(gx, gy, 303) * totalWeight;
-
-        for (const [key, data] of availableOres) {
-          roll -= data.rarityWeight;
-          if (roll <= 0) {
-            ore = key;
-            break;
+          for (const [key, data] of availableOres) {
+            roll -= data.rarityWeight;
+            if (roll <= 0) {
+              ore = key;
+              break;
+            }
           }
-        }
-        if (!ore) {
-          ore = availableOres[availableOres.length - 1][0];
+          if (!ore) {
+            ore = availableOres[availableOres.length - 1][0];
+          }
         }
       }
     }
@@ -438,12 +539,27 @@ export class GridSystem {
 
     if (tile.hp <= 0) {
       const destroyedOre = tile.ore;
+      const prevType = tile.type;
       tile.hp = 0;
       tile.type = TILE_TYPES.EMPTY;
       tile.ore = null;
       tile.explored = true;
       this.fogDirty = true;
       if (this.exploredTiles) this.exploredTiles.add(`${gx},${gy}`);
+
+      // Spezielle Beute- & Gefahreneffekte
+      if (prevType === TILE_TYPES.CACHE) {
+        this.handleCacheFound(gx, gy);
+      } else if (prevType === TILE_TYPES.FOSSIL) {
+        this.handleFossilFound(gx, gy);
+      } else if (prevType === TILE_TYPES.LAVA) {
+        if (this.scene.player) {
+          const res = this.scene.player.hasArtifact?.('artifact_meteorite') ? 0.5 : 1.0;
+          const dmg = Math.round(16 * res);
+          this.scene.player.takeDamage(dmg);
+          this.scene.hud?.showToast(`⚠️ Heiße Lava angebohrt! -${dmg} HP Hitzeschaden!`, 'danger');
+        }
+      }
 
       // Anstatt eines leeren schwarzen Lochs: Strukturierte Schacht-Hintergrundwand setzen!
       const key = `${gx},${gy}`;
@@ -467,9 +583,17 @@ export class GridSystem {
         }
       }
 
+      // Prüfen, ob über dieser Kachel instabiles Geröll liegt, das nun herabstürzt!
+      if (this.scene && this.scene.time) {
+        this.scene.time.delayedCall(160, () => {
+          this.checkBoulderFall(gx, gy - 1);
+        });
+      }
+
       return {
         destroyed: true,
         ore: destroyedOre,
+        special: prevType,
         gx,
         gy
       };
@@ -482,6 +606,149 @@ export class GridSystem {
         progress
       };
     }
+  }
+
+  handleCacheFound(gx, gy) {
+    const player = this.scene.player;
+    if (!player) return;
+    const cashBonus = Math.floor(280 + gy * 4.2);
+    player.cash += cashBonus;
+    player.stats.totalCashEarned = (player.stats.totalCashEarned || 0) + cashBonus;
+
+    let bonusMsg = '';
+    const roll = Math.random();
+    if (roll < 0.35) {
+      player.gadgets = player.gadgets || { dynamite: 0, fuel_canister: 0, repair_kit: 0 };
+      player.gadgets.dynamite = (player.gadgets.dynamite || 0) + 1;
+      bonusMsg = ' + 1x Dynamit';
+    } else if (roll < 0.65) {
+      player.gadgets = player.gadgets || { dynamite: 0, fuel_canister: 0, repair_kit: 0 };
+      player.gadgets.fuel_canister = (player.gadgets.fuel_canister || 0) + 1;
+      bonusMsg = ' + 1x Treibstoff-Kanister';
+    } else if (roll < 0.85) {
+      player.gadgets = player.gadgets || { dynamite: 0, fuel_canister: 0, repair_kit: 0 };
+      player.gadgets.repair_kit = (player.gadgets.repair_kit || 0) + 1;
+      bonusMsg = ' + 1x Reparatur-Kit';
+    }
+
+    soundFx.playPurchase();
+    this.scene.hud?.showToast(`📦 Expeditions-Kapsel geborgen! +$${cashBonus.toLocaleString('de-DE')}${bonusMsg}`, 'success');
+    this.scene.events?.emit('player_updated');
+  }
+
+  handleFossilFound(gx, gy) {
+    const player = this.scene.player;
+    if (!player) return;
+    const catalogList = Object.values(ARTIFACT_CATALOG);
+    const eligible = catalogList.filter(art => gy >= art.minDepth);
+    const known = player.discoveredArtifacts || [];
+    const undiscovered = eligible.filter(art => !known.includes(art.id));
+    const pool = undiscovered.length > 0 ? undiscovered : (eligible.length > 0 ? eligible : catalogList);
+    const picked = pool[Math.floor(Math.random() * pool.length)];
+
+    if (picked) {
+      const isNew = player.addArtifact ? player.addArtifact(picked.id) : false;
+      soundFx.playArtifactFind();
+      if (isNew) {
+        this.scene.hud?.showToast(`🦖 Neues Relikt entdeckt: ${picked.name}! (${picked.perk})`, 'info');
+      } else {
+        const bonusCash = 1250;
+        player.cash += bonusCash;
+        this.scene.hud?.showToast(`🦖 Bekanntes Fossil ${picked.name} für $${bonusCash} an Museum verkauft!`, 'success');
+      }
+      this.scene.events?.emit('player_updated');
+    }
+  }
+
+  checkBoulderFall(gx, gy) {
+    if (gy <= 0) return;
+    const tile = this.tiles.get(`${gx},${gy}`);
+    if (!tile || tile.type !== TILE_TYPES.BOULDER) return;
+
+    const belowTile = this.getTile(gx, gy + 1);
+    if (!belowTile || belowTile.type !== TILE_TYPES.EMPTY) return;
+
+    // Tiefsten leeren Zielblock ermitteln
+    let targetGy = gy + 1;
+    while (true) {
+      const nextBelow = this.getTile(gx, targetGy + 1);
+      if (nextBelow && nextBelow.type === TILE_TYPES.EMPTY) {
+        targetGy++;
+      } else {
+        break;
+      }
+    }
+
+    if (targetGy <= gy) return;
+
+    // Ursprüngliche Position leeren
+    tile.type = TILE_TYPES.EMPTY;
+    tile.hp = 0;
+    tile.explored = true;
+    this.fogDirty = true;
+    this.removeSpritesAt(gx, gy);
+
+    // Schachtwand an alter Position setzen
+    const shaftTex = this.getShaftTexture(gy);
+    const tint = getDepthTint(gy);
+    const bgSprite = this.scene.add.image(gx * TILE_SIZE + TILE_SIZE / 2, gy * TILE_SIZE + TILE_SIZE / 2, shaftTex)
+      .setDepth(1)
+      .setTint(tint);
+    this.activeSprites.set(`${gx},${gy}`, { bgSprite, oreSprite: null, crackSprite: null });
+
+    // Fallender Felsbrocken
+    const startX = gx * TILE_SIZE + TILE_SIZE / 2;
+    const startY = gy * TILE_SIZE + TILE_SIZE / 2;
+    const targetY = targetGy * TILE_SIZE + TILE_SIZE / 2;
+
+    const fallingSprite = this.scene.add.image(startX, startY, 'tile_boulder')
+      .setDepth(6)
+      .setTint(getDepthTint(gy));
+
+    const distance = targetGy - gy;
+    const duration = Math.min(650, Math.max(160, distance * 110));
+
+    this.scene.tweens.add({
+      targets: fallingSprite,
+      y: targetY,
+      duration,
+      ease: 'Quad.easeIn',
+      onUpdate: () => {
+        // Kollision mit Driller prüfen
+        const player = this.scene.player;
+        if (player && player.gx === gx && !fallingSprite.hasHitPlayer) {
+          const pY = player.y;
+          if (Math.abs(fallingSprite.y - pY) < 22) {
+            fallingSprite.hasHitPlayer = true;
+            player.takeDamage(25);
+            this.scene.cameras.main.shake(200, 0.02);
+            this.scene.hud?.showToast('⚠️ Achtung! Geröllsturz trifft Driller! (-25 HP)', 'danger');
+          }
+        }
+      },
+      onComplete: () => {
+        fallingSprite.destroy();
+
+        // Zielkachel wird zum Felsbrocken
+        const landedTile = {
+          type: TILE_TYPES.BOULDER,
+          ore: null,
+          maxHp: 220,
+          hp: 220,
+          indestructible: false,
+          explored: true
+        };
+        this.tiles.set(`${gx},${targetGy}`, landedTile);
+        this.fogDirty = true;
+
+        // Aufprallgeräusch & Erschütterung
+        soundFx.playTileDestroy();
+        this.scene.cameras.main.shake(120, 0.008);
+
+        // Kettenreaktion: Felsbrocken über dem ursprünglichen Block prüfen
+        this.checkBoulderFall(gx, gy - 1);
+      }
+    });
   }
 
   updateCrackVisual(gx, gy, progress) {
@@ -607,10 +874,11 @@ export class GridSystem {
         }
 
         let bundle = this.activeSprites.get(key);
+        const tileTint = (tile.type === TILE_TYPES.LAVA) ? 0xffffff : depthTint;
         if (!bundle) {
           const bgSprite = this.scene.add.image(tileCenterX, tileCenterY, tile.type)
             .setDepth(2)
-            .setTint(depthTint);
+            .setTint(tileTint);
           let oreSprite = null;
 
           if (tile.ore && ORE_DATA[tile.ore]) {
