@@ -2,6 +2,7 @@ import { ORE_DATA } from '../core/GridSystem.js';
 import { soundFx } from '../core/SoundEffects.js';
 import { icon, refreshIcons, oreIcon, itemDisplayIcon, getRefinedOreName, drillerVehicleIcon } from './IconHelper.js';
 import { notifyModalClosed, closeActiveModal } from '../core/BaseSystem.js';
+import { showOreInfoModal } from './OreInfoModal.js';
 
 /**
  * DrillerMenuModal.js
@@ -165,9 +166,10 @@ export class DrillerMenuModal {
       const data = ORE_DATA[key] || { name: key, value: 0 };
 
       gridItemsHtml += `
-        <div style="
+        <div class="driller-ore-card" data-key="${key}" style="
           position: relative;
           background: rgba(18, 26, 42, 0.85);
+          border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 10px;
           padding: 10px 6px 8px 6px;
           display: flex;
@@ -177,7 +179,10 @@ export class DrillerMenuModal {
           gap: 6px;
           min-height: 84px;
           box-sizing: border-box;
-        ">
+          cursor: pointer;
+          user-select: none;
+          transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+        " title="${data.name} (Klicken für Erz-Details)">
           <!-- Anzahl Badge -->
           <span style="
             position: absolute;
@@ -262,5 +267,16 @@ export class DrillerMenuModal {
     document.body.classList.add('modal-open');
     modalEl.style.display = 'flex';
     refreshIcons(modalEl);
+
+    // Klick auf Erz-Karten im Bohrermenü öffnet das Info-Popup
+    bodyEl.querySelectorAll('.driller-ore-card').forEach(card => {
+      card.onclick = (e) => {
+        e.stopPropagation();
+        const key = card.getAttribute('data-key');
+        if (key) {
+          showOreInfoModal(key, this.scene);
+        }
+      };
+    });
   }
 }

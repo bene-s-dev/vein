@@ -7,6 +7,8 @@
 
 import Phaser from 'phaser';
 import { isModalActive, closeActiveModal } from './BaseSystem.js';
+import { TILE_SIZE, TILE_TYPES } from './GridSystem.js';
+import { showOreInfoModal } from '../ui/OreInfoModal.js';
 
 export class InputHandler {
   constructor(scene) {
@@ -117,6 +119,10 @@ export class InputHandler {
     let activePointerId = null;
     let startClientX = 0;
     let startClientY = 0;
+    let startWorldX = 0;
+    let startWorldY = 0;
+    let startTime = 0;
+    let hasMovedBeyondTap = false;
     const maxRadius = 40;
     const deadzone = 8;
 
@@ -172,9 +178,13 @@ export class InputHandler {
 
       activePointerId = pointer.id;
 
-      // Exakte Bildschirmkoordinaten
+      // Exakte Bildschirm- und Weltkoordinaten merken
       startClientX = (pointer.event && pointer.event.clientX != null) ? pointer.event.clientX : pointer.x;
       startClientY = (pointer.event && pointer.event.clientY != null) ? pointer.event.clientY : pointer.y;
+      startWorldX = pointer.worldX;
+      startWorldY = pointer.worldY;
+      startTime = Date.now();
+      hasMovedBeyondTap = false;
 
       if (joystickContainer) {
         joystickContainer.style.left = `${startClientX - 48}px`;
@@ -210,6 +220,10 @@ export class InputHandler {
         knob.style.transform = `translate(${dx}px, ${dy}px)`;
       }
 
+      if (dist > deadzone) {
+        hasMovedBeyondTap = true;
+      }
+
       if (dist < deadzone) {
         this.touchDirection = null;
         return;
@@ -230,7 +244,30 @@ export class InputHandler {
     // POINTER UP & CANCEL:
     const handlePointerUp = (pointer) => {
       if (pointer && pointer.id !== activePointerId) return;
+
+      const upTime = Date.now();
+      const upClientX = (pointer && pointer.event && pointer.event.clientX != null) ? pointer.event.clientX : (pointer ? pointer.x : startClientX);
+      const upClientY = (pointer && pointer.event && pointer.event.clientY != null) ? pointer.event.clientY : (pointer ? pointer.y : startClientY);
+      const tapDist = Math.hypot(upClientX - startClientX, upClientY - startClientY);
+
       hideJoystick();
+
+      // Tap / Klick-Erkennung auf Erze unter Tage
+      if (!hasMovedBeyondTap && tapDist < 14 && (upTime - startTime) < 550) {
+        if (this.scene.gridSystem) {
+          const gx = Math.floor(startWorldX / TILE_SIZE);
+          const gy = Math.floor(startWorldY / TILE_SIZE);
+          if (gy >= 1) {
+            const tile = this.scene.gridSystem.getTile(gx, gy);
+            const key = `${gx},${gy}`;
+            const isExplored = tile && (tile.explored || (this.scene.gridSystem.exploredTiles && this.scene.gridSystem.exploredTiles.has(key)));
+            if (tile && tile.ore && tile.type !== TILE_TYPES.EMPTY && isExplored) {
+              showOreInfoModal(tile.ore, this.scene);
+              return;
+            }
+          }
+        }
+      }
     };
 
     this.scene.input.on('pointerup', handlePointerUp);

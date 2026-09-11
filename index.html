@@ -1587,6 +1587,17 @@
       display: none !important;
     }
 
+    @keyframes oreInfoPopIn {
+      0% {
+        opacity: 0;
+        transform: scale(0.92) translateY(8px);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
     /* Pause-Button verwandelt sich im Menü in das Schließen-X */
     body.modal-open #btn-pause #icon-pause-state {
       display: none !important;

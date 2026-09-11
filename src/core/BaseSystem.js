@@ -10,6 +10,7 @@ import { TILE_SIZE, ORE_DATA } from './GridSystem.js';
 import { soundFx } from './SoundEffects.js';
 import { icon, refreshIcons, COMPONENT_ICONS, oreIcon, ORE_COLORS, REFINED_ORE_DATA, getRefinedOreName, refinedItemIcon, itemDisplayIcon } from '../ui/IconHelper.js';
 import { TANK_TIERS, HULL_TIERS, ENGINE_TIERS, CARGO_TIERS, SENSOR_TIERS } from './Player.js';
+import { showOreInfoModal } from '../ui/OreInfoModal.js';
 
 // Dauer für das Einschmelzen einzelner Erze in Sekunden (verlängert für spürbaren Fortschritt)
 export const REFINERY_DURATIONS_SEC = {
@@ -83,6 +84,10 @@ export function closeActiveModal(scene) {
 export function isModalActive() {
   const modal = document.getElementById('building-modal');
   if (modal && modal.style.display && modal.style.display !== 'none') {
+    return true;
+  }
+  const oreInfoBackdrop = document.getElementById('ore-info-backdrop');
+  if (oreInfoBackdrop && oreInfoBackdrop.style.display && oreInfoBackdrop.style.display !== 'none') {
     return true;
   }
   if (Date.now() - lastModalCloseTimestamp < 350) {
@@ -1774,7 +1779,7 @@ export class BaseSystem {
         <div class="depot-ore-card" data-key="${key}" style="
           position: relative;
           background: rgba(18, 26, 42, 0.85);
-          border: ${canDeposit ? '1px solid rgba(56, 189, 248, 0.4)' : 'none'};
+          border: ${canDeposit ? '1px solid rgba(56, 189, 248, 0.4)' : '1px solid rgba(255, 255, 255, 0.08)'};
           border-radius: 10px;
           padding: 10px 6px 8px 6px;
           display: flex;
@@ -1784,10 +1789,10 @@ export class BaseSystem {
           gap: 6px;
           min-height: 84px;
           box-sizing: border-box;
-          cursor: ${canDeposit ? 'pointer' : 'default'};
+          cursor: pointer;
           user-select: none;
-          transition: transform 0.1s ease;
-        " title="${data.name}: ${depotCount}x im Depot${inCargo > 0 ? ` · ${inCargo}x im Bohrer (Klick = 1x einlagern, Shift-Klick = Alle)` : ''}">
+          transition: transform 0.12s ease, border-color 0.12s ease;
+        " title="${data.name}: ${depotCount}x im Depot${inCargo > 0 ? ` · ${inCargo}x im Bohrer` : ''} (Klicken für Details)">
           <!-- Anzahl Badge -->
           <span style="
             position: absolute;
@@ -2149,12 +2154,14 @@ export class BaseSystem {
       };
     }
 
-    // Klick auf Erz-Kachel (Einlagern aus Bohrer)
+    // Klick auf Erz-Kachel öffnet das Info-Popup
     body.querySelectorAll('.depot-ore-card').forEach(card => {
       card.onclick = (e) => {
+        e.stopPropagation();
         const key = card.getAttribute('data-key');
-        const count = e.shiftKey ? 9999 : 1;
-        this.depositOre(key, count);
+        if (key) {
+          showOreInfoModal(key, this.scene);
+        }
       };
     });
 
