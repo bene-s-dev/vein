@@ -38,7 +38,7 @@ export const MISSION_POOL = [
     targetDepth: 25,
     rewardCash: 450,
     rewardXp: 180,
-    rewardComp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 },
+    rewardComp: { key: 'iron_tube', name: 'Stahl-Rohr', count: 1 },
     minLevel: 1
   },
   {
@@ -50,7 +50,7 @@ export const MISSION_POOL = [
     targetCount: 4,
     rewardCash: 650,
     rewardXp: 260,
-    rewardComp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 },
+    rewardComp: { key: 'iron_tube', name: 'Stahl-Rohr', count: 1 },
     minLevel: 1
   },
   {
@@ -61,7 +61,7 @@ export const MISSION_POOL = [
     targetDepth: 65,
     rewardCash: 850,
     rewardXp: 350,
-    rewardComp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', count: 1 },
+    rewardComp: { key: 'iron_tube', name: 'Stahl-Rohr', count: 1 },
     minLevel: 2
   },
   {
@@ -73,7 +73,7 @@ export const MISSION_POOL = [
     targetCount: 3,
     rewardCash: 950,
     rewardXp: 400,
-    rewardComp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 },
+    rewardComp: { key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1 },
     minLevel: 2
   },
   {
@@ -84,7 +84,7 @@ export const MISSION_POOL = [
     targetDepth: 150,
     rewardCash: 1400,
     rewardXp: 550,
-    rewardComp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 },
+    rewardComp: { key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1 },
     minLevel: 2
   },
   {
@@ -96,7 +96,7 @@ export const MISSION_POOL = [
     targetCount: 3,
     rewardCash: 1500,
     rewardXp: 600,
-    rewardComp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 },
+    rewardComp: { key: 'silver_coil', name: 'Silber-Spule', count: 1 },
     minLevel: 3
   },
   {
@@ -108,7 +108,7 @@ export const MISSION_POOL = [
     targetCount: 3,
     rewardCash: 2200,
     rewardXp: 800,
-    rewardComp: { key: 'titan_alloy', name: 'Titan-Legierung', count: 1 },
+    rewardComp: { key: 'silver_coil', name: 'Silber-Spule', count: 1 },
     minLevel: 3
   },
   {
@@ -119,7 +119,7 @@ export const MISSION_POOL = [
     targetDepth: 350,
     rewardCash: 2800,
     rewardXp: 1000,
-    rewardComp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 1 },
+    rewardComp: { key: 'silver_coil', name: 'Silber-Spule', count: 1 },
     minLevel: 3
   },
   {
@@ -131,7 +131,7 @@ export const MISSION_POOL = [
     targetCount: 2,
     rewardCash: 3200,
     rewardXp: 1200,
-    rewardComp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 1 },
+    rewardComp: { key: 'crystal_lens', name: 'Kristall-Linse', count: 1 },
     minLevel: 4
   },
   {
@@ -142,7 +142,7 @@ export const MISSION_POOL = [
     targetDepth: 700,
     rewardCash: 4500,
     rewardXp: 1600,
-    rewardComp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 1 },
+    rewardComp: { key: 'crystal_lens', name: 'Kristall-Linse', count: 1 },
     minLevel: 4
   },
   {
@@ -154,7 +154,7 @@ export const MISSION_POOL = [
     targetCount: 2,
     rewardCash: 6000,
     rewardXp: 2200,
-    rewardComp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', count: 1 },
+    rewardComp: { key: 'crystal_lens', name: 'Kristall-Linse', count: 1 },
     minLevel: 4
   },
   {
@@ -165,7 +165,7 @@ export const MISSION_POOL = [
     targetDepth: 1200,
     rewardCash: 9500,
     rewardXp: 3200,
-    rewardComp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 1 },
+    rewardComp: { key: 'titan_bolt', name: 'Titan-Bolzen', count: 1 },
     minLevel: 5
   },
   {
@@ -177,7 +177,7 @@ export const MISSION_POOL = [
     targetCount: 3,
     rewardCash: 12000,
     rewardXp: 4000,
-    rewardComp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 1 },
+    rewardComp: { key: 'titan_bolt', name: 'Titan-Bolzen', count: 1 },
     minLevel: 6
   },
   {
@@ -188,7 +188,7 @@ export const MISSION_POOL = [
     targetDepth: 1600,
     rewardCash: 15000,
     rewardXp: 5000,
-    rewardComp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 1 },
+    rewardComp: { key: 'titan_bolt', name: 'Titan-Bolzen', count: 1 },
     minLevel: 6
   },
   {
@@ -200,7 +200,7 @@ export const MISSION_POOL = [
     targetCount: 3,
     rewardCash: 18000,
     rewardXp: 6000,
-    rewardComp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 1 },
+    rewardComp: { key: 'titan_bolt', name: 'Titan-Bolzen', count: 1 },
     minLevel: 7
   },
   {
@@ -211,7 +211,7 @@ export const MISSION_POOL = [
     targetDepth: 2000,
     rewardCash: 22000,
     rewardXp: 7500,
-    rewardComp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 1 },
+    rewardComp: { key: 'quantum_core', name: 'Quanten-Kern', count: 1 },
     minLevel: 8
   },
   {
@@ -223,7 +223,7 @@ export const MISSION_POOL = [
     targetCount: 4,
     rewardCash: 28000,
     rewardXp: 9500,
-    rewardComp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 },
+    rewardComp: { key: 'quantum_core', name: 'Quanten-Kern', count: 2 },
     minLevel: 8
   },
   {
@@ -235,7 +235,7 @@ export const MISSION_POOL = [
     targetCount: 2,
     rewardCash: 40000,
     rewardXp: 15000,
-    rewardComp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 2 },
+    rewardComp: { key: 'quantum_core', name: 'Quanten-Kern', count: 2 },
     minLevel: 9
   },
   {
@@ -246,7 +246,7 @@ export const MISSION_POOL = [
     targetDepth: 3000,
     rewardCash: 65000,
     rewardXp: 30000,
-    rewardComp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', count: 3 },
+    rewardComp: { key: 'quantum_core', name: 'Quanten-Kern', count: 3 },
     minLevel: 10
   }
 ];
@@ -356,7 +356,18 @@ export class MissionSystem {
       const count = this.activeMission.rewardComp.count || 1;
       const compName = this.activeMission.rewardComp.name || compKey;
       if (!this.player.components) {
-        this.player.components = { hydraulic_part: 0, titan_alloy: 0, laser_lens: 0, quantum_chip: 0 };
+        this.player.components = {
+          iron_tube: 0,
+          bronze_gear: 0,
+          silver_coil: 0,
+          crystal_lens: 0,
+          titan_bolt: 0,
+          quantum_core: 0,
+          hydraulic_part: 0,
+          titan_alloy: 0,
+          laser_lens: 0,
+          quantum_chip: 0
+        };
       }
       this.player.components[compKey] = (this.player.components[compKey] || 0) + count;
       compMsg = `, +${count}x ${compName}`;

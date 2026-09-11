@@ -116,31 +116,115 @@ export const DRILL_DATA = DRILL_TIERS;
 export const DEPOT_TIERS = [
   { tier: 1, capacity: 10, costCash: 0, label: 'Kompaktes Lagerfach' },
   { tier: 2, capacity: 25, costCash: 450, label: 'Erweitertes Regallager' },
-  { tier: 3, capacity: 60, costCash: 1600, costComp: { hydraulic_part: 1 }, compName: '1x Hydraulikzylinder', label: 'Automatisierte Förderbrücke' },
-  { tier: 4, capacity: 150, costCash: 4200, costComp: { titan_alloy: 1 }, compName: '1x Titan-Legierung', label: 'Schwergut-Containerterminal' },
-  { tier: 5, capacity: 350, costCash: 11000, costComp: { titan_alloy: 2 }, compName: '2x Titan-Legierung', label: 'Industrie-Großlager' },
-  { tier: 6, capacity: 650, costCash: 24000, costComp: { laser_lens: 2 }, compName: '2x Kristall-Fokuslinse', label: 'Logistik-Zentralverteiler' },
-  { tier: 7, capacity: 1000, costCash: 52000, costComp: { quantum_chip: 1 }, compName: '1x Quanten-Steuerkern', label: 'Quanten-Kompressionslager' },
-  { tier: 8, capacity: 1500, costCash: 115000, costComp: { quantum_chip: 2 }, compName: '2x Quanten-Steuerkern', label: 'Subraum-Speicherkomplex' },
-  { tier: 9, capacity: 2200, costCash: 230000, costComp: { quantum_chip: 2 }, compName: '2x Quanten-Steuerkern', label: 'Megaspeicher-Matrix' },
-  { tier: 10, capacity: 3000, costCash: 450000, costComp: { quantum_chip: 3 }, compName: '3x Quanten-Steuerkern', label: 'Interdimensionales Zentrallager' }
+  { tier: 3, capacity: 60, costCash: 1600, costComp: { iron_tube: 1 }, compName: '1x Stahl-Rohr', label: 'Automatisierte Förderbrücke' },
+  { tier: 4, capacity: 150, costCash: 4200, costComp: { bronze_gear: 1 }, compName: '1x Bronze-Getriebe', label: 'Schwergut-Containerterminal' },
+  { tier: 5, capacity: 350, costCash: 11000, costComp: { bronze_gear: 2 }, compName: '2x Bronze-Getriebe', label: 'Industrie-Großlager' },
+  { tier: 6, capacity: 650, costCash: 24000, costComp: { silver_coil: 2 }, compName: '2x Silber-Spule', label: 'Logistik-Zentralverteiler' },
+  { tier: 7, capacity: 1000, costCash: 52000, costComp: { crystal_lens: 1 }, compName: '1x Kristall-Linse', label: 'Quanten-Kompressionslager' },
+  { tier: 8, capacity: 1500, costCash: 115000, costComp: { crystal_lens: 2 }, compName: '2x Kristall-Linse', label: 'Subraum-Speicherkomplex' },
+  { tier: 9, capacity: 2200, costCash: 230000, costComp: { titan_bolt: 2 }, compName: '2x Titan-Bolzen', label: 'Megaspeicher-Matrix' },
+  { tier: 10, capacity: 3000, costCash: 450000, costComp: { quantum_core: 2 }, compName: '2x Quanten-Kern', label: 'Interdimensionales Zentrallager' }
 ];
 
-// Spezial-Upgrade-Bauteile (Auftragsbelohnungen, als Plätze im Depot)
+// Spezial-Upgrade-Bauteile (Auftragsbelohnungen & Montagebauteile)
 export const COMPONENT_DATA = {
-  // Sammler-Bauteile (via Quests beim Geolögie-NPC)
-  hydraulic_part: { name: 'Hydraulik-Zylinder', icon: 'cog', color: '#38bdf8' },
-  titan_alloy: { name: 'Titan-Legierung', icon: 'shield-check', color: '#60a5fa' },
-  laser_lens: { name: 'Kristall-Fokuslinse', icon: 'disc', color: '#c084fc' },
-  quantum_chip: { name: 'Quanten-Steuerkern', icon: 'atom', color: '#34d399' },
-  // Fabrik-Montage-Bauteile (herstellbar in der Fabrik)
-  iron_tube: { name: 'Stahl-Rohr', icon: 'pipe', color: '#94a3b8' },
+  // Fabrik- & Sammler-Montagebauteile
+  iron_tube: { name: 'Stahl-Rohr', icon: 'cylinder', color: '#94a3b8' },
   bronze_gear: { name: 'Bronze-Getriebe', icon: 'settings', color: '#d97706' },
   silver_coil: { name: 'Silber-Spule', icon: 'rotate-ccw', color: '#e2e8f0' },
   crystal_lens: { name: 'Kristall-Linse', icon: 'aperture', color: '#a78bfa' },
   titan_bolt: { name: 'Titan-Bolzen', icon: 'bolt', color: '#38bdf8' },
-  quantum_core: { name: 'Quanten-Kern', icon: 'orbit', color: '#34d399' }
+  quantum_core: { name: 'Quanten-Kern', icon: 'orbit', color: '#34d399' },
+  // Abwärtskompatibilität für alte Spielstände
+  hydraulic_part: { name: 'Hydraulik-Zylinder', icon: 'cog', color: '#38bdf8' },
+  titan_alloy: { name: 'Titan-Legierung', icon: 'shield-check', color: '#60a5fa' },
+  laser_lens: { name: 'Kristall-Fokuslinse', icon: 'disc', color: '#c084fc' },
+  quantum_chip: { name: 'Quanten-Steuerkern', icon: 'atom', color: '#34d399' }
 };
+
+// Steinsammler- / Geologen-Aufträge (Tiefenstufen 0-2000m+)
+export const GEOLOGIST_QUESTS = [
+  {
+    id: 'geologist_iron_tube',
+    title: 'Geologische Probensammlung I',
+    depthHint: 'Tiefe 0-50m (Erdschicht)',
+    reqs: { coal: 4, iron: 3 },
+    rewardComp: { key: 'iron_tube', name: 'Stahl-Rohr', iconName: 'cylinder' },
+    rewardCash: 180,
+    rewardXp: 140,
+    minLevel: 1
+  },
+  {
+    id: 'geologist_bronze_gear',
+    title: 'Sedimentproben II',
+    depthHint: 'Tiefe 30-150m (Schiefer-Schicht)',
+    reqs: { copper: 3, tin: 3 },
+    rewardComp: { key: 'bronze_gear', name: 'Bronze-Getriebe', iconName: 'settings' },
+    rewardCash: 420,
+    rewardXp: 300,
+    minLevel: 1
+  },
+  {
+    id: 'geologist_silver_coil',
+    title: 'Kristall-Reflektionsanalyse III',
+    depthHint: 'Tiefe 130-350m (Granit-Schicht)',
+    reqs: { silver: 3, gold: 2 },
+    rewardComp: { key: 'silver_coil', name: 'Silber-Spule', iconName: 'rotate-ccw' },
+    rewardCash: 950,
+    rewardXp: 650,
+    minLevel: 2
+  },
+  {
+    id: 'geologist_crystal_lens',
+    title: 'Edelstein-Prismenanalyse IV',
+    depthHint: 'Tiefe 340-800m (Obsidian-Zone)',
+    reqs: { emerald: 2, ruby: 2 },
+    rewardComp: { key: 'crystal_lens', name: 'Kristall-Linse', iconName: 'aperture' },
+    rewardCash: 2200,
+    rewardXp: 1300,
+    minLevel: 3
+  },
+  {
+    id: 'geologist_titan_bolt',
+    title: 'Tiefenanalyse V: Urgestein',
+    depthHint: 'Tiefe 850m+ (Urgesteins-Kern)',
+    reqs: { titan: 2, diamond: 1 },
+    rewardComp: { key: 'titan_bolt', name: 'Titan-Bolzen', iconName: 'bolt' },
+    rewardCash: 4200,
+    rewardXp: 2200,
+    minLevel: 5
+  },
+  {
+    id: 'geologist_quantum_core',
+    title: 'Quanten-Kernresonanz VI',
+    depthHint: 'Tiefe 1.500m+ (Erdkern-Zentrum)',
+    reqs: { uranium: 2, platinum: 1 },
+    rewardComp: { key: 'quantum_core', name: 'Quanten-Kern', iconName: 'orbit' },
+    rewardCash: 8500,
+    rewardXp: 4200,
+    minLevel: 7
+  },
+  {
+    id: 'geologist_amethyst_bonus',
+    title: 'Subraum-Resonanz VII',
+    depthHint: 'Tiefe 1.000-1.500m (Basalt & Urgestein)',
+    reqs: { amethyst: 2, sapphire: 2 },
+    rewardComp: { key: 'titan_bolt', name: 'Titan-Bolzen', iconName: 'bolt' },
+    rewardCash: 6000,
+    rewardXp: 3200,
+    minLevel: 6
+  },
+  {
+    id: 'geologist_darkmatter_bonus',
+    title: 'Kosmologische Tiefenstudie VIII',
+    depthHint: 'Tiefe 2.000m+ (Erdkern-Zentrum)',
+    reqs: { dark_matter: 1, platinum: 2 },
+    rewardComp: { key: 'quantum_core', name: 'Quanten-Kern', iconName: 'orbit' },
+    rewardCash: 16000,
+    rewardXp: 8000,
+    minLevel: 9
+  }
+];
 
 // Fabrik-Maschinen Ausbaustufen (Schaltet Fertigung mit tieferen Erzen frei)
 export const REFINERY_MACHINE_TIERS = [
@@ -387,7 +471,7 @@ export class BaseSystem {
         gx: -16,
         height: 70,
         costCash: 2400,
-        costComp: { hydraulic_part: 1 },
+        costComp: { iron_tube: 1 },
         isBuilt: false,
         storedOres: ['coal', 'copper'],
         timer: 0,
@@ -403,7 +487,7 @@ export class BaseSystem {
         gx: 34,
         height: 76,
         costCash: 5800,
-        costComp: { hydraulic_part: 1, titan_alloy: 1 },
+        costComp: { bronze_gear: 1, silver_coil: 1 },
         isBuilt: false,
         action: () => this.openTeleporterModal()
       },
@@ -417,7 +501,7 @@ export class BaseSystem {
         gx: 42,
         height: 76,
         costCash: 14500,
-        costComp: { titan_alloy: 2, laser_lens: 1 },
+        costComp: { silver_coil: 2, crystal_lens: 1 },
         isBuilt: false,
         timer: 0,
         accumulatedCash: 0,
@@ -1503,13 +1587,7 @@ export class BaseSystem {
         const have = this.player.components[compKey] || 0;
         const isMet = have >= need;
         const compIconName = COMPONENT_ICONS[compKey] || 'box';
-        const compNames = {
-          hydraulic_part: 'Hydraulik-Zylinder',
-          titan_alloy: 'Titan-Legierung',
-          laser_lens: 'Kristall-Fokuslinse',
-          quantum_chip: 'Quanten-Steuerkern'
-        };
-        const cName = compNames[compKey] || compKey;
+        const cName = COMPONENT_DATA[compKey]?.name || compKey;
         return `
           <span style="background: rgba(192, 132, 252, 0.12); border: 1px solid ${isMet ? 'rgba(192, 132, 252, 0.3)' : 'rgba(239, 68, 68, 0.4)'}; color: ${isMet ? '#c084fc' : '#ef4444'}; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">
             ${icon(compIconName, '', 11)} ${need}x ${cName} <span style="font-size: 9.5px; opacity: 0.85; font-variant-numeric: tabular-nums;">(${have}/${need})</span>
@@ -2359,59 +2437,7 @@ export class BaseSystem {
     const p = this.player;
     const comps = p.components;
 
-    // Realistische Quests passend zur Tiefe (0 bis 1600m) & Level
-    const quests = [
-      {
-        id: 'geologist_coal_copper',
-        title: 'Geologische Probensammlung I',
-        depthHint: 'Tiefe 0-50m (Erdschicht)',
-        reqs: { coal: 5, copper: 3 },
-        rewardComp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', iconName: 'cog' },
-        rewardCash: 160,
-        rewardXp: 120,
-        minLevel: 1
-      },
-      {
-        id: 'geologist_iron_tin',
-        title: 'Sedimentproben II',
-        depthHint: 'Tiefe 30-150m (Schiefer-Schicht)',
-        reqs: { iron: 4, tin: 3 },
-        rewardComp: { key: 'titan_alloy', name: 'Titan-Legierung', iconName: 'shield-check' },
-        rewardCash: 350,
-        rewardXp: 280,
-        minLevel: 2
-      },
-      {
-        id: 'geologist_silver_gold',
-        title: 'Kristall-Reflektionsanalyse III',
-        depthHint: 'Tiefe 130-350m (Granit-Schicht)',
-        reqs: { silver: 3, gold: 2 },
-        rewardComp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', iconName: 'disc' },
-        rewardCash: 800,
-        rewardXp: 580,
-        minLevel: 3
-      },
-      {
-        id: 'geologist_gem_cluster',
-        title: 'Quanten-Kernresonanz IV',
-        depthHint: 'Tiefe 340-800m (Obsidian-Zone)',
-        reqs: { emerald: 2, ruby: 2 },
-        rewardComp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', iconName: 'atom' },
-        rewardCash: 1900,
-        rewardXp: 1150,
-        minLevel: 4
-      },
-      {
-        id: 'geologist_diamond_core',
-        title: 'Tiefenanalyse V: Urgestein',
-        depthHint: 'Tiefe 850m+ (Urgestein-Kern)',
-        reqs: { diamond: 1, sapphire: 2 },
-        rewardComp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', iconName: 'atom' },
-        rewardCash: 3400,
-        rewardXp: 1900,
-        minLevel: 5
-      }
-    ];
+    const quests = GEOLOGIST_QUESTS;
 
     // Cargo & Depot nach Erzen zählen
     const cargoCounts = {};
@@ -2480,12 +2506,24 @@ export class BaseSystem {
     questsHtml += '</div>';
 
     // Komponenten-Inventar des Spielers
+    const activeCompKeys = [
+      { key: 'iron_tube', name: 'Stahl-Rohr', icon: 'cylinder', color: '#94a3b8' },
+      { key: 'bronze_gear', name: 'Bronze-Getriebe', icon: 'settings', color: '#d97706' },
+      { key: 'silver_coil', name: 'Silber-Spule', icon: 'rotate-ccw', color: '#e2e8f0' },
+      { key: 'crystal_lens', name: 'Kristall-Linse', icon: 'aperture', color: '#a78bfa' },
+      { key: 'titan_bolt', name: 'Titan-Bolzen', icon: 'bolt', color: '#38bdf8' },
+      { key: 'quantum_core', name: 'Quanten-Kern', icon: 'orbit', color: '#34d399' }
+    ];
+
+    const compBadges = activeCompKeys.map(c => `
+      <span style="display: inline-flex; align-items: center; gap: 4px; background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
+        ${icon(c.icon, '', 13)} <span style="color: #cbd5e1;">${c.name}:</span> <strong style="color: ${c.color};">${comps[c.key] || 0}</strong>
+      </span>
+    `).join('');
+
     const compHeader = `
-      <div style="background: rgba(15,23,42,0.85); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-around; font-size: 12px; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
-        <span style="display: inline-flex; align-items: center; gap: 4px;">${icon('cog', '', 13)} Hydraulik-Zylinder: <strong style="color: #38bdf8;">${comps.hydraulic_part || 0}</strong></span>
-        <span style="display: inline-flex; align-items: center; gap: 4px;">${icon('shield-check', '', 13)} Titan-Legierung: <strong style="color: #38bdf8;">${comps.titan_alloy || 0}</strong></span>
-        <span style="display: inline-flex; align-items: center; gap: 4px;">${icon('disc', '', 13)} Kristall-Linse: <strong style="color: #38bdf8;">${comps.laser_lens || 0}</strong></span>
-        <span style="display: inline-flex; align-items: center; gap: 4px;">${icon('atom', '', 13)} Quanten-Kern: <strong style="color: #38bdf8;">${comps.quantum_chip || 0}</strong></span>
+      <div style="background: rgba(15,23,42,0.85); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 12px; display: flex; justify-content: center; font-size: 11.5px; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+        ${compBadges}
       </div>
     `;
 
@@ -2500,8 +2538,6 @@ export class BaseSystem {
         <span>STEINEFORSCHER</span>
       </div>
     `, content);
-
-
 
     // Abgabe Event Listener
     const claimBtns = document.querySelectorAll('.btn-claim-geologist');
@@ -2534,6 +2570,7 @@ export class BaseSystem {
         soundFx.playPurchase();
 
         this.openGeologistModal();
+        if (this.scene.hud) this.scene.hud.update();
         this.scene.events.emit('notify', `Auftrag erfüllt: +1 ${q.rewardComp.name}, +€${q.rewardCash}, +${q.rewardXp} XP`);
       };
     });
@@ -2801,14 +2838,9 @@ export class BaseSystem {
     for (const [key, count] of Object.entries(pb.costComp)) {
       const have = p.components[key] || 0;
       if (have < count) canAffordComp = false;
-      const names = {
-        hydraulic_part: 'Hydraulik-Zylinder',
-        titan_alloy: 'Titan-Legierung',
-        laser_lens: 'Kristall-Linse',
-        quantum_chip: 'Quanten-Kern'
-      };
+      const cName = COMPONENT_DATA[key]?.name || key;
       const compIcon = COMPONENT_ICONS[key] || 'box';
-      reqCompsHtml.push(`<span style="color: ${have >= count ? '#10b981' : '#f87171'}; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">${icon(compIcon, '', 13)} ${names[key] || key}: ${have}/${count}</span>`);
+      reqCompsHtml.push(`<span style="color: ${have >= count ? '#10b981' : '#f87171'}; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">${icon(compIcon, '', 13)} ${cName}: ${have}/${count}</span>`);
     }
 
     const canBuild = canAffordCash && canAffordComp;

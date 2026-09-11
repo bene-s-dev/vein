@@ -2,7 +2,7 @@ import { MISSION_POOL } from '../core/MissionSystem.js';
 import { ORE_DATA } from '../core/GridSystem.js';
 import { soundFx } from '../core/SoundEffects.js';
 import { icon, refreshIcons, oreIcon } from './IconHelper.js';
-import { closeActiveModal } from '../core/BaseSystem.js';
+import { closeActiveModal, GEOLOGIST_QUESTS, COMPONENT_DATA } from '../core/BaseSystem.js';
 
 /**
  * MissionsProgressModal.js
@@ -488,115 +488,38 @@ export class MissionsProgressModal {
     const comps = p.components || {};
 
     // Bauteil-Inventar Header
+    const activeCompKeys = [
+      { key: 'iron_tube', name: 'Stahl-Rohr', icon: 'cylinder', color: '#94a3b8' },
+      { key: 'bronze_gear', name: 'Bronze-Getriebe', icon: 'settings', color: '#d97706' },
+      { key: 'silver_coil', name: 'Silber-Spule', icon: 'rotate-ccw', color: '#e2e8f0' },
+      { key: 'crystal_lens', name: 'Kristall-Linse', icon: 'aperture', color: '#a78bfa' },
+      { key: 'titan_bolt', name: 'Titan-Bolzen', icon: 'bolt', color: '#38bdf8' },
+      { key: 'quantum_core', name: 'Quanten-Kern', icon: 'orbit', color: '#34d399' }
+    ];
+
     const compInventoryHtml = `
       <div style="
-        background: rgba(15, 23, 42, 0.8);
+        background: rgba(15, 23, 42, 0.85);
         border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 10px;
         padding: 10px 14px;
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(3, 1fr);
         gap: 8px;
         margin-bottom: 12px;
       ">
-        <div style="display: flex; align-items: center; gap: 6px; font-size: 12px;">
-          ${icon('cog', '', 14)}
-          <span style="color: #94a3b8;">Hydraulik-Zylinder:</span>
-          <strong style="color: #38bdf8;">${comps.hydraulic_part || 0}</strong>
-        </div>
-        <div style="display: flex; align-items: center; gap: 6px; font-size: 12px;">
-          ${icon('shield-check', '', 14)}
-          <span style="color: #94a3b8;">Titan-Legierung:</span>
-          <strong style="color: #38bdf8;">${comps.titan_alloy || 0}</strong>
-        </div>
-        <div style="display: flex; align-items: center; gap: 6px; font-size: 12px;">
-          ${icon('disc', '', 14)}
-          <span style="color: #94a3b8;">Kristall-Linse:</span>
-          <strong style="color: #38bdf8;">${comps.laser_lens || 0}</strong>
-        </div>
-        <div style="display: flex; align-items: center; gap: 6px; font-size: 12px;">
-          ${icon('atom', '', 14)}
-          <span style="color: #94a3b8;">Quanten-Kern:</span>
-          <strong style="color: #38bdf8;">${comps.quantum_chip || 0}</strong>
-        </div>
+        ${activeCompKeys.map(c => `
+          <div style="display: flex; align-items: center; gap: 6px; font-size: 11.5px; background: rgba(0,0,0,0.25); padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.04);">
+            ${icon(c.icon, '', 13)}
+            <span style="color: #cbd5e1; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${c.name}:</span>
+            <strong style="color: ${c.color};">${comps[c.key] || 0}</strong>
+          </div>
+        `).join('')}
       </div>
     `;
 
-    // Quests (abgestimmt auf 0-1600m Tiefe)
-    const quests = [
-      {
-        id: 'geologist_coal_copper',
-        title: 'Geologische Probensammlung I',
-        depthHint: 'Tiefe 0-50m (Erdschicht)',
-        reqs: { coal: 5, copper: 3 },
-        rewardComp: { key: 'hydraulic_part', name: 'Hydraulik-Zylinder', iconName: 'cog' },
-        rewardCash: 160,
-        rewardXp: 120
-      },
-      {
-        id: 'geologist_iron_tin',
-        title: 'Sedimentproben II',
-        depthHint: 'Tiefe 30-150m (Schiefer-Schicht)',
-        reqs: { iron: 4, tin: 3 },
-        rewardComp: { key: 'titan_alloy', name: 'Titan-Legierung', iconName: 'shield-check' },
-        rewardCash: 350,
-        rewardXp: 280
-      },
-      {
-        id: 'geologist_silver_gold',
-        title: 'Kristall-Reflektionsanalyse III',
-        depthHint: 'Tiefe 130-350m (Granit-Schicht)',
-        reqs: { silver: 3, gold: 2 },
-        rewardComp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', iconName: 'disc' },
-        rewardCash: 800,
-        rewardXp: 580
-      },
-      {
-        id: 'geologist_gem_cluster',
-        title: 'Quanten-Kernresonanz IV',
-        depthHint: 'Tiefe 340-800m (Obsidian-Zone)',
-        reqs: { emerald: 2, ruby: 2 },
-        rewardComp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', iconName: 'atom' },
-        rewardCash: 1900,
-        rewardXp: 1150
-      },
-      {
-        id: 'geologist_diamond_core',
-        title: 'Tiefenanalyse V: Urgestein',
-        depthHint: 'Tiefe 850m+ (Urgestein-Kern)',
-        reqs: { diamond: 1, sapphire: 2 },
-        rewardComp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', iconName: 'atom' },
-        rewardCash: 3400,
-        rewardXp: 1900
-      },
-      {
-        id: 'geologist_deep_amethyst',
-        title: 'Subraum-Resonanz VI',
-        depthHint: 'Tiefe 1.000-1.500m (Basalt & Urgestein)',
-        reqs: { amethyst: 2, ruby: 3 },
-        rewardComp: { key: 'laser_lens', name: 'Kristall-Fokuslinse', iconName: 'disc' },
-        rewardCash: 4800,
-        rewardXp: 2600
-      },
-      {
-        id: 'geologist_abyssal_diamonds',
-        title: 'Quanten-Partikelanalyse VII',
-        depthHint: 'Tiefe 1.500m+ (Urgesteins-Kern)',
-        reqs: { diamond: 2, sapphire: 2 },
-        rewardComp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', iconName: 'atom' },
-        rewardCash: 7500,
-        rewardXp: 3800
-      },
-      {
-        id: 'geologist_dark_matter_anomaly',
-        title: 'Kosmologische Tiefenstudie VIII',
-        depthHint: 'Tiefe 2.000m+ (Erdkern-Zentrum)',
-        reqs: { dark_matter: 1, diamond: 3 },
-        rewardComp: { key: 'quantum_chip', name: 'Quanten-Steuerkern', iconName: 'atom' },
-        rewardCash: 15000,
-        rewardXp: 7500
-      }
-    ];
+    // Quests (abgestimmt auf 0-2000m Tiefe aus BaseSystem)
+    const quests = GEOLOGIST_QUESTS;
 
     const cargoCounts = {};
     p.cargo.forEach(ore => {
@@ -840,17 +763,7 @@ export class MissionsProgressModal {
     claimGeologistBtns.forEach(btn => {
       btn.onclick = () => {
         const qid = btn.getAttribute('data-qid');
-        const quests = [
-          { id: 'geologist_coal_copper', reqs: { coal: 5, copper: 3 }, rewardKey: 'hydraulic_part', name: 'Hydraulik-Zylinder', cash: 160, xp: 120 },
-          { id: 'geologist_iron_tin', reqs: { iron: 4, tin: 3 }, rewardKey: 'titan_alloy', name: 'Titan-Legierung', cash: 350, xp: 280 },
-          { id: 'geologist_silver_gold', reqs: { silver: 3, gold: 2 }, rewardKey: 'laser_lens', name: 'Kristall-Fokuslinse', cash: 800, xp: 580 },
-          { id: 'geologist_gem_cluster', reqs: { emerald: 2, ruby: 2 }, rewardKey: 'quantum_chip', name: 'Quanten-Steuerkern', cash: 1900, xp: 1150 },
-          { id: 'geologist_diamond_core', reqs: { diamond: 1, sapphire: 2 }, rewardKey: 'quantum_chip', name: 'Quanten-Steuerkern', cash: 3400, xp: 1900 },
-          { id: 'geologist_deep_amethyst', reqs: { amethyst: 2, ruby: 3 }, rewardKey: 'laser_lens', name: 'Kristall-Fokuslinse', cash: 4800, xp: 2600 },
-          { id: 'geologist_abyssal_diamonds', reqs: { diamond: 2, sapphire: 2 }, rewardKey: 'quantum_chip', name: 'Quanten-Steuerkern', cash: 7500, xp: 3800 },
-          { id: 'geologist_dark_matter_anomaly', reqs: { dark_matter: 1, diamond: 3 }, rewardKey: 'quantum_chip', name: 'Quanten-Steuerkern', cash: 15000, xp: 7500 }
-        ];
-        const q = quests.find(item => item.id === qid);
+        const q = GEOLOGIST_QUESTS.find(item => item.id === qid);
         if (!q) return;
 
         const depotOres = (this.baseSystem?.depot?.ores) || (this.scene?.baseSystem?.depot?.ores) || {};
@@ -868,14 +781,15 @@ export class MissionsProgressModal {
         }
 
         // Belohnung
-        this.player.addComponent(q.rewardKey, 1);
-        this.player.cash += q.cash;
-        this.player.addXp(q.xp);
+        this.player.addComponent(q.rewardComp.key, 1);
+        this.player.cash += q.rewardCash;
+        this.player.addXp(q.rewardXp);
         this.player.stats.researchCompleted = (this.player.stats.researchCompleted || 0) + 1;
         soundFx.playPurchase();
 
-        this.scene.events.emit('notify', `Steinforscher: +1 ${q.name}, +€${q.cash}, +${q.xp} XP erhalten!`);
         this.render();
+        if (this.scene && this.scene.hud) this.scene.hud.update();
+        this.scene.events.emit('notify', `Auftrag erfüllt: +1 ${q.rewardComp.name}, +€${q.rewardCash}, +${q.rewardXp} XP erhalten!`);
       };
     });
   }
