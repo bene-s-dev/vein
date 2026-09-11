@@ -90,12 +90,14 @@ export const BOOK_PRODUCTS = [
   { id: 'bar_titanium', name: 'Titan-Barren', value: 3200, req: '1x Titan (im Schmelzofen)', desc: 'Raumfahrt-zertifizierter Titanblock für schwerste Tiefenrümpfe.' },
   { id: 'bar_platinum', name: 'Platin-Barren', value: 5100, req: '1x Platin (im Schmelzofen)', desc: 'Das edelste aller Metalle. Korrosionsfrei und extrem wertvoll.' },
   // Fabrik-Erzeugnisse
-  { id: 'steel_beam', name: 'Stahlträger', value: 260, req: '2x Eisen + 2x Kohle (Fabrik)', desc: 'Schwerer Industriestahl für Schachtgerüste und Maschinensockel.' },
-  { id: 'bronze_ingot', name: 'Bronze-Barren', value: 390, req: '2x Kupfer + 2x Zinn (Fabrik)', desc: 'Korrosionsfreie Legierung für Antriebszahnräder und Motoren.' },
-  { id: 'circuit_board', name: 'Elektronik-Platine', value: 920, req: '2x Kupfer + 1x Silber + 1x Gold (Fabrik)', desc: 'Präzisions-Leiterplatte für autonome Sensoren und Schachtradar.' },
-  { id: 'polished_gem', name: 'Schmuck-Diamant', value: 3600, req: '1x Smaragd + 1x Rubin (Fabrik)', desc: 'Lasergeschnittener Kristall für Hochenergie-Optiken und Luxus.' },
-  { id: 'titan_plate', name: 'Titan-Panzerung', value: 9400, req: '2x Titan + 1x Diamant (Fabrik)', desc: 'Verbundpanzerung für den Vorstoß in tiefste Basaltzonen.' },
-  { id: 'fusion_rod', name: 'Quanten-Brennstab', value: 24000, req: '2x Uran + 1x Dunkelmaterie (Fabrik)', desc: 'Ultimative Fusions-Energiequelle mit astronomischem Erlös.' }
+  { id: 'steel_beam', name: 'Stahlträger', value: 280, req: '2x Eisen + 2x Kohle (Fabrik)', desc: 'Schwerer Industriestahl für Schachtgerüste und Maschinensockel.' },
+  { id: 'bronze_ingot', name: 'Bronze-Barren', value: 360, req: '2x Kupfer + 1x Zinn (Fabrik)', desc: 'Korrosionsfreie Legierung für Antriebszahnräder und Motoren.' },
+  { id: 'circuit_board', name: 'Elektronik-Platine', value: 1150, req: '2x Kupfer + 1x Zinn + 1x Gold (Fabrik)', desc: 'Präzisions-Leiterplatte mit Zinn-Lötbahnen und Gold-Kontakten.' },
+  { id: 'sapphire_glass', name: 'Saphir-Panzerglas', value: 2300, req: '2x Saphir + 1x Silber (Fabrik)', desc: 'Kratzfestes und hochdruckstabiles Panzerglas aus Saphirkristallen.' },
+  { id: 'polished_gem', name: 'Schmuck-Diamant', value: 4400, req: '1x Smaragd + 1x Rubin + 1x Diamant (Fabrik)', desc: 'Präzisionsgeschliffener Dreifach-Edelstein für Luxus und Hochleistungs-Laser.' },
+  { id: 'titan_plate', name: 'Titan-Panzerung', value: 9800, req: '2x Titan + 1x Diamant (Fabrik)', desc: 'Verbundpanzerung für den Vorstoß in tiefste Basaltzonen.' },
+  { id: 'obsidian_matrix', name: 'Obsidian-Superleiter', value: 19500, req: '1x Obsidian-Kern + 2x Platin (Fabrik)', desc: 'Hochdichte vulkanische Kristallmatrix für extremste Energiedichten.' },
+  { id: 'fusion_rod', name: 'Quanten-Brennstab', value: 32000, req: '2x Uran + 1x Dunkelmaterie (Fabrik)', desc: 'Ultimative Fusions-Energiequelle mit astronomischem Erlös.' }
 ];
 
 export class MinerBookModal {

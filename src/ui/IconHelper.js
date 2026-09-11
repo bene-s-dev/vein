@@ -292,9 +292,17 @@ export const FACTORY_PRODUCT_ICONS = {
   steel_beam: 'circle-pile',
   bronze_ingot: 'layers',
   circuit_board: 'cpu',
+  sapphire_glass: 'shield',
   polished_gem: 'gem',
-  titan_plate: 'shield',
-  fusion_rod: 'flame'
+  titan_plate: 'shield-check',
+  obsidian_matrix: 'disc',
+  fusion_rod: 'flame',
+  iron_tube: 'cylinder',
+  bronze_gear: 'settings',
+  silver_coil: 'rotate-ccw',
+  crystal_lens: 'aperture',
+  titan_bolt: 'bolt',
+  quantum_core: 'orbit'
 };
 
 /**

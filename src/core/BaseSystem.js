@@ -180,7 +180,7 @@ export const GEOLOGIST_QUESTS = [
     id: 'geologist_crystal_lens',
     title: 'Edelstein-Prismenanalyse IV',
     depthHint: 'Tiefe 340-800m (Obsidian-Zone)',
-    reqs: { emerald: 2, ruby: 2 },
+    reqs: { emerald: 2, sapphire: 2 },
     rewardComp: { key: 'crystal_lens', name: 'Kristall-Linse', iconName: 'aperture' },
     rewardCash: 2200,
     rewardXp: 1300,
@@ -190,7 +190,7 @@ export const GEOLOGIST_QUESTS = [
     id: 'geologist_titan_bolt',
     title: 'Tiefenanalyse V: Urgestein',
     depthHint: 'Tiefe 850m+ (Urgesteins-Kern)',
-    reqs: { titan: 2, diamond: 1 },
+    reqs: { titanium: 2, diamond: 1 },
     rewardComp: { key: 'titan_bolt', name: 'Titan-Bolzen', iconName: 'bolt' },
     rewardCash: 4200,
     rewardXp: 2200,
@@ -210,7 +210,7 @@ export const GEOLOGIST_QUESTS = [
     id: 'geologist_amethyst_bonus',
     title: 'Subraum-Resonanz VII',
     depthHint: 'Tiefe 1.000-1.500m (Basalt & Urgestein)',
-    reqs: { amethyst: 2, sapphire: 2 },
+    reqs: { obsidian_gem: 2, sapphire: 2 },
     rewardComp: { key: 'titan_bolt', name: 'Titan-Bolzen', iconName: 'bolt' },
     rewardCash: 6000,
     rewardXp: 3200,
@@ -231,88 +231,112 @@ export const GEOLOGIST_QUESTS = [
 // Fabrik-Maschinen Ausbaustufen (Schaltet Fertigung mit tieferen Erzen frei)
 export const REFINERY_MACHINE_TIERS = [
   { tier: 1, name: 'Standard-Maschine', costCash: 0, desc: 'Einfache Bauteile aus Eisen, Kupfer und Zinn.' },
-  { tier: 2, name: 'Präzisions-Werkbank Mk.II', costCash: 1500, desc: 'Elektronik-Platinen (Silber, Gold).' },
-  { tier: 3, name: 'Kristall-Schleifer Mk.III', costCash: 5000, desc: 'Schmuck-Diamanten (Smaragd, Rubin).' },
-  { tier: 4, name: 'Tiefsee-Schmiede Mk.IV', costCash: 15000, desc: 'Titan-Panzerungen (Titan, Diamant).' },
-  { tier: 5, name: 'Quanten-Assembler V', costCash: 45000, desc: 'Quanten-Brennstäbe (Uran, Platin).' }
+  { tier: 2, name: 'Präzisions-Werkbank Mk.II', costCash: 1500, desc: 'Elektronik-Platinen & Silber-Spulen (Silber, Gold).' },
+  { tier: 3, name: 'Kristall-Schleifer Mk.III', costCash: 5000, desc: 'Saphir-Panzerglas, Schmuck-Diamanten & Kristall-Linsen (Saphir, Smaragd, Rubin).' },
+  { tier: 4, name: 'Tiefsee-Schmiede Mk.IV', costCash: 15000, desc: 'Titan-Panzerungen & Titan-Bolzen (Titan, Diamant, Platin).' },
+  { tier: 5, name: 'Quanten-Assembler V', costCash: 45000, desc: 'Obsidian-Superleiter, Quanten-Brennstäbe & Quanten-Kerne (Obsidian, Uran, Dunkelmaterie).' }
 ];
 
-// Fabrik-Produkte (Industrielle Werkstoffe mit hohem Börsenwert)
-// Jedes Produkt benötigt zusätzlich 2x Kohle als Prozesshitze/Brennstoff
+// Fabrik-Produkte (Industrielle Werkstoffe mit hohem Börsenwert & Montagebauteile)
+// Jedes Handelsgut benötigt zusätzlich 2x Kohle als Prozesshitze/Brennstoff
 export const FACTORY_PRODUCTS = {
+  // ── 1. Industrielle Handelsgüter (Börsen-Verkauf mit hohem Gewinn) ──
   steel_beam: {
     id: 'steel_beam',
     name: 'Stahlträger',
-    desc: 'Hochbelastbarer Baustahl für Schachtgerüste und Industrie.',
+    desc: 'Schwerer Baustahl für Schachtgerüste und Industrie. Aus 2x Eisen + 2x Kohle geschmiedet.',
     iconName: 'circle-pile',
-    recipe: { iron: 2, coal: 2 }, // 2x Eisen + 2x Kohle Material
+    recipe: { iron: 2, coal: 2 },
     fuelCoal: 2,
     minTier: 1,
     durationSec: 45,
-    value: 260
+    value: 280
   },
   bronze_ingot: {
     id: 'bronze_ingot',
     name: 'Bronze-Barren',
-    desc: 'Widerstandsfähige Legierung für korrosionsfreie Maschinenteile.',
+    desc: 'Korrosionsfreie Legierung für Schiffbau und Maschinenbau. Gegossen aus 2x Kupfer + 1x Zinn.',
     iconName: 'layers',
-    recipe: { copper: 2, tin: 2 },
+    recipe: { copper: 2, tin: 1 },
     fuelCoal: 2,
     minTier: 1,
-    durationSec: 60,
-    value: 390
+    durationSec: 55,
+    value: 360
   },
   circuit_board: {
     id: 'circuit_board',
     name: 'Elektronik-Platine',
-    desc: 'Hochintegrierte Leiterplatte für Steuerungen und Navigationssysteme.',
+    desc: 'Hochintegrierte Leiterplatte mit Zinn-Lötbahnen und Gold-Kontakten.',
     iconName: 'cpu',
-    recipe: { copper: 2, silver: 1, gold: 1 },
+    recipe: { copper: 2, tin: 1, gold: 1 },
     fuelCoal: 2,
     minTier: 2,
-    durationSec: 120,
-    value: 920
+    durationSec: 110,
+    value: 1150
+  },
+  sapphire_glass: {
+    id: 'sapphire_glass',
+    name: 'Saphir-Panzerglas',
+    desc: 'Kratzfestes und hochdruckstabiles Panzerglas aus Saphirkristallen und Feinsilber.',
+    iconName: 'shield',
+    recipe: { sapphire: 2, silver: 1 },
+    fuelCoal: 2,
+    minTier: 3,
+    durationSec: 160,
+    value: 2300
   },
   polished_gem: {
     id: 'polished_gem',
     name: 'Schmuck-Diamant',
-    desc: 'Präzisionsgeschliffener Edelstein für Optik und Luxusmärkte.',
+    desc: 'Präzisionsgeschliffener Dreifach-Edelstein aus Smaragd, Rubin und Diamant.',
     iconName: 'gem',
-    recipe: { emerald: 1, ruby: 1 },
+    recipe: { emerald: 1, ruby: 1, diamond: 1 },
     fuelCoal: 2,
     minTier: 3,
     durationSec: 200,
-    value: 3600
+    value: 4400
   },
   titan_plate: {
     id: 'titan_plate',
     name: 'Titan-Panzerung',
-    desc: 'Hitzebeständige Panzerplatte für Tiefsee- und Hochdruckrümpfe.',
-    iconName: 'shield',
+    desc: 'Hitzebeständige Panzerplatte mit Diamant-Partikelbeschichtung für Tiefsee- und Hochdruckrümpfe.',
+    iconName: 'shield-check',
     recipe: { titanium: 2, diamond: 1 },
     fuelCoal: 2,
     minTier: 4,
-    durationSec: 320,
-    value: 9400
+    durationSec: 300,
+    value: 9800
+  },
+  obsidian_matrix: {
+    id: 'obsidian_matrix',
+    name: 'Obsidian-Superleiter',
+    desc: 'Hochdichte vulkanische Kristallmatrix mit Platin-Leiterbahnen für extremste Energiedichten.',
+    iconName: 'disc',
+    recipe: { obsidian_gem: 1, platinum: 2 },
+    fuelCoal: 2,
+    minTier: 5,
+    durationSec: 400,
+    value: 19500
   },
   fusion_rod: {
     id: 'fusion_rod',
     name: 'Quanten-Brennstab',
-    desc: 'Hochenergetischer Nuklear-Brennstab für Fusionsreaktoren.',
+    desc: 'Hochenergetischer Nuklear-Brennstab aus radioaktivem Uran und stabilisierter Dunkelmaterie.',
     iconName: 'zap',
-    recipe: { uranium: 2, platinum: 1 },
+    recipe: { uranium: 2, dark_matter: 1 },
     fuelCoal: 2,
     minTier: 5,
     durationSec: 480,
-    value: 24500
+    value: 32000
   },
-  // ── Neue Montage-Bauteile (für Hangar-Upgrades) ──
+
+  // ── 2. Montage-Bauteile (für Hangar-Fahrzeug-Upgrades) ──
   iron_tube: {
     id: 'iron_tube',
     name: 'Stahl-Rohr',
-    desc: 'Robustes Nahtlos-Rohr für Anbauteile an Tier-2-Moduls. Aus 2x Eisen + 2x Kohle gefertigt.',
+    desc: 'Nahtlos gezogenes Hochdruckrohr für Tier-2-Module. Aus 2x Eisen + 1x Kupfer gefertigt.',
     iconName: 'pipe',
-    recipe: { iron: 2, coal: 2 },
+    recipe: { iron: 2, copper: 1 },
     fuelCoal: 0,
     minTier: 1,
     durationSec: 40,
@@ -323,12 +347,12 @@ export const FACTORY_PRODUCTS = {
   bronze_gear: {
     id: 'bronze_gear',
     name: 'Bronze-Getriebe',
-    desc: 'Präzisionszahnrad für Tier-3-Mechanik. Aus 2x Kupfer + 2x Zinn legiert.',
+    desc: 'Präzisionszahnrad für Tier-3-Mechanik. Gefertigt aus 2x Zinn + 1x Eisen (Zahnkranz & Achse).',
     iconName: 'settings',
-    recipe: { copper: 2, tin: 2 },
+    recipe: { tin: 2, iron: 1 },
     fuelCoal: 0,
     minTier: 1,
-    durationSec: 55,
+    durationSec: 50,
     value: 0,
     isComponent: true,
     compKey: 'bronze_gear'
@@ -336,12 +360,12 @@ export const FACTORY_PRODUCTS = {
   silver_coil: {
     id: 'silver_coil',
     name: 'Silber-Spule',
-    desc: 'Hochleitfähige Induktionsspule für Tier-4-5-Elektronik. Aus 3x Silber + 1x Kupfer.',
+    desc: 'Induktionsspule für Tier-4-5-Elektronik. Feines Silber mit isolierendem Feingold gewickelt.',
     iconName: 'rotate-ccw',
-    recipe: { silver: 3, copper: 1 },
+    recipe: { silver: 2, gold: 1 },
     fuelCoal: 0,
     minTier: 2,
-    durationSec: 100,
+    durationSec: 90,
     value: 0,
     isComponent: true,
     compKey: 'silver_coil'
@@ -349,12 +373,12 @@ export const FACTORY_PRODUCTS = {
   crystal_lens: {
     id: 'crystal_lens',
     name: 'Kristall-Linse',
-    desc: 'Optische Präzisionslinse für Tier-6-7-Systeme. Aus 2x Smaragd + 1x Rubin poliert.',
+    desc: 'Prismatische Zweifarben-Linse für Tier-6-7-Sensorik. Aus 1x Saphir + 1x Smaragd geschliffen.',
     iconName: 'aperture',
-    recipe: { emerald: 2, ruby: 1 },
+    recipe: { sapphire: 1, emerald: 1 },
     fuelCoal: 0,
     minTier: 3,
-    durationSec: 180,
+    durationSec: 160,
     value: 0,
     isComponent: true,
     compKey: 'crystal_lens'
@@ -362,12 +386,12 @@ export const FACTORY_PRODUCTS = {
   titan_bolt: {
     id: 'titan_bolt',
     name: 'Titan-Bolzen',
-    desc: 'Hochfester Schraubenbolzen für Tier-8-9-Gehäuse. Aus 2x Titan + 1x Diamant geschmiedet.',
+    desc: 'Extrem zugfester Gewindebolzen für Tier-8-9-Chassis. Aus 2x Titan + 1x Platin legiert.',
     iconName: 'bolt',
-    recipe: { titanium: 2, diamond: 1 },
+    recipe: { titanium: 2, platinum: 1 },
     fuelCoal: 0,
     minTier: 4,
-    durationSec: 280,
+    durationSec: 240,
     value: 0,
     isComponent: true,
     compKey: 'titan_bolt'
@@ -375,12 +399,12 @@ export const FACTORY_PRODUCTS = {
   quantum_core: {
     id: 'quantum_core',
     name: 'Quanten-Kern',
-    desc: 'Quantenmechanischer Kern für Tier-10-Technologie. Aus 2x Uran + 1x Platin synthesiert.',
+    desc: 'Subatomarer Gravitationskern für Tier-10-Technologie. Aus 1x Uran + 1x Obsidian-Kern synthetisiert.',
     iconName: 'orbit',
-    recipe: { uranium: 2, platinum: 1 },
+    recipe: { uranium: 1, obsidian_gem: 1 },
     fuelCoal: 0,
     minTier: 5,
-    durationSec: 420,
+    durationSec: 360,
     value: 0,
     isComponent: true,
     compKey: 'quantum_core'

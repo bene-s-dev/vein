@@ -187,8 +187,10 @@ export class Player {
       steel_beam: 0,
       bronze_ingot: 0,
       circuit_board: 0,
+      sapphire_glass: 0,
       polished_gem: 0,
       titan_plate: 0,
+      obsidian_matrix: 0,
       fusion_rod: 0
     };
 
@@ -215,12 +217,12 @@ export class Player {
       laser_lens: 0,      // Kristall-Fokuslinse (Sammler-Belohnung)
       quantum_chip: 0,    // Quanten-Steuerkern (Sammler-Belohnung)
       // Fabrik-Montage-Bauteile (hergestellt in der Fabrik)
-      iron_tube: 0,       // Stahl-Rohr: 2x Eisen + 2x Kohle → Tier 2
-      bronze_gear: 0,     // Bronze-Getriebe: 2x Kupfer + 2x Zinn → Tier 3
-      silver_coil: 0,     // Silber-Spule: 3x Silber + 1x Kupfer → Tier 4-5
-      crystal_lens: 0,    // Kristall-Linse: 2x Smaragd + 1x Rubin → Tier 6-7
-      titan_bolt: 0,      // Titan-Bolzen: 2x Titan + 1x Diamant → Tier 8-9
-      quantum_core: 0     // Quanten-Kern: 2x Uran + 1x Platin → Tier 10
+      iron_tube: 0,       // Stahl-Rohr: 2x Eisen + 1x Kupfer → Tier 2
+      bronze_gear: 0,     // Bronze-Getriebe: 2x Zinn + 1x Eisen → Tier 3
+      silver_coil: 0,     // Silber-Spule: 2x Silber + 1x Gold → Tier 4-5
+      crystal_lens: 0,    // Kristall-Linse: 1x Saphir + 1x Smaragd → Tier 6-7
+      titan_bolt: 0,      // Titan-Bolzen: 2x Titan + 1x Platin → Tier 8-9
+      quantum_core: 0     // Quanten-Kern: 1x Uran + 1x Obsidian-Kern → Tier 10
     };
 
     // Notfall-Kits & Gadgets (Verbrauchsgüter)
