@@ -335,9 +335,13 @@ export class HUD {
       }
     }
 
-    // Point of No Return Linie auf dem Tankbalken (stets sichtbar, dynamisch angepasst)
+    // Rückkehr-Schwelle inkl. Sicherheitspuffer zur rechtzeitigen Umkehr
+    const safetyBuffer = 3.0; // 3% Sicherheitspuffer
+    const effectiveReturnThreshold = returnPercent + safetyBuffer;
+
+    // Rückkehr-Nadel auf dem Tankbalken (stets sichtbar, dynamisch angepasst)
     if (this.fuelReturnLine) {
-      const displayPct = Math.min(98, Math.max(2.5, returnPercent));
+      const displayPct = Math.min(98, Math.max(2.5, effectiveReturnThreshold));
       const pct = displayPct.toFixed(1);
       if (!this._lastReturnLineVisible || this._lastReturnPercent !== pct) {
         this.fuelReturnLine.style.display = 'block';
@@ -348,18 +352,18 @@ export class HUD {
     }
 
     if (this.fuelBarContainer) {
-      const roundedReturn = Math.round(returnPercent);
+      const roundedReturn = Math.round(effectiveReturnThreshold);
       if (this._lastFuelTitleFuel !== roundedFuel || this._lastFuelTitleReturn !== roundedReturn) {
         this._lastFuelTitleFuel = roundedFuel;
         this._lastFuelTitleReturn = roundedReturn;
-        this.fuelBarContainer.title = `Tank: ${roundedFuel}% | Rückkehr-Bedarf: ${roundedReturn}%`;
+        this.fuelBarContainer.title = `Tank: ${roundedFuel}% | Rückkehr-Schwelle (inkl. Puffer): ${roundedReturn}%`;
       }
     }
 
-    // Rückkehr-Status (Kritisch: aktueller Tank reicht nur noch für den Aufstieg)
-    const isReturnCritical = isBelowGround && returnPercent > 2 && fuelPercent <= returnPercent;
+    // Rückkehr-Status (Kritisch: aktueller Tank erreicht die Rückkehr-Schwelle inkl. Puffer)
+    const isReturnCritical = isBelowGround && returnPercent > 2 && fuelPercent <= effectiveReturnThreshold;
 
-    // Tankwarnung: NUR wenn der Tank tatsächlich niedrig ist (<= 15%), NICHT bei Point of No Return!
+    // Tankwarnung: NUR wenn der Tank tatsächlich niedrig ist (<= 15%), NICHT bei Rückkehrschwelle!
     const isFuelLow = fuelPercent <= 15;
     if (this._lastFuelWarning !== isFuelLow) {
       this._lastFuelWarning = isFuelLow;
@@ -385,6 +389,8 @@ export class HUD {
           duration: 5000,
           sound: 'cockpit'
         });
+      } else if (fuelPercent > effectiveReturnThreshold + 5) {
+        this.warnedPointOfNoReturn = false;
       }
     }
 

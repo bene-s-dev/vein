@@ -1596,15 +1596,15 @@ export class Player {
     const efficiency = Math.max(0.1, this.fuelEfficiency || 1.0);
     const entranceGx = 19.5;
     const atSurface = this.gy <= -1 || (this.sprite && this.sprite.y <= -16);
-    const baseReserve = 1.2; // Mindestreserve für sichere Landung
+    const baseReserve = 1.6; // Solide Mindestreserve für Landung & Schachtmanöver
 
     if (atSurface) {
       // Überirdisch: horizontaler Rückweg zur Einfahrt + Reserve
       const tilesX = Math.abs(this.gx - entranceGx);
-      return (tilesX * (0.3 / efficiency) * 1.10) + baseReserve;
+      return (tilesX * (0.3 / efficiency) * 1.15) + baseReserve;
     }
 
-    // Unterirdisch: Steigflug + horizontaler Weg + Reserve
+    // Unterirdisch: Steigflug + horizontaler Weg + 15% Sicherheitsmarge + Reserve
     const currentY = this.sprite ? this.sprite.y : (this.gy * TILE_SIZE + TILE_SIZE / 2);
     const distY = Math.max(0, currentY - (-16));
     const flightSpeed = Math.max(1, this.flightSpeed || 120);
@@ -1615,7 +1615,7 @@ export class Player {
     const tilesX = Math.abs(this.gx - entranceGx);
     const horizontalFuel = tilesX * (0.3 / efficiency);
 
-    return ((verticalFuel + horizontalFuel) * 1.10) + baseReserve;
+    return ((verticalFuel + horizontalFuel) * 1.15) + baseReserve;
   }
 
   getReturnFuelPercent() {
