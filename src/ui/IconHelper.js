@@ -34,13 +34,20 @@ export function icon(name, extraClass = '', size = 15) {
  * Icon-Zuweisung für Bauteile
  */
 export const COMPONENT_ICONS = {
-  // Sammler- & Fabrik-Montagebauteile
+  // Fabrik-Montagebauteile (Mechanik & Struktur)
   iron_tube: 'cylinder',
   bronze_gear: 'settings',
   silver_coil: 'rotate-ccw',
   crystal_lens: 'aperture',
   titan_bolt: 'bolt',
   quantum_core: 'orbit',
+  // Forscher-High-Tech-Komponenten (Elektronik & Wissenschaft)
+  microprocessor: 'cpu',
+  capacitor: 'battery-charging',
+  spectrometer: 'activity',
+  plasma_regulator: 'flame',
+  graviton_core: 'compass',
+  quantum_processor: 'atom',
   // Abwärtskompatibilität für alte Speicherstände
   hydraulic_part: 'cog',
   titan_alloy: 'shield-check',

@@ -489,14 +489,14 @@ export class MissionsProgressModal {
     const p = this.player;
     const comps = p.components || {};
 
-    // Bauteil-Inventar Header
+    // Bauteil-Inventar Header (Forscher-Bauteile)
     const activeCompKeys = [
-      { key: 'iron_tube', name: 'Stahl-Rohr', icon: 'cylinder', color: '#94a3b8' },
-      { key: 'bronze_gear', name: 'Bronze-Getriebe', icon: 'settings', color: '#d97706' },
-      { key: 'silver_coil', name: 'Silber-Spule', icon: 'rotate-ccw', color: '#e2e8f0' },
-      { key: 'crystal_lens', name: 'Kristall-Linse', icon: 'aperture', color: '#a78bfa' },
-      { key: 'titan_bolt', name: 'Titan-Bolzen', icon: 'bolt', color: '#38bdf8' },
-      { key: 'quantum_core', name: 'Quanten-Kern', icon: 'orbit', color: '#34d399' }
+      { key: 'microprocessor', name: 'Mikroprozessor', icon: 'cpu', color: '#60a5fa' },
+      { key: 'capacitor', name: 'Druck-Kondensator', icon: 'battery-charging', color: '#fbbf24' },
+      { key: 'spectrometer', name: 'Sensor-Spektrometer', icon: 'activity', color: '#c084fc' },
+      { key: 'plasma_regulator', name: 'Plasma-Injektor', icon: 'flame', color: '#f87171' },
+      { key: 'graviton_core', name: 'Gravitations-Modulator', icon: 'compass', color: '#38bdf8' },
+      { key: 'quantum_processor', name: 'Quanten-Prozessor', icon: 'atom', color: '#a78bfa' }
     ];
 
     const compInventoryHtml = `

@@ -100,16 +100,16 @@ export function getRefinedOreNetValue(oreKey) {
 
 // Bohrkopf-Stufen & DPS (Entwicklung im Labor -> Montage im Hangar)
 export const DRILL_TIERS = [
-  { tier: 1, name: 'Stahl-Bohrkopf', stat: '38 DPS', cost: 0, comp: null, mountComp: null, level: 1, desc: 'Solider Bohrkopf für Humus & lockere Erde (ca. 1.2s pro Block).' },
-  { tier: 2, name: 'Wolframkarbid-Spitze', stat: '52 DPS', cost: 280, comp: null, mountComp: { key: 'iron_tube', name: 'Stahl-Rohr', count: 1 }, level: 1, desc: 'Fräst spürbar flüssiger durch Erde (ca. 0.9s) und Schiefer.' },
-  { tier: 3, name: 'Gehärteter Meißel Mk.III', stat: '60 DPS', cost: 1750, comp: null, mountComp: { key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1 }, level: 1, desc: 'Schneidet zügig durch Stein und zerbröckelt Fels.' },
-  { tier: 4, name: 'Titan-Diamant-Kopf Mk.IV', stat: '82 DPS', cost: 4600, comp: null, mountComp: { key: 'silver_coil', name: 'Silber-Spule', count: 1 }, level: 2, desc: 'Hydraulisch verstärkte Fräse zermalmt harte Granitadern.' },
-  { tier: 5, name: 'Hochdruck-Fräse Mk.V', stat: '115 DPS', cost: 12000, comp: null, mountComp: { key: 'silver_coil', name: 'Silber-Spule', count: 2 }, level: 3, desc: 'Panzerung und Zahnkränze fräsen mühelos durch Granit und Basalt.' },
-  { tier: 6, name: 'Plasma-Schneidbrenner Mk.VI', stat: '165 DPS', cost: 27000, comp: null, mountComp: { key: 'crystal_lens', name: 'Kristall-Linse', count: 1 }, level: 4, desc: 'Fokussierter Plasmastrahl schmilzt Obsidian-Gestein.' },
-  { tier: 7, name: 'Laser-Kavitationsmeißel Mk.VII', stat: '240 DPS', cost: 58000, comp: null, mountComp: { key: 'crystal_lens', name: 'Kristall-Linse', count: 2 }, level: 5, desc: 'Höchste Schneidleistung für schwerste Tiefenerze.' },
-  { tier: 8, name: 'Antimaterie-Bohrer Mk.VIII', stat: '350 DPS', cost: 125000, comp: null, mountComp: { key: 'titan_bolt', name: 'Titan-Bolzen', count: 1 }, level: 6, desc: 'Fräst durch das härteste Urgestein wie Butter.' },
-  { tier: 9, name: 'Singularitäts-Fräse Mk.IX', stat: '500 DPS', cost: 245000, comp: null, mountComp: { key: 'titan_bolt', name: 'Titan-Bolzen', count: 2 }, level: 8, desc: 'Erzeugt Mikrogravitations-Kollapse vor dem Bohrkopf.' },
-  { tier: 10, name: 'Tachyonen-Disruptor X', stat: '700 DPS', cost: 480000, comp: null, mountComp: { key: 'quantum_core', name: 'Quanten-Kern', count: 2 }, level: 10, desc: 'Zersetzt die Molekularstruktur des Erdkerns in Sekundenbruchteilen.' }
+  { tier: 1, name: 'Stahl-Bohrkopf', stat: '38 DPS', cost: 0, comp: null, mountComps: null, level: 1, desc: 'Solider Bohrkopf für Humus & lockere Erde (ca. 1.2s pro Block).' },
+  { tier: 2, name: 'Wolframkarbid-Spitze', stat: '52 DPS', cost: 280, comp: null, mountComps: [{ key: 'iron_tube', name: 'Stahl-Rohr', count: 1, source: 'Fabrik' }, { key: 'microprocessor', name: 'Mikroprozessor', count: 1, source: 'Forscher' }], level: 1, desc: 'Fräst spürbar flüssiger durch Erde (ca. 0.9s) und Schiefer.' },
+  { tier: 3, name: 'Gehärteter Meißel Mk.III', stat: '60 DPS', cost: 1750, comp: null, mountComps: [{ key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1, source: 'Fabrik' }, { key: 'capacitor', name: 'Druck-Kondensator', count: 1, source: 'Forscher' }], level: 1, desc: 'Schneidet zügig durch Stein und zerbröckelt Fels.' },
+  { tier: 4, name: 'Titan-Diamant-Kopf Mk.IV', stat: '82 DPS', cost: 4600, comp: null, mountComps: [{ key: 'silver_coil', name: 'Silber-Spule', count: 1, source: 'Fabrik' }, { key: 'spectrometer', name: 'Sensor-Spektrometer', count: 1, source: 'Forscher' }], level: 2, desc: 'Hydraulisch verstärkte Fräse zermalmt harte Granitadern.' },
+  { tier: 5, name: 'Hochdruck-Fräse Mk.V', stat: '115 DPS', cost: 12000, comp: null, mountComps: [{ key: 'silver_coil', name: 'Silber-Spule', count: 2, source: 'Fabrik' }, { key: 'spectrometer', name: 'Sensor-Spektrometer', count: 1, source: 'Forscher' }], level: 3, desc: 'Panzerung und Zahnkränze fräsen mühelos durch Granit und Basalt.' },
+  { tier: 6, name: 'Plasma-Schneidbrenner Mk.VI', stat: '165 DPS', cost: 27000, comp: null, mountComps: [{ key: 'crystal_lens', name: 'Kristall-Linse', count: 1, source: 'Fabrik' }, { key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Forscher' }], level: 4, desc: 'Fokussierter Plasmastrahl schmilzt Obsidian-Gestein.' },
+  { tier: 7, name: 'Laser-Kavitationsmeißel Mk.VII', stat: '240 DPS', cost: 58000, comp: null, mountComps: [{ key: 'crystal_lens', name: 'Kristall-Linse', count: 2, source: 'Fabrik' }, { key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Forscher' }], level: 5, desc: 'Höchste Schneidleistung für schwerste Tiefenerze.' },
+  { tier: 8, name: 'Antimaterie-Bohrer Mk.VIII', stat: '350 DPS', cost: 125000, comp: null, mountComps: [{ key: 'titan_bolt', name: 'Titan-Bolzen', count: 1, source: 'Fabrik' }, { key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Forscher' }], level: 6, desc: 'Fräst durch das härteste Urgestein wie Butter.' },
+  { tier: 9, name: 'Singularitäts-Fräse Mk.IX', stat: '500 DPS', cost: 245000, comp: null, mountComps: [{ key: 'titan_bolt', name: 'Titan-Bolzen', count: 2, source: 'Fabrik' }, { key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Forscher' }], level: 8, desc: 'Erzeugt Mikrogravitations-Kollapse vor dem Bohrkopf.' },
+  { tier: 10, name: 'Tachyonen-Disruptor X', stat: '700 DPS', cost: 480000, comp: null, mountComps: [{ key: 'quantum_core', name: 'Quanten-Kern', count: 2, source: 'Fabrik' }, { key: 'quantum_processor', name: 'Quanten-Prozessor', count: 1, source: 'Forscher' }], level: 10, desc: 'Zersetzt die Molekularstruktur des Erdkerns in Sekundenbruchteilen.' }
 ];
 export const DRILL_DPS = [38, 52, 60, 82, 115, 165, 240, 350, 500, 700];
 export const DRILL_DATA = DRILL_TIERS;
@@ -130,13 +130,20 @@ export const DEPOT_TIERS = [
 
 // Spezial-Upgrade-Bauteile (Auftragsbelohnungen & Montagebauteile)
 export const COMPONENT_DATA = {
-  // Fabrik- & Sammler-Montagebauteile
+  // Fabrik-Montagebauteile (Mechanik & Struktur)
   iron_tube: { name: 'Stahl-Rohr', icon: 'cylinder', color: '#94a3b8' },
   bronze_gear: { name: 'Bronze-Getriebe', icon: 'settings', color: '#d97706' },
   silver_coil: { name: 'Silber-Spule', icon: 'rotate-ccw', color: '#e2e8f0' },
   crystal_lens: { name: 'Kristall-Linse', icon: 'aperture', color: '#a78bfa' },
   titan_bolt: { name: 'Titan-Bolzen', icon: 'bolt', color: '#38bdf8' },
   quantum_core: { name: 'Quanten-Kern', icon: 'orbit', color: '#34d399' },
+  // Forscher- / Geologen-Elektronik & High-Tech-Bauteile
+  microprocessor: { name: 'Mikroprozessor', icon: 'cpu', color: '#60a5fa' },
+  capacitor: { name: 'Druck-Kondensator', icon: 'battery-charging', color: '#fbbf24' },
+  spectrometer: { name: 'Sensor-Spektrometer', icon: 'activity', color: '#c084fc' },
+  plasma_regulator: { name: 'Plasma-Injektor', icon: 'flame', color: '#f87171' },
+  graviton_core: { name: 'Gravitations-Modulator', icon: 'compass', color: '#38bdf8' },
+  quantum_processor: { name: 'Quanten-Prozessor', icon: 'atom', color: '#a78bfa' },
   // Abwärtskompatibilität für alte Spielstände
   hydraulic_part: { name: 'Hydraulik-Zylinder', icon: 'cog', color: '#38bdf8' },
   titan_alloy: { name: 'Titan-Legierung', icon: 'shield-check', color: '#60a5fa' },
@@ -147,81 +154,81 @@ export const COMPONENT_DATA = {
 // Steinsammler- / Geologen-Aufträge (Tiefenstufen 0-2000m+)
 export const GEOLOGIST_QUESTS = [
   {
-    id: 'geologist_iron_tube',
-    title: 'Geologische Probensammlung I',
+    id: 'geologist_microprocessor',
+    title: 'Elektronik-Grundlagen I',
     depthHint: 'Tiefe 0-50m (Erdschicht)',
     reqs: { coal: 3, iron: 2 },
-    rewardComp: { key: 'iron_tube', name: 'Stahl-Rohr', iconName: 'cylinder' },
+    rewardComp: { key: 'microprocessor', name: 'Mikroprozessor', iconName: 'cpu' },
     rewardCash: 180,
     rewardXp: 140,
     minLevel: 1
   },
   {
-    id: 'geologist_bronze_gear',
-    title: 'Sedimentproben II',
+    id: 'geologist_capacitor',
+    title: 'Energiespeicher-Analyse II',
     depthHint: 'Tiefe 30-150m (Schiefer-Schicht)',
     reqs: { copper: 3, tin: 3 },
-    rewardComp: { key: 'bronze_gear', name: 'Bronze-Getriebe', iconName: 'settings' },
+    rewardComp: { key: 'capacitor', name: 'Druck-Kondensator', iconName: 'battery-charging' },
     rewardCash: 420,
     rewardXp: 300,
     minLevel: 1
   },
   {
-    id: 'geologist_silver_coil',
-    title: 'Kristall-Reflektionsanalyse III',
+    id: 'geologist_spectrometer',
+    title: 'Optische Spektrometrie III',
     depthHint: 'Tiefe 130-350m (Granit-Schicht)',
     reqs: { silver: 3, gold: 2 },
-    rewardComp: { key: 'silver_coil', name: 'Silber-Spule', iconName: 'rotate-ccw' },
+    rewardComp: { key: 'spectrometer', name: 'Sensor-Spektrometer', iconName: 'activity' },
     rewardCash: 950,
     rewardXp: 650,
     minLevel: 2
   },
   {
-    id: 'geologist_crystal_lens',
-    title: 'Edelstein-Prismenanalyse IV',
+    id: 'geologist_plasma_regulator',
+    title: 'Thermodynamische Plasmaforschung IV',
     depthHint: 'Tiefe 340-800m (Obsidian-Zone)',
     reqs: { emerald: 2, sapphire: 2 },
-    rewardComp: { key: 'crystal_lens', name: 'Kristall-Linse', iconName: 'aperture' },
+    rewardComp: { key: 'plasma_regulator', name: 'Plasma-Injektor', iconName: 'flame' },
     rewardCash: 2200,
     rewardXp: 1300,
     minLevel: 3
   },
   {
-    id: 'geologist_titan_bolt',
-    title: 'Tiefenanalyse V: Urgestein',
+    id: 'geologist_graviton_core',
+    title: 'Gravitationswellen-Erfassung V',
     depthHint: 'Tiefe 850m+ (Urgesteins-Kern)',
     reqs: { titanium: 2, diamond: 1 },
-    rewardComp: { key: 'titan_bolt', name: 'Titan-Bolzen', iconName: 'bolt' },
+    rewardComp: { key: 'graviton_core', name: 'Gravitations-Modulator', iconName: 'compass' },
     rewardCash: 4200,
     rewardXp: 2200,
     minLevel: 5
   },
   {
-    id: 'geologist_quantum_core',
-    title: 'Quanten-Kernresonanz VI',
+    id: 'geologist_quantum_processor',
+    title: 'Subatomare Quantenrechner VI',
     depthHint: 'Tiefe 1.500m+ (Erdkern-Zentrum)',
     reqs: { uranium: 2, platinum: 1 },
-    rewardComp: { key: 'quantum_core', name: 'Quanten-Kern', iconName: 'orbit' },
+    rewardComp: { key: 'quantum_processor', name: 'Quanten-Prozessor', iconName: 'atom' },
     rewardCash: 8500,
     rewardXp: 4200,
     minLevel: 7
   },
   {
     id: 'geologist_amethyst_bonus',
-    title: 'Subraum-Resonanz VII',
+    title: 'Tiefenfeld-Gravitation VII',
     depthHint: 'Tiefe 1.000-1.500m (Basalt & Urgestein)',
     reqs: { obsidian_gem: 2, sapphire: 2 },
-    rewardComp: { key: 'titan_bolt', name: 'Titan-Bolzen', iconName: 'bolt' },
+    rewardComp: { key: 'graviton_core', name: 'Gravitations-Modulator', iconName: 'compass' },
     rewardCash: 6000,
     rewardXp: 3200,
     minLevel: 6
   },
   {
     id: 'geologist_darkmatter_bonus',
-    title: 'Kosmologische Tiefenstudie VIII',
+    title: 'Kosmologische Quantenforschung VIII',
     depthHint: 'Tiefe 2.000m+ (Erdkern-Zentrum)',
     reqs: { dark_matter: 1, platinum: 2 },
-    rewardComp: { key: 'quantum_core', name: 'Quanten-Kern', iconName: 'orbit' },
+    rewardComp: { key: 'quantum_processor', name: 'Quanten-Prozessor', iconName: 'atom' },
     rewardCash: 16000,
     rewardXp: 8000,
     minLevel: 9
@@ -2531,14 +2538,14 @@ export class BaseSystem {
     }
     questsHtml += '</div>';
 
-    // Komponenten-Inventar des Spielers
+    // Komponenten-Inventar des Spielers (Forscher-Bauteile)
     const activeCompKeys = [
-      { key: 'iron_tube', name: 'Stahl-Rohr', icon: 'cylinder', color: '#94a3b8' },
-      { key: 'bronze_gear', name: 'Bronze-Getriebe', icon: 'settings', color: '#d97706' },
-      { key: 'silver_coil', name: 'Silber-Spule', icon: 'rotate-ccw', color: '#e2e8f0' },
-      { key: 'crystal_lens', name: 'Kristall-Linse', icon: 'aperture', color: '#a78bfa' },
-      { key: 'titan_bolt', name: 'Titan-Bolzen', icon: 'bolt', color: '#38bdf8' },
-      { key: 'quantum_core', name: 'Quanten-Kern', icon: 'orbit', color: '#34d399' }
+      { key: 'microprocessor', name: 'Mikroprozessor', icon: 'cpu', color: '#60a5fa' },
+      { key: 'capacitor', name: 'Druck-Kondensator', icon: 'battery-charging', color: '#fbbf24' },
+      { key: 'spectrometer', name: 'Sensor-Spektrometer', icon: 'activity', color: '#c084fc' },
+      { key: 'plasma_regulator', name: 'Plasma-Injektor', icon: 'flame', color: '#f87171' },
+      { key: 'graviton_core', name: 'Gravitations-Modulator', icon: 'compass', color: '#38bdf8' },
+      { key: 'quantum_processor', name: 'Quanten-Prozessor', icon: 'atom', color: '#a78bfa' }
     ];
 
     const compBadges = activeCompKeys.map(c => `
@@ -3106,28 +3113,40 @@ export class BaseSystem {
       return ` &bull; <span style="color: #f87171; font-weight: 600;">Ab Level ${nextData.level}</span>`;
     };
 
+    // Helper: Holt alle benötigten Montage-Bauteile (mountComps Array oder altes mountComp Objekt)
+    const getRequiredComps = (tierData) => {
+      if (!tierData) return [];
+      if (Array.isArray(tierData.mountComps)) return tierData.mountComps;
+      if (tierData.mountComp) return [tierData.mountComp];
+      return [];
+    };
+
     // Helper: Prüft ob die nötigen Montage-Bauteile vorhanden sind
     const checkMountComp = (tierData) => {
-      if (!tierData || !tierData.mountComp) return true; // kein Bauteil nötig
-      const have = this.player.components[tierData.mountComp.key] || 0;
-      return have >= tierData.mountComp.count;
+      const compsNeeded = getRequiredComps(tierData);
+      if (compsNeeded.length === 0) return true;
+      return compsNeeded.every(mc => (this.player.components[mc.key] || 0) >= mc.count);
     };
 
     // Helper: Badge für benötigte Montage-Bauteile
     const getMountCompBadge = (tierData) => {
-      if (!tierData || !tierData.mountComp) return '<span style="color: #94a3b8; font-size: 11px;">Keine Teile nötig</span>';
-      const mc = tierData.mountComp;
-      const have = this.player.components[mc.key] || 0;
-      const isMet = have >= mc.count;
-      const iconName = COMPONENT_ICONS[mc.key] || 'box';
-      return `<span style="background: ${isMet ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)'}; border: 1px solid ${isMet ? 'rgba(16,185,129,0.35)' : 'rgba(239,68,68,0.35)'}; color: ${isMet ? '#34d399' : '#f87171'}; font-weight: 700; font-size: 11px; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">${icon(iconName, '', 12)} ${mc.count}x ${mc.name} (${have}/${mc.count})</span>`;
+      const compsNeeded = getRequiredComps(tierData);
+      if (compsNeeded.length === 0) return '<span style="color: #94a3b8; font-size: 11px;">Keine Teile nötig</span>';
+      return compsNeeded.map(mc => {
+        const have = this.player.components[mc.key] || 0;
+        const isMet = have >= mc.count;
+        const iconName = COMPONENT_ICONS[mc.key] || 'box';
+        const srcPrefix = mc.source ? `<span style="opacity: 0.75; font-size: 10px; margin-right: 2px;">[${mc.source}]</span>` : '';
+        return `<span style="background: ${isMet ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)'}; border: 1px solid ${isMet ? 'rgba(16,185,129,0.35)' : 'rgba(239,68,68,0.35)'}; color: ${isMet ? '#34d399' : '#f87171'}; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">${icon(iconName, '', 12)} ${srcPrefix}${mc.count}x ${mc.name} (${have}/${mc.count})</span>`;
+      }).join(' ');
     };
 
     // Helper: Verbraucht die nötigen Montage-Bauteile
     const consumeMountComp = (tierData) => {
-      if (!tierData || !tierData.mountComp) return;
-      const mc = tierData.mountComp;
-      this.player.components[mc.key] = Math.max(0, (this.player.components[mc.key] || 0) - mc.count);
+      const compsNeeded = getRequiredComps(tierData);
+      compsNeeded.forEach(mc => {
+        this.player.components[mc.key] = Math.max(0, (this.player.components[mc.key] || 0) - mc.count);
+      });
     };
 
     // Die 6 Upgrade-Tracks
@@ -3466,8 +3485,12 @@ export class BaseSystem {
             return;
           }
           if (!checkMountComp(nextData)) {
-            const mc = nextData.mountComp;
-            this.scene.events.emit('notify', `Fehlende Bauteile: ${mc?.count}x ${mc?.name}! In der Fabrik herstellen oder beim Sammler erhalten.`);
+            const compsNeeded = getRequiredComps(nextData);
+            const missing = compsNeeded
+              .filter(mc => (this.player.components[mc.key] || 0) < mc.count)
+              .map(mc => `${mc.count}x ${mc.name} [${mc.source || 'Werkstatt'}]`)
+              .join(', ');
+            this.scene.events.emit('notify', `Fehlende Bauteile: ${missing}! Fabrik & Forscher nutzen.`);
             return;
           }
           consumeMountComp(nextData);
