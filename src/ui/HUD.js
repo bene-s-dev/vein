@@ -667,66 +667,188 @@ export class HUD {
       </div>
     `;
 
+    const slots = SaveSystem.listSlots();
+
+    const slotsHtml = slots.map(s => `
+      <div style="background: rgba(15, 23, 42, 0.75); border: ${s.isCurrent ? '1.5px solid #10b981' : '1px solid rgba(255,255,255,0.08)'}; border-radius: 10px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
+        <div style="display: flex; flex-direction: column; gap: 3px; min-width: 170px;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <strong style="color: #f8fafc; font-size: 12.5px;">${s.label}</strong>
+            ${s.isCurrent ? '<span style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); color: #10b981; font-size: 9.5px; font-weight: 800; padding: 1px 6px; border-radius: 99px;">AKTIV</span>' : ''}
+          </div>
+          <div style="font-size: 11px; color: ${s.exists ? '#94a3b8' : '#64748b'};">
+            ${s.exists
+              ? `Lv. ${s.level} · €${s.cash.toLocaleString()} · Tiefe: ${s.highestDepth}m · <span style="color: #64748b;">${s.dateFormatted}</span>`
+              : 'Freier Speicherplatz (Leer)'
+            }
+          </div>
+        </div>
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <button class="btn-slot-load ${s.exists ? 'btn-action' : 'btn-3d-secondary'}" data-slot="${s.slotId}" ${s.exists ? '' : 'disabled'} style="height: 30px; padding: 0 10px; font-size: 11px; border: none; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;" title="Spielstand laden">
+            ${icon('play', '', 12)} Laden
+          </button>
+          <button class="btn-slot-save btn-buy" data-slot="${s.slotId}" style="height: 30px; padding: 0 10px; font-size: 11px; border: none; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;" title="Aktuelles Spiel hier sichern">
+            ${icon('save', '', 12)} Sichern
+          </button>
+          ${s.exists ? `
+            <button class="btn-slot-delete btn-3d-danger" data-slot="${s.slotId}" style="height: 30px; width: 30px; padding: 0; justify-content: center; display: inline-flex; align-items: center; border: none; border-radius: 6px;" title="Diesen Slot löschen">
+              ${icon('trash-2', '', 12)}
+            </button>
+          ` : ''}
+        </div>
+      </div>
+    `).join('');
+
     bodyEl.innerHTML = `
-      <div style="display: flex; flex-direction: column; gap: 10px; max-width: 440px; margin: 0 auto; width: 100%; box-sizing: border-box; padding: 0 4px 36px 4px;">
+      <div style="display: flex; flex-direction: column; gap: 12px; max-width: 580px; margin: 0 auto; width: 100%; box-sizing: border-box; padding: 0 4px 36px 4px;">
         <button id="btn-back-to-menu" class="btn-action" style="height: 32px; padding: 0 14px; font-size: 11.5px; align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: 8px;">
           ${icon('arrow-left', '', 14)}
           <span>Zurück zum Spielmenü</span>
         </button>
 
-        <!-- Audio -->
-        <div style="background: rgba(15, 23, 42, 0.65); border: none; border-radius: 12px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 4px rgba(0,0,0,0.2);">
-          <div>
-            <strong style="color: #f8fafc; font-size: 12.5px; display: block;">Soundeffekte</strong>
-            <span style="color: #94a3b8; font-size: 11px;">Bohren, Triebwerk, Erze & Gebäude</span>
-          </div>
-          <button id="btn-toggle-sound" class="${soundFx.muted ? 'btn-3d-secondary' : 'btn-action'}" style="height: 32px; padding: 0 14px; font-size: 11.5px; display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: 8px;">
-            ${icon(soundFx.muted ? 'volume-x' : 'volume-2', '', 14)}
-            <span>Sound: ${soundFx.muted ? 'Aus' : 'An'}</span>
-          </button>
-        </div>
-
-        <!-- Anzeige -->
-        <div style="background: rgba(15, 23, 42, 0.65); border: none; border-radius: 12px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 4px rgba(0,0,0,0.2);">
-          <div>
-            <strong style="color: #f8fafc; font-size: 12.5px; display: block;">Vollbildmodus</strong>
-            <span style="color: #94a3b8; font-size: 11px;">Desktop & Mobilgeräte</span>
-          </div>
-          <button id="btn-toggle-fullscreen" class="${document.fullscreenElement ? 'btn-3d-success' : 'btn-action'}" style="height: 32px; padding: 0 14px; font-size: 11.5px; display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: 8px;">
-            ${icon(document.fullscreenElement ? 'minimize' : 'maximize', '', 14)}
-            <span>${document.fullscreenElement ? 'Beenden' : 'Aktivieren'}</span>
-          </button>
-        </div>
-
-        <!-- Spielstand -->
-        <div style="background: rgba(15, 23, 42, 0.65); border: none; border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.2);">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
+        <!-- Audio & Anzeige -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <!-- Audio -->
+          <div style="background: rgba(15, 23, 42, 0.65); border-radius: 12px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 4px rgba(0,0,0,0.2);">
             <div>
-              <strong style="color: #f8fafc; font-size: 12.5px; display: block;">Automatisches Speichern</strong>
-              <span style="color: #94a3b8; font-size: 11px;">Speichert automatisch alle 10 Sekunden</span>
+              <strong style="color: #f8fafc; font-size: 12px; display: block;">Soundeffekte</strong>
+              <span style="color: #94a3b8; font-size: 10.5px;">Bohren & Triebwerk</span>
             </div>
-            <span style="color: #10b981; font-weight: 700; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;">
-              ${icon('check-circle', '', 13)} Aktiv
+            <button id="btn-toggle-sound" class="${soundFx.muted ? 'btn-3d-secondary' : 'btn-action'}" style="height: 30px; padding: 0 10px; font-size: 11px; display: inline-flex; align-items: center; gap: 5px; border: none; border-radius: 8px;">
+              ${icon(soundFx.muted ? 'volume-x' : 'volume-2', '', 13)}
+              <span>${soundFx.muted ? 'Aus' : 'An'}</span>
+            </button>
+          </div>
+
+          <!-- Vollbild -->
+          <div style="background: rgba(15, 23, 42, 0.65); border-radius: 12px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 4px rgba(0,0,0,0.2);">
+            <div>
+              <strong style="color: #f8fafc; font-size: 12px; display: block;">Vollbildmodus</strong>
+              <span style="color: #94a3b8; font-size: 10.5px;">Desktop & Mobile</span>
+            </div>
+            <button id="btn-toggle-fullscreen" class="${document.fullscreenElement ? 'btn-3d-success' : 'btn-action'}" style="height: 30px; padding: 0 10px; font-size: 11px; display: inline-flex; align-items: center; gap: 5px; border: none; border-radius: 8px;">
+              ${icon(document.fullscreenElement ? 'minimize' : 'maximize', '', 13)}
+              <span>${document.fullscreenElement ? 'Beenden' : 'An'}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 1. Speicherstände (Localhost) -->
+        <div style="background: rgba(15, 23, 42, 0.65); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.2);">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
+            <div>
+              <strong style="color: #f8fafc; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px;">
+                ${icon('database', '', 14)}
+                SPEICHERSTÄNDE (LOCALHOST)
+              </strong>
+              <span style="color: #94a3b8; font-size: 11px; display: block; margin-top: 1px;">Speichere und lade unterschiedliche Spielstände im Browser</span>
+            </div>
+            <span style="color: #10b981; font-weight: 700; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">
+              ${icon('check-circle', '', 12)} Auto-Save alle 10s
             </span>
           </div>
 
-          <div id="save-buttons-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-            <button id="btn-manual-save" class="btn-action" style="height: 36px; font-size: 11.5px; justify-content: center; border: none; border-radius: 8px;">
-              ${icon('save', '', 13)} Jetzt sichern
+          <!-- Slots Liste -->
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            ${slotsHtml}
+          </div>
+
+          <!-- Backup / JSON Tools -->
+          <div style="display: flex; gap: 8px; align-items: center; justify-content: flex-end; padding-top: 4px; border-top: 1px solid rgba(255,255,255,0.06);">
+            <input type="file" id="input-import-file" accept=".json" style="display: none;" />
+            <button id="btn-import-json" class="btn-action" style="height: 28px; padding: 0 10px; font-size: 10.5px; display: inline-flex; align-items: center; gap: 5px; border: none; border-radius: 6px;">
+              ${icon('upload', '', 12)} JSON Importieren
             </button>
-            <button id="btn-reset-save" class="btn-3d-danger" style="height: 36px; font-size: 11.5px; justify-content: center; border: none; border-radius: 8px;">
-              ${icon('rotate-ccw', '', 13)} Spielstand löschen
+            <button id="btn-export-json" class="btn-action" style="height: 28px; padding: 0 10px; font-size: 10.5px; display: inline-flex; align-items: center; gap: 5px; border: none; border-radius: 6px;">
+              ${icon('download', '', 12)} JSON Exportieren
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. Entwicklermodus (Dev-Test-Presets) -->
+        <div style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(16, 185, 129, 0.08)); border: 1.5px solid rgba(245, 158, 11, 0.4); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 0 16px rgba(245, 158, 11, 0.08);">
+          <div>
+            <strong style="color: #fbbf24; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
+              ${icon('wrench', '', 14)}
+              Entwicklermodus · Test-Presets
+            </strong>
+            <span style="color: #cbd5e1; font-size: 11px; display: block; margin-top: 2px; line-height: 1.4;">
+              Starte direkt in höheren Spielstufen mit fiktivem Spielfortschritt: <strong>abgebautes Schacht- & Stollennetz</strong>, passende Bohrer-Upgrades, Finanzen, Basis-Bauten & Erze!
+            </span>
+          </div>
+
+          <!-- Presets Grid -->
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <!-- Early-Game -->
+            <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span style="font-size: 14px;">🟢</span>
+                  <strong style="color: #34d399; font-size: 12px;">Early-Game (85m Tiefe · Schiefer)</strong>
+                </div>
+                <div style="font-size: 10.5px; color: #94a3b8; margin-top: 2px;">
+                  Level 4 · €2.400 · Wolfram-Bohrer (Tier 2) · 70L Tank · 85m Schacht mit Stollen
+                </div>
+              </div>
+              <button class="btn-dev-preset btn-buy" data-preset="early" style="height: 30px; padding: 0 12px; font-size: 11px; border: none; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px;">
+                ${icon('zap', '', 12)} Early laden
+              </button>
+            </div>
+
+            <!-- Mid-Game -->
+            <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 10px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span style="font-size: 14px;">🟡</span>
+                  <strong style="color: #fbbf24; font-size: 12px;">Mid-Game (360m Tiefe · Granit & Gold)</strong>
+                </div>
+                <div style="font-size: 10.5px; color: #94a3b8; margin-top: 2px;">
+                  Level 8 · €32.000 · Laser-Fräse (Tier 5) · 235L Tank · Fabrik Stufe 3 · 360m Stollen
+                </div>
+              </div>
+              <button class="btn-dev-preset btn-buy" data-preset="mid" style="height: 30px; padding: 0 12px; font-size: 11px; border: none; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px;">
+                ${icon('zap', '', 12)} Mid laden
+              </button>
+            </div>
+
+            <!-- Late-Game -->
+            <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 10px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span style="font-size: 14px;">🟣</span>
+                  <strong style="color: #c084fc; font-size: 12px;">Late-Game (1.150m · Tiefenkern & Titan)</strong>
+                </div>
+                <div style="font-size: 10.5px; color: #94a3b8; margin-top: 2px;">
+                  Level 15 · €350.000 · Quantenfräse (Tier 9) · 850L Tank · Alle Erze · 1.150m Mega-Mine
+                </div>
+              </div>
+              <button class="btn-dev-preset btn-buy" data-preset="late" style="height: 30px; padding: 0 12px; font-size: 11px; border: none; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px;">
+                ${icon('zap', '', 12)} Late laden
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Spielstand zurücksetzen -->
+        <div style="background: rgba(15, 23, 42, 0.65); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <strong style="color: #f8fafc; font-size: 12px; display: block;">Aktiven Spielstand zurücksetzen</strong>
+              <span style="color: #94a3b8; font-size: 10.5px;">Löscht den aktuellen Speicherplatz vollständig</span>
+            </div>
+            <button id="btn-reset-save" class="btn-3d-danger" style="height: 30px; padding: 0 12px; font-size: 11px; border: none; border-radius: 6px;">
+              ${icon('rotate-ccw', '', 12)} Zurücksetzen
             </button>
           </div>
 
           <!-- Sicherheitsabfrage mit Eingabe von "delete" -->
-          <div id="box-delete-confirm" style="display: none; margin-top: 10px; background: rgba(239, 68, 68, 0.08); border-radius: 10px; padding: 12px; flex-direction: column; gap: 8px;">
+          <div id="box-delete-confirm" style="display: none; margin-top: 6px; background: rgba(239, 68, 68, 0.08); border-radius: 10px; padding: 12px; flex-direction: column; gap: 8px;">
             <div style="display: flex; align-items: center; gap: 6px; color: #f87171; font-weight: 700; font-size: 12px;">
               ${icon('alert-triangle', '', 14)}
               <span>Sicherheitsabfrage: Spielstand löschen</span>
             </div>
             <div style="font-size: 11.5px; color: #cbd5e1; line-height: 1.4;">
-              Der gesamte Fortschritt geht verloren. Tippe zur Bestätigung <strong style="color: #ffffff; background: rgba(0, 0, 0, 0.5); padding: 2px 6px; border-radius: 4px; font-family: monospace;">delete</strong> ein:
+              Der Fortschritt von <strong style="color: #ffffff;">Slot ${SaveSystem.getActiveSlotId()}</strong> geht verloren. Tippe zur Bestätigung <strong style="color: #ffffff; background: rgba(0, 0, 0, 0.5); padding: 2px 6px; border-radius: 4px; font-family: monospace;">delete</strong> ein:
             </div>
             <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">
               <input type="text" id="input-confirm-delete" placeholder="delete" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="flex: 1; height: 34px; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 8px; color: #ffffff; padding: 0 10px; font-size: 13px; font-weight: 700; outline: none;" />
@@ -755,9 +877,9 @@ export class HUD {
         soundFx.toggleMute();
         toggleSoundBtn.innerHTML = `
           ${icon(soundFx.muted ? 'volume-x' : 'volume-2', '', 13)}
-          <span>Sound: ${soundFx.muted ? 'Aus' : 'An'}</span>
+          <span>${soundFx.muted ? 'Aus' : 'An'}</span>
         `;
-        toggleSoundBtn.style.background = soundFx.muted ? '#475569' : '#2563eb';
+        toggleSoundBtn.className = soundFx.muted ? 'btn-3d-secondary' : 'btn-action';
         refreshIcons(toggleSoundBtn);
       };
     }
@@ -785,21 +907,109 @@ export class HUD {
         const isFs = !!document.fullscreenElement;
         toggleFullscreenBtn.innerHTML = `
           ${icon(isFs ? 'minimize' : 'maximize', '', 13)}
-          <span>${isFs ? 'Beenden' : 'Aktivieren'}</span>
+          <span>${isFs ? 'Beenden' : 'An'}</span>
         `;
-        toggleFullscreenBtn.style.background = isFs ? '#10b981' : '#2563eb';
+        toggleFullscreenBtn.className = isFs ? 'btn-3d-success' : 'btn-action';
         refreshIcons(toggleFullscreenBtn);
       };
     }
 
-    const manualSaveBtn = document.getElementById('btn-manual-save');
-    if (manualSaveBtn) {
-      manualSaveBtn.onclick = () => {
-        SaveSystem.save(this.scene);
-        this.scene.events.emit('notify', '💾 Spielstand erfolgreich gesichert!');
+    // Slots Aktionen
+    bodyEl.querySelectorAll('.btn-slot-load').forEach(btn => {
+      btn.onclick = () => {
+        const slotId = parseInt(btn.getAttribute('data-slot'), 10);
+        if (SaveSystem.loadSlot(this.scene, slotId)) {
+          soundFx.playPurchase();
+          this.openSettingsModal();
+        }
+      };
+    });
+
+    bodyEl.querySelectorAll('.btn-slot-save').forEach(btn => {
+      btn.onclick = () => {
+        const slotId = parseInt(btn.getAttribute('data-slot'), 10);
+        if (SaveSystem.saveToSlot(this.scene, slotId)) {
+          SaveSystem.setActiveSlotId(slotId);
+          soundFx.playClick();
+          this.scene.events.emit('notify', `💾 Spielstand in Slot ${slotId} gesichert!`);
+          this.openSettingsModal();
+        }
+      };
+    });
+
+    bodyEl.querySelectorAll('.btn-slot-delete').forEach(btn => {
+      btn.onclick = () => {
+        const slotId = parseInt(btn.getAttribute('data-slot'), 10);
+        if (confirm(`Möchtest du Slot ${slotId} wirklich leeren?`)) {
+          SaveSystem.deleteSlot(slotId);
+          soundFx.playClick();
+          this.scene.events.emit('notify', `🗑️ Slot ${slotId} gelöscht!`);
+          this.openSettingsModal();
+        }
+      };
+    });
+
+    // Entwicklermodus Presets
+    bodyEl.querySelectorAll('.btn-dev-preset').forEach(btn => {
+      btn.onclick = () => {
+        const preset = btn.getAttribute('data-preset');
+        if (confirm(`Entwicklermodus: Möchtest du das [${preset.toUpperCase()}]-Preset laden?\nDein aktueller Slot wird mit diesem Test-Spielfortschritt überschrieben.`)) {
+          SaveSystem.loadDevPreset(this.scene, preset);
+          soundFx.playLevelUp();
+          this.openSettingsModal();
+        }
+      };
+    });
+
+    // JSON Exportieren
+    const exportBtn = document.getElementById('btn-export-json');
+    if (exportBtn) {
+      exportBtn.onclick = () => {
+        const json = SaveSystem.exportSlotJSON(SaveSystem.getActiveSlotId());
+        if (!json) {
+          alert('Kein Spielstand im aktiven Slot vorhanden!');
+          return;
+        }
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `deep_miner_save_slot${SaveSystem.getActiveSlotId()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        soundFx.playClick();
       };
     }
 
+    // JSON Importieren
+    const importBtn = document.getElementById('btn-import-json');
+    const importFileInput = document.getElementById('input-import-file');
+    if (importBtn && importFileInput) {
+      importBtn.onclick = () => {
+        importFileInput.click();
+      };
+
+      importFileInput.onchange = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          const content = evt.target?.result;
+          if (content && typeof content === 'string') {
+            const activeId = SaveSystem.getActiveSlotId();
+            if (SaveSystem.importSlotJSON(this.scene, activeId, content)) {
+              soundFx.playLevelUp();
+              this.openSettingsModal();
+            } else {
+              alert('Fehler: Die Datei konnte nicht als gültiger Spielstand gelesen werden.');
+            }
+          }
+        };
+        reader.readAsText(file);
+      };
+    }
+
+    // Spielstand zurücksetzen
     const resetSaveBtn = document.getElementById('btn-reset-save');
     const deleteBox = document.getElementById('box-delete-confirm');
     const deleteInput = document.getElementById('input-confirm-delete');
