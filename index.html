@@ -129,7 +129,7 @@
       backdrop-filter: none;
       display: flex;
       align-items: flex-start;
-      gap: 8px;
+      gap: 6px;
     }
 
     #card-gauges {
@@ -141,7 +141,7 @@
       backdrop-filter: none !important;
       display: inline-flex;
       align-items: flex-start;
-      gap: 16px;
+      gap: 8px;
       cursor: pointer;
       transition: transform 0.14s ease, filter 0.14s ease;
       touch-action: manipulation;
@@ -206,7 +206,7 @@
     .stat-row {
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 3px;
       font-size: 12px;
       font-weight: 700;
       letter-spacing: 0.2px;
@@ -226,7 +226,7 @@
     .hud-level-indicator {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
       color: #ffffff;
     }
 
@@ -234,7 +234,7 @@
     .stat-row span {
       display: flex;
       align-items: center;
-      gap: 2.5px;
+      gap: 2px;
     }
 
     .bar-container {
@@ -298,8 +298,8 @@
 
     #hud-fuel-text,
     #hud-hull-text {
-      width: 24px;
-      min-width: 24px;
+      width: auto;
+      min-width: 19px;
       display: inline-flex;
       justify-content: flex-end;
       text-align: right;
@@ -315,7 +315,7 @@
     }
 
     #hud-cargo-text {
-      min-width: 38px;
+      min-width: 32px;
       display: inline-flex;
       justify-content: flex-end;
       align-items: center;
@@ -929,7 +929,7 @@
         -webkit-backdrop-filter: none !important;
         display: inline-flex !important;
         align-items: flex-start !important;
-        gap: 12px !important;
+        gap: 8px !important;
         flex-shrink: 0 !important;
       }
 
@@ -2085,10 +2085,10 @@
             <span class="hud-value-badge" id="hud-fuel-text" style="color: #f8fafc;"><span class="hud-num-slot" id="hud-fuel-num">100</span></span>
             <span id="hud-fuel-icon" style="display: inline-flex; align-items: center;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <rect x="3" y="4" width="10" height="17" rx="2" fill="#fbbf24" stroke="#000000" stroke-width="1.2"/>
-                <rect x="5.5" y="7" width="5" height="4" rx="0.5" fill="#000000" fill-opacity="0.3"/>
-                <path d="M13 8h2a2 2 0 0 1 2 2v3a1.5 1.5 0 0 0 3 0V9l-2-3" fill="none" stroke="#000000" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-                <line x1="2" y1="21" x2="14" y2="21" stroke="#000000" stroke-width="1.2" stroke-linecap="round"/>
+                <rect x="3" y="4" width="10" height="17" rx="2" fill="#fbbf24" stroke="#475569" stroke-width="1.1"/>
+                <rect x="5.5" y="7" width="5" height="4" rx="0.5" fill="#1e293b" fill-opacity="0.35"/>
+                <path d="M13 8h2a2 2 0 0 1 2 2v3a1.5 1.5 0 0 0 3 0V9l-2-3" fill="none" stroke="#475569" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+                <line x1="2" y1="21" x2="14" y2="21" stroke="#475569" stroke-width="1.1" stroke-linecap="round"/>
               </svg>
             </span>
           </div>
@@ -2106,8 +2106,8 @@
             <span class="hud-value-badge" id="hud-hull-text" style="color: #f8fafc;"><span class="hud-num-slot" id="hud-hull-num">100</span></span>
             <span id="hud-hull-icon" style="display: inline-flex; align-items: center;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path id="hud-hull-icon-path" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="#10b981" stroke="#000000" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M12 7v7M9 10.5h6" stroke="#000000" stroke-width="1.2" stroke-linecap="round"/>
+                <path id="hud-hull-icon-path" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="#10b981" stroke="#475569" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M12 7v7M9 10.5h6" stroke="#475569" stroke-width="1.1" stroke-linecap="round"/>
               </svg>
             </span>
           </div>
@@ -2119,8 +2119,8 @@
             <span class="hud-value-badge" id="hud-cargo-text" style="color: #ffffff;"><span class="hud-num-slot" id="hud-cargo-num">0</span><span class="hud-cargo-slash">/</span><span id="hud-cargo-max">10</span></span>
             <span id="hud-cargo-icon" style="display: inline-flex; align-items: center;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" fill="#38bdf8" stroke="#000000" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="m3.3 7 8.7 5 8.7-5M12 22V12" fill="none" stroke="#000000" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" fill="#38bdf8" stroke="#475569" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="m3.3 7 8.7 5 8.7-5M12 22V12" fill="none" stroke="#475569" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </span>
           </div>
@@ -2154,8 +2154,8 @@
         <div class="stat-row" title="Spieler-Level">
           <span id="hud-level-icon" style="display: inline-flex; align-items: center;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-              <path d="m15.5 13 2 8-5.5-2.5L6.5 21l2-8" fill="#a855f7" stroke="#000000" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-              <circle cx="12" cy="8" r="6" fill="#c084fc" stroke="#000000" stroke-width="1.2"/>
+              <path d="m15.5 13 2 8-5.5-2.5L6.5 21l2-8" fill="#a855f7" stroke="#475569" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="12" cy="8" r="6" fill="#c084fc" stroke="#475569" stroke-width="1.1"/>
               <circle cx="12" cy="8" r="2.8" fill="#ffffff" fill-opacity="0.35"/>
             </svg>
           </span>
@@ -2164,7 +2164,7 @@
         <!-- Adaptive return warning (shown when current fuel <= return cost) -->
         <div id="hud-return-warn" class="hud-return-warn" title="Tankwarnung: Treibstoff reicht nur noch für den Rückweg!">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
-            <path d="M12 2 1 21h22L12 2z" fill="#ef4444" stroke="#000000" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 2 1 21h22L12 2z" fill="#ef4444" stroke="#475569" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
             <path d="M12 9v4M12 17h.01" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
           </svg>
           <span>UMKEHREN!</span>
@@ -2173,17 +2173,17 @@
         <div class="stat-row">
           <span id="hud-cash-icon" style="display: inline-flex; align-items: center;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-              <ellipse cx="9" cy="12" rx="6" ry="6" fill="#f59e0b" stroke="#000000" stroke-width="1.2"/>
-              <ellipse cx="15" cy="12" rx="6" ry="6" fill="#fbbf24" stroke="#000000" stroke-width="1.2"/>
-              <ellipse cx="15" cy="12" rx="3.5" ry="3.5" fill="none" stroke="#000000" stroke-width="1"/>
+              <ellipse cx="9" cy="12" rx="6" ry="6" fill="#f59e0b" stroke="#475569" stroke-width="1.1"/>
+              <ellipse cx="15" cy="12" rx="6" ry="6" fill="#fbbf24" stroke="#475569" stroke-width="1.1"/>
+              <ellipse cx="15" cy="12" rx="3.5" ry="3.5" fill="none" stroke="#475569" stroke-width="1"/>
             </svg>
           </span>
           <span class="hud-value-badge cash-badge" id="hud-cash">€150</span>
         </div>
         <button id="btn-pause" class="btn-3d-secondary" title="Spielmenü (ESC / P)">
           <svg id="icon-pause-state" width="12" height="12" viewBox="0 0 24 24" fill="none">
-            <rect x="5" y="4" width="4.5" height="16" rx="1.2" fill="#cbd5e1" stroke="#000000" stroke-width="1.2"/>
-            <rect x="14.5" y="4" width="4.5" height="16" rx="1.2" fill="#cbd5e1" stroke="#000000" stroke-width="1.2"/>
+            <rect x="5" y="4" width="4.5" height="16" rx="1.2" fill="#cbd5e1" stroke="#475569" stroke-width="1.1"/>
+            <rect x="14.5" y="4" width="4.5" height="16" rx="1.2" fill="#cbd5e1" stroke="#475569" stroke-width="1.1"/>
           </svg>
           <svg id="icon-close-state" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: none; pointer-events: none;">
             <line x1="18" y1="6" x2="6" y2="18"></line>
