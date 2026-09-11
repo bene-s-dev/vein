@@ -813,6 +813,22 @@ export class GridSystem {
     }
   }
 
+  clearAllSprites() {
+    for (const [key, bundle] of this.activeSprites.entries()) {
+      if (bundle.bgSprite) bundle.bgSprite.destroy();
+      if (bundle.oreSprite) bundle.oreSprite.destroy();
+      if (bundle.crackSprite) bundle.crackSprite.destroy();
+    }
+    this.activeSprites.clear();
+    this.neededKeys.clear();
+    this.lastCamX = null;
+    this.lastCamY = null;
+    this.lastPlayerX = null;
+    this.lastPlayerY = null;
+    this.fogDirty = true;
+    this.fogBufferReady = false;
+  }
+
   updateViewport(camera, player) {
     const camView = camera.worldView;
     const pX = player ? player.sprite.x : 0;
@@ -890,6 +906,15 @@ export class GridSystem {
               if (bundle.bgSprite && bundle.bgSprite.texture.key !== shaftTex) {
                 bundle.bgSprite.setTexture(shaftTex).setDepth(1).setTint(depthTint);
               }
+              // Sicherstellen, dass keine Erze oder Risse in abgebauten Kacheln schweben
+              if (bundle.oreSprite) {
+                bundle.oreSprite.destroy();
+                bundle.oreSprite = null;
+              }
+              if (bundle.crackSprite) {
+                bundle.crackSprite.destroy();
+                bundle.crackSprite = null;
+              }
               if (!bundle.bgSprite.visible) bundle.bgSprite.setVisible(true);
             }
           }
@@ -920,10 +945,41 @@ export class GridSystem {
           bundle = { bgSprite, oreSprite, crackSprite };
           this.activeSprites.set(key, bundle);
         } else {
-          // Sprite existiert bereits: Nur Sichtbarkeit sicherstellen falls nötig, keine redundanten setTint Calls!
+          // Sprite existiert bereits: Typ, Erz und Risse mit aktuellem Kachelzustand synchronisieren
+          if (bundle.bgSprite.texture.key !== tile.type) {
+            bundle.bgSprite.setTexture(tile.type).setDepth(2).setTint(tileTint);
+          }
           if (!bundle.bgSprite.visible) bundle.bgSprite.setVisible(true);
-          if (bundle.oreSprite && !bundle.oreSprite.visible) bundle.oreSprite.setVisible(true);
-          if (bundle.crackSprite && !bundle.crackSprite.visible) bundle.crackSprite.setVisible(true);
+
+          const expectedOreSprite = (tile.ore && ORE_DATA[tile.ore]) ? ORE_DATA[tile.ore].sprite : null;
+          if (expectedOreSprite) {
+            if (!bundle.oreSprite) {
+              bundle.oreSprite = this.scene.add.image(tileCenterX, tileCenterY, expectedOreSprite)
+                .setDepth(3)
+                .setTint(oreTint);
+            } else if (bundle.oreSprite.texture.key !== expectedOreSprite) {
+              bundle.oreSprite.setTexture(expectedOreSprite).setTint(oreTint);
+            }
+            if (!bundle.oreSprite.visible) bundle.oreSprite.setVisible(true);
+          } else if (bundle.oreSprite) {
+            bundle.oreSprite.destroy();
+            bundle.oreSprite = null;
+          }
+
+          if (tile.hp < tile.maxHp) {
+            const progress = 1 - tile.hp / tile.maxHp;
+            let stage = Math.min(4, Math.max(1, Math.ceil(progress * 4)));
+            const crackKey = `crack_${stage}`;
+            if (!bundle.crackSprite) {
+              bundle.crackSprite = this.scene.add.image(tileCenterX, tileCenterY, crackKey).setDepth(5);
+            } else if (bundle.crackSprite.texture.key !== crackKey) {
+              bundle.crackSprite.setTexture(crackKey);
+            }
+            if (!bundle.crackSprite.visible) bundle.crackSprite.setVisible(true);
+          } else if (bundle.crackSprite) {
+            bundle.crackSprite.destroy();
+            bundle.crackSprite = null;
+          }
         }
       }
     }

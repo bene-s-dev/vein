@@ -264,6 +264,9 @@ export class SaveSystem {
       const ms = scene.missionSystem;
 
       // 1. Raster & Welt-Zustand komplett zurücksetzen und neu befüllen
+      if (gs.clearAllSprites) {
+        gs.clearAllSprites();
+      }
       gs.tiles.clear();
       if (gs.exploredTiles) gs.exploredTiles.clear();
       gs.exploredStamps = [];
@@ -385,6 +388,9 @@ export class SaveSystem {
       if (p.scannerRing) p.scannerRing.setPosition(p.x, p.y);
 
       if (scene.cameras && scene.cameras.main && p.sprite) {
+        scene.cameras.main.centerOn(p.x, p.y);
+        scene.cameras.main.scrollX = p.x - scene.cameras.main.width / 2;
+        scene.cameras.main.scrollY = p.y - scene.cameras.main.height / 2;
         scene.cameras.main.startFollow(p.sprite, true, 0.15, 0.15);
       }
 
@@ -441,6 +447,13 @@ export class SaveSystem {
       // HUD synchronisieren
       if (scene.hud) {
         scene.hud.update();
+      }
+
+      // Viewport & Nebel sofort frisch für neue Position & Spielstand rendern
+      gs.fogDirty = true;
+      gs.fogBufferReady = false;
+      if (scene.cameras && scene.cameras.main) {
+        gs.updateViewport(scene.cameras.main, p);
       }
 
       scene.events.emit('notify', `💾 ${sourceLabel} erfolgreich geladen!`);
@@ -505,11 +518,11 @@ export class SaveSystem {
       // 🟢 Early-Game: Tiefe ~85m, Schieferzone, Tier-2-Upgrades
       const maxDepth = 85;
       const branches = [
-        { startGy: 10, endGy: 14, minGx: 13, maxGx: 26 }, // Kohle-Flöz
-        { startGy: 24, endGy: 29, minGx: 14, maxGx: 28 }, // Kupfer-Stollen
-        { startGy: 42, endGy: 47, minGx: 12, maxGx: 24 }, // Erstes Eisen-Abbaugebiet
-        { startGy: 62, endGy: 68, minGx: 15, maxGx: 27 }, // Schiefer-Suchstollen
-        { startGy: 78, endGy: 83, minGx: 16, maxGx: 25 }  // Zinn-Kammer am Grund
+        { startGy: 11, endGy: 13, minGx: 13, maxGx: 26 }, // Kohle-Flöz
+        { startGy: 25, endGy: 27, minGx: 14, maxGx: 28 }, // Kupfer-Stollen
+        { startGy: 43, endGy: 45, minGx: 12, maxGx: 25 }, // Erstes Eisen-Abbaugebiet
+        { startGy: 63, endGy: 65, minGx: 15, maxGx: 27 }, // Schiefer-Suchstollen
+        { startGy: 79, endGy: 81, minGx: 16, maxGx: 25 }  // Zinn-Kammer am Grund
       ];
       const gridData = SaveSystem.generateDestroyedAndExplored(maxDepth, branches);
 
@@ -582,16 +595,16 @@ export class SaveSystem {
       // 🟡 Mid-Game: Tiefe ~360m, Granit & Gold, Tier-5-Laser, Fabrik Stufe 3
       const maxDepth = 360;
       const branches = [
-        { startGy: 12, endGy: 16, minGx: 12, maxGx: 26 },
-        { startGy: 26, endGy: 31, minGx: 10, maxGx: 28 },
-        { startGy: 45, endGy: 52, minGx: 11, maxGx: 29 },
-        { startGy: 70, endGy: 78, minGx: 9, maxGx: 30 },
-        { startGy: 115, endGy: 124, minGx: 8, maxGx: 32 }, // Schiefer-Großstollen
-        { startGy: 150, endGy: 160, minGx: 12, maxGx: 31 }, // Silber-Flöz
-        { startGy: 205, endGy: 215, minGx: 10, maxGx: 28 }, // Granit-Vortrieb
-        { startGy: 235, endGy: 248, minGx: 6, maxGx: 34 }, // Reiche Gold-Kammer
-        { startGy: 290, endGy: 302, minGx: 11, maxGx: 30 }, // Tiefe Goldadern
-        { startGy: 345, endGy: 358, minGx: 8, maxGx: 32 }  // Smaragd-Halle
+        { startGy: 13, endGy: 15, minGx: 12, maxGx: 26 },
+        { startGy: 27, endGy: 29, minGx: 10, maxGx: 28 },
+        { startGy: 46, endGy: 48, minGx: 11, maxGx: 27 },
+        { startGy: 71, endGy: 73, minGx: 9, maxGx: 29 },
+        { startGy: 116, endGy: 118, minGx: 8, maxGx: 30 }, // Schiefer-Großstollen
+        { startGy: 151, endGy: 153, minGx: 12, maxGx: 29 }, // Silber-Flöz
+        { startGy: 206, endGy: 208, minGx: 10, maxGx: 28 }, // Granit-Vortrieb
+        { startGy: 236, endGy: 238, minGx: 8, maxGx: 32 }, // Reiche Gold-Kammer
+        { startGy: 291, endGy: 293, minGx: 11, maxGx: 29 }, // Tiefe Goldadern
+        { startGy: 346, endGy: 348, minGx: 10, maxGx: 30 }  // Smaragd-Halle
       ];
       const gridData = SaveSystem.generateDestroyedAndExplored(maxDepth, branches);
 
@@ -685,19 +698,19 @@ export class SaveSystem {
       // 🟣 Late-Game: Tiefe ~1.150m, Tiefenkern & Titan, Tier-9-Quantenfräse, alle Erze & Relikte
       const maxDepth = 1150;
       const branches = [
-        { startGy: 15, endGy: 22, minGx: 10, maxGx: 28 },
-        { startGy: 45, endGy: 54, minGx: 8, maxGx: 30 },
-        { startGy: 95, endGy: 105, minGx: 7, maxGx: 32 },
-        { startGy: 160, endGy: 172, minGx: 10, maxGx: 34 },
-        { startGy: 240, endGy: 255, minGx: 6, maxGx: 35 },
-        { startGy: 350, endGy: 365, minGx: 8, maxGx: 32 },
-        { startGy: 490, endGy: 504, minGx: 10, maxGx: 30 },
-        { startGy: 620, endGy: 635, minGx: 6, maxGx: 36 }, // Obsidian & Rubin
-        { startGy: 780, endGy: 795, minGx: 8, maxGx: 32 },
-        { startGy: 860, endGy: 880, minGx: 5, maxGx: 35 }, // Diamant-Hauptlager
-        { startGy: 980, endGy: 995, minGx: 10, maxGx: 30 },
-        { startGy: 1070, endGy: 1088, minGx: 6, maxGx: 34 }, // Titan-Bruchfeld
-        { startGy: 1130, endGy: 1148, minGx: 8, maxGx: 32 }  // Tiefenkern-Halle
+        { startGy: 15, endGy: 17, minGx: 10, maxGx: 28 },
+        { startGy: 45, endGy: 47, minGx: 10, maxGx: 28 },
+        { startGy: 95, endGy: 97, minGx: 9, maxGx: 30 },
+        { startGy: 160, endGy: 162, minGx: 10, maxGx: 30 },
+        { startGy: 240, endGy: 242, minGx: 8, maxGx: 32 },
+        { startGy: 350, endGy: 352, minGx: 10, maxGx: 30 },
+        { startGy: 490, endGy: 492, minGx: 10, maxGx: 30 },
+        { startGy: 620, endGy: 622, minGx: 8, maxGx: 32 }, // Obsidian & Rubin
+        { startGy: 780, endGy: 782, minGx: 10, maxGx: 30 },
+        { startGy: 860, endGy: 862, minGx: 8, maxGx: 32 }, // Diamant-Hauptlager
+        { startGy: 980, endGy: 982, minGx: 10, maxGx: 30 },
+        { startGy: 1070, endGy: 1072, minGx: 8, maxGx: 32 }, // Titan-Bruchfeld
+        { startGy: 1130, endGy: 1133, minGx: 9, maxGx: 31 }  // Tiefenkern-Halle
       ];
       const gridData = SaveSystem.generateDestroyedAndExplored(maxDepth, branches);
 
