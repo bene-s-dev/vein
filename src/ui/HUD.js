@@ -1199,11 +1199,11 @@ export class HUD {
           <div style="background: rgba(15, 23, 42, 0.65); border: none; border-radius: 10px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">
             <div style="font-size: 12px; font-weight: 700; color: #38bdf8; margin-bottom: 3px;">Tiefenschichten & Mineralien</div>
             <div style="font-size: 11px; color: #94a3b8; line-height: 1.5;">
-              • <strong>0–40 m (Humus & Erde):</strong> Kohle, Kupfer<br>
-              • <strong>40–120 m (Schiefer):</strong> Eisen, Zinn<br>
-              • <strong>120–300 m (Granit):</strong> Silber, Gold<br>
-              • <strong>300–800 m (Obsidian & Basalt):</strong> Smaragde, Saphire, Rubine, Diamanten<br>
-              • <strong>>800 m (Tiefenkern):</strong> Titan, Platin, Uran, Dunkelmaterie
+              • <strong>0–50 m (Humus):</strong> Kohle, Kupfer, Eisen<br>
+              • <strong>50–180 m (Schiefer):</strong> Eisen, Zinn, Silber<br>
+              • <strong>180–480 m (Granit):</strong> Silber, Gold, Smaragd<br>
+              • <strong>480–950 m (Obsidian):</strong> Saphir, Rubin, Diamant<br>
+              • <strong>>950 m (Urgestein):</strong> Titan, Platin, Uran, Dunkelmaterie
             </div>
           </div>
           <div style="background: rgba(15, 23, 42, 0.65); border: none; border-radius: 10px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">

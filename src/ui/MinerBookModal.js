@@ -24,18 +24,18 @@ export const ORE_DESCRIPTIONS = {
 export const GEOLOGICAL_LAYERS = [
   {
     id: 'humus',
-    name: 'Humusschicht & Oberboden',
+    name: 'Humus',
     depthRange: '0 – 50 m',
     minDepth: 0,
     baseHardness: '48 HP',
     hardnessMultiplier: '1.0x (Basis)',
     color: '#d97706',
     ores: ['coal', 'copper', 'iron'],
-    report: 'Die oberste Sedimentschicht aus weicher Erde, Lehm und Humus. Jeder Einsteigerbohrer dringt hier mühelos vor. Ausgezeichnete Fundstelle für Kohle, frühe Kupferadern und ab 18m Tiefe die ersten Eisenerzvorkommen.'
+    report: 'Die oberste Erdschicht aus weichem Humus und Lehm. Jeder Einsteigerbohrer dringt hier mühelos vor. Ausgezeichnete Fundstelle für Kohle, frühe Kupferadern und ab 18m Tiefe die ersten Eisenerzvorkommen.'
   },
   {
     id: 'schist',
-    name: 'Schiefer & Felsgestein',
+    name: 'Schiefer',
     depthRange: '50 – 180 m',
     minDepth: 50,
     baseHardness: '160 HP',
@@ -46,7 +46,7 @@ export const GEOLOGICAL_LAYERS = [
   },
   {
     id: 'granite',
-    name: 'Granit-Formation',
+    name: 'Granit',
     depthRange: '180 – 480 m',
     minDepth: 180,
     baseHardness: '320 HP',
@@ -57,7 +57,7 @@ export const GEOLOGICAL_LAYERS = [
   },
   {
     id: 'obsidian',
-    name: 'Obsidian- & Basaltzone',
+    name: 'Obsidian',
     depthRange: '480 – 950 m',
     minDepth: 480,
     baseHardness: '600 HP',
@@ -68,7 +68,7 @@ export const GEOLOGICAL_LAYERS = [
   },
   {
     id: 'core',
-    name: 'Urgestein & Der Tiefenkern',
+    name: 'Urgestein',
     depthRange: '> 950 m',
     minDepth: 950,
     baseHardness: '1100 – 1800 HP',

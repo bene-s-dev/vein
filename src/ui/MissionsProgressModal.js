@@ -272,61 +272,61 @@ export class MissionsProgressModal {
       {
         level: 1,
         title: 'Novize',
-        desc: 'Humus- und Erdschicht (0-50m). Einstieg in den Schacht-Bergbau.',
+        desc: 'Humus (0-50m). Einstieg in den Schacht-Bergbau.',
         perks: 'Zugang zu Basis-Upgrades und Erzbörse'
       },
       {
         level: 2,
         title: 'Schürfer',
-        desc: curLevel >= 2 ? 'Schiefer- und Felsschicht (50-180m). Härtere Gesteinsformationen.' : 'Schiefer- und Felsschicht (50-180m). Unbekannte Gesteinsschichten.',
+        desc: curLevel >= 2 ? 'Schiefer (50-180m). Härtere Gesteinsformationen.' : 'Schiefer (50-180m). Unbekannte Gesteinsschichten.',
         perks: 'Hydraulik-Zylinder und Titan-Legierung montierbar'
       },
       {
         level: 3,
         title: 'Tiefen-Geologe',
-        desc: curLevel >= 3 ? 'Dichte Granitschicht (180-350m). Wertvolle Minerale & Adern.' : 'Dichte Granitschicht (180-350m). Unbekannte Tiefenadern.',
+        desc: curLevel >= 3 ? 'Granit (180-350m). Wertvolle Minerale & Adern.' : 'Granit (180-350m). Unbekannte Tiefenadern.',
         perks: 'Kristall-Fokuslinsen und Plasmabrenner freigeschaltet'
       },
       {
         level: 4,
         title: 'Basalt-Pionier',
-        desc: curLevel >= 4 ? 'Basalt- und Härteschicht (350-550m). Enormer Gebirgsdruck.' : 'Basalt- und Härteschicht (350-550m). Massiver Basaltfels.',
+        desc: curLevel >= 4 ? 'Basalt (350-550m). Enormer Gebirgsdruck.' : 'Basalt (350-550m). Massiver Basaltfels.',
         perks: 'Schwere Verbundpanzerung und Vektor-Booster'
       },
       {
         level: 5,
         title: 'Kern-Ingenieur',
-        desc: curLevel >= 5 ? 'Obsidian- und Kristallzone (550-850m). Magmatische Hochdruck-Zone.' : 'Obsidian- und Kristallzone (550-850m). Magmatische Tiefenregion.',
+        desc: curLevel >= 5 ? 'Obsidian (550-850m). Magmatische Hochdruck-Zone.' : 'Obsidian (550-850m). Magmatische Tiefenregion.',
         perks: 'Quanten-Steuerkerne und Fusions-Reaktoren'
       },
       {
         level: 6,
         title: 'Magma-Schürfer',
-        desc: curLevel >= 6 ? 'Glühende Magma-Übergangszone (850-1.200m). Intensive Hitze.' : 'Glühende Magma-Übergangszone (850-1.200m). Glutflüssiges Gestein.',
+        desc: curLevel >= 6 ? 'Magma (850-1.200m). Intensive Hitze.' : 'Magma (850-1.200m). Glutflüssiges Gestein.',
         perks: 'Nanit-Matrix-Chassis und Plasmareaktoren'
       },
       {
         level: 7,
         title: 'Kavitations-Experte',
-        desc: curLevel >= 7 ? 'Sub-Krusten-Kavitation (1.200-1.600m). Seltene Kristallgeoden.' : 'Sub-Krusten-Kavitation (1.200-1.600m). Tiefe Hohlraum-Systeme.',
+        desc: curLevel >= 7 ? 'Kavitation (1.200-1.600m). Seltene Kristallgeoden.' : 'Kavitation (1.200-1.600m). Tiefe Hohlraum-Systeme.',
         perks: 'Kraftfeld-Deflektoren und Subraum-Module'
       },
       {
         level: 8,
         title: 'Urgestein-Meister',
-        desc: curLevel >= 8 ? 'Uralter Kontinentalsockel (1.600-2.000m). Extrem verdichtetes Gestein.' : 'Uralter Kontinentalsockel (1.600-2.000m). Unerreichtes Urgestein.',
+        desc: curLevel >= 8 ? 'Urgestein (1.600-2.000m). Extrem verdichtetes Gestein.' : 'Urgestein (1.600-2.000m). Unerreichtes Tiefengestein.',
         perks: 'Singularitäts-Fräsen und Dimensions-Kompaktoren'
       },
       {
         level: 9,
         title: 'Quanten-Architekt',
-        desc: curLevel >= 9 ? 'Äußerer Erdkern (2.000-2.500m). Fluktuierende Gravitationsfelder.' : 'Äußerer Erdkern (2.000-2.500m). Der Gravitations-Kern.',
+        desc: curLevel >= 9 ? 'Erdkern (2.000-2.500m). Fluktuierende Gravitationsfelder.' : 'Erdkern (2.000-2.500m). Der Gravitations-Kern.',
         perks: 'Chrono-Tachyonen-Antrieb und Adamantit-Hülle'
       },
       {
         level: 10,
         title: 'Meister der Tiefe',
-        desc: curLevel >= 10 ? 'Zentrum des Planetenkerns (2.500m+). Das Herz der Welt.' : 'Zentrum des Planetenkerns (2.500m+). Das unberührte Planetenherz.',
+        desc: curLevel >= 10 ? 'Planetenherz (2.500m+). Das Herz der Welt.' : 'Planetenherz (2.500m+). Das unberührte Planetenherz.',
         perks: 'Tachyonen-Disruptor X, Quanten-Aura und Omnispektrum'
       }
     ];
