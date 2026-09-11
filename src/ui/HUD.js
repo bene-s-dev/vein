@@ -114,6 +114,7 @@ export class HUD {
     this.fuelReturnLine = document.getElementById('hud-fuel-return-line');
     this.hullText = document.getElementById('hud-hull-text');
     this.hullNum = document.getElementById('hud-hull-num');
+    this.hullIcon = document.getElementById('hud-hull-icon');
     this.hullBar = document.getElementById('hud-hull-bar');
     this.hullBarContainer = document.getElementById('hud-hull-bar-container');
     this.cargoText = document.getElementById('hud-cargo-text');
@@ -319,7 +320,7 @@ export class HUD {
       }
     } else if (this.fuelText) {
       if (this._lastFuel !== roundedFuel) {
-        this.fuelText.textContent = `${roundedFuel}%`;
+        this.fuelText.textContent = `${roundedFuel}`;
         this._lastFuel = roundedFuel;
       }
     }
@@ -371,7 +372,7 @@ export class HUD {
       }
     } else if (this.hullText) {
       if (this._lastHull !== roundedHull) {
-        this.hullText.textContent = `${roundedHull}%`;
+        this.hullText.textContent = `${roundedHull}`;
         this._lastHull = roundedHull;
       }
     }
@@ -380,9 +381,10 @@ export class HUD {
     if (hullPercent <= 20) hullColor = '#ef4444';
     else if (hullPercent <= 45) hullColor = '#f59e0b';
 
-    if (this.hullText && this._lastHullColor !== hullColor) {
+    if (this._lastHullColor !== hullColor) {
       this._lastHullColor = hullColor;
-      this.hullText.style.color = hullColor;
+      if (this.hullText) this.hullText.style.color = hullColor;
+      if (this.hullIcon) this.hullIcon.style.color = hullColor;
     }
 
     if (this.hullCluster) {
@@ -412,10 +414,10 @@ export class HUD {
         this._lastMaxCargo = this.player.maxCargo;
       }
     } else if (this.cargoText) {
-      const cargoStr = `${this.player.cargoCount}/${this.player.maxCargo}`;
+      const cargoStr = `${this.player.cargoCount}<span class="hud-cargo-slash">/</span>${this.player.maxCargo}`;
       if (this._lastCargoStr !== cargoStr) {
         this._lastCargoStr = cargoStr;
-        this.cargoText.textContent = cargoStr;
+        this.cargoText.innerHTML = cargoStr;
       }
     }
 
