@@ -297,31 +297,46 @@
     }
 
     #hud-fuel-text,
-    #hud-hull-text {
-      width: auto;
-      min-width: 19px;
-      display: inline-flex;
-      justify-content: flex-end;
-      text-align: right;
-    }
-
-    #hud-fuel-num,
-    #hud-hull-num {
-      width: 100%;
-      display: inline-flex;
-      justify-content: flex-end;
-      text-align: right;
-      font-variant-numeric: tabular-nums;
-    }
-
+    #hud-hull-text,
     #hud-cargo-text {
-      min-width: 32px;
+      width: auto;
+      min-width: 28px;
       display: inline-flex;
       justify-content: flex-end;
       align-items: center;
       text-align: right;
       font-variant-numeric: tabular-nums;
       white-space: nowrap;
+    }
+
+    #hud-fuel-num,
+    #hud-hull-num,
+    #hud-cargo-num {
+      min-width: 10px;
+      display: inline-flex;
+      justify-content: flex-end;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #hud-fuel-max,
+    #hud-hull-max,
+    #hud-cargo-max {
+      min-width: 10px;
+      display: inline-flex;
+      justify-content: flex-start;
+      text-align: left;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .hud-unit {
+      font-size: 9px;
+      font-weight: 800;
+      margin-left: 1px;
+      user-select: none;
+      letter-spacing: 0.2px;
+      display: inline-flex;
+      align-items: baseline;
     }
 
     #hud-cargo-num {
@@ -2206,7 +2221,7 @@
         <!-- Tank -->
         <div class="hud-cluster-part" id="hud-fuel-cluster">
           <div class="stat-row">
-            <span class="hud-value-badge" id="hud-fuel-text" style="color: #f8fafc;"><span class="hud-num-slot" id="hud-fuel-num">100</span></span>
+            <span class="hud-value-badge" id="hud-fuel-text" style="color: #f8fafc;"><span class="hud-num-slot" id="hud-fuel-num">40</span><span class="hud-cargo-slash">/</span><span id="hud-fuel-max">40</span><span class="hud-unit" style="color: #fbbf24;">L</span></span>
             <span id="hud-fuel-icon" style="display: inline-flex; align-items: center;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                 <rect x="3" y="4" width="10" height="17" rx="2" fill="#fbbf24" stroke="#475569" stroke-width="1.1"/>
@@ -2227,7 +2242,7 @@
         <!-- Hülle -->
         <div class="hud-cluster-part" id="hud-hull-cluster">
           <div class="stat-row">
-            <span class="hud-value-badge" id="hud-hull-text" style="color: #f8fafc;"><span class="hud-num-slot" id="hud-hull-num">100</span></span>
+            <span class="hud-value-badge" id="hud-hull-text" style="color: #f8fafc;"><span class="hud-num-slot" id="hud-hull-num">50</span><span class="hud-cargo-slash">/</span><span id="hud-hull-max">50</span><span class="hud-unit" style="color: #10b981;">HP</span></span>
             <span id="hud-hull-icon" style="display: inline-flex; align-items: center;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                 <path id="hud-hull-icon-path" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="#10b981" stroke="#475569" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>

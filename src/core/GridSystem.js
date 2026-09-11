@@ -692,7 +692,7 @@ export class GridSystem {
 
     // Tiefsten leeren Zielblock ermitteln
     let targetGy = gy + 1;
-    while (true) {
+    while (targetGy < gy + 150) {
       const nextBelow = this.getTile(gx, targetGy + 1);
       if (nextBelow && nextBelow.type === TILE_TYPES.EMPTY) {
         targetGy++;

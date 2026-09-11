@@ -1010,10 +1010,8 @@ class SoundManager {
     osc.stop(now + 0.65);
 
     // Weißes/Braunes Rauschen für Detonationsschock
-    const noise = this._getNoiseBuffer('brown') || this._getNoiseBuffer('white');
-    if (noise) {
-      const src = this.ctx.createBufferSource();
-      src.buffer = noise;
+    const src = this.createNoiseBufferSource('brown') || this.createNoiseBufferSource('white');
+    if (src) {
       const filter = this.ctx.createBiquadFilter();
       filter.type = 'lowpass';
       filter.frequency.setValueAtTime(800, now);
@@ -1029,6 +1027,10 @@ class SoundManager {
       src.start(now);
       src.stop(now + 0.65);
     }
+  }
+
+  _getNoiseBuffer(type = 'brown') {
+    return this._noiseBuffers[type] || this._noiseBuffers.brown || null;
   }
 
   playItemUse() {

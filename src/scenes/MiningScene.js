@@ -319,23 +319,29 @@ export class MiningScene extends Phaser.Scene {
       repeat: 3,
       duration: 175,
       onComplete: () => {
-        bombSprite.destroy();
-        this.explodeDynamite(gx, gy);
-        this.isDynamiteActive = false;
+        try {
+          bombSprite.destroy();
+          this.explodeDynamite(gx, gy);
+        } catch (err) {
+          console.error('Fehler bei Detonation:', err);
+        } finally {
+          this.isDynamiteActive = false;
+        }
       }
     });
     return true;
   }
 
   explodeDynamite(centerGx, centerGy) {
-    centerGx = Math.round(centerGx);
-    centerGy = Math.round(centerGy);
-    const bombX = centerGx * TILE_SIZE + TILE_SIZE / 2;
-    const bombY = centerGy * TILE_SIZE + TILE_SIZE / 2;
+    try {
+      centerGx = Math.round(centerGx);
+      centerGy = Math.round(centerGy);
+      const bombX = centerGx * TILE_SIZE + TILE_SIZE / 2;
+      const bombY = centerGy * TILE_SIZE + TILE_SIZE / 2;
 
-    // Sound & Erschütterung
-    soundFx.playExplosion();
-    this.cameras.main.shake(380, 0.028);
+      // Sound & Erschütterung
+      soundFx.playExplosion();
+      this.cameras.main.shake(380, 0.028);
 
     // Explosions-Flash
     const blast = this.add.circle(bombX, bombY, 56, 0xfef08a, 0.95).setDepth(20);
@@ -395,6 +401,9 @@ export class MiningScene extends Phaser.Scene {
     // Geröll über dem Krater prüfen
     for (let dx = -1; dx <= 1; dx++) {
       this.gridSystem.checkBoulderFall(centerGx + dx, centerGy - 2);
+    }
+    } catch (err) {
+      console.error('Dynamite explosion error:', err);
     }
   }
 }

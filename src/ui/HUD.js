@@ -114,11 +114,13 @@ export class HUD {
     // DOM-Referenzen
     this.fuelText = document.getElementById('hud-fuel-text');
     this.fuelNum = document.getElementById('hud-fuel-num');
+    this.fuelMax = document.getElementById('hud-fuel-max');
     this.fuelBar = document.getElementById('hud-fuel-bar');
     this.fuelBarContainer = document.getElementById('hud-fuel-bar-container');
     this.fuelReturnLine = document.getElementById('hud-fuel-return-line');
     this.hullText = document.getElementById('hud-hull-text');
     this.hullNum = document.getElementById('hud-hull-num');
+    this.hullMax = document.getElementById('hud-hull-max');
     this.hullIcon = document.getElementById('hud-hull-icon');
     this.hullBar = document.getElementById('hud-hull-bar');
     this.hullBarContainer = document.getElementById('hud-hull-bar-container');
@@ -360,16 +362,23 @@ export class HUD {
         this.fuelBar.style.width = `${fuelPercent.toFixed(1)}%`;
       }
     }
-    const roundedFuel = Math.round(fuelPercent);
+    const curFuel = Math.round(this.player.fuel);
+    const maxFuel = this.player.maxFuel || 40;
     if (this.fuelNum) {
-      if (this._lastFuel !== roundedFuel) {
-        this.fuelNum.textContent = roundedFuel;
-        this._lastFuel = roundedFuel;
+      if (this._lastFuel !== curFuel) {
+        this.fuelNum.textContent = curFuel;
+        this._lastFuel = curFuel;
       }
-    } else if (this.fuelText) {
-      if (this._lastFuel !== roundedFuel) {
-        this.fuelText.textContent = `${roundedFuel}`;
-        this._lastFuel = roundedFuel;
+    }
+    if (this.fuelMax) {
+      if (this._lastMaxFuel !== maxFuel) {
+        this.fuelMax.textContent = maxFuel;
+        this._lastMaxFuel = maxFuel;
+      }
+    } else if (this.fuelText && !this.fuelNum) {
+      if (this._lastFuel !== curFuel) {
+        this.fuelText.textContent = `${curFuel}/${maxFuel}L`;
+        this._lastFuel = curFuel;
       }
     }
 
@@ -391,10 +400,12 @@ export class HUD {
 
     if (this.fuelBarContainer) {
       const roundedReturn = Math.round(effectiveReturnThreshold);
-      if (this._lastFuelTitleFuel !== roundedFuel || this._lastFuelTitleReturn !== roundedReturn) {
-        this._lastFuelTitleFuel = roundedFuel;
+      const fuelPct = Math.round(fuelPercent);
+      const returnCost = Math.round(this.player.getReturnFuelCost ? this.player.getReturnFuelCost() : 0);
+      if (this._lastFuelTitleFuel !== curFuel || this._lastFuelTitleReturn !== roundedReturn) {
+        this._lastFuelTitleFuel = curFuel;
         this._lastFuelTitleReturn = roundedReturn;
-        this.fuelBarContainer.title = `Tank: ${roundedFuel}% | Rückkehr-Schwelle (inkl. Puffer): ${roundedReturn}%`;
+        this.fuelBarContainer.title = `Tank: ${curFuel}/${maxFuel}L (${fuelPct}%) | Rückkehr-Bedarf: ${returnCost}L (${roundedReturn}%)`;
       }
     }
 
@@ -455,18 +466,25 @@ export class HUD {
       }
     }
 
-    // Karosserie / Rumpfintegrität (Reine Prozent-Anzeige)
+    // Karosserie / Rumpfintegrität (Reale HP-Werte statt reiner Prozentwert)
     const hullPercent = Math.max(0, Math.min(100, (this.player.hull / this.player.maxHull) * 100));
-    const roundedHull = Math.round(hullPercent);
+    const curHull = Math.round(this.player.hull);
+    const maxHull = this.player.maxHull || 50;
     if (this.hullNum) {
-      if (this._lastHull !== roundedHull) {
-        this.hullNum.textContent = roundedHull;
-        this._lastHull = roundedHull;
+      if (this._lastHull !== curHull) {
+        this.hullNum.textContent = curHull;
+        this._lastHull = curHull;
       }
-    } else if (this.hullText) {
-      if (this._lastHull !== roundedHull) {
-        this.hullText.textContent = `${roundedHull}`;
-        this._lastHull = roundedHull;
+    }
+    if (this.hullMax) {
+      if (this._lastMaxHull !== maxHull) {
+        this.hullMax.textContent = maxHull;
+        this._lastMaxHull = maxHull;
+      }
+    } else if (this.hullText && !this.hullNum) {
+      if (this._lastHull !== curHull) {
+        this.hullText.textContent = `${curHull}/${maxHull}HP`;
+        this._lastHull = curHull;
       }
     }
 
@@ -485,11 +503,11 @@ export class HUD {
     }
 
     if (this.hullCluster) {
-      const roundedHp = Math.round(this.player.hull);
-      if (this._lastHullTitleHp !== roundedHp || this._lastHullTitlePct !== roundedHull) {
-        this._lastHullTitleHp = roundedHp;
-        this._lastHullTitlePct = roundedHull;
-        this.hullCluster.title = `Driller-Status & Panzerung: ${roundedHull}% (${roundedHp}/${this.player.maxHull} HP) - Klick zum Öffnen`;
+      const roundedHullPct = Math.round(hullPercent);
+      if (this._lastHullTitleHp !== curHull || this._lastHullTitleMax !== maxHull) {
+        this._lastHullTitleHp = curHull;
+        this._lastHullTitleMax = maxHull;
+        this.hullCluster.title = `Driller-Status & Panzerung: ${curHull}/${maxHull} HP (${roundedHullPct}%) - Klick zum Öffnen`;
       }
     }
 
