@@ -133,12 +133,8 @@ export class HUD {
     this.levelRight = document.getElementById('hud-level-right');
     this.returnWarn = document.getElementById('hud-return-warn');
 
-    // Toast- und Alarm-Tracking
-    this.wasAtSurface = true;
-    this.warnedReturnPre = false;
+    // Toast- und Alarm-Tracking (nur 1x beim Point of No Return)
     this.warnedPointOfNoReturn = false;
-    this.warnedFuelLow20 = false;
-    this.warnedFuelCritical10 = false;
 
     // Oberes linkes Bohrer-Status-Widget (Tank, Hülle, Fracht) als ein einheitliches klick-/tippbares Element
     let lastDrillerModalOpen = 0;
@@ -367,8 +363,7 @@ export class HUD {
 
     // Point of No Return Status (Kritisch: aktueller Tank reicht nicht mehr für den Aufstieg)
     const isReturnCritical = isBelowGround && returnPercent > 0.5 && fuelPercent <= returnPercent;
-    const isFuelLow = fuelPercent <= 20;
-    const needsFuelWarning = isFuelLow || isReturnCritical;
+    const needsFuelWarning = isReturnCritical;
     if (this._lastFuelWarning !== needsFuelWarning) {
       this._lastFuelWarning = needsFuelWarning;
       if (needsFuelWarning) this.cardGauges?.classList.add('fuel-warning');
@@ -381,86 +376,18 @@ export class HUD {
       this.returnWarn.style.display = isReturnCritical ? 'inline-flex' : 'none';
     }
 
-    // --- Toast-Warnungen & Cockpit-Alarme ---
+    // --- Einzige Tankwarnung: Genau einmal beim Point of No Return ---
     if (isAtSurface) {
-      this.wasAtSurface = true;
-      this.warnedReturnPre = false;
       this.warnedPointOfNoReturn = false;
-      this.warnedFuelLow20 = false;
-      this.warnedFuelCritical10 = false;
     } else if (isBelowGround) {
-      // 1. Übergang von der Oberfläche in die Mine mit wenig Tank
-      if (this.wasAtSurface) {
-        this.wasAtSurface = false;
-        if (fuelPercent <= 20) {
-          toastManager.show({
-            id: 'fuel-low-entry',
-            text: 'Tanken empfohlen',
-            duration: 4000,
-            sound: 'cockpit'
-          });
-        }
-      }
-
-      // 2. POINT OF NO RETURN (Sofort umkehren!)
-      if (isReturnCritical) {
-        if (!this.warnedPointOfNoReturn) {
-          this.warnedPointOfNoReturn = true;
-          this.warnedReturnPre = true;
-          toastManager.show({
-            id: 'point-of-no-return',
-            text: 'Point of No Return: Sofort umkehren!',
-            duration: 5000,
-            sound: 'cockpit'
-          });
-        }
-      } else if (returnPercent > 0.5 && fuelPercent <= returnPercent + 3) {
-        // 3. Vorwarnung: 3% Puffer vor Point of No Return
-        if (!this.warnedReturnPre && !this.warnedPointOfNoReturn) {
-          this.warnedReturnPre = true;
-          toastManager.show({
-            id: 'return-fuel-pre',
-            text: 'Rückkehr-Limit naht',
-            duration: 4000,
-            sound: 'cockpit'
-          });
-        }
-      }
-
-      // 4. Allgemeine TANKWARNUNG unter Tage
-      if (fuelPercent <= 10) {
-        if (!this.warnedFuelCritical10) {
-          this.warnedFuelCritical10 = true;
-          this.warnedFuelLow20 = true;
-          toastManager.show({
-            id: 'fuel-critical-10',
-            text: 'Achtung: Treibstoff kritisch (10%)!',
-            duration: 5000,
-            sound: 'cockpit'
-          });
-        }
-      } else if (fuelPercent <= 20) {
-        if (!this.warnedFuelLow20 && !this.warnedPointOfNoReturn) {
-          this.warnedFuelLow20 = true;
-          toastManager.show({
-            id: 'fuel-low-20',
-            text: 'Tankwarnung: Treibstoff niedrig (20%)',
-            duration: 4000,
-            sound: 'cockpit'
-          });
-        }
-      }
-
-      // Hysterese-Reset unter Tage bei Wiederaufladung
-      if (fuelPercent > returnPercent + 6) {
-        this.warnedReturnPre = false;
-        this.warnedPointOfNoReturn = false;
-      }
-      if (fuelPercent > 25) {
-        this.warnedFuelLow20 = false;
-      }
-      if (fuelPercent > 15) {
-        this.warnedFuelCritical10 = false;
+      if (isReturnCritical && !this.warnedPointOfNoReturn) {
+        this.warnedPointOfNoReturn = true;
+        toastManager.show({
+          id: 'point-of-no-return',
+          text: 'Point of No Return: Sofort umkehren!',
+          duration: 5000,
+          sound: 'cockpit'
+        });
       }
     }
 
