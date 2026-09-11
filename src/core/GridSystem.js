@@ -32,19 +32,19 @@ function hashCoord(x, y, seed = 1337) {
 export const ORE_DATA = {
   coal: {
     name: 'Kohle',
-    value: 18,
+    value: 22,
     weight: 1,
     sprite: 'ore_coal',
-    hardness: 1.15,
+    hardness: 1.1,
     minDepth: 1,
     rarityWeight: 100
   },
   copper: {
     name: 'Kupfer',
-    value: 35,
+    value: 40,
     weight: 1,
     sprite: 'ore_copper',
-    hardness: 1.25,
+    hardness: 1.2,
     minDepth: 1,
     rarityWeight: 80
   },
@@ -53,8 +53,8 @@ export const ORE_DATA = {
     value: 65,
     weight: 2,
     sprite: 'ore_iron',
-    hardness: 1.45,
-    minDepth: 30,
+    hardness: 1.35,
+    minDepth: 18,
     rarityWeight: 65
   },
   tin: {
@@ -335,11 +335,11 @@ export class GridSystem {
       return surfaceTile;
     } else if (gy <= 50) {
       type = TILE_TYPES.DIRT;
-      baseHp = 85;
+      baseHp = 48;
     } else if (gy <= 180) {
       const isStone = hashCoord(gx, gy, 101) < 0.80;
       type = isStone ? TILE_TYPES.STONE : TILE_TYPES.DIRT;
-      baseHp = isStone ? 160 : 95;
+      baseHp = isStone ? 160 : 65;
     } else if (gy <= 480) {
       const isGranite = hashCoord(gx, gy, 102) < 0.85;
       type = isGranite ? TILE_TYPES.GRANITE : TILE_TYPES.STONE;
@@ -360,8 +360,8 @@ export class GridSystem {
     let ore = null;
     const oreChance = hashCoord(gx, gy, 201);
 
-    // Ca. 27% Wahrscheinlichkeit für Erz in einem Block
-    if (gy > 0 && oreChance < 0.27) {
+    // Ca. 28% Wahrscheinlichkeit für Erz in einem Block
+    if (gy > 0 && oreChance < 0.28) {
       // Gültigen Erz-Pool für aktuelle Tiefe ermitteln
       const availableOres = Object.entries(ORE_DATA).filter(([, data]) => gy >= data.minDepth);
 

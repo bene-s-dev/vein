@@ -32,7 +32,7 @@ export const RANK_NAMES = [
 
 export const TANK_TIERS = [
   { tier: 1, name: 'Standard-Tank', maxFuel: 100, stat: '100 L', cost: 0, comp: null, mountComp: null, level: 1, desc: 'Basis-Treibstofftank für normale Bohrgänge.' },
-  { tier: 2, name: 'Kerosin-Tank Mk.II', maxFuel: 140, stat: '140 L', cost: 450, comp: null, mountComp: { key: 'iron_tube', name: 'Stahl-Rohr', count: 1 }, level: 1, desc: 'Erhöht Treibstoff auf 140 Liter und senkt Verbrauch um 12%.' },
+  { tier: 2, name: 'Kerosin-Tank Mk.II', maxFuel: 140, stat: '140 L', cost: 250, comp: null, mountComp: { key: 'iron_tube', name: 'Stahl-Rohr', count: 1 }, level: 1, desc: 'Erhöht Treibstoff auf 140 Liter und senkt Verbrauch um 12%.' },
   { tier: 3, name: 'Spartriebwerk Mk.III', maxFuel: 190, stat: '190 L', cost: 1500, comp: null, mountComp: { key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1 }, level: 1, desc: 'Erhöht Treibstoff auf 190 Liter und spart 20% Kerosin.' },
   { tier: 4, name: 'Dual-Injektor Mk.IV', maxFuel: 250, stat: '250 L', cost: 4200, comp: null, mountComp: { key: 'silver_coil', name: 'Silber-Spule', count: 1 }, level: 2, desc: 'Verbessert Steigflug-Effizienz mit Hochdruck-Injektoren (250 L).' },
   { tier: 5, name: 'Kompressions-Tank Mk.V', maxFuel: 330, stat: '330 L', cost: 11000, comp: null, mountComp: { key: 'silver_coil', name: 'Silber-Spule', count: 2 }, level: 3, desc: 'Hochfeste Legierung erlaubt 330 Liter Treibstoffkapazität.' },
@@ -45,7 +45,7 @@ export const TANK_TIERS = [
 
 export const HULL_TIERS = [
   { tier: 1, name: 'Leichtmetall-Gehäuse', shortName: 'Leichtmetall', maxHull: 100, stat: '100 HP', cost: 0, comp: null, mountComp: null, level: 1, desc: 'Basis-Gehäuse für normale Bohrungen in oberflächennahem Erdreich.' },
-  { tier: 2, name: 'Kevlar-Verbundschutz Mk.II', shortName: 'Kevlar Mk.II', maxHull: 140, stat: '140 HP', cost: 420, comp: null, mountComp: { key: 'iron_tube', name: 'Stahl-Rohr', count: 1 }, level: 1, desc: 'Verstärkte Verbundstruktur gegen Stoß- und Reibungsverschleiß beim Bohren.' },
+  { tier: 2, name: 'Kevlar-Verbundschutz Mk.II', shortName: 'Kevlar Mk.II', maxHull: 140, stat: '140 HP', cost: 240, comp: null, mountComp: { key: 'iron_tube', name: 'Stahl-Rohr', count: 1 }, level: 1, desc: 'Verstärkte Verbundstruktur gegen Stoß- und Reibungsverschleiß beim Bohren.' },
   { tier: 3, name: 'Gehärtetes Stahl-Chassis Mk.III', shortName: 'Stahl Mk.III', maxHull: 190, stat: '190 HP', cost: 1400, comp: null, mountComp: { key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1 }, level: 1, desc: 'Widerstandsfähiger Gehäuseschutz für tiefere Schiefer- und Granitschichten.' },
   { tier: 4, name: 'Titan-Panzergehäuse Mk.IV', shortName: 'Titan Mk.IV', maxHull: 260, stat: '260 HP', cost: 3900, comp: null, mountComp: { key: 'silver_coil', name: 'Silber-Spule', count: 1 }, level: 2, desc: 'Widersteht hohem Gesteinsdruck und Reibungshitze.' },
   { tier: 5, name: 'Magma-Hitzeschild Mk.V', shortName: 'Hitzeschild Mk.V', maxHull: 350, stat: '350 HP', cost: 10500, comp: null, mountComp: { key: 'silver_coil', name: 'Silber-Spule', count: 2 }, level: 3, desc: 'Schützt das Gehäuse vor extremen Tiefentemperaturen und Erschütterungen.' },
@@ -58,7 +58,7 @@ export const HULL_TIERS = [
 
 export const ENGINE_TIERS = [
   { tier: 1, name: 'Standard-Raupenfahrwerk', stat: '175 px/s', moveDuration: 160, flightSpeed: 175, cost: 0, comp: null, mountComp: null, level: 1, desc: 'Sicheres Basis-Fahrwerk für solide Schachtmanöver.' },
-  { tier: 2, name: 'Verstärkte Getriebe Mk.II', stat: '195 px/s', moveDuration: 145, flightSpeed: 195, cost: 480, comp: null, mountComp: { key: 'iron_tube', name: 'Stahl-Rohr', count: 1 }, level: 1, desc: 'Kürzere Schaltzeiten beschleunigen Kriechgang und Steigflug.' },
+  { tier: 2, name: 'Verstärkte Getriebe Mk.II', stat: '195 px/s', moveDuration: 145, flightSpeed: 195, cost: 260, comp: null, mountComp: { key: 'iron_tube', name: 'Stahl-Rohr', count: 1 }, level: 1, desc: 'Kürzere Schaltzeiten beschleunigen Kriechgang und Steigflug.' },
   { tier: 3, name: 'Hydraulik-Raupen Mk.III', stat: '220 px/s', moveDuration: 130, flightSpeed: 220, cost: 1600, comp: null, mountComp: { key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1 }, level: 1, desc: 'Flüssigere Kettenbewegungen und mehr Schubdüsengeschwindigkeit.' },
   { tier: 4, name: 'Hochdruck-Turbine Mk.IV', stat: '250 px/s', moveDuration: 115, flightSpeed: 250, cost: 4400, comp: null, mountComp: { key: 'silver_coil', name: 'Silber-Spule', count: 1 }, level: 2, desc: 'Kraftvoller Vortrieb im Schacht und schnellerer Aufstieg.' },
   { tier: 5, name: 'Titan-Kettenantrieb Mk.V', stat: '285 px/s', moveDuration: 100, flightSpeed: 285, cost: 11500, comp: null, mountComp: { key: 'silver_coil', name: 'Silber-Spule', count: 2 }, level: 3, desc: 'Geringerer Rollwiderstand und kräftige Schwebetriebwerke.' },
@@ -70,9 +70,9 @@ export const ENGINE_TIERS = [
 ];
 
 export const CARGO_TIERS = [
-  { tier: 1, name: 'Standard-Ladebucht', maxCargo: 10, stat: '10 Plätze', cost: 0, comp: null, mountComp: null, level: 1, desc: 'Kompakter Laderaum für die ersten Bergbau-Expeditionen.' },
-  { tier: 2, name: 'Erweiterte Frachtbucht Mk.II', maxCargo: 14, stat: '14 Plätze', cost: 440, comp: null, mountComp: { key: 'iron_tube', name: 'Stahl-Rohr', count: 1 }, level: 1, desc: 'Erweitert Ladeplätze auf 14 Erze für lukrativere Tauchgänge.' },
-  { tier: 3, name: 'Titan-Containermodul Mk.III', maxCargo: 20, stat: '20 Plätze', cost: 1500, comp: null, mountComp: { key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1 }, level: 1, desc: 'Großzügiger Frachtraum für 20 Erze.' },
+  { tier: 1, name: 'Standard-Ladebucht', maxCargo: 12, stat: '12 Plätze', cost: 0, comp: null, mountComp: null, level: 1, desc: 'Kompakter Laderaum für die ersten Bergbau-Expeditionen.' },
+  { tier: 2, name: 'Erweiterte Frachtbucht Mk.II', maxCargo: 18, stat: '18 Plätze', cost: 250, comp: null, mountComp: { key: 'iron_tube', name: 'Stahl-Rohr', count: 1 }, level: 1, desc: 'Erweitert Ladeplätze auf 18 Erze für lukrativere Tauchgänge.' },
+  { tier: 3, name: 'Titan-Containermodul Mk.III', maxCargo: 26, stat: '26 Plätze', cost: 1500, comp: null, mountComp: { key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1 }, level: 1, desc: 'Großzügiger Frachtraum für 26 Erze.' },
   { tier: 4, name: 'Struktur-Laderaum Mk.IV', maxCargo: 28, stat: '28 Plätze', cost: 4100, comp: null, mountComp: { key: 'silver_coil', name: 'Silber-Spule', count: 1 }, level: 2, desc: 'Hydraulische Ladeklappen bieten Platz für 28 Erze.' },
   { tier: 5, name: 'Molekular-Kompressor Mk.V', maxCargo: 38, stat: '38 Plätze', cost: 10800, comp: null, mountComp: { key: 'silver_coil', name: 'Silber-Spule', count: 2 }, level: 3, desc: 'Hohe Packdichte erlaubt den Transport von 38 Erzen.' },
   { tier: 6, name: 'Subraum-Boxen Mk.VI', maxCargo: 50, stat: '50 Plätze', cost: 24500, comp: null, mountComp: { key: 'crystal_lens', name: 'Kristall-Linse', count: 1 }, level: 4, desc: 'Transportiert bis zu 50 Erze auf einen Schlag.' },
@@ -84,7 +84,7 @@ export const CARGO_TIERS = [
 
 export const SENSOR_TIERS = [
   { tier: 1, name: 'Basis-Sonar', radius: 1.8, stat: '1.8 Kacheln', cost: 0, comp: null, mountComp: null, level: 1, desc: 'Kompakter Sensor zur Erkennung naher Erzadern.' },
-  { tier: 2, name: 'Geo-Scanner Mk.II', radius: 2.4, stat: '2.4 Kacheln', cost: 380, comp: null, mountComp: { key: 'iron_tube', name: 'Stahl-Rohr', count: 1 }, level: 1, desc: 'Vergrößert den kreisrunden Scan-Umkreis spürbar.' },
+  { tier: 2, name: 'Geo-Scanner Mk.II', radius: 2.4, stat: '2.4 Kacheln', cost: 220, comp: null, mountComp: { key: 'iron_tube', name: 'Stahl-Rohr', count: 1 }, level: 1, desc: 'Vergrößert den kreisrunden Scan-Umkreis spürbar.' },
   { tier: 3, name: 'Puls-Sonar Mk.III', radius: 3.0, stat: '3.0 Kacheln', cost: 1300, comp: null, mountComp: { key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1 }, level: 1, desc: 'Erweitert den Erfassungsbereich auf 3.0 Kacheln.' },
   { tier: 4, name: 'Spektral-Radar Mk.IV', radius: 3.7, stat: '3.7 Kacheln', cost: 3700, comp: null, mountComp: { key: 'silver_coil', name: 'Silber-Spule', count: 1 }, level: 2, desc: 'Schwenkbarer Pylon deckt Erze in 3.7 Kacheln Umkreis auf.' },
   { tier: 5, name: 'Tiefen-Sensor Mk.V', radius: 4.5, stat: '4.5 Kacheln', cost: 9800, comp: null, mountComp: { key: 'silver_coil', name: 'Silber-Spule', count: 2 }, level: 3, desc: 'Optische Linse durchdringt dicke Gesteinsschichten bis 4.5 Kacheln.' },
@@ -160,23 +160,23 @@ export class Player {
     this.researchedTankTier = 1; // Im Labor erforschter Bauplan (Montage im Hangar erforderlich)
     this.batteryTier = 1;
 
-    // Antrieb & Geschwindigkeit (am Anfang ruhig & beherrschbar, upgradebar)
+    // Antrieb & Geschwindigkeit (am Anfang dynamisch & beherrschbar, upgradebar)
     this.engineTier = 1;
     this.researchedEngineTier = 1; // Im Labor erforschter Bauplan (Montage im Hangar erforderlich)
-    this.moveDuration = 260; // 260ms pro Kachel (~3.8 Kacheln/s für ruhiges, kontrolliertes Fahren auf Stufe 1)
-    this.flightSpeed = 120;  // 120 px/s Steigflug (ca. 2.5 Kacheln/s)
+    this.moveDuration = 160; // 160ms pro Kachel (synchronisiert mit Stufe 1)
+    this.flightSpeed = 175;  // 175 px/s Steigflug (ca. 5.5 Kacheln/s)
     this.moveTargetGx = this.gx;
     this.moveTargetGy = this.gy;
     this.moveTargetX = this.x;
     this.moveTargetY = this.y;
     this.moveSpeed = 125;
 
-    this.maxCargo = 10;
+    this.maxCargo = 12;
     this.cargo = [];
     this.cargoTier = 1;
     this.researchedCargoTier = 1; // Im Labor erforschter Bauplan (Montage im Hangar erforderlich)
 
-    this.drillPower = 34; // Ausbalanciert: 85 HP / 34 DPS = ca. 2.5s pro Erdblock
+    this.drillPower = 38; // Ausbalanciert: 48 HP / 38 DPS = ca. 1.25s pro Erdblock
     this.drillTier = 1;
     this.researchedDrillTier = 1; // Im Labor erforschter Bauplan (Montage im Hangar erforderlich)
 
@@ -198,7 +198,7 @@ export class Player {
     // Rettungen (3 kostenlos, danach Bergungsgebühr)
     this.freeRescues = 3;
 
-    this.cash = 10; // Startgeld: Erstes Upgrade wird durch Abbau von ca. 10 Kohle verdient!
+    this.cash = 60; // Startguthaben für Treibstoff und erste Ausrüstung
 
     // Level- und XP-System (saubere Progression: Start bei Level 1)
     this.level = 1;
@@ -354,11 +354,9 @@ export class Player {
 
   upgradeEngine(tier) {
     this.engineTier = tier;
-    // Bewegung: Stufe 1 (260ms) bis Stufe 10 (60ms)
-    // Fluggeschwindigkeit: Stufe 1 (120 px/s) bis Stufe 10 (480 px/s)
     const data = ENGINE_TIERS[tier - 1] || ENGINE_TIERS[0];
-    this.moveDuration = data.moveDuration || 260;
-    this.flightSpeed = data.flightSpeed || 120;
+    this.moveDuration = data.moveDuration || 160;
+    this.flightSpeed = data.flightSpeed || 175;
   }
 
   drawScanner() {

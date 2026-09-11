@@ -98,8 +98,8 @@ export function getRefinedOreNetValue(oreKey) {
 
 // Bohrkopf-Stufen & DPS (Entwicklung im Labor -> Montage im Hangar)
 export const DRILL_TIERS = [
-  { tier: 1, name: 'Stahl-Bohrkopf', stat: '34 DPS', cost: 0, comp: null, mountComp: null, level: 1, desc: 'Solider Bohrkopf für Humus & lockere Erde (ca. 2.5s pro Block).' },
-  { tier: 2, name: 'Wolframkarbid-Spitze', stat: '45 DPS', cost: 520, comp: null, mountComp: { key: 'iron_tube', name: 'Stahl-Rohr', count: 1 }, level: 1, desc: 'Fräst spürbar flüssiger durch Erde (ca. 1.9s) und Schiefer.' },
+  { tier: 1, name: 'Stahl-Bohrkopf', stat: '38 DPS', cost: 0, comp: null, mountComp: null, level: 1, desc: 'Solider Bohrkopf für Humus & lockere Erde (ca. 1.2s pro Block).' },
+  { tier: 2, name: 'Wolframkarbid-Spitze', stat: '52 DPS', cost: 280, comp: null, mountComp: { key: 'iron_tube', name: 'Stahl-Rohr', count: 1 }, level: 1, desc: 'Fräst spürbar flüssiger durch Erde (ca. 0.9s) und Schiefer.' },
   { tier: 3, name: 'Gehärteter Meißel Mk.III', stat: '60 DPS', cost: 1750, comp: null, mountComp: { key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1 }, level: 1, desc: 'Schneidet zügig durch Stein und zerbröckelt Fels.' },
   { tier: 4, name: 'Titan-Diamant-Kopf Mk.IV', stat: '82 DPS', cost: 4600, comp: null, mountComp: { key: 'silver_coil', name: 'Silber-Spule', count: 1 }, level: 2, desc: 'Hydraulisch verstärkte Fräse zermalmt harte Granitadern.' },
   { tier: 5, name: 'Hochdruck-Fräse Mk.V', stat: '115 DPS', cost: 12000, comp: null, mountComp: { key: 'silver_coil', name: 'Silber-Spule', count: 2 }, level: 3, desc: 'Panzerung und Zahnkränze fräsen mühelos durch Granit und Basalt.' },
@@ -109,7 +109,7 @@ export const DRILL_TIERS = [
   { tier: 9, name: 'Singularitäts-Fräse Mk.IX', stat: '500 DPS', cost: 245000, comp: null, mountComp: { key: 'titan_bolt', name: 'Titan-Bolzen', count: 2 }, level: 8, desc: 'Erzeugt Mikrogravitations-Kollapse vor dem Bohrkopf.' },
   { tier: 10, name: 'Tachyonen-Disruptor X', stat: '700 DPS', cost: 480000, comp: null, mountComp: { key: 'quantum_core', name: 'Quanten-Kern', count: 2 }, level: 10, desc: 'Zersetzt die Molekularstruktur des Erdkerns in Sekundenbruchteilen.' }
 ];
-export const DRILL_DPS = [34, 45, 60, 82, 115, 165, 240, 350, 500, 700];
+export const DRILL_DPS = [38, 52, 60, 82, 115, 165, 240, 350, 500, 700];
 export const DRILL_DATA = DRILL_TIERS;
 
 // Zentrale Depot-Ausbaustufen (10 Tiers mit linear-exponentieller Kapazität)
@@ -148,7 +148,7 @@ export const GEOLOGIST_QUESTS = [
     id: 'geologist_iron_tube',
     title: 'Geologische Probensammlung I',
     depthHint: 'Tiefe 0-50m (Erdschicht)',
-    reqs: { coal: 4, iron: 3 },
+    reqs: { coal: 3, iron: 2 },
     rewardComp: { key: 'iron_tube', name: 'Stahl-Rohr', iconName: 'cylinder' },
     rewardCash: 180,
     rewardXp: 140,
