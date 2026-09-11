@@ -1117,11 +1117,6 @@ export class BaseSystem {
           <span style="color: #fbbf24; font-size: 13px; font-weight: 700;">Warenwert: €${totalFpValue.toLocaleString()}</span>
         </div>
         ${fpListHtml}
-        ${hasAnyFp ? `
-          <button id="btn-sell-all-fp" class="btn-buy btn-lg" style="width: 100%; margin-top: 6px;">
-            ${icon('coins', '', 15)} Fabrik-Waren verkaufen (€${totalFpValue.toLocaleString()})
-          </button>
-        ` : ''}
       </div>
     `;
 
@@ -1135,11 +1130,6 @@ export class BaseSystem {
             <strong style="color: #fbbf24; font-size: 14px; font-weight: 800;">Gesamtwert: €${totalOreValue.toLocaleString()}</strong>
           </div>
           ${oreListHtml}
-          ${totalOreCount > 0 ? `
-            <button id="btn-sell-all-ores" class="btn-buy btn-lg" style="width: 100%; margin-top: 6px;">
-              ${icon('coins', '', 15)} Alle Erze verkaufen (€${totalOreValue.toLocaleString()})
-            </button>
-          ` : ''}
         </div>
         ${factoryHtml}
       </div>
@@ -1233,18 +1223,6 @@ export class BaseSystem {
       };
     });
 
-    // Gesamtverkauf aller Erze (Fracht + Depot)
-    const btnSellAllOres = document.getElementById('btn-sell-all-ores');
-    if (btnSellAllOres) {
-      btnSellAllOres.onclick = () => {
-        const res = this.sellAllMarketOres();
-        if (res.totalEarned > 0) {
-          soundFx.playPurchase();
-          this.openMarketModal();
-          this.scene.events.emit('notify', `${res.totalCount} Erze vollständig verkauft für +€${res.totalEarned.toLocaleString()}!`);
-        }
-      };
-    }
 
     // Fabrik-Produkte Mengenhelfer
     const updateFpQty = (prodId, newQty) => {
@@ -1306,29 +1284,6 @@ export class BaseSystem {
       };
     });
 
-    // Gesamtverkauf aller Fabrik- & Veredelungs-Waren
-    const btnSellAllFp = document.getElementById('btn-sell-all-fp');
-    if (btnSellAllFp) {
-      btnSellAllFp.onclick = () => {
-        let totalEarned = 0;
-        const allKeys = Array.from(new Set([
-          ...Object.keys(FACTORY_PRODUCTS),
-          ...Object.keys(this.player.factoryProducts || {}),
-          ...Object.keys(this.depot?.products || {})
-        ]));
-        for (const prodId of allKeys) {
-          const avail = (this.player.factoryProducts?.[prodId] || 0) + (this.depot?.products?.[prodId] || 0);
-          if (avail > 0) {
-            totalEarned += this.sellMarketProductFromPlayerOrDepot(prodId, avail);
-          }
-        }
-        if (totalEarned > 0) {
-          soundFx.playPurchase();
-          this.openMarketModal();
-          this.scene.events.emit('notify', `Alle Industrie- & Veredelungswaren verkauft für +€${totalEarned.toLocaleString()}!`);
-        }
-      };
-    }
   }
 
   sellMarketOreFromPlayerOrDepot(oreKey, count = 1) {
