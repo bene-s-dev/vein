@@ -250,10 +250,11 @@
 
     #hud-fuel-bar-container {
       width: 100%;
-      min-width: 26px;
-      height: 3.5px;
+      min-width: 44px;
+      height: 5px;
       border-radius: 99px;
-      margin-top: 1px;
+      margin-top: 2px;
+      overflow: visible !important;
     }
 
     .hud-cargo-slash {
@@ -785,16 +786,16 @@
     /* Roter Strich im Tankbalken zur garantierten Rückkehr (Point of No Return) */
     .fuel-return-line {
       position: absolute;
-      top: -1px;
-      bottom: -1px;
+      top: -3px;
+      bottom: -3px;
       width: 2.5px;
-      background: #ff3333;
-      z-index: 5;
+      background: #ff2222;
+      z-index: 10;
       pointer-events: none;
       transform: translateX(-50%);
       display: none;
-      border-radius: 1px;
-      box-shadow: 0 0 6px rgba(255, 51, 51, 0.95), 0 0 2px #ffffff;
+      border-radius: 2px;
+      box-shadow: 0 0 5px rgba(255, 34, 34, 0.95), 0 0 1px #ffffff;
       transition: left 0.12s ease-out;
     }
 

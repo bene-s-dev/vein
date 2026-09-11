@@ -337,14 +337,14 @@ export class HUD {
 
     // Point of No Return Linie auf dem Tankbalken
     if (this.fuelReturnLine) {
-      const shouldShow = isBelowGround && returnPercent > 0.5 && returnPercent < 99.5;
+      const shouldShow = returnPercent > 0.5 && returnPercent < 99.5;
       if (shouldShow) {
-        const roundedReturn = Math.round(returnPercent);
-        if (!this._lastReturnLineVisible || this._lastReturnPercent !== roundedReturn) {
+        const pct = Math.min(99, Math.max(1, returnPercent)).toFixed(1);
+        if (!this._lastReturnLineVisible || this._lastReturnPercent !== pct) {
           this.fuelReturnLine.style.display = 'block';
-          this.fuelReturnLine.style.left = `${roundedReturn}%`;
+          this.fuelReturnLine.style.left = `${pct}%`;
           this._lastReturnLineVisible = true;
-          this._lastReturnPercent = roundedReturn;
+          this._lastReturnPercent = pct;
         }
       } else if (this._lastReturnLineVisible) {
         this.fuelReturnLine.style.display = 'none';
