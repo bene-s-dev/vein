@@ -112,11 +112,11 @@
       z-index: 300;
       gap: 10px;
       color: #ffffff;
-      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95), 0 2px 8px rgba(0, 0, 0, 0.85);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
     }
 
     #hud-overlay svg {
-      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.95));
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
     }
 
     .hud-card {
@@ -141,7 +141,7 @@
       backdrop-filter: none !important;
       display: inline-flex;
       align-items: flex-start;
-      gap: 6px;
+      gap: 16px;
       cursor: pointer;
       transition: transform 0.14s ease, filter 0.14s ease;
       touch-action: manipulation;
@@ -206,7 +206,7 @@
     .stat-row {
       display: flex;
       align-items: center;
-      gap: 2.5px;
+      gap: 5px;
       font-size: 12px;
       font-weight: 700;
       letter-spacing: 0.2px;
@@ -298,8 +298,8 @@
 
     #hud-fuel-text,
     #hud-hull-text {
-      width: 20px;
-      min-width: 20px;
+      width: 24px;
+      min-width: 24px;
       display: inline-flex;
       justify-content: flex-end;
       text-align: right;
@@ -315,8 +315,7 @@
     }
 
     #hud-cargo-text {
-      width: auto;
-      min-width: auto;
+      min-width: 38px;
       display: inline-flex;
       justify-content: flex-end;
       align-items: center;
@@ -326,8 +325,7 @@
     }
 
     #hud-cargo-num {
-      width: 13px;
-      min-width: 13px;
+      min-width: 12px;
       display: inline-flex;
       justify-content: flex-end;
       text-align: right;
@@ -335,8 +333,7 @@
     }
 
     #hud-cargo-max {
-      width: 13px;
-      min-width: 13px;
+      min-width: 12px;
       display: inline-flex;
       justify-content: flex-start;
       text-align: left;
@@ -358,8 +355,8 @@
     #card-status {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      flex-wrap: wrap;
+      gap: 12px;
+      flex-wrap: nowrap;
       justify-content: flex-end;
     }
 
@@ -941,7 +938,7 @@
         will-change: backdrop-filter;
       }
 
-      /* Tankanzeige & Gauges: Natürliche, entspannte Position - kein Hochziehen an die Decke */
+      /* Tankanzeige & Gauges: Natürliche, transparente Position mit passenden Abständen */
       #card-gauges {
         pointer-events: auto !important;
         background: transparent !important;
@@ -953,7 +950,7 @@
         -webkit-backdrop-filter: none !important;
         display: inline-flex !important;
         align-items: flex-start !important;
-        gap: 4px !important;
+        gap: 12px !important;
         flex-shrink: 0 !important;
       }
 
@@ -1006,17 +1003,17 @@
         -webkit-backdrop-filter: none !important;
         display: inline-flex !important;
         align-items: center !important;
-        gap: 3px !important;
+        gap: 8px !important;
         flex-wrap: nowrap !important;
         flex-shrink: 0 !important;
       }
 
       #btn-pause {
-        width: 23px !important;
-        height: 21px !important;
-        min-width: 23px !important;
-        min-height: 21px !important;
-        border-radius: 4px !important;
+        width: 24px !important;
+        height: 22px !important;
+        min-width: 24px !important;
+        min-height: 22px !important;
+        border-radius: 6px !important;
         padding: 0 !important;
         display: inline-flex !important;
         align-items: center !important;
@@ -1024,20 +1021,20 @@
       }
 
       body.modal-open #btn-pause {
-        width: 23px !important;
-        height: 21px !important;
-        min-width: 23px !important;
-        min-height: 21px !important;
+        width: 24px !important;
+        height: 22px !important;
+        min-width: 24px !important;
+        min-height: 22px !important;
       }
 
       .stat-cluster {
         min-width: auto;
-        gap: 2px;
+        gap: 3px;
       }
 
       .stat-row {
-        font-size: 10px;
-        gap: 2px;
+        font-size: 11px;
+        gap: 4px;
       }
 
       .bar-container {
@@ -2106,7 +2103,7 @@
       <div class="hud-card" id="card-gauges" title="Bohrer-Status (Klick / Tippen zum Öffnen)">
         <!-- Tank -->
         <div class="hud-cluster-part" id="hud-fuel-cluster">
-          <div class="stat-row" style="gap: 2px;">
+          <div class="stat-row">
             <span class="hud-value-badge" id="hud-fuel-text" style="color: #f8fafc;"><span class="hud-num-slot" id="hud-fuel-num">100</span></span>
             <span id="hud-fuel-icon" style="display: inline-flex; align-items: center;"><i data-lucide="fuel" style="width: 14px; height: 14px;"></i></span>
           </div>
@@ -2120,7 +2117,7 @@
 
         <!-- Hülle -->
         <div class="hud-cluster-part" id="hud-hull-cluster">
-          <div class="stat-row" style="gap: 2px;">
+          <div class="stat-row">
             <span class="hud-value-badge" id="hud-hull-text" style="color: #f8fafc;"><span class="hud-num-slot" id="hud-hull-num">100</span></span>
             <span id="hud-hull-icon" style="display: inline-flex; align-items: center;"><i data-lucide="shield-cog" style="width: 14px; height: 14px;"></i></span>
           </div>
@@ -2128,7 +2125,7 @@
 
         <!-- Fracht -->
         <div class="hud-cluster-part" id="hud-cargo-cluster">
-          <div class="stat-row" style="gap: 2px;">
+          <div class="stat-row">
             <span class="hud-value-badge" id="hud-cargo-text" style="color: #f8fafc;"><span class="hud-num-slot" id="hud-cargo-num">0</span><span class="hud-cargo-slash">/</span><span id="hud-cargo-max" style="color: #94a3b8;">10</span></span>
             <span id="hud-cargo-icon" style="display: inline-flex; align-items: center;"><i data-lucide="container" style="width: 14px; height: 14px;"></i></span>
           </div>
@@ -2137,7 +2134,7 @@
 
       <!-- Center: Cockpit Depth Widget / Modal Title in Menus -->
       <div class="hud-card" id="hud-center-depth">
-        <div class="stat-row" style="align-items: center; justify-content: center; gap: 4px;">
+        <div class="stat-row" style="align-items: center; justify-content: center;">
           <span class="hud-value-badge depth-badge" id="hud-depth" style="color: #f8fafc; font-weight: 800; font-size: 14px;">0 m</span>
           <div id="hud-center-menu-title"></div>
         </div>
@@ -2159,7 +2156,7 @@
       <!-- Right: Level, Return Warn, Cash & Pause Menu -->
       <div class="hud-card" id="card-status">
         <!-- Level display (purple) -->
-        <div class="stat-row" style="gap: 2px;" title="Spieler-Level">
+        <div class="stat-row" title="Spieler-Level">
           <span style="display: inline-flex; align-items: center; color: #c084fc;"><i data-lucide="award" style="width: 13px; height: 13px;"></i></span>
           <span class="hud-value-badge" id="hud-level-right" style="color: #f8fafc; font-weight: 800;">1</span>
         </div>
@@ -2169,7 +2166,7 @@
           <span>UMKEHREN!</span>
         </div>
         <!-- Cash -->
-        <div class="stat-row" style="gap: 2px;">
+        <div class="stat-row">
           <span id="hud-cash-icon" style="display: inline-flex; align-items: center; color: #fbbf24;"><i data-lucide="coins" style="width: 13px; height: 13px; color: #fbbf24;"></i></span>
           <span class="hud-value-badge cash-badge" id="hud-cash">€150</span>
         </div>
