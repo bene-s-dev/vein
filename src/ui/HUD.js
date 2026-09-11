@@ -231,44 +231,42 @@ export class HUD {
     const bodyEl = document.getElementById('modal-body');
     if (!modalEl || !titleEl || !bodyEl) return;
 
-    titleEl.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 8px; color: #fbbf24;">
-        ${icon('sparkles', '', 18)}
-        <span>NEUE STEINSORTE ENTDECKT!</span>
-      </div>
-    `;
+    modalEl.classList.add('discovery-modal-active');
+    document.body.classList.add('discovery-modal-open');
+
+    titleEl.innerHTML = '';
 
     bodyEl.innerHTML = `
-      <div style="display: flex; flex-direction: column; gap: 14px; text-align: center; align-items: center;">
-        <div style="
-          background: rgba(15, 23, 42, 0.85);
-          border: 1px solid rgba(56, 189, 248, 0.25);
-          border-radius: 12px;
-          padding: 18px 20px;
-          width: 100%;
-          box-sizing: border-box;
-        ">
-          <h2 style="color: #f8fafc; font-size: 22px; font-weight: 800; margin: 0 0 8px 0; letter-spacing: 0.5px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
-            ${oreIcon(oreType, 22)}
-            <span>${data.name.toUpperCase()}</span>
-          </h2>
-          <div style="display: flex; justify-content: center; gap: 10px; font-size: 12px; margin-bottom: 12px; flex-wrap: wrap;">
-            <span style="background: rgba(251, 191, 36, 0.15); border: 1px solid rgba(251, 191, 36, 0.3); color: #fbbf24; font-weight: 800; padding: 3px 10px; border-radius: 6px;">
-              Börsenwert: +€${data.value}
-            </span>
-            <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-weight: 700; padding: 3px 10px; border-radius: 6px;">
-              Tiefe: ab ${data.minDepth}m
-            </span>
-            <span style="background: rgba(148, 163, 184, 0.15); border: 1px solid rgba(148, 163, 184, 0.3); color: #cbd5e1; font-weight: 700; padding: 3px 10px; border-radius: 6px;">
-              Härte: ${data.hardness}x
-            </span>
-          </div>
-          <p style="font-size: 13px; line-height: 1.5; color: #cbd5e1; margin: 0;">
-            ${desc}
-          </p>
+      <div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; width: 100%;">
+        <div style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; color: #fbbf24; background: rgba(251, 191, 36, 0.12); padding: 4px 12px; border-radius: 9999px;">
+          ${icon('sparkles', '', 14)}
+          <span>NEUE ENTDECKUNG</span>
         </div>
 
-        <button id="btn-discovery-ok" class="btn-buy" style="height: 32px; padding: 0 28px; font-size: 12.5px; font-weight: 800;">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+          ${oreIcon(oreType, 26)}
+          <h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #f8fafc; letter-spacing: 0.5px;">
+            ${data.name.toUpperCase()}
+          </h2>
+        </div>
+
+        <div style="display: flex; justify-content: center; gap: 8px; font-size: 12px; flex-wrap: wrap;">
+          <span style="background: rgba(251, 191, 36, 0.12); color: #fbbf24; font-weight: 800; padding: 4px 10px; border-radius: 8px;">
+            +€${data.value}
+          </span>
+          <span style="background: rgba(56, 189, 248, 0.12); color: #38bdf8; font-weight: 700; padding: 4px 10px; border-radius: 8px;">
+            ab ${data.minDepth}m
+          </span>
+          <span style="background: rgba(148, 163, 184, 0.12); color: #cbd5e1; font-weight: 700; padding: 4px 10px; border-radius: 8px;">
+            Härte ${data.hardness}x
+          </span>
+        </div>
+
+        <p style="margin: 2px 0 6px 0; font-size: 13px; line-height: 1.5; color: #94a3b8; max-width: 300px;">
+          ${desc}
+        </p>
+
+        <button id="btn-discovery-ok" class="btn-buy" style="height: 38px; width: 100%; max-width: 180px; font-size: 13px; font-weight: 800; border-radius: 10px; margin-top: 4px;">
           OK
         </button>
       </div>
@@ -280,8 +278,10 @@ export class HUD {
     const btnOk = document.getElementById('btn-discovery-ok');
     if (btnOk) {
       btnOk.onclick = () => {
-        notifyModalClosed();
+        modalEl.classList.remove('discovery-modal-active');
+        document.body.classList.remove('discovery-modal-open');
         modalEl.style.display = 'none';
+        notifyModalClosed();
       };
     }
   }
@@ -957,7 +957,7 @@ export class HUD {
         <div style="display: flex; flex-direction: column; gap: 8px;">
           <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 9px; padding: 10px 12px;">
             <div style="font-size: 12px; font-weight: 700; color: #10b981; margin-bottom: 2px;">⛽ Treibstoff & Betankung</div>
-            <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">Parke auf der Hangar-Plattform an der Oberfläche – das Tankkabel dockt automatisch an und füllt deinen Treibstoff kostenlos auf.</div>
+            <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">Fahren, Steigflug und insbesondere das Bohren durch Gestein verbrauchen Treibstoff. Parke an der Hangar-Plattform an der Oberfläche – das Tankkabel füllt deinen Tank kostenlos auf.</div>
           </div>
           <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 9px; padding: 10px 12px;">
             <div style="font-size: 12px; font-weight: 700; color: #38bdf8; margin-bottom: 2px;">🚀 Jetpack-Nutzung</div>

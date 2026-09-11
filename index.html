@@ -1317,6 +1317,55 @@
       background: rgba(239, 68, 68, 0.55);
     }
 
+    /* Minimalistisches Discovery-Modal (kompakt & zentriert auf Mobile und Desktop) */
+    .modal-backdrop.discovery-modal-active {
+      display: flex !important;
+      justify-content: center !important;
+      align-items: center !important;
+      padding: 16px !important;
+      background: rgba(3, 7, 18, 0.78) !important;
+      backdrop-filter: blur(14px) !important;
+      -webkit-backdrop-filter: blur(14px) !important;
+      z-index: 9999 !important;
+    }
+    .modal-backdrop.discovery-modal-active .modal-window {
+      width: 90% !important;
+      max-width: 360px !important;
+      height: auto !important;
+      max-height: 85vh !important;
+      margin: auto !important;
+      align-self: center !important;
+      border-radius: 20px !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      background: rgba(15, 23, 42, 0.95) !important;
+      backdrop-filter: blur(24px) saturate(180%) !important;
+      -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 35px rgba(56, 189, 248, 0.1) !important;
+      padding: 24px 20px 20px 20px !important;
+      box-sizing: border-box !important;
+      overflow: hidden !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+    }
+    .modal-backdrop.discovery-modal-active .modal-header {
+      display: none !important;
+    }
+    .modal-backdrop.discovery-modal-active .modal-content {
+      padding: 0 !important;
+      margin: 0 !important;
+      width: 100% !important;
+      max-height: none !important;
+      overflow: visible !important;
+      font-size: 13px !important;
+    }
+    .modal-backdrop.discovery-modal-active #modal-floating-actions {
+      display: none !important;
+    }
+    body.discovery-modal-open #btn-pause {
+      display: none !important;
+    }
+
     /* Pause-Button verwandelt sich im Menü in das Schließen-X */
     body.modal-open #btn-pause #icon-pause-state {
       display: none !important;

@@ -31,15 +31,15 @@ export const RANK_NAMES = [
 ];
 
 export const TANK_TIERS = [
-  { tier: 1, name: 'Standard-Tank', maxFuel: 100, stat: '100 L', cost: 0, comp: null, mountComp: null, level: 1, desc: 'Basis-Treibstofftank für normale Bohrgänge.' },
-  { tier: 2, name: 'Kerosin-Tank Mk.II', maxFuel: 140, stat: '140 L', cost: 250, comp: null, mountComp: { key: 'iron_tube', name: 'Stahl-Rohr', count: 1 }, level: 1, desc: 'Erhöht Treibstoff auf 140 Liter und senkt Verbrauch um 12%.' },
-  { tier: 3, name: 'Spartriebwerk Mk.III', maxFuel: 190, stat: '190 L', cost: 1500, comp: null, mountComp: { key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1 }, level: 1, desc: 'Erhöht Treibstoff auf 190 Liter und spart 20% Kerosin.' },
-  { tier: 4, name: 'Dual-Injektor Mk.IV', maxFuel: 250, stat: '250 L', cost: 4200, comp: null, mountComp: { key: 'silver_coil', name: 'Silber-Spule', count: 1 }, level: 2, desc: 'Verbessert Steigflug-Effizienz mit Hochdruck-Injektoren (250 L).' },
-  { tier: 5, name: 'Kompressions-Tank Mk.V', maxFuel: 330, stat: '330 L', cost: 11000, comp: null, mountComp: { key: 'silver_coil', name: 'Silber-Spule', count: 2 }, level: 3, desc: 'Hochfeste Legierung erlaubt 330 Liter Treibstoffkapazität.' },
-  { tier: 6, name: 'Turbo-Booster Mk.VI', maxFuel: 430, stat: '430 L', cost: 25000, comp: null, mountComp: { key: 'crystal_lens', name: 'Kristall-Linse', count: 1 }, level: 4, desc: 'Großer 430L Tank für tiefe Expeditionen.' },
-  { tier: 7, name: 'Fusions-Zelle Mk.VII', maxFuel: 560, stat: '560 L', cost: 55000, comp: null, mountComp: { key: 'crystal_lens', name: 'Kristall-Linse', count: 2 }, level: 5, desc: 'Hocheffizienter Fusions-Antrieb mit 560 Litern Kapazität.' },
-  { tier: 8, name: 'Plasma-Injektor Mk.VIII', maxFuel: 720, stat: '720 L', cost: 115000, comp: null, mountComp: { key: 'titan_bolt', name: 'Titan-Bolzen', count: 1 }, level: 6, desc: 'Plasmagespeister 720L Tank mit geringstem Kerosinverbrauch.' },
-  { tier: 9, name: 'Dunkelfeld-Speicher Mk.IX', maxFuel: 920, stat: '920 L', cost: 225000, comp: null, mountComp: { key: 'titan_bolt', name: 'Titan-Bolzen', count: 2 }, level: 8, desc: 'Hochenergie-Tank für ausgedehnte Tiefen-Expeditionen.' },
+  { tier: 1, name: 'Standard-Tank', maxFuel: 40, stat: '40 L', cost: 0, comp: null, mountComp: null, level: 1, desc: 'Kompakter Basis-Treibstofftank für kurze Schacht-Expeditionen.' },
+  { tier: 2, name: 'Kerosin-Tank Mk.II', maxFuel: 70, stat: '70 L', cost: 250, comp: null, mountComp: { key: 'iron_tube', name: 'Stahl-Rohr', count: 1 }, level: 1, desc: 'Erhöht Treibstoff auf 70 Liter und senkt Verbrauch um 12%.' },
+  { tier: 3, name: 'Spartriebwerk Mk.III', maxFuel: 110, stat: '110 L', cost: 1500, comp: null, mountComp: { key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1 }, level: 1, desc: 'Erhöht Treibstoff auf 110 Liter und spart 20% Kerosin.' },
+  { tier: 4, name: 'Dual-Injektor Mk.IV', maxFuel: 165, stat: '165 L', cost: 4200, comp: null, mountComp: { key: 'silver_coil', name: 'Silber-Spule', count: 1 }, level: 2, desc: 'Verbessert Steigflug-Effizienz mit Hochdruck-Injektoren (165 L).' },
+  { tier: 5, name: 'Kompressions-Tank Mk.V', maxFuel: 235, stat: '235 L', cost: 11000, comp: null, mountComp: { key: 'silver_coil', name: 'Silber-Spule', count: 2 }, level: 3, desc: 'Hochfeste Legierung erlaubt 235 Liter Treibstoffkapazität.' },
+  { tier: 6, name: 'Turbo-Booster Mk.VI', maxFuel: 330, stat: '330 L', cost: 25000, comp: null, mountComp: { key: 'crystal_lens', name: 'Kristall-Linse', count: 1 }, level: 4, desc: 'Großer 330L Tank für tiefe Expeditionen.' },
+  { tier: 7, name: 'Fusions-Zelle Mk.VII', maxFuel: 460, stat: '460 L', cost: 55000, comp: null, mountComp: { key: 'crystal_lens', name: 'Kristall-Linse', count: 2 }, level: 5, desc: 'Hocheffizienter Fusions-Antrieb mit 460 Litern Kapazität.' },
+  { tier: 8, name: 'Plasma-Injektor Mk.VIII', maxFuel: 630, stat: '630 L', cost: 115000, comp: null, mountComp: { key: 'titan_bolt', name: 'Titan-Bolzen', count: 1 }, level: 6, desc: 'Plasmagespeister 630L Tank mit geringstem Kerosinverbrauch.' },
+  { tier: 9, name: 'Dunkelfeld-Speicher Mk.IX', maxFuel: 850, stat: '850 L', cost: 225000, comp: null, mountComp: { key: 'titan_bolt', name: 'Titan-Bolzen', count: 2 }, level: 8, desc: 'Hochenergie-Tank für ausgedehnte Tiefen-Expeditionen.' },
   { tier: 10, name: 'Quanten-Ionen-Matrix X', maxFuel: 1200, stat: '1200 L', cost: 450000, comp: null, mountComp: { key: 'quantum_core', name: 'Quanten-Kern', count: 2 }, level: 10, desc: 'Ultimative 1200L Quantenmatrix mit nahezu unschöpflichem Schub.' }
 ];
 
@@ -153,8 +153,8 @@ export class Player {
       .setVisible(false);
 
     // Fahrzeug-Werte & Stats (ausbalancierte Wirtschaft)
-    this.maxFuel = 100;
-    this.fuel = 100;
+    this.maxFuel = 40;
+    this.fuel = 40;
     this.fuelEfficiency = 1.0;
     this.tankTier = 1;
     this.researchedTankTier = 1; // Im Labor erforschter Bauplan (Montage im Hangar erforderlich)
@@ -478,7 +478,13 @@ export class Player {
   }
 
   getChargeSpeed() {
-    return 5; // Verlängerte, ruhige Betankungszeit am Hangar (~20s für 100L)
+    let speed = 5;
+    const baseSys = this.scene?.baseSystem;
+    const pp = baseSys?.buildings?.find(b => b.id === 'powerplant');
+    if (pp?.isBuilt) {
+      speed *= 2;
+    }
+    return speed;
   }
 
   getTankData() {
@@ -489,9 +495,9 @@ export class Player {
   upgradeTank(tier) {
     this.tankTier = tier;
     const data = TANK_TIERS[tier - 1] || TANK_TIERS[0];
-    const prevMax = this.maxFuel || 100;
+    const prevMax = this.maxFuel || 40;
     this.maxFuel = data.maxFuel;
-    const effs = [1.0, 1.12, 1.20, 1.28, 1.35, 1.42, 1.50, 1.60, 1.72, 1.85];
+    const effs = [1.0, 1.12, 1.22, 1.34, 1.48, 1.64, 1.82, 2.05, 2.35, 2.80];
     this.fuelEfficiency = effs[tier - 1] || 1.0;
     this.fuel = Math.min(this.maxFuel, this.fuel + (this.maxFuel - prevMax));
   }
@@ -1363,8 +1369,8 @@ export class Player {
       return;
     }
 
-    // Treibstoffverbrauch während des aktiven Bohrens
-    this.consumeFuel(0.6 * (delta / 1000));
+    // Spürbarer Treibstoffverbrauch während des schweren Bohrvorgangs durch Gestein
+    this.consumeFuel(1.5 * (delta / 1000));
 
     // Karosserie-Verschleiß beim Bohren (nur beim Bohren, nicht beim Fahren)
     // Auf Level 1 besonders robust (nur ca. 0.35 HP/s statt 1.5 HP/s, mehr als 4x langsamer kaputt)
@@ -1542,7 +1548,7 @@ export class Player {
 
   getReturnFuelPercent() {
     const cost = this.getReturnFuelCost();
-    const max = Math.max(1, this.maxFuel || 100);
+    const max = Math.max(1, this.maxFuel || 40);
     return Math.min(100, Math.max(0, (cost / max) * 100));
   }
 
@@ -1690,8 +1696,8 @@ export class Player {
     this.state = PLAYER_STATES.IDLE;
 
     // 4. Notfall-Auftankung bei komplett leerem Tank
-    if (this.fuel < 20) {
-      this.fuel = 20;
+    if (this.fuel < 15) {
+      this.fuel = Math.min(15, this.maxFuel);
     }
 
     // 5. Kamera und Viewport sofort an die Basis binden

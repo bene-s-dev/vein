@@ -48,6 +48,7 @@ export function closeActiveModal(scene) {
 
   const modalEl = document.getElementById('building-modal');
   if (modalEl) {
+    modalEl.classList.remove('discovery-modal-active');
     modalEl.style.display = 'none';
   }
   const floatingContainer = document.getElementById('modal-floating-actions');
@@ -56,6 +57,7 @@ export function closeActiveModal(scene) {
     floatingContainer.style.display = 'none';
   }
   document.body.classList.remove('modal-open');
+  document.body.classList.remove('discovery-modal-open');
 
   const sc = scene || (window.__game && window.__game.scene && window.__game.scene.getScene('MiningScene'));
   if (sc) {
