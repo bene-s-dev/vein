@@ -290,16 +290,11 @@ export class MinerBookModal {
         `;
       } else {
         html += `
-          <div style="background: rgba(15, 23, 42, 0.4); border: none; border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; opacity: 0.75;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; color: #64748b;">
-                ${icon('lock', '', 16)}
-              </span>
-              <span style="color: #64748b; font-size: 12.5px; font-weight: 700; font-style: italic;">??? Unbekanntes Mineral</span>
-            </div>
-            <span style="font-size: 11px; color: #64748b; background: rgba(255, 255, 255, 0.04); padding: 2px 8px; border-radius: 6px;">
-              Vorkommen ab ${data.minDepth}m
+          <div style="background: rgba(15, 23, 42, 0.35); border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; gap: 8px; opacity: 0.6;">
+            <span style="display: inline-flex; align-items: center; justify-content: center; color: #64748b;">
+              ${icon('lock', '', 15)}
             </span>
+            <span style="color: #64748b; font-size: 13px; font-weight: 700;">?</span>
           </div>
         `;
       }
@@ -321,9 +316,9 @@ export class MinerBookModal {
           const found = this.player.isOreDiscovered(o);
           const name = ORE_DATA[o]?.name || o;
           return `
-            <span style="background: ${found ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.3)'}; color: ${found ? '#f8fafc' : '#64748b'}; padding: 2px 7px; border-radius: 5px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">
-              ${found ? oreIcon(o, 13) : icon('lock', '', 10)}
-              <span>${found ? name : '???'}</span>
+            <span style="background: ${found ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.25)'}; color: ${found ? '#f8fafc' : '#64748b'}; padding: 2px 7px; border-radius: 5px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">
+              ${found ? oreIcon(o, 13) : icon('lock', '', 11)}
+              <span>${found ? name : '?'}</span>
             </span>
           `;
         }).join(' ');
@@ -351,19 +346,11 @@ export class MinerBookModal {
         `;
       } else {
         html += `
-          <div style="background: rgba(15, 23, 42, 0.4); border: none; border-radius: 10px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; opacity: 0.75;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; color: #64748b;">
-                ${icon('lock', '', 16)}
-              </span>
-              <div style="display: flex; flex-direction: column;">
-                <span style="color: #64748b; font-size: 12.5px; font-weight: 700; font-style: italic;">Unerforschte Tiefe (${layer.depthRange})</span>
-                <span style="color: #475569; font-size: 10.5px;">Bohre bis auf mindestens ${layer.minDepth} m, um diese Schicht freizuschalten.</span>
-              </div>
-            </div>
-            <span style="font-size: 11px; color: #64748b; background: rgba(255, 255, 255, 0.04); padding: 2px 8px; border-radius: 6px;">
-              Rekord: ${Math.round(highestDepth)}m
+          <div style="background: rgba(15, 23, 42, 0.35); border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; gap: 8px; opacity: 0.6;">
+            <span style="display: inline-flex; align-items: center; justify-content: center; color: #64748b;">
+              ${icon('lock', '', 15)}
             </span>
+            <span style="color: #64748b; font-size: 13px; font-weight: 700;">?</span>
           </div>
         `;
       }
@@ -400,16 +387,11 @@ export class MinerBookModal {
         `;
       } else {
         html += `
-          <div style="background: rgba(15, 23, 42, 0.4); border: none; border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; opacity: 0.75;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; color: #64748b;">
-                ${icon('lock', '', 15)}
-              </span>
-              <span style="color: #64748b; font-size: 12px; font-weight: 700; font-style: italic;">??? Unentdeckte Rezeptur</span>
-            </div>
-            <span style="font-size: 10.5px; color: #64748b; background: rgba(255, 255, 255, 0.04); padding: 2px 8px; border-radius: 6px;">
-              In Schmelzofen / Fabrik herstellen
+          <div style="background: rgba(15, 23, 42, 0.35); border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; gap: 8px; opacity: 0.6;">
+            <span style="display: inline-flex; align-items: center; justify-content: center; color: #64748b;">
+              ${icon('lock', '', 15)}
             </span>
+            <span style="color: #64748b; font-size: 13px; font-weight: 700;">?</span>
           </div>
         `;
       }
