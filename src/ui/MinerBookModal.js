@@ -358,6 +358,7 @@ export class MinerBookModal {
     this.scene = scene;
     this.player = player;
     this.activeTab = 'ores';
+    this.productsSubFilter = 'all';
   }
 
   open(tab = 'ores') {
@@ -528,6 +529,19 @@ export class MinerBookModal {
       };
     });
 
+    // Sub-Filter Klicks im Waren-Tab binden
+    modalEl.querySelectorAll('.product-subfilter-btn').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const filter = btn.getAttribute('data-filter');
+        if (filter && filter !== this.productsSubFilter) {
+          this.productsSubFilter = filter;
+          soundFx.playClick();
+          this.render();
+        }
+      };
+    });
+
     // Zurück zum Spielmenü
     const btnBack = document.getElementById('btn-book-back');
     if (btnBack) {
@@ -642,12 +656,99 @@ export class MinerBookModal {
   }
 
   renderProductsTab() {
-    let html = '';
+    const categories = [
+      {
+        id: 'furnace',
+        label: 'Schmelzofen',
+        icon: 'flame',
+        color: '#f59e0b',
+        filter: p => p.category === 'bar'
+      },
+      {
+        id: 'factory',
+        label: 'Fabrik',
+        icon: 'factory',
+        color: '#38bdf8',
+        filter: p => p.category === 'goods' || p.category === 'component'
+      },
+      {
+        id: 'research',
+        label: 'Forscher',
+        icon: 'atom',
+        color: '#c084fc',
+        filter: p => p.category === 'research'
+      }
+    ];
 
-    for (const prod of BOOK_PRODUCTS) {
-      const isDiscovered = this.player.isProductDiscovered(prod.id);
+    const filterCounts = {};
+    categories.forEach(cat => {
+      const items = BOOK_PRODUCTS.filter(cat.filter);
+      const discovered = items.filter(p => this.player.isProductDiscovered(p.id)).length;
+      filterCounts[cat.id] = { discovered, total: items.length };
+    });
 
-      if (isDiscovered) {
+    const allDiscovered = BOOK_PRODUCTS.filter(p => this.player.isProductDiscovered(p.id)).length;
+    const allTotal = BOOK_PRODUCTS.length;
+
+    // Subfilter-Navigation oben im Tab
+    const currentSub = this.productsSubFilter || 'all';
+    let subFilterHtml = `
+      <div style="display: flex; gap: 6px; width: 100%; overflow-x: auto; padding-bottom: 4px; margin-bottom: 6px;">
+        <button class="product-subfilter-btn ${currentSub === 'all' ? 'active' : ''}" data-filter="all" style="
+          padding: 4px 10px;
+          font-size: 11px;
+          font-weight: 700;
+          border-radius: 6px;
+          border: 1px solid ${currentSub === 'all' ? '#fbbf24' : 'rgba(255,255,255,0.08)'};
+          background: ${currentSub === 'all' ? 'rgba(251, 191, 36, 0.18)' : 'rgba(15, 23, 42, 0.5)'};
+          color: ${currentSub === 'all' ? '#fbbf24' : '#94a3b8'};
+          cursor: pointer;
+          white-space: nowrap;
+        ">
+          Alle (${allDiscovered}/${allTotal})
+        </button>
+        ${categories.map(cat => {
+          const c = filterCounts[cat.id];
+          const active = currentSub === cat.id;
+          return `
+            <button class="product-subfilter-btn ${active ? 'active' : ''}" data-filter="${cat.id}" style="
+              padding: 4px 10px;
+              font-size: 11px;
+              font-weight: 700;
+              border-radius: 6px;
+              border: 1px solid ${active ? cat.color : 'rgba(255,255,255,0.08)'};
+              background: ${active ? `${cat.color}22` : 'rgba(15, 23, 42, 0.5)'};
+              color: ${active ? cat.color : '#94a3b8'};
+              cursor: pointer;
+              white-space: nowrap;
+              display: inline-flex;
+              align-items: center;
+              gap: 4px;
+            ">
+              ${icon(cat.icon, '', 12)}
+              <span>${cat.label} (${c.discovered}/${c.total})</span>
+            </button>
+          `;
+        }).join('')}
+      </div>
+    `;
+
+    // Sektionen rendern
+    const categoriesToRender = currentSub === 'all'
+      ? categories
+      : categories.filter(c => c.id === currentSub);
+
+    let sectionsHtml = '';
+
+    for (const cat of categoriesToRender) {
+      const items = BOOK_PRODUCTS.filter(cat.filter);
+      const discoveredItems = items.filter(p => this.player.isProductDiscovered(p.id));
+      const lockedItems = items.filter(p => !this.player.isProductDiscovered(p.id));
+
+      let itemsHtml = '';
+
+      // Zuerst ALLE entdeckten Produkte detailliert rendern!
+      for (const prod of discoveredItems) {
         const valueBadge = prod.value > 0
           ? `<span style="background: rgba(251, 191, 36, 0.12); color: #fbbf24; font-weight: 800; padding: 2px 8px; border-radius: 6px;">Wert: +€${prod.value.toLocaleString()}</span>`
           : `<span style="background: rgba(168, 85, 247, 0.15); color: #c084fc; font-weight: 800; padding: 2px 8px; border-radius: 6px;">${prod.usage || 'Upgrade-Bauteil'}</span>`;
@@ -656,8 +757,8 @@ export class MinerBookModal {
           ? `<span style="background: rgba(56, 189, 248, 0.12); color: #38bdf8; font-weight: 700; padding: 2px 8px; border-radius: 6px;">${prod.categoryLabel}</span>`
           : '';
 
-        html += `
-          <div style="background: rgba(15, 23, 42, 0.75); border: none; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
+        itemsHtml += `
+          <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
               <div style="display: flex; align-items: center; gap: 8px;">
                 ${itemDisplayIcon(prod.id, 20)}
@@ -676,19 +777,48 @@ export class MinerBookModal {
             </p>
           </div>
         `;
-      } else {
-        html += `
-          <div style="background: rgba(15, 23, 42, 0.35); border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; gap: 8px; opacity: 0.6;">
-            <span style="display: inline-flex; align-items: center; justify-content: center; color: #64748b;">
-              ${icon('lock', '', 15)}
-            </span>
-            <span style="color: #64748b; font-size: 13px; font-weight: 700;">?</span>
+      }
+
+      // Anschließend kompakte gesperrte Kacheln
+      if (lockedItems.length > 0) {
+        itemsHtml += `
+          <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 4px;">
+            <div style="font-size: 10.5px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 5px;">
+              ${icon('lock', '', 11)} Noch unentdeckte Rezepte (${lockedItems.length})
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); gap: 6px;">
+              ${lockedItems.map(() => `
+                <div style="background: rgba(15, 23, 42, 0.35); border: 1px dashed rgba(255,255,255,0.07); border-radius: 8px; padding: 6px; display: flex; align-items: center; justify-content: center; gap: 4px; color: #64748b; font-size: 11px;">
+                  <span style="font-weight: 700;">?</span>
+                </div>
+              `).join('')}
+            </div>
           </div>
         `;
       }
+
+      sectionsHtml += `
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 2px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+            <span style="font-size: 12px; font-weight: 800; color: ${cat.color}; display: inline-flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
+              ${icon(cat.icon, '', 13)}
+              ${cat.label}
+            </span>
+            <span style="font-size: 11px; font-weight: 700; color: #94a3b8;">
+              ${discoveredItems.length} / ${items.length} freigeschaltet
+            </span>
+          </div>
+          ${itemsHtml}
+        </div>
+      `;
     }
 
-    return html;
+    return `
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        ${subFilterHtml}
+        ${sectionsHtml}
+      </div>
+    `;
   }
 
   renderCodexTab() {
