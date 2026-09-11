@@ -3964,11 +3964,6 @@ export class BaseSystem {
             ${icon('flame', '', 14)}
             <span>Alle Erze schmelzen (${Math.min(totalAvailableOres, loadedCoal)} / ${totalAvailableOres})</span>
           </button>
-          ${loadedCoal === 0 ? `
-            <div style="color: #f87171; font-size: 11px; font-weight: 700; text-align: center; padding: 2px 0;">
-              ⚠️ Brennkammer leer! Bitte fülle oben erst Kohle mit dem Button ein.
-            </div>
-          ` : ''}
         ` : ''}
       `;
 
