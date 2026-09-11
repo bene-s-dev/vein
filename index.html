@@ -166,15 +166,18 @@
     }
 
     #hud-fuel-cluster {
-      min-width: auto;
+      width: 48px;
+      min-width: 48px;
     }
 
     #hud-hull-cluster {
-      min-width: auto;
+      width: 48px;
+      min-width: 48px;
     }
 
     #hud-cargo-cluster {
-      min-width: auto;
+      width: 66px;
+      min-width: 66px;
     }
 
     .stat-cluster {
@@ -288,30 +291,67 @@
       font-weight: 700;
       color: #ffffff;
       font-variant-numeric: tabular-nums;
-      display: inline-block;
-      white-space: nowrap;
-    }
-
-    .hud-num-slot {
       display: inline-flex;
       align-items: center;
-      font-variant-numeric: tabular-nums;
-    }
-
-    #hud-cargo-num,
-    #hud-fuel-num,
-    #hud-hull-num {
-      display: inline-flex;
-      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
     }
 
     #hud-fuel-text,
-    #hud-hull-text,
-    #hud-cargo-text {
+    #hud-hull-text {
+      width: 25px;
+      min-width: 25px;
       display: inline-flex;
-      align-items: center;
+      justify-content: flex-end;
+      text-align: right;
+    }
+
+    #hud-fuel-num,
+    #hud-hull-num {
+      width: 100%;
+      display: inline-flex;
+      justify-content: flex-end;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #hud-cargo-text {
+      width: 42px;
+      min-width: 42px;
+      display: inline-flex;
+      justify-content: flex-end;
+      text-align: right;
       font-variant-numeric: tabular-nums;
       white-space: nowrap;
+    }
+
+    #hud-cargo-num {
+      width: 18px;
+      min-width: 18px;
+      display: inline-flex;
+      justify-content: flex-end;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #hud-cargo-max {
+      width: 18px;
+      min-width: 18px;
+      display: inline-flex;
+      justify-content: flex-start;
+      text-align: left;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #hud-fuel-icon,
+    #hud-hull-icon,
+    #hud-cargo-icon {
+      width: 16px;
+      min-width: 16px;
+      height: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
     }
 
     .cash-badge {

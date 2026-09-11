@@ -2,6 +2,7 @@ import { soundFx } from '../core/SoundEffects.js';
 import { SaveSystem } from '../core/SaveSystem.js';
 import { MissionsProgressModal } from './MissionsProgressModal.js';
 import { DrillerMenuModal } from './DrillerMenuModal.js';
+import { MinerBookModal } from './MinerBookModal.js';
 import { icon, refreshIcons, oreIcon } from './IconHelper.js';
 import { ORE_DATA } from '../core/GridSystem.js';
 import { notifyModalClosed, closeActiveModal } from '../core/BaseSystem.js';
@@ -105,6 +106,9 @@ export class HUD {
 
     // Driller-Cockpit & Fracht-Modal
     this.drillerModal = new DrillerMenuModal(scene, player, scene.baseSystem);
+
+    // Bergmann-Buch (Schacht-Logbuch & Kompendium)
+    this.minerBookModal = new MinerBookModal(scene, player);
 
     // DOM-Referenzen
     this.fuelText = document.getElementById('hud-fuel-text');
@@ -556,12 +560,12 @@ export class HUD {
           </div>
         </button>
 
-        <!-- 4. Erklärungen & Anleitung -->
-        <button id="btn-menu-guide" class="btn-3d-secondary" style="height: 44px; width: 100%; font-size: 12.5px; font-weight: 700; justify-content: flex-start; padding: 0 14px; gap: 12px; border-radius: 10px;">
+        <!-- 4. Bergmann-Buch -->
+        <button id="btn-menu-book" class="btn-3d-secondary" style="height: 44px; width: 100%; font-size: 12.5px; font-weight: 700; justify-content: flex-start; padding: 0 14px; gap: 12px; border-radius: 10px;">
           <span style="color: #fbbf24; display: inline-flex;">${icon('book-open', '', 17)}</span>
           <div style="display: flex; flex-direction: column; text-align: left; line-height: 1.2;">
-            <span style="color: #f8fafc; font-weight: 700;">Erklärungen & Spielanleitung</span>
-            <span style="color: #64748b; font-size: 10.5px; font-weight: 500;">Steuerung, Gebäude, Erze & Fabrik</span>
+            <span style="color: #f8fafc; font-weight: 700;">Bergmann-Buch</span>
+            <span style="color: #64748b; font-size: 10.5px; font-weight: 500;">Schacht-Logbuch, entdeckte Erze & Schichten</span>
           </div>
         </button>
 
@@ -592,9 +596,9 @@ export class HUD {
       settingsBtn.onclick = () => this.openSettingsView();
     }
 
-    const guideBtn = document.getElementById('btn-menu-guide');
-    if (guideBtn) {
-      guideBtn.onclick = () => this.openGuideView('controls');
+    const bookBtn = document.getElementById('btn-menu-book') || document.getElementById('btn-menu-guide');
+    if (bookBtn) {
+      bookBtn.onclick = () => this.minerBookModal.open('ores');
     }
 
     const saveBtn = document.getElementById('btn-menu-save');

@@ -146,6 +146,8 @@ export class Player {
 
     // Set aller bisher entdeckten Erze (Kohle ist als Start-Brennstoff von Beginn an bekannt)
     this.discoveredOres = new Set(['coal']);
+    // Set aller bisher hergestellten/entdeckten Fabrikprodukte und Barren
+    this.discoveredProducts = new Set();
 
     // Dynamischer Scheinwerfer (Über der Erde komplett unsichtbar)
     this.headlight = scene.add.circle(this.x, this.y, 64, 0xfffbeb, 0.08)
@@ -1486,6 +1488,30 @@ export class Player {
       return true;
     }
     return false;
+  }
+
+  isProductDiscovered(prodId) {
+    if (!this.discoveredProducts) this.discoveredProducts = new Set();
+    if (this.discoveredProducts.has(prodId)) return true;
+    if ((this.factoryProducts?.[prodId] || 0) > 0) {
+      this.discoveredProducts.add(prodId);
+      return true;
+    }
+    if ((this.scene?.baseSystem?.depot?.products?.[prodId] || 0) > 0) {
+      this.discoveredProducts.add(prodId);
+      return true;
+    }
+    return false;
+  }
+
+  discoverProduct(prodId) {
+    if (!this.discoveredProducts) this.discoveredProducts = new Set();
+    if (!this.discoveredProducts.has(prodId)) {
+      this.discoveredProducts.add(prodId);
+      if (this.scene && this.scene.events) {
+        this.scene.events.emit('product_discovered', prodId);
+      }
+    }
   }
 
   checkDepthProgress() {

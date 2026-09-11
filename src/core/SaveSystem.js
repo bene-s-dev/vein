@@ -87,6 +87,7 @@ export class SaveSystem {
           engineTier: p.engineTier || 1,
           researchedEngineTier: p.researchedEngineTier || p.engineTier || 1,
           discoveredOres: Array.from(p.discoveredOres || []),
+          discoveredProducts: Array.from(p.discoveredProducts || []),
           maxCargo: p.maxCargo,
           cargoTier: p.cargoTier,
           researchedCargoTier: p.researchedCargoTier || p.cargoTier || 1,
@@ -157,6 +158,7 @@ export class SaveSystem {
       p.drillTier = data.player.drillTier || p.drillTier;
       p.researchedDrillTier = data.player.researchedDrillTier || p.drillTier || 1;
       p.discoveredOres = new Set(data.player.discoveredOres && data.player.discoveredOres.length ? data.player.discoveredOres : ['coal']);
+      p.discoveredProducts = new Set(data.player.discoveredProducts && data.player.discoveredProducts.length ? data.player.discoveredProducts : []);
       p.factoryProducts = data.player.factoryProducts || {};
 
       if (p.upgradeEngine) {

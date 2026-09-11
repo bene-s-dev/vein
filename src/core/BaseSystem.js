@@ -3392,6 +3392,7 @@ export class BaseSystem {
         if (!this.depot.products) this.depot.products = {};
         const barKey = 'bar_' + currentSmelt.ore;
         this.depot.products[barKey] = (this.depot.products[barKey] || 0) + 1;
+        if (this.player && this.player.discoverProduct) this.player.discoverProduct(barKey);
 
         finishedCount++;
       } else {
@@ -3425,6 +3426,7 @@ export class BaseSystem {
           // Normal-Produkt → ins Depot
           this.depot.products[prodId] = (this.depot.products[prodId] || 0) + 1;
         }
+        if (this.player && this.player.discoverProduct) this.player.discoverProduct(prodId);
 
         finishedCount++;
       } else {
