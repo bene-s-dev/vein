@@ -133,9 +133,12 @@ export class HUD {
     this.levelRight = document.getElementById('hud-level-right');
     this.returnWarn = document.getElementById('hud-return-warn');
 
-    // Toast-Warnungstracking
+    // Toast- und Alarm-Tracking
     this.wasAtSurface = true;
-    this.warnedReturn2Percent = false;
+    this.warnedReturnPre = false;
+    this.warnedPointOfNoReturn = false;
+    this.warnedFuelLow20 = false;
+    this.warnedFuelCritical10 = false;
 
     // Oberes linkes Bohrer-Status-Widget (Tank, Hülle, Fracht) als ein einheitliches klick-/tippbares Element
     let lastDrillerModalOpen = 0;
@@ -308,8 +311,15 @@ export class HUD {
   }
 
   update() {
-    // Treibstoff & dynamische Rückkehr-Linie
+    // Position & Tiefenstatus
+    const currentY = this.player.sprite ? this.player.sprite.y : (this.player.gy * 32 + 16);
+    const isAtSurface = this.player.gy < 0 || currentY <= -8;
+    const isBelowGround = !isAtSurface && (this.player.gy >= 0 || currentY >= 8);
+
+    // Treibstoff & dynamische Rückkehr-Schwelle
     const fuelPercent = Math.max(0, (this.player.fuel / this.player.maxFuel) * 100);
+    const returnPercent = this.player.getReturnFuelPercent ? this.player.getReturnFuelPercent() : 0;
+
     if (this.fuelBar) {
       if (this._lastFuelPercent === undefined || Math.abs(this._lastFuelPercent - fuelPercent) >= 0.15) {
         this._lastFuelPercent = fuelPercent;
@@ -329,11 +339,9 @@ export class HUD {
       }
     }
 
-    // Dynamischer Rückweg-Bedarf: Schwarzer Strich zur garantierten Rückkehr
-    const returnPercent = this.player.getReturnFuelPercent ? this.player.getReturnFuelPercent() : 0;
-
+    // Point of No Return Linie auf dem Tankbalken
     if (this.fuelReturnLine) {
-      const shouldShow = returnPercent > 0.5 && returnPercent < 99.5;
+      const shouldShow = isBelowGround && returnPercent > 0.5 && returnPercent < 99.5;
       if (shouldShow) {
         const roundedReturn = Math.round(returnPercent);
         if (!this._lastReturnLineVisible || this._lastReturnPercent !== roundedReturn) {
@@ -353,17 +361,107 @@ export class HUD {
       if (this._lastFuelTitleFuel !== roundedFuel || this._lastFuelTitleReturn !== roundedReturn) {
         this._lastFuelTitleFuel = roundedFuel;
         this._lastFuelTitleReturn = roundedReturn;
-        this.fuelBarContainer.title = `Tank: ${roundedFuel}% | Rückkehr-Schwelle: ${roundedReturn}%`;
+        this.fuelBarContainer.title = `Tank: ${roundedFuel}% | Point of No Return: ${roundedReturn}%`;
       }
     }
 
-    // Tankwarnung auf Rot ab 15% (oder wenn aktueller Tank unter die garantierte Rückkehr fällt)
-    const isReturnCritical = returnPercent > 0.5 && fuelPercent <= returnPercent;
-    const needsFuelWarning = fuelPercent <= 15 || isReturnCritical;
+    // Point of No Return Status (Kritisch: aktueller Tank reicht nicht mehr für den Aufstieg)
+    const isReturnCritical = isBelowGround && returnPercent > 0.5 && fuelPercent <= returnPercent;
+    const isFuelLow = fuelPercent <= 20;
+    const needsFuelWarning = isFuelLow || isReturnCritical;
     if (this._lastFuelWarning !== needsFuelWarning) {
       this._lastFuelWarning = needsFuelWarning;
       if (needsFuelWarning) this.cardGauges?.classList.add('fuel-warning');
       else this.cardGauges?.classList.remove('fuel-warning');
+    }
+
+    // Adaptive Rückkehr-Warnung (oben rechts, pulsierender roter Button/Badge)
+    if (this.returnWarn && this._lastReturnWarn !== isReturnCritical) {
+      this._lastReturnWarn = isReturnCritical;
+      this.returnWarn.style.display = isReturnCritical ? 'inline-flex' : 'none';
+    }
+
+    // --- Toast-Warnungen & Cockpit-Alarme ---
+    if (isAtSurface) {
+      this.wasAtSurface = true;
+      this.warnedReturnPre = false;
+      this.warnedPointOfNoReturn = false;
+      this.warnedFuelLow20 = false;
+      this.warnedFuelCritical10 = false;
+    } else if (isBelowGround) {
+      // 1. Übergang von der Oberfläche in die Mine mit wenig Tank
+      if (this.wasAtSurface) {
+        this.wasAtSurface = false;
+        if (fuelPercent <= 20) {
+          toastManager.show({
+            id: 'fuel-low-entry',
+            text: 'Tanken empfohlen',
+            duration: 4000,
+            sound: 'cockpit'
+          });
+        }
+      }
+
+      // 2. POINT OF NO RETURN (Sofort umkehren!)
+      if (isReturnCritical) {
+        if (!this.warnedPointOfNoReturn) {
+          this.warnedPointOfNoReturn = true;
+          this.warnedReturnPre = true;
+          toastManager.show({
+            id: 'point-of-no-return',
+            text: 'Point of No Return: Sofort umkehren!',
+            duration: 5000,
+            sound: 'cockpit'
+          });
+        }
+      } else if (returnPercent > 0.5 && fuelPercent <= returnPercent + 3) {
+        // 3. Vorwarnung: 3% Puffer vor Point of No Return
+        if (!this.warnedReturnPre && !this.warnedPointOfNoReturn) {
+          this.warnedReturnPre = true;
+          toastManager.show({
+            id: 'return-fuel-pre',
+            text: 'Rückkehr-Limit naht',
+            duration: 4000,
+            sound: 'cockpit'
+          });
+        }
+      }
+
+      // 4. Allgemeine TANKWARNUNG unter Tage
+      if (fuelPercent <= 10) {
+        if (!this.warnedFuelCritical10) {
+          this.warnedFuelCritical10 = true;
+          this.warnedFuelLow20 = true;
+          toastManager.show({
+            id: 'fuel-critical-10',
+            text: 'Achtung: Treibstoff kritisch (10%)!',
+            duration: 5000,
+            sound: 'cockpit'
+          });
+        }
+      } else if (fuelPercent <= 20) {
+        if (!this.warnedFuelLow20 && !this.warnedPointOfNoReturn) {
+          this.warnedFuelLow20 = true;
+          toastManager.show({
+            id: 'fuel-low-20',
+            text: 'Tankwarnung: Treibstoff niedrig (20%)',
+            duration: 4000,
+            sound: 'cockpit'
+          });
+        }
+      }
+
+      // Hysterese-Reset unter Tage bei Wiederaufladung
+      if (fuelPercent > returnPercent + 6) {
+        this.warnedReturnPre = false;
+        this.warnedPointOfNoReturn = false;
+      }
+      if (fuelPercent > 25) {
+        this.warnedFuelLow20 = false;
+      }
+      if (fuelPercent > 15) {
+        this.warnedFuelCritical10 = false;
+      }
     }
 
     // Karosserie / Rumpfintegrität (Reine Prozent-Anzeige)
@@ -431,51 +529,6 @@ export class HUD {
       this._lastLevel = lvl;
       if (this.rankName) this.rankName.textContent = lvl;
       if (this.levelRight) this.levelRight.textContent = lvl;
-    }
-
-    // Adaptive Rückkehr-Warnung (oben rechts, rot pulsierend)
-    const fuelPctRaw = Math.max(0, (this.player.fuel / this.player.maxFuel) * 100);
-    const returnPct = this.player.getReturnFuelPercent ? this.player.getReturnFuelPercent() : 0;
-    const currentY = this.player.sprite ? this.player.sprite.y : (this.player.gy * 32 + 16);
-    const isAtSurface = this.player.gy < 0 || currentY <= -8;
-    const isBelowGround = !isAtSurface && (this.player.gy >= 0 || currentY >= 8);
-
-    const isReturnWarn = isBelowGround && returnPct > 0.5 && fuelPctRaw <= returnPct;
-    if (this.returnWarn && this._lastReturnWarn !== isReturnWarn) {
-      this._lastReturnWarn = isReturnWarn;
-      this.returnWarn.style.display = isReturnWarn ? 'flex' : 'none';
-    }
-
-    // --- Toast-Warnungen (oben zentriert) ---
-    // 1. NUR beim Eintritt in die Mine von der Oberfläche, wenn man dann <= 15% hat
-    if (this.wasAtSurface && isBelowGround) {
-      this.wasAtSurface = false;
-      if (fuelPctRaw <= 15) {
-        toastManager.show({
-          id: 'fuel-low-entry',
-          text: 'Tanken empfohlen',
-          duration: 4000
-        });
-      }
-    } else if (isAtSurface) {
-      this.wasAtSurface = true;
-      this.warnedReturn2Percent = false;
-    }
-
-    // 2. Rückkehr-Vorwarnung: 2% vor Erreichen des Tankminimums zur Rückkehr (nur unter Tage)
-    const returnMinThreshold = returnPct + 2;
-    if (isBelowGround && returnPct > 0.5) {
-      if (!this.warnedReturn2Percent && fuelPctRaw <= returnMinThreshold) {
-        this.warnedReturn2Percent = true;
-        toastManager.show({
-          id: 'return-fuel-2percent',
-          text: 'Rückkehrwarnung',
-          duration: 4000,
-          sound: 'cockpit'
-        });
-      }
-    } else if (fuelPctRaw > returnMinThreshold + 5) {
-      this.warnedReturn2Percent = false;
     }
 
     // Cash & Tiefe (textContent + Dirty-Check verhindert teure Browser-Reflows)

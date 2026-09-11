@@ -710,15 +710,47 @@
 
 
 
-    /* Tankalarm - Auf das neue transparente Cockpit-HUD abgestimmt (ab 15% rot) */
-    .fuel-warning #hud-fuel-bar {
-      background: #ef4444 !important;
-      animation: fuel-bar-flash 0.8s infinite alternate;
+    /* Tankalarm & Rückkehrwarnung Keyframes */
+    @keyframes fuel-bar-flash {
+      0%, 100% {
+        background: #ef4444 !important;
+        box-shadow: 0 0 6px rgba(239, 68, 68, 0.9);
+      }
+      50% {
+        background: #fca5a5 !important;
+        box-shadow: 0 0 12px rgba(239, 68, 68, 1);
+      }
     }
 
-    .fuel-warning #hud-fuel-text {
+    @keyframes fuel-text-flash {
+      0%, 100% {
+        color: #ef4444 !important;
+        text-shadow: 0 0 6px rgba(239, 68, 68, 0.9);
+      }
+      50% {
+        color: #ffffff !important;
+        text-shadow: 0 0 10px rgba(239, 68, 68, 1);
+      }
+    }
+
+    /* Tankalarm - Auf das transparente Cockpit-HUD abgestimmt (unter 20% oder Point of No Return) */
+    .fuel-warning #hud-fuel-bar {
+      background: #ef4444 !important;
+      animation: fuel-bar-flash 0.8s infinite alternate !important;
+    }
+
+    .fuel-warning #hud-fuel-text,
+    .fuel-warning #hud-fuel-num {
       color: #ef4444 !important;
-      animation: fuel-text-flash 0.8s infinite alternate;
+      animation: fuel-text-flash 0.8s infinite alternate !important;
+    }
+
+    .fuel-warning #hud-fuel-icon,
+    .fuel-warning #hud-fuel-icon svg,
+    .fuel-warning #hud-fuel-icon i {
+      color: #ef4444 !important;
+      stroke: #ef4444 !important;
+      animation: fuel-text-flash 0.8s infinite alternate !important;
     }
 
     .hull-warning #hud-hull-bar {
@@ -729,10 +761,10 @@
       animation: fuel-text-flash 0.8s infinite alternate;
     }
 
-    /* Feste Icon-Farben im HUD: Tank gelb, Rumpf grün, Fracht blau, Level lila (auch bei Alarm) */
+    /* Feste Icon-Farben im HUD: Standardzustand */
     #hud-fuel-icon, #hud-fuel-cluster svg, #hud-fuel-cluster i {
-      color: #fbbf24 !important;
-      stroke: #fbbf24 !important;
+      color: #fbbf24;
+      stroke: #fbbf24;
     }
 
     #hud-hull-icon, #hud-hull-cluster svg, #hud-hull-cluster i {
@@ -750,20 +782,37 @@
       stroke: #c084fc !important;
     }
 
-    /* Roter Strich im Tankbalken zur garantierten Rückkehr */
+    /* Roter Strich im Tankbalken zur garantierten Rückkehr (Point of No Return) */
     .fuel-return-line {
       position: absolute;
-      top: 0;
-      bottom: 0;
+      top: -1px;
+      bottom: -1px;
       width: 2.5px;
-      background: #ef4444;
-      z-index: 4;
+      background: #ff3333;
+      z-index: 5;
       pointer-events: none;
       transform: translateX(-50%);
       display: none;
       border-radius: 1px;
-      box-shadow: 0 0 5px rgba(239, 68, 68, 0.85);
+      box-shadow: 0 0 6px rgba(255, 51, 51, 0.95), 0 0 2px #ffffff;
       transition: left 0.12s ease-out;
+    }
+
+    /* Warnungs-Badge oben rechts: UMKEHREN! */
+    .hud-return-warn {
+      display: none;
+      background: rgba(239, 68, 68, 0.25);
+      border: 1px solid rgba(239, 68, 68, 0.7);
+      border-radius: 5px;
+      padding: 1px 6px;
+      align-items: center;
+      gap: 3px;
+      font-size: 9.5px;
+      font-weight: 800;
+      color: #fca5a5;
+      white-space: nowrap;
+      animation: warnPulse 1.1s infinite ease-in-out;
+      box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
     }
 
     /* Dezent gestalteter Orientierungs-Hinweis für Mobile */
@@ -2104,7 +2153,7 @@
           <span class="hud-value-badge" id="hud-level-right" style="color: #f8fafc; font-weight: 800;">1</span>
         </div>
         <!-- Adaptive return warning (shown when current fuel <= return cost) -->
-        <div id="hud-return-warn" style="display: none; background: rgba(239, 68, 68, 0.18); border: 1px solid rgba(239, 68, 68, 0.55); border-radius: 5px; padding: 1px 5px; display: none; align-items: center; gap: 3px; font-size: 9.5px; font-weight: 800; color: #f87171; white-space: nowrap; animation: warnPulse 1.2s infinite ease-in-out;">
+        <div id="hud-return-warn" class="hud-return-warn" title="Point of No Return: Nicht mehr genug Treibstoff für den Rückweg!">
           <i data-lucide="triangle-alert" style="width: 11px; height: 11px;"></i>
           <span>UMKEHREN!</span>
         </div>
