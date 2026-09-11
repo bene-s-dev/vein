@@ -31,10 +31,14 @@ export class InputHandler {
 
     // Gadget Hotkeys
     this.keyB = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.B, false);
+    this.keyT = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.T, false);
+    this.key1 = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ONE, false);
+    this.key2 = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.TWO, false);
+    this.key3 = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.THREE, false);
     this.keyF = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F, false);
     this.keyR = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R, false);
 
-    // Tastatur-Capture für Buchstaben freigeben, damit Texteingaben (z. B. 'delete') überall funktionieren
+    // Tastatur-Capture für Buchstaben und Ziffern freigeben, damit Texteingaben überall funktionieren
     if (scene.input.keyboard.removeCapture) {
       scene.input.keyboard.removeCapture([
         Phaser.Input.Keyboard.KeyCodes.W,
@@ -44,6 +48,10 @@ export class InputHandler {
         Phaser.Input.Keyboard.KeyCodes.ESC,
         Phaser.Input.Keyboard.KeyCodes.P,
         Phaser.Input.Keyboard.KeyCodes.B,
+        Phaser.Input.Keyboard.KeyCodes.T,
+        Phaser.Input.Keyboard.KeyCodes.ONE,
+        Phaser.Input.Keyboard.KeyCodes.TWO,
+        Phaser.Input.Keyboard.KeyCodes.THREE,
         Phaser.Input.Keyboard.KeyCodes.F,
         Phaser.Input.Keyboard.KeyCodes.R
       ]);
@@ -67,23 +75,33 @@ export class InputHandler {
     this.keyEsc.on('down', handlePauseKey);
     this.keyP.on('down', handlePauseKey);
 
-    this.keyB.on('down', () => {
+    const triggerDynamite = () => {
       if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
       if (isModalActive()) return;
       this.scene.useDynamite?.();
-    });
+    };
 
-    this.keyF.on('down', () => {
+    const triggerFuel = () => {
       if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
       if (isModalActive()) return;
       this.scene.player?.useFuelCanister();
-    });
+    };
 
-    this.keyR.on('down', () => {
+    const triggerRepair = () => {
       if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
       if (isModalActive()) return;
       this.scene.player?.useRepairKit();
-    });
+    };
+
+    this.keyB.on('down', triggerDynamite);
+    this.keyT.on('down', triggerDynamite);
+    this.key1.on('down', triggerDynamite);
+
+    this.keyF.on('down', triggerFuel);
+    this.key2.on('down', triggerFuel);
+
+    this.keyR.on('down', triggerRepair);
+    this.key3.on('down', triggerRepair);
 
     this.setupControls();
   }

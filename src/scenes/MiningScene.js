@@ -297,7 +297,7 @@ export class MiningScene extends Phaser.Scene {
     // Exakte ganzzahlige Gitterkoordinaten (verhindert Fehltreffer bei Float-Werten im Flug)
     const pX = this.player.sprite ? this.player.sprite.x : this.player.x;
     const pY = this.player.sprite ? this.player.sprite.y : this.player.y;
-    const gx = Math.max(0, Math.min(this.gridSystem.width - 1, Math.round((pX - TILE_SIZE / 2) / TILE_SIZE)));
+    const gx = Math.round((pX - TILE_SIZE / 2) / TILE_SIZE);
     const gy = Math.max(1, Math.round((pY - TILE_SIZE / 2) / TILE_SIZE));
     const bombX = gx * TILE_SIZE + TILE_SIZE / 2;
     const bombY = gy * TILE_SIZE + TILE_SIZE / 2;
@@ -357,7 +357,6 @@ export class MiningScene extends Phaser.Scene {
 
         // Oberfläche gy <= 0 Fundamente nicht sprengen
         if (tgy <= 0) continue;
-        if (tgx < 0 || tgx >= this.gridSystem.width) continue;
 
         const tile = this.gridSystem.getTile(tgx, tgy);
         if (tile && tile.type !== 'empty' && !tile.indestructible) {
@@ -391,6 +390,7 @@ export class MiningScene extends Phaser.Scene {
     } else {
       this.hud?.showToast('💥 BOOM! Felsbereich freigesprengt!', 'info');
     }
+    this.events.emit('player_updated');
 
     // Geröll über dem Krater prüfen
     for (let dx = -1; dx <= 1; dx++) {
