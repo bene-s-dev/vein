@@ -21,6 +21,8 @@ const config = {
   },
   input: {
     activePointers: 3,
+    smoothStep: true,
+    windowEvents: false,
     touch: {
       capture: false
     }
@@ -28,33 +30,64 @@ const config = {
   fps: {
     min: 10,
     target: 60,
-    smoothStep: true
+    smoothStep: false
   },
   scene: [BootScene, MiningScene]
 };
 
 import { refreshIcons } from './ui/IconHelper.js';
-import { closeActiveModal } from './core/BaseSystem.js';
+import { closeActiveModal, notifyModalClosed } from './core/BaseSystem.js';
 
 function shieldUiElements() {
-  // Verhindert das Durchklicken vom Modal & HUD auf den darunterliegenden Phaser-Canvas
+  // Verhindert das Durchklicken von Modals, HUD, Action-FAB und Dialogen auf den Phaser-Canvas
   const events = ['pointerdown', 'pointerup', 'pointermove', 'mousedown', 'mouseup', 'click', 'touchstart', 'touchend'];
-  
-  const modal = document.getElementById('building-modal');
-  if (modal) {
-    events.forEach((eventType) => {
-      modal.addEventListener(eventType, (e) => {
-        e.stopPropagation();
-      }, { passive: false });
-    });
-  }
 
-  const elements = document.querySelectorAll('#hud-overlay, #orientation-tip, #mission-tracker, #hud-gadget-bar, .btn-gadget');
-  elements.forEach((el) => {
-    ['pointerdown', 'pointerup', 'mousedown', 'mouseup', 'touchstart', 'touchend'].forEach((eventType) => {
-      el.addEventListener(eventType, (e) => {
+  // Globaler Listener auf document (Bubbling-Phase):
+  // Wenn ein Event von einem DOM-UI-Element stammt (nicht vom Canvas),
+  // wird verhindert, dass es bis zu Window bubbelt (wo Phaser oder andere globale Handler sitzen).
+  events.forEach((eventType) => {
+    document.addEventListener(eventType, (e) => {
+      const canvas = window.__game?.canvas;
+      if (!e.target) return;
+      // Klicks auf HTML-UI-Elemente niemals an Window/Canvas durchlassen
+      if (canvas && e.target !== canvas) {
         e.stopPropagation();
-      }, { passive: false });
+      }
+    }, { capture: false, passive: false });
+  });
+
+  // Direkte Absicherung aller bekannten UI-Container & Klassen
+  const selectors = [
+    '#building-modal',
+    '#hud-overlay',
+    '#orientation-tip',
+    '#mission-tracker',
+    '#hud-action-fab',
+    '#hud-action-dial',
+    '#toast-container',
+    '#ore-info-backdrop',
+    '.modal-backdrop',
+    '.modal-window',
+    '.modal-content',
+    '.hud-card',
+    '.fab-item-row',
+    '.btn-fab-item',
+    '.btn-fab-main',
+    '.fab-label',
+    '.ore-info-window',
+    'button',
+    'input',
+    'select',
+    'textarea'
+  ];
+
+  selectors.forEach((sel) => {
+    document.querySelectorAll(sel).forEach((el) => {
+      events.forEach((eventType) => {
+        el.addEventListener(eventType, (e) => {
+          e.stopPropagation();
+        }, { passive: false });
+      });
     });
   });
 }
@@ -94,9 +127,12 @@ function initModalObserver() {
   }
   const closeBtn = document.getElementById('modal-close-btn');
   if (closeBtn) {
-    closeBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      closeActiveModal();
+    ['pointerdown', 'click'].forEach(evt => {
+      closeBtn.addEventListener(evt, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        closeActiveModal();
+      });
     });
   }
 }

@@ -82,15 +82,24 @@ export function closeActiveModal(scene) {
 }
 
 export function isModalActive() {
-  const modal = document.getElementById('building-modal');
-  if (modal && modal.style.display && modal.style.display !== 'none') {
-    return true;
+  if (typeof document !== 'undefined') {
+    if (document.body && (document.body.classList.contains('modal-open') || document.body.classList.contains('discovery-modal-open'))) {
+      return true;
+    }
+    const modal = document.getElementById('building-modal');
+    if (modal && modal.style && (modal.style.display === 'flex' || (modal.style.display !== 'none' && modal.style.display !== ''))) {
+      return true;
+    }
+    const oreInfoBackdrop = document.getElementById('ore-info-backdrop');
+    if (oreInfoBackdrop && oreInfoBackdrop.style && (oreInfoBackdrop.style.display === 'flex' || (oreInfoBackdrop.style.display !== 'none' && oreInfoBackdrop.style.display !== ''))) {
+      return true;
+    }
+    const actionFab = document.getElementById('hud-action-fab');
+    if (actionFab && actionFab.classList.contains('open')) {
+      return true;
+    }
   }
-  const oreInfoBackdrop = document.getElementById('ore-info-backdrop');
-  if (oreInfoBackdrop && oreInfoBackdrop.style.display && oreInfoBackdrop.style.display !== 'none') {
-    return true;
-  }
-  if (Date.now() - lastModalCloseTimestamp < 350) {
+  if (Date.now() - lastModalCloseTimestamp < 400) {
     return true;
   }
   return false;
@@ -226,6 +235,194 @@ export const HANGAR_TIERS = [
     desc: 'Ultimative Versorgungsmatrix: Nullzeit-Betankung und augenblickliche Reparatur.'
   }
 ];
+
+// Expeditions-Ausrüstung, Untertage-Stationen & Notfall-Verbrauchsgüter
+export const EXPEDITION_ITEMS = [
+  // 1. Erzförderung (Pneumatische Förderstationen) nach 5 Schichten in 3 Preisstufen
+  {
+    key: 'tube_s1',
+    category: 'station',
+    stationType: 'tube',
+    name: 'Erzförderung (Schicht 1 & 2)',
+    badge: '0–180m',
+    desc: 'Förderschacht für Humus & Schiefer (bis 180m). Saugt Erze direkt ins Depot ab.',
+    price: 350,
+    icon: '🚀',
+    minDepth: 5,
+    maxDepth: 180,
+    reqResearch: { track: 'station_tube', tier: 1, label: 'Förderschacht Stufe 1' }
+  },
+  {
+    key: 'tube_s2',
+    category: 'station',
+    stationType: 'tube',
+    name: 'Erzförderung (Schicht 3 & 4)',
+    badge: '180–950m',
+    desc: 'Verstärkter Förderschacht für Granit & Obsidian (180–950m). Druckfeste Rohre.',
+    price: 1800,
+    icon: '🚀',
+    minDepth: 5,
+    maxDepth: 950,
+    reqResearch: { track: 'station_tube', tier: 2, label: 'Förderschacht Stufe 2' }
+  },
+  {
+    key: 'tube_s3',
+    category: 'station',
+    stationType: 'tube',
+    name: 'Erzförderung (Schicht 5)',
+    badge: '>950m',
+    desc: 'Titan-Kernbohr-Förderschacht für Urgestein (>950m). Höchste Tiefenbeständigkeit.',
+    price: 7500,
+    icon: '🚀',
+    minDepth: 5,
+    maxDepth: 99999,
+    reqResearch: { track: 'station_tube', tier: 3, label: 'Förderschacht Stufe 3' }
+  },
+
+  // 2. Untertage-Tankanlagen nach 5 Schichten in 3 Preisstufen
+  {
+    key: 'fuel_s1',
+    category: 'station',
+    stationType: 'fuel',
+    name: 'Tankanlage (Schicht 1 & 2)',
+    badge: '0–180m',
+    desc: 'Untertage-Tankanlage für Humus & Schiefer (bis 180m). Roboter-Betankungsarm.',
+    price: 500,
+    icon: '⛽',
+    minDepth: 5,
+    maxDepth: 180,
+    reqResearch: { track: 'station_fuel', tier: 1, label: 'Tankanlage Stufe 1' }
+  },
+  {
+    key: 'fuel_s2',
+    category: 'station',
+    stationType: 'fuel',
+    name: 'Tankanlage (Schicht 3 & 4)',
+    badge: '180–950m',
+    desc: 'Hochdruck-Tankanlage für Granit & Obsidian (180–950m). Schnelles Tiefenbetanken.',
+    price: 2600,
+    icon: '⛽',
+    minDepth: 5,
+    maxDepth: 950,
+    reqResearch: { track: 'station_fuel', tier: 2, label: 'Tankanlage Stufe 2' }
+  },
+  {
+    key: 'fuel_s3',
+    category: 'station',
+    stationType: 'fuel',
+    name: 'Tankanlage (Schicht 5)',
+    badge: '>950m',
+    desc: 'Thermo-resistente Tiefen-Tankanlage für Urgestein (>950m). Für extremste Tiefen.',
+    price: 11000,
+    icon: '⛽',
+    minDepth: 5,
+    maxDepth: 99999,
+    reqResearch: { track: 'station_fuel', tier: 3, label: 'Tankanlage Stufe 3' }
+  },
+
+  // 3. Notfall-Ausrüstung & Verbrauchsgüter
+  {
+    key: 'dynamite',
+    category: 'gadget',
+    name: 'Dynamit-Sprengsatz',
+    badge: '3x3 Feld',
+    desc: 'Sprengt ein 3x3 Feld frei und birgt Erze sofort. (Taste B, T oder 1)',
+    price: 250,
+    icon: '🧨',
+    reqResearch: { track: 'tnt', tier: 1, label: 'Sprengtechnik & TNT' }
+  },
+  {
+    key: 'fuel_canister',
+    category: 'gadget',
+    name: 'Notfall-Treibstoffkanister',
+    badge: '+20L Tank',
+    desc: 'Füllt unter Tage sofort +20L Treibstoff nach. (Taste F oder 2)',
+    price: 120,
+    icon: '⛽',
+    reqResearch: { track: 'emergency_gear', tier: 1, label: 'Notfall-Ausrüstung' }
+  },
+  {
+    key: 'repair_kit',
+    category: 'gadget',
+    name: 'Feld-Reparatur-Kit',
+    badge: '+40 HP Hülle',
+    desc: 'Repariert im Notfall sofort +40 HP Panzerung. (Taste R oder 3)',
+    price: 180,
+    icon: '🧰',
+    reqResearch: { track: 'emergency_gear', tier: 1, label: 'Notfall-Ausrüstung' }
+  }
+];
+
+export function isExpeditionItemResearched(player, item) {
+  if (!item || !item.reqResearch) return true;
+  if (!player) return false;
+  const req = item.reqResearch;
+  if (req.track === 'tnt') return (player.researchedTnt || 0) >= req.tier;
+  if (req.track === 'emergency_gear') return (player.researchedEmergency || 0) >= req.tier;
+  if (req.track === 'station_fuel') return (player.researchedStationFuel || 0) >= req.tier;
+  if (req.track === 'station_tube') return (player.researchedStationTube || 0) >= req.tier;
+  return true;
+}
+
+export function getAvailableStationCount(player, type, depthMeters) {
+  const g = player?.gadgets || {};
+  const isTube = (type === 'tube' || type === 'pneumatic');
+  if (depthMeters == null || depthMeters <= 0) {
+    if (isTube) {
+      return (g.tube_s1 || 0) + (g.tube_s2 || 0) + (g.tube_s3 || 0);
+    } else {
+      return (g.fuel_s1 || 0) + (g.fuel_s2 || 0) + (g.fuel_s3 || 0);
+    }
+  }
+
+  if (isTube) {
+    if (depthMeters <= 180) {
+      return (g.tube_s1 || 0) + (g.tube_s2 || 0) + (g.tube_s3 || 0);
+    } else if (depthMeters <= 950) {
+      return (g.tube_s2 || 0) + (g.tube_s3 || 0);
+    } else {
+      return (g.tube_s3 || 0);
+    }
+  } else {
+    if (depthMeters <= 180) {
+      return (g.fuel_s1 || 0) + (g.fuel_s2 || 0) + (g.fuel_s3 || 0);
+    } else if (depthMeters <= 950) {
+      return (g.fuel_s2 || 0) + (g.fuel_s3 || 0);
+    } else {
+      return (g.fuel_s3 || 0);
+    }
+  }
+}
+
+export function getUsableStationKey(player, type, depthMeters) {
+  const g = player?.gadgets || {};
+  const isTube = (type === 'tube' || type === 'pneumatic');
+  if (isTube) {
+    if (depthMeters <= 180) {
+      if ((g.tube_s1 || 0) > 0) return 'tube_s1';
+      if ((g.tube_s2 || 0) > 0) return 'tube_s2';
+      if ((g.tube_s3 || 0) > 0) return 'tube_s3';
+    } else if (depthMeters <= 950) {
+      if ((g.tube_s2 || 0) > 0) return 'tube_s2';
+      if ((g.tube_s3 || 0) > 0) return 'tube_s3';
+    } else {
+      if ((g.tube_s3 || 0) > 0) return 'tube_s3';
+    }
+    return null;
+  } else {
+    if (depthMeters <= 180) {
+      if ((g.fuel_s1 || 0) > 0) return 'fuel_s1';
+      if ((g.fuel_s2 || 0) > 0) return 'fuel_s2';
+      if ((g.fuel_s3 || 0) > 0) return 'fuel_s3';
+    } else if (depthMeters <= 950) {
+      if ((g.fuel_s2 || 0) > 0) return 'fuel_s2';
+      if ((g.fuel_s3 || 0) > 0) return 'fuel_s3';
+    } else {
+      if ((g.fuel_s3 || 0) > 0) return 'fuel_s3';
+    }
+    return null;
+  }
+}
 
 // Spezial-Upgrade-Bauteile (Auftragsbelohnungen & Montagebauteile)
 export const COMPONENT_DATA = {
@@ -671,8 +868,15 @@ export class BaseSystem {
     // Hangar-Ausbaustufe (1-10) für Betankungs- und Reparaturrate
     this.hangarTier = 1;
 
+    // Unterirdische Infrastruktur (Frei platzierbare Förder-Schächte & Geothermie-Zapfsäulen)
+    this.subsurfaceStations = [];
+    this.activeStationAction = null;
+    this.geothermalAudioTimer = 0;
+
     this.initWorldSprites();
     this.initPurchasableWorldSprites();
+    this.initSubsurfaceStations();
+    this.initSurfaceVisualUpgrades();
     this.initSteinsammler();
     this.initSmokeParticles();
     this.initEvents();
@@ -711,9 +915,13 @@ export class BaseSystem {
 
       const onTrigger = (pointer) => {
         if (isModalActive()) return;
+        const canvas = this.scene.game?.canvas;
         if (pointer && pointer.event) {
           const target = pointer.event.target;
-          if (target && target.closest && target.closest('#building-modal, .modal-backdrop, .modal-window, .hud-card, button, input')) {
+          if (target && canvas && target !== canvas) {
+            return;
+          }
+          if (target && target.closest && target.closest('#building-modal, .modal-backdrop, .modal-window, #ore-info-backdrop, #hud-overlay, #hud-action-fab, .hud-card, button, input, #toast-container')) {
             return;
           }
         }
@@ -734,6 +942,7 @@ export class BaseSystem {
     });
 
     this.updateHangarBuildingLabel();
+    this.updateBuildingVisuals();
 
     // Feste Gruben-Überdachung beim Minen-Schachteinstieg (gx: 19..20, x=640)
     const entranceX = 20 * TILE_SIZE;
@@ -796,9 +1005,13 @@ export class BaseSystem {
 
       const onTriggerPb = (pointer) => {
         if (isModalActive()) return;
+        const canvas = this.scene.game?.canvas;
         if (pointer && pointer.event) {
           const target = pointer.event.target;
-          if (target && target.closest && target.closest('#building-modal, .modal-backdrop, .modal-window, .hud-card, button, input')) {
+          if (target && canvas && target !== canvas) {
+            return;
+          }
+          if (target && target.closest && target.closest('#building-modal, .modal-backdrop, .modal-window, #ore-info-backdrop, #hud-overlay, #hud-action-fab, .hud-card, button, input, #toast-container')) {
             return;
           }
         }
@@ -850,9 +1063,13 @@ export class BaseSystem {
 
     const onOpenForscher = (pointer) => {
       if (isModalActive()) return;
+      const canvas = this.scene.game?.canvas;
       if (pointer && pointer.event) {
         const target = pointer.event.target;
-        if (target && target.closest && target.closest('#building-modal, .modal-backdrop, .modal-window, .hud-card, button, input')) {
+        if (target && canvas && target !== canvas) {
+          return;
+        }
+        if (target && target.closest && target.closest('#building-modal, .modal-backdrop, .modal-window, #ore-info-backdrop, #hud-overlay, #hud-action-fab, .hud-card, button, input, #toast-container')) {
           return;
         }
       }
@@ -869,7 +1086,7 @@ export class BaseSystem {
     const refX = (factoryB ? factoryB.gx : 26) * TILE_SIZE;
     const refY = -70;
 
-    this.scene.add.particles(refX - 22, refY, 'particle_smoke', {
+    this.factorySmokeEmitter = this.scene.add.particles(refX - 22, refY, 'particle_smoke', {
       speedY: { min: -18, max: -36 },
       speedX: { min: 3, max: 10 },
       scale: { start: 0.5, end: 1.4 },
@@ -910,6 +1127,13 @@ export class BaseSystem {
           }
         }
       }
+    });
+
+    this.scene.events.on('player_level_up', () => {
+      this.updateBuildingVisuals();
+    });
+    this.scene.events.on('player_updated', () => {
+      this.updateBuildingVisuals();
     });
   }
 
@@ -1031,6 +1255,578 @@ export class BaseSystem {
         this.scene.hud?.showToast(`📉 Börsen-Boom für ${endName} ist beendet. Preise normalisieren sich.`, 'info');
       }
     }
+
+    // 5. Unterirdische Basislager & Stationen (Förderschächte & Geothermie-Zapfsäulen)
+    this.updateSubsurfaceStations(delta);
+
+    // 6. Oberflächen-Förderband Animation
+    if (this.surfaceVisuals && this.surfaceVisuals.conveyor && this.surfaceVisuals.conveyor.visible) {
+      this.renderSurfaceConveyor();
+    }
+  }
+
+  initSubsurfaceStations() {
+    if (!this.subsurfaceStations) this.subsurfaceStations = [];
+    this.subsurfaceStations.forEach(st => {
+      if (st.isBuilt && !st.sprite) {
+        this.spawnStationInWorld(st);
+      }
+    });
+  }
+
+  initSurfaceVisualUpgrades() {
+    this.surfaceVisuals = {
+      crane: null,
+      craneBeacon: null,
+      lanterns: [],
+      conveyor: null
+    };
+
+    // 1. Industrie-Kran am Schachtrand (gx = 22 * 32 = 704px, y = 0)
+    const craneX = 22 * TILE_SIZE;
+    const crane = this.scene.add.image(craneX, 0, 'surface_crane')
+      .setOrigin(0.5, 1.0)
+      .setDepth(4.2)
+      .setVisible(false);
+    
+    // Rote Blinkwarnleuchte an der Kranspitze
+    const beacon = this.scene.add.circle(craneX - 16, -78, 3, 0xef4444)
+      .setDepth(4.5)
+      .setVisible(false);
+    
+    this.scene.tweens.add({
+      targets: beacon,
+      alpha: 0.1,
+      duration: 500,
+      yoyo: true,
+      repeat: -1
+    });
+
+    this.surfaceVisuals.crane = crane;
+    this.surfaceVisuals.craneBeacon = beacon;
+
+    // 2. Neon-Laternen entlang des Werksgeländes
+    const lanternGXs = [-13, -6, 0, 6, 12, 17, 24, 31, 39];
+    lanternGXs.forEach(lgx => {
+      const lx = lgx * TILE_SIZE;
+      const lantern = this.scene.add.image(lx, 0, 'surface_lantern')
+        .setOrigin(0.5, 1.0)
+        .setDepth(4.4)
+        .setVisible(false);
+      
+      const glow = this.scene.add.circle(lx, 0, 22, 0x38bdf8, 0.15)
+        .setOrigin(0.5, 0.5)
+        .setDepth(2.5)
+        .setVisible(false);
+
+      this.surfaceVisuals.lanterns.push({ lantern, glow });
+    });
+
+    // 3. Förderband-System (vom Schacht zum Depot)
+    const conveyorG = this.scene.add.graphics().setDepth(3.5).setVisible(false);
+    this.surfaceVisuals.conveyor = conveyorG;
+
+    this.updateSurfaceVisuals();
+    this.updateBuildingVisuals();
+  }
+
+  updateSurfaceVisuals() {
+    if (!this.surfaceVisuals) return;
+    const hTier = this.hangarTier || 1;
+    const builtPurchasedCount = (this.purchasableBuildings || []).filter(b => b.isBuilt).length;
+    const builtTubesCount = (this.subsurfaceStations || []).filter(s => s.isBuilt && s.type === 'pneumatic').length;
+
+    // 1. Industrie-Kran ab Hangar Tier >= 3 oder 2 Bauwerken
+    const showCrane = hTier >= 3 || builtPurchasedCount >= 2;
+    if (this.surfaceVisuals.crane) this.surfaceVisuals.crane.setVisible(showCrane);
+    if (this.surfaceVisuals.craneBeacon) this.surfaceVisuals.craneBeacon.setVisible(showCrane);
+
+    // 2. Neon-Laternen ab Hangar Tier >= 4 oder 2 Bauwerken
+    const showLanterns = hTier >= 4 || builtPurchasedCount >= 2;
+    this.surfaceVisuals.lanterns.forEach(l => {
+      l.lantern.setVisible(showLanterns);
+      l.glow.setVisible(showLanterns);
+    });
+
+    // 3. Förderband ab mindestens 1 gebauter Förderstation
+    const showConveyor = builtTubesCount >= 1;
+    if (this.surfaceVisuals.conveyor) {
+      this.surfaceVisuals.conveyor.setVisible(showConveyor);
+      if (showConveyor) {
+        this.renderSurfaceConveyor();
+      }
+    }
+  }
+
+  updateBuildingVisuals() {
+    if (!this.buildings) return;
+
+    const hTier = this.hangarTier || 1;
+    const dTier = this.depot?.tier || 1;
+    const fTier = this.refinery?.machineTier || 1;
+    const resTier = this.player?.researchedDrillTier || (this.player?.drillTier || 1);
+
+    this.buildings.forEach((b) => {
+      let key = b.spriteKey;
+      let height = b.height || 70;
+
+      if (b.id === 'dock') {
+        if (hTier === 1) {
+          key = 'building_dock_t1';
+          height = 42;
+        } else if (hTier <= 4) {
+          key = 'building_dock_t2';
+          height = 56;
+        } else {
+          key = 'building_dock';
+          height = 72;
+        }
+      } else if (b.id === 'depot') {
+        if (dTier === 1) {
+          key = 'building_depot_t1';
+          height = 40;
+        } else if (dTier <= 3) {
+          key = 'building_depot_t2';
+          height = 54;
+        } else if (dTier <= 5) {
+          key = 'building_depot_t3';
+          height = 62;
+        } else {
+          key = 'building_depot';
+          height = 70;
+        }
+      } else if (b.id === 'factory') {
+        if (fTier === 1) {
+          key = 'building_factory_t1';
+          height = 42;
+        } else if (fTier === 2) {
+          key = 'building_factory_t2';
+          height = 56;
+        } else if (fTier === 3) {
+          key = 'building_factory_t3';
+          height = 64;
+        } else {
+          key = 'building_factory';
+          height = 72;
+        }
+      } else if (b.id === 'lab') {
+        if (resTier === 1) {
+          key = 'building_lab_t1';
+          height = 40;
+        } else if (resTier <= 3) {
+          key = 'building_lab_t2';
+          height = 56;
+        } else {
+          key = 'building_lab';
+          height = 72;
+        }
+      } else if (b.id === 'market') {
+        // Nicht ausbaubar: von Anfang an wie ursprünglich
+        key = 'building_market';
+        height = 68;
+      } else if (b.id === 'office') {
+        // Nicht ausbaubar: von Anfang an wie ursprünglich
+        key = 'building_office';
+        height = 70;
+      }
+
+      if (b.sprite) {
+        if (b.sprite.texture.key !== key) {
+          b.sprite.setTexture(key);
+        }
+        b.currentHeight = height;
+        if (b.textLabel) {
+          b.textLabel.setY(-height - 14);
+        }
+      }
+    });
+
+    // Fabrik-Rauch dynamisch an Schornstein der aktuellen Fabrik-Stufe anpassen
+    if (this.factorySmokeEmitter) {
+      const factoryB = this.buildings.find(b => b.id === 'factory');
+      const refX = (factoryB ? factoryB.gx : 26) * TILE_SIZE;
+      if (fTier === 1) {
+        this.factorySmokeEmitter.setPosition(refX + 13, -39);
+      } else if (fTier === 2) {
+        this.factorySmokeEmitter.setPosition(refX + 19, -54);
+      } else if (fTier === 3) {
+        this.factorySmokeEmitter.setPosition(refX - 23, -64);
+      } else {
+        this.factorySmokeEmitter.setPosition(refX - 22, -70);
+      }
+    }
+  }
+
+  renderSurfaceConveyor() {
+    if (!this.surfaceVisuals.conveyor) return;
+    const g = this.surfaceVisuals.conveyor;
+    g.clear();
+    const startX = 608;
+    const endX = 300;
+    const y = -6;
+
+    // Stützpfeiler
+    g.lineStyle(2, 0x475569, 1);
+    for (let px = endX + 30; px <= startX - 20; px += 50) {
+      g.beginPath();
+      g.moveTo(px, y);
+      g.lineTo(px, 0);
+      g.strokePath();
+    }
+
+    // Förderband-Körper
+    g.fillStyle(0x1e293b, 1);
+    g.fillRect(endX, y - 4, startX - endX, 8);
+
+    g.lineStyle(1.5, 0x0284c7, 0.9);
+    g.beginPath();
+    g.moveTo(endX, y - 4);
+    g.lineTo(startX, y - 4);
+    g.strokePath();
+
+    g.lineStyle(1.5, 0x0f172a, 1);
+    g.beginPath();
+    g.moveTo(endX, y + 4);
+    g.lineTo(startX, y + 4);
+    g.strokePath();
+
+    const t = (Date.now() / 60) % 50;
+    g.fillStyle(0xf59e0b, 1);
+    for (let px = startX - t; px >= endX; px -= 50) {
+      g.fillCircle(px, y - 6, 2.5);
+    }
+  }
+
+  getPneumaticCost(depthMeters) {
+    const d = Math.max(0, depthMeters || 0);
+    if (d <= 180) return 350;
+    if (d <= 950) return 1800;
+    return 7500;
+  }
+
+  getGeothermalCost(depthMeters) {
+    const d = Math.max(0, depthMeters || 0);
+    if (d <= 180) return 500;
+    if (d <= 950) return 2600;
+    return 11000;
+  }
+
+  getAvailableStationCount(player, type, depthMeters) {
+    return getAvailableStationCount(player || this.player, type, depthMeters);
+  }
+
+  getUsableStationKey(player, type, depthMeters) {
+    return getUsableStationKey(player || this.player, type, depthMeters);
+  }
+
+  buyGadget(key, price) {
+    if (!this.player) return false;
+    const itemData = EXPEDITION_ITEMS.find(i => i.key === key);
+    if (itemData && !isExpeditionItemResearched(this.player, itemData)) {
+      soundFx.playError();
+      this.scene.events.emit('notify', `🔒 ${itemData.name} muss zuerst im LABOR erforscht werden!`);
+      return false;
+    }
+    if (this.player.cash < price) {
+      soundFx.playError();
+      this.scene.events.emit('notify', '⚠️ Nicht genug Geld!');
+      return false;
+    }
+    this.player.cash -= price;
+    this.player.gadgets = this.player.gadgets || { dynamite: 0, fuel_canister: 0, repair_kit: 0 };
+    this.player.gadgets[key] = (this.player.gadgets[key] || 0) + 1;
+    soundFx.playPurchase();
+    this.scene.events.emit('player_updated');
+    if (this.scene.hud) this.scene.hud.update();
+    const itemName = itemData ? itemData.name : key;
+    this.scene.events.emit('notify', `Gekauft: 1x ${itemName} für €${price.toLocaleString()}`);
+    return true;
+  }
+
+  getNearbyStation(gx, gy, maxDist = 2.4) {
+    if (!this.subsurfaceStations) return null;
+    let closest = null;
+    let minDist = maxDist;
+    for (const st of this.subsurfaceStations) {
+      const dist = Math.hypot(st.gx - gx, st.gy - gy);
+      if (dist <= minDist) {
+        minDist = dist;
+        closest = st;
+      }
+    }
+    return closest;
+  }
+
+  spawnStationInWorld(st) {
+    const px = st.gx * TILE_SIZE + TILE_SIZE / 2;
+    const py = st.gy * TILE_SIZE + TILE_SIZE / 2;
+
+    const isTube = (st.type === 'pneumatic' || st.type === 'tube');
+    const spriteKey = isTube ? 'station_pneumatic_tube' : 'station_fuel';
+    const sprite = this.scene.add.image(px, py, spriteKey)
+      .setDepth(6)
+      .setOrigin(0.5, 0.5)
+      .setInteractive({ useHandCursor: true });
+
+    const labelText = st.name || (isTube ? 'Förder-Schacht' : 'Tankanlage');
+    const text = this.scene.add.text(px, py - 26, labelText, {
+      fontFamily: 'Plus Jakarta Sans, system-ui, sans-serif',
+      fontSize: '10px',
+      fontStyle: 'bold',
+      color: isTube ? '#38bdf8' : '#fb923c',
+      stroke: '#020617',
+      strokeThickness: 2.5,
+      resolution: 3
+    }).setOrigin(0.5, 0.5).setDepth(20).setInteractive({ useHandCursor: true });
+
+    const onTrigger = (pointer) => {
+      if (isModalActive()) return;
+      const canvas = this.scene.game?.canvas;
+      if (pointer && pointer.event) {
+        const target = pointer.event.target;
+        if (target && canvas && target !== canvas) {
+          return;
+        }
+        if (target && target.closest && target.closest('#building-modal, .modal-backdrop, .modal-window, #ore-info-backdrop, #hud-overlay, #hud-action-fab, .hud-card, button, input, #toast-container')) {
+          return;
+        }
+      }
+      this.handleStationInteraction(st);
+    };
+
+    sprite.on('pointerdown', onTrigger);
+    text.on('pointerdown', onTrigger);
+
+    st.sprite = sprite;
+    st.textLabel = text;
+    return st;
+  }
+
+  buildPneumaticStationAtPlayer() {
+    if (!this.player) return;
+    const depthMeters = Math.max(0, Math.floor(this.player.gy));
+    if (depthMeters < 5) {
+      this.scene.events.emit('notify', '⚠️ Förderstationen können nur unter Tage errichtet werden!');
+      soundFx.playError();
+      return;
+    }
+
+    const nearby = this.getNearbyStation(this.player.gx, this.player.gy, 2.5);
+    if (nearby && (nearby.type === 'pneumatic' || nearby.type === 'tube')) {
+      this.depositOresAtStation(nearby);
+      return;
+    }
+
+    const usableKey = this.getUsableStationKey(this.player, 'tube', depthMeters);
+    if (!usableKey) {
+      const anyTubes = (this.player.gadgets?.tube_s1 || 0) + (this.player.gadgets?.tube_s2 || 0) + (this.player.gadgets?.tube_s3 || 0);
+      if (anyTubes > 0) {
+        this.scene.events.emit('notify', `⚠️ Vorhandene Förderstation reicht nicht bis ${depthMeters}m! Passendes Modul im Depot kaufen.`);
+      } else {
+        this.scene.events.emit('notify', '⚠️ Keine passende Erzförderstation im Inventar! Im Depot kaufen.');
+      }
+      soundFx.playError();
+      return;
+    }
+
+    // Item aus dem Inventar verbrauchen
+    this.player.gadgets[usableKey] = Math.max(0, (this.player.gadgets[usableKey] || 0) - 1);
+
+    const count = (this.subsurfaceStations || []).filter(s => s.type === 'pneumatic' || s.type === 'tube').length + 1;
+    const newStation = {
+      id: 'tube_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      type: 'pneumatic',
+      name: `Förder-Schacht #${count} (${depthMeters}m)`,
+      depth: depthMeters,
+      gx: Math.round(this.player.gx),
+      gy: Math.round(this.player.gy),
+      usedItem: usableKey,
+      isBuilt: true
+    };
+
+    this.subsurfaceStations.push(newStation);
+    this.spawnStationInWorld(newStation);
+    this.depot.capacity = (this.depot.capacity || 10) + 20;
+
+    soundFx.playUpgrade();
+    this.showFloatingText(newStation.gx * TILE_SIZE + 16, newStation.gy * TILE_SIZE - 20, `🏗️ Förderstation #${count} zementiert!`, '#38bdf8');
+    this.scene.events.emit('notify', `🏗️ Förderstation #${count} in ${depthMeters}m Tiefe errichtet! (+20 Depot-Kapazität)`);
+    this.updateSurfaceVisuals();
+    if (this.scene.hud) this.scene.hud.update();
+  }
+
+  buildFuelStationAtPlayer() {
+    if (!this.player) return;
+    const depthMeters = Math.max(0, Math.floor(this.player.gy));
+    if (depthMeters < 5) {
+      this.scene.events.emit('notify', '⚠️ Tankanlagen können nur unter Tage gebaut werden!');
+      soundFx.playError();
+      return;
+    }
+
+    const nearby = this.getNearbyStation(this.player.gx, this.player.gy, 2.5);
+    if (nearby && (nearby.type === 'fuel' || nearby.type === 'geothermal')) {
+      this.scene.events.emit('notify', '⛽ Du bist bereits an einer Tankanlage! Halte an der Station an, um aufzutanken.');
+      return;
+    }
+
+    const usableKey = this.getUsableStationKey(this.player, 'fuel', depthMeters);
+    if (!usableKey) {
+      const anyFuels = (this.player.gadgets?.fuel_s1 || 0) + (this.player.gadgets?.fuel_s2 || 0) + (this.player.gadgets?.fuel_s3 || 0);
+      if (anyFuels > 0) {
+        this.scene.events.emit('notify', `⚠️ Vorhandene Tankanlage reicht nicht bis ${depthMeters}m! Passendes Modul im Depot kaufen.`);
+      } else {
+        this.scene.events.emit('notify', '⚠️ Keine passende Tankanlage im Inventar! Im Depot kaufen.');
+      }
+      soundFx.playError();
+      return;
+    }
+
+    // Item aus dem Inventar verbrauchen
+    this.player.gadgets[usableKey] = Math.max(0, (this.player.gadgets[usableKey] || 0) - 1);
+
+    const count = (this.subsurfaceStations || []).filter(s => s.type === 'fuel' || s.type === 'geothermal').length + 1;
+    const newStation = {
+      id: 'fuel_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      type: 'fuel',
+      name: `Tankanlage #${count} (${depthMeters}m)`,
+      depth: depthMeters,
+      gx: Math.round(this.player.gx),
+      gy: Math.round(this.player.gy),
+      usedItem: usableKey,
+      isBuilt: true
+    };
+
+    this.subsurfaceStations.push(newStation);
+    this.spawnStationInWorld(newStation);
+
+    soundFx.playUpgrade();
+    this.showFloatingText(newStation.gx * TILE_SIZE + 16, newStation.gy * TILE_SIZE - 20, `⛽ Tankanlage #${count} einsatzbereit!`, '#f59e0b');
+    this.scene.events.emit('notify', `⛽ Tankanlage #${count} in ${depthMeters}m Tiefe errichtet! Halte an der Station an, um automatisch aufzutanken.`);
+    this.updateSurfaceVisuals();
+    if (this.scene.hud) this.scene.hud.update();
+  }
+
+  buildGeothermalStationAtPlayer() {
+    return this.buildFuelStationAtPlayer();
+  }
+
+  depositOresAtStation(station) {
+    const cargo = this.player.cargo || [];
+    const ores = [];
+    const kept = [];
+    cargo.forEach(item => {
+      if (typeof item === 'string' && item.startsWith('bar_')) {
+        kept.push(item);
+      } else {
+        ores.push(item);
+      }
+    });
+
+    if (ores.length === 0) {
+      this.scene.events.emit('notify', 'Laderaum enthält keine Roh-Erze zum Absaugen.');
+      return;
+    }
+
+    if (!this.depot.ores) this.depot.ores = {};
+    ores.forEach(ore => {
+      this.depot.ores[ore] = (this.depot.ores[ore] || 0) + 1;
+    });
+    this.player.cargo = kept;
+
+    soundFx.playPneumaticDeposit();
+    const stX = station?.sprite ? station.sprite.x : (this.player.gx * TILE_SIZE + 16);
+    const stY = station?.sprite ? station.sprite.y : (this.player.gy * TILE_SIZE + 16);
+    this.showFloatingText(stX, stY - 30, `▲ ${ores.length}x Erze nach oben gesaugt!`, '#38bdf8');
+    this.scene.events.emit('notify', `🚀 ${ores.length}x Erze durch Förder-Schacht direkt ins Depot befördert!`);
+    if (this.scene.hud) this.scene.hud.update();
+  }
+
+  updateSubsurfaceStations(delta) {
+    // Untertage-Betankung wird vollautomatisch in Player.js (checkDocking)
+    // inklusive mechanischer Roboterarm-Animation, Schlauch-Physik & Audio gesteuert!
+  }
+
+  handleStationInteraction(targetStation) {
+    if (!this.player) return;
+    const playerGx = this.player.gx;
+    const playerGy = this.player.gy;
+
+    let station = targetStation || this.getNearbyStation(playerGx, playerGy, 2.5);
+    if (station) {
+      if (station.type === 'pneumatic' || station.type === 'tube') {
+        this.depositOresAtStation(station);
+      } else if (station.type === 'fuel' || station.type === 'geothermal') {
+        this.scene.events.emit('notify', '⛽ Tankanlage: Halte an der Station an, um automatisch über den Betankungsarm aufzutanken.');
+      }
+    } else {
+      const fab = document.getElementById('hud-action-fab');
+      if (fab) fab.classList.add('open');
+    }
+  }
+
+  showFloatingText(x, y, message, color = '#38bdf8') {
+    if (!this.scene || !this.scene.add) return;
+    const txt = this.scene.add.text(x, y, message, {
+      fontFamily: 'Plus Jakarta Sans, system-ui, sans-serif',
+      fontSize: '12px',
+      fontStyle: 'bold',
+      color: color,
+      stroke: '#020617',
+      strokeThickness: 3,
+      resolution: 3
+    }).setOrigin(0.5, 0.5).setDepth(35);
+
+    this.scene.tweens.add({
+      targets: txt,
+      y: y - 36,
+      alpha: 0,
+      duration: 1600,
+      ease: 'Cubic.easeOut',
+      onComplete: () => txt.destroy()
+    });
+  }
+
+  getSubsurfaceSaveData() {
+    return (this.subsurfaceStations || []).map(st => ({
+      id: st.id,
+      type: st.type,
+      name: st.name,
+      depth: st.depth,
+      isBuilt: !!st.isBuilt,
+      gx: st.gx,
+      gy: st.gy,
+      costCash: st.costCash
+    }));
+  }
+
+  loadSubsurfaceSaveData(data) {
+    if (!Array.isArray(data)) return;
+    if (this.subsurfaceStations) {
+      this.subsurfaceStations.forEach(st => {
+        if (st.sprite) st.sprite.destroy();
+        if (st.textLabel) st.textLabel.destroy();
+      });
+    }
+    this.subsurfaceStations = [];
+    data.forEach(saved => {
+      const isFuel = saved.type === 'fuel' || saved.type === 'geothermal' || (saved.id && (saved.id.startsWith('geo') || saved.id.startsWith('fuel')));
+      const st = {
+        id: saved.id,
+        type: isFuel ? 'fuel' : 'pneumatic',
+        name: saved.name || (isFuel ? 'Tankanlage' : 'Förder-Schacht'),
+        depth: saved.depth || saved.gy || 0,
+        gx: saved.gx,
+        gy: saved.gy,
+        costCash: saved.costCash || 250,
+        isBuilt: !!saved.isBuilt
+      };
+      this.subsurfaceStations.push(st);
+      if (st.isBuilt) {
+        this.spawnStationInWorld(st);
+      }
+    });
+    this.updateSurfaceVisuals();
   }
 
   openModal(title, contentHtml) {
@@ -1689,13 +2485,16 @@ export class BaseSystem {
     this.updateHangarBuildingLabel();
   }
 
-  openDepotModal() {
+  openDepotModal(tab = null) {
     this.isDepotModalOpen = true;
     if (this.scene) {
       this.scene.isPaused = true;
     }
     if (!this.depot) {
       this.depot = { ores: {}, products: {}, capacity: 10, tier: 1 };
+    }
+    if (tab && ['storage', 'upgrades', 'shop'].includes(tab)) {
+      this.depot.currentTab = tab;
     }
     this.renderDepotModal();
   }
@@ -1832,48 +2631,7 @@ export class BaseSystem {
       </div>
     `;
 
-    // 2. Depot-Ausbau Banner / Card
-    let upgradeSnippetHtml = '';
-    if (nextTierData) {
-      const compBadgesHtml = nextTierData.costComp ? Object.entries(nextTierData.costComp).map(([compKey, need]) => {
-        const have = this.player.components[compKey] || 0;
-        const isMet = have >= need;
-        const compIconName = COMPONENT_ICONS[compKey] || 'box';
-        const cName = COMPONENT_DATA[compKey]?.name || compKey;
-        return `
-          <span style="background: rgba(192, 132, 252, 0.14); color: ${isMet ? '#c084fc' : '#ef4444'}; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">
-            ${icon(compIconName, '', 11)} ${need}x ${cName} <span style="font-size: 9.5px; opacity: 0.85; font-variant-numeric: tabular-nums;">(${have}/${need})</span>
-          </span>
-        `;
-      }).join('') : '';
-
-      upgradeSnippetHtml = `
-        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.7); padding: 8px 12px; border-radius: 10px; gap: 10px; flex-wrap: wrap;">
-          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <strong style="color: #38bdf8; font-size: 12px;">Stufe ${nextTierData.tier}: ${nextTierData.label}</strong>
-            <span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-weight: 800; font-size: 11px; padding: 1px 7px; border-radius: 6px;">
-              +${nextTierData.capacity - capacity} Plätze (${nextTierData.capacity})
-            </span>
-          </div>
-          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <span style="background: rgba(251, 191, 36, 0.14); color: ${this.player.cash >= nextTierData.costCash ? '#fbbf24' : '#ef4444'}; font-weight: 800; font-size: 11px; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; font-variant-numeric: tabular-nums;">
-              ${icon('coins', '', 11)} €${nextTierData.costCash.toLocaleString()}
-            </span>
-            ${compBadgesHtml}
-            <button id="btn-depot-upgrade" class="btn-buy" style="height: 28px; padding: 0 12px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 5px;" ${canAffordDepot ? '' : 'disabled'}>
-              ${icon('wrench', '', 12)}
-              <span>Ausbauen</span>
-            </button>
-          </div>
-        </div>
-      `;
-    } else {
-      upgradeSnippetHtml = `
-        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; padding: 6px 12px; text-align: center; color: #10b981; font-weight: 800; font-size: 11.5px;">
-          MAXIMALER DEPOT-AUSBAU ERREICHT (${capacity} PLÄTZE)
-        </div>
-      `;
-    }
+    // 2. OBERES INVENTAR: ERZE & MINERALIEN
 
     // 3. OBERES INVENTAR: ERZE & MINERALIEN
     let oresItemsHtml = '';
@@ -2225,30 +2983,331 @@ export class BaseSystem {
       </div>
     `;
 
-    // Zusammenbau des scrollbaren Modals genau wie beim Bohrermenü
-    this.modalBodyEl.innerHTML = `
-      <div style="display: flex; flex-direction: column; max-width: 620px; margin: 0 auto; width: 100%; box-sizing: border-box; padding: 0 4px 54px 4px; gap: 14px;">
-        ${statusBarsHtml}
-        ${upgradeSnippetHtml}
-        ${oresSectionHtml}
-        ${goodsSectionHtml}
+    // --- TAB-SYSTEM: 1. LAGER | 2. AUSBAU | 3. SHOP ---
+    if (!this.depot.currentTab || !['storage', 'upgrades', 'shop'].includes(this.depot.currentTab)) {
+      this.depot.currentTab = 'storage';
+    }
+    const currentTab = this.depot.currentTab;
+
+    const depotTabs = [
+      { id: 'storage', label: 'Lager', icon: 'warehouse', badge: `${totalStored}/${capacity}` },
+      { id: 'upgrades', label: 'Ausbau', icon: 'arrow-up-circle', badge: `Stufe ${currentTier}` },
+      { id: 'shop', label: 'Shop', icon: 'shopping-bag', badge: 'Ausrüstung' }
+    ];
+
+    const tabNavHtml = `
+      <div style="display: flex; gap: 8px; margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 10px;">
+        ${depotTabs.map(t => {
+          const isActive = currentTab === t.id;
+          return `
+            <button class="depot-tab-btn tab-btn" data-tab="${t.id}" style="
+              flex: 1;
+              height: 36px;
+              box-sizing: border-box;
+              background: ${isActive ? 'linear-gradient(180deg, #0284c7 0%, #0369a1 100%)' : 'rgba(15,23,42,0.6)'};
+              border: 1px solid ${isActive ? '#38bdf8' : 'rgba(255,255,255,0.08)'};
+              border-bottom: ${isActive ? '3px solid #075985' : '1px solid rgba(255,255,255,0.08)'};
+              color: ${isActive ? '#ffffff' : '#94a3b8'};
+              padding: 0 10px;
+              font-size: 12px;
+              font-weight: 700;
+              border-radius: 8px;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              gap: 6px;
+              cursor: pointer;
+              transition: all 0.15s ease;
+            ">
+              ${icon(t.icon, '', 14)}
+              <span>${t.label}</span>
+              <span style="font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 99px; background: ${isActive ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.3)'}; color: ${isActive ? '#ffffff' : '#64748b'};">
+                ${t.badge}
+              </span>
+            </button>
+          `;
+        }).join('')}
       </div>
     `;
 
-    this.setFloatingAction(`
-      <button id="btn-depot-all-ores" class="btn-buy btn-flyover" style="gap: 6px;" ${playerCargoOreLength > 0 && freeDepot > 0 ? '' : 'disabled'}>
-        ${icon('arrow-down-to-line', '', 14)}
-        <span>Erze einlagern (${playerCargoOreLength})</span>
-      </button>
-    `, (container) => {
-      const btn = container.querySelector('#btn-depot-all-ores');
-      if (btn) {
-        btn.onclick = (e) => {
-          e.stopPropagation();
-          this.depositAllOres();
-        };
+    let tabContentHtml = '';
+
+    if (currentTab === 'storage') {
+      tabContentHtml = `
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          ${statusBarsHtml}
+          ${oresSectionHtml}
+          ${goodsSectionHtml}
+        </div>
+      `;
+    } else if (currentTab === 'upgrades') {
+      const curTierInfo = DEPOT_TIERS.find(t => t.tier === currentTier) || DEPOT_TIERS[0];
+      let segmentsHtml = '<div class="segmented-progress-bar">';
+      for (let s = 1; s <= DEPOT_TIERS.length; s++) {
+        if (s <= currentTier) {
+          segmentsHtml += `
+            <div class="seg-step completed${s === currentTier ? ' current' : ''}">
+              <span><span class="step-label">Stufe </span>${s}</span>
+            </div>
+          `;
+        } else if (s === currentTier + 1) {
+          segmentsHtml += `
+            <div class="seg-step active">
+              <span><span class="step-label">Stufe </span>${s}</span>
+            </div>
+          `;
+        } else {
+          segmentsHtml += `
+            <div class="seg-step locked">
+              <span><span class="step-label">Stufe </span>${s}</span>
+            </div>
+          `;
+        }
       }
-    });
+      segmentsHtml += '</div>';
+
+      let upgradeActionCard = '';
+      if (nextTierData) {
+        const compBadgesHtml = nextTierData.costComp ? Object.entries(nextTierData.costComp).map(([compKey, need]) => {
+          const have = this.player.components[compKey] || 0;
+          const isMet = have >= need;
+          const compIconName = COMPONENT_ICONS[compKey] || 'box';
+          const cName = COMPONENT_DATA[compKey]?.name || compKey;
+          return `
+            <span style="background: rgba(192, 132, 252, 0.14); color: ${isMet ? '#c084fc' : '#ef4444'}; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">
+              ${icon(compIconName, '', 11)} ${need}x ${cName} <span style="font-size: 9.5px; opacity: 0.85; font-variant-numeric: tabular-nums;">(${have}/${need})</span>
+            </span>
+          `;
+        }).join('') : '';
+
+        upgradeActionCard = `
+          <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 13.5px; font-weight: 800; color: #38bdf8;">Nächster Ausbau: Stufe ${nextTierData.tier}</span>
+                <span style="font-size: 11px; font-weight: 700; color: #10b981; background: rgba(16,185,129,0.15); padding: 2px 8px; border-radius: 6px;">
+                  +${nextTierData.capacity - capacity} Plätze (${nextTierData.capacity} gesamt)
+                </span>
+              </div>
+              <div style="font-size: 11.5px; color: #94a3b8;">${nextTierData.label}</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+              <span style="background: rgba(251, 191, 36, 0.14); color: ${this.player.cash >= nextTierData.costCash ? '#fbbf24' : '#ef4444'}; font-weight: 800; font-size: 12px; padding: 3px 9px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+                ${icon('coins', '', 12)} €${nextTierData.costCash.toLocaleString()}
+              </span>
+              ${compBadgesHtml}
+              <button id="btn-depot-upgrade" class="btn-buy" style="height: 32px; padding: 0 14px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px;" ${canAffordDepot ? '' : 'disabled'}>
+                ${icon('wrench', '', 14)}
+                <span>Depot Ausbauen</span>
+              </button>
+            </div>
+          </div>
+        `;
+      } else {
+        upgradeActionCard = `
+          <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 12px; text-align: center; color: #10b981; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            ${icon('award', '', 18)}
+            <span>MAXIMALER DEPOT-AUSBAU ERREICHT (3.000 PLÄTZE)</span>
+          </div>
+        `;
+      }
+
+      // Alle 10 Tiers Liste
+      const tiersListHtml = DEPOT_TIERS.map(t => {
+        const isCurrent = t.tier === currentTier;
+        const isUnlocked = t.tier <= currentTier;
+        const isNext = t.tier === currentTier + 1;
+        let statusBadge = '';
+        if (isCurrent) {
+          statusBadge = `<span style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; font-weight: 800; font-size: 10px; padding: 2px 7px; border-radius: 6px;">AKTUELL</span>`;
+        } else if (isUnlocked) {
+          statusBadge = `<span style="background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 800; font-size: 10px; padding: 2px 7px; border-radius: 6px;">ERREICHT</span>`;
+        } else if (isNext) {
+          statusBadge = `<span style="background: rgba(251, 191, 36, 0.15); color: #fbbf24; font-weight: 800; font-size: 10px; padding: 2px 7px; border-radius: 6px;">NÄCHSTE</span>`;
+        } else {
+          statusBadge = `<span style="background: rgba(100, 116, 139, 0.2); color: #64748b; font-weight: 700; font-size: 10px; padding: 2px 7px; border-radius: 6px;">GESPERRT</span>`;
+        }
+
+        const costStr = t.costCash === 0 ? 'Kostenlos' : `€${t.costCash.toLocaleString()}${t.compName ? ` + ${t.compName}` : ''}`;
+
+        return `
+          <div style="background: ${isCurrent ? 'rgba(56, 189, 248, 0.08)' : 'rgba(15, 23, 42, 0.5)'}; border: 1px solid ${isCurrent ? 'rgba(56, 189, 248, 0.3)' : 'rgba(255, 255, 255, 0.05)'}; border-radius: 8px; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 11px; font-weight: 800; color: ${isUnlocked ? '#38bdf8' : '#64748b'}; width: 22px;">T${t.tier}</span>
+              <div>
+                <div style="font-size: 12px; font-weight: 700; color: ${isUnlocked ? '#f8fafc' : '#94a3b8'};">${t.label}</div>
+                <div style="font-size: 10.5px; color: #64748b;">${costStr}</div>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 12px; font-weight: 800; color: ${isUnlocked ? '#10b981' : '#64748b'}; font-variant-numeric: tabular-nums;">
+                ${t.capacity} Plätze
+              </span>
+              ${statusBadge}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      tabContentHtml = `
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="background: rgba(15, 23, 42, 0.7); border-radius: 12px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 38px; height: 38px; border-radius: 8px; background: rgba(56,189,248,0.15); display: flex; align-items: center; justify-content: center; color: #38bdf8;">
+                ${icon('warehouse', '', 20)}
+              </div>
+              <div>
+                <div style="font-size: 13.5px; font-weight: 800; color: #f8fafc;">Stufe ${currentTier} von 10: ${curTierInfo.label}</div>
+                <div style="font-size: 11px; color: #94a3b8;">Lagerkapazität: ${capacity} Plätze (${totalStored} belegt)</div>
+              </div>
+            </div>
+            <span style="font-size: 13px; font-weight: 800; color: #38bdf8; background: rgba(56,189,248,0.15); padding: 4px 10px; border-radius: 8px;">
+              ${occPct}% Belegt
+            </span>
+          </div>
+
+          ${segmentsHtml}
+          ${upgradeActionCard}
+
+          <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px;">
+            <span style="font-size: 11.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 5px;">
+              ${icon('list', '', 12)} Alle Ausbaustufen (1–10)
+            </span>
+            ${tiersListHtml}
+          </div>
+        </div>
+      `;
+    } else if (currentTab === 'shop') {
+      const currentGadgets = this.player.gadgets || {};
+      const gadgetsItems = EXPEDITION_ITEMS.filter(i => i.category === 'gadget');
+      const stationItems = EXPEDITION_ITEMS.filter(i => i.category === 'station');
+
+      const renderShopItem = (item) => {
+        const count = currentGadgets[item.key] || 0;
+        const canAfford = this.player.cash >= item.price;
+        const isResearched = isExpeditionItemResearched(this.player, item);
+        const isStation = item.category === 'station';
+        const badgeColor = isStation ? (item.stationType === 'tube' ? '#38bdf8' : '#f59e0b') : '#a855f7';
+        const badgeBg = isStation ? (item.stationType === 'tube' ? 'rgba(56,189,248,0.15)' : 'rgba(245,158,11,0.15)') : 'rgba(168,85,247,0.15)';
+
+        return `
+          <div style="
+            background: ${isResearched ? 'rgba(15, 23, 42, 0.7)' : 'rgba(15, 23, 42, 0.45)'};
+            border: 1px solid ${isResearched ? 'rgba(255,255,255,0.07)' : 'rgba(239, 68, 68, 0.2)'};
+            border-radius: 10px;
+            padding: 9px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            opacity: ${isResearched ? '1' : '0.85'};
+          ">
+            <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+              <div style="font-size: 20px; width: 36px; height: 36px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.35); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                ${item.icon}
+              </div>
+              <div style="min-width: 0;">
+                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                  <span style="font-size: 12.5px; font-weight: 700; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.name}</span>
+                  <span style="font-size: 9.5px; font-weight: 800; padding: 1px 6px; border-radius: 5px; background: ${badgeBg}; color: ${badgeColor}; white-space: nowrap;">${item.badge}</span>
+                  ${!isResearched ? `<span style="font-size: 9.5px; font-weight: 800; padding: 1px 6px; border-radius: 5px; background: rgba(239, 68, 68, 0.18); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); white-space: nowrap;">🔒 Nicht erforscht</span>` : ''}
+                </div>
+                <div style="font-size: 10.5px; color: #94a3b8; line-height: 1.3; margin-top: 1px;">
+                  ${item.desc}
+                  ${!isResearched ? `<span style="color: #ef4444; font-weight: 700; display: block; margin-top: 2px;">⚠️ Im LABOR erforschen: ${item.reqResearch?.label || 'Labor'}</span>` : ''}
+                </div>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+              ${isResearched ? `
+                <span style="font-size: 11px; font-weight: 700; color: ${count > 0 ? '#38bdf8' : '#64748b'}; background: rgba(0,0,0,0.3); padding: 2px 7px; border-radius: 6px; white-space: nowrap; font-variant-numeric: tabular-nums;">
+                  ${count}x
+                </span>
+                <button id="btn-buy-${item.key}" class="btn-buy-gadget btn-buy" data-gadget="${item.key}" data-price="${item.price}" style="height: 28px; padding: 0 10px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; background: ${canAfford ? 'linear-gradient(135deg, #10b981, #059669)' : '#334155'}; color: ${canAfford ? '#ffffff' : '#94a3b8'};" ${canAfford ? '' : 'disabled'}>
+                  + Kaufen (€${item.price.toLocaleString()})
+                </button>
+              ` : `
+                <button class="btn-buy" disabled style="height: 28px; padding: 0 10px; font-size: 10.5px; font-weight: 700; background: #1e293b; border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; display: inline-flex; align-items: center; gap: 4px; opacity: 0.85;">
+                  ${icon('lock', '', 12)}
+                  <span>Labor</span>
+                </button>
+              `}
+            </div>
+          </div>
+        `;
+      };
+
+      tabContentHtml = `
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.6); padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.06);">
+            <span style="font-size: 12px; color: #94a3b8;">Verfügbares Guthaben:</span>
+            <span style="font-size: 13.5px; font-weight: 800; color: #fbbf24; display: inline-flex; align-items: center; gap: 4px;">
+              ${icon('coins', '', 13)} €${this.player.cash.toLocaleString()}
+            </span>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <span style="font-size: 11.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 5px;">
+              ${icon('package', '', 12)} Expeditions- & Notfallausrüstung
+            </span>
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              ${gadgetsItems.map(renderShopItem).join('')}
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <span style="font-size: 11.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 5px;">
+              ${icon('anchor', '', 12)} Untertage-Infrastruktur & Stationen
+            </span>
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              ${stationItems.map(renderShopItem).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Zusammenbau des scrollbaren Modals
+    this.modalBodyEl.innerHTML = `
+      <div style="display: flex; flex-direction: column; max-width: 620px; margin: 0 auto; width: 100%; box-sizing: border-box; padding: 0 4px 54px 4px; gap: 14px;">
+        ${tabNavHtml}
+        ${tabContentHtml}
+      </div>
+    `;
+
+    if (currentTab === 'storage') {
+      this.setFloatingAction(`
+        <button id="btn-depot-all-ores" class="btn-buy btn-flyover" style="gap: 6px;" ${playerCargoOreLength > 0 && freeDepot > 0 ? '' : 'disabled'}>
+          ${icon('arrow-down-to-line', '', 14)}
+          <span>Erze einlagern (${playerCargoOreLength})</span>
+        </button>
+      `, (container) => {
+        const btn = container.querySelector('#btn-depot-all-ores');
+        if (btn) {
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            this.depositAllOres();
+          };
+        }
+      });
+    } else if (currentTab === 'upgrades' && nextTierData && canAffordDepot) {
+      this.setFloatingAction(`
+        <button id="btn-depot-floating-upgrade" class="btn-buy btn-flyover" style="gap: 6px; background: linear-gradient(135deg, #10b981, #059669);">
+          ${icon('wrench', '', 14)}
+          <span>Depot ausbauen auf Stufe ${nextTierData.tier}</span>
+        </button>
+      `, (container) => {
+        const btn = container.querySelector('#btn-depot-floating-upgrade');
+        if (btn) {
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            this.upgradeDepot();
+          };
+        }
+      });
+    } else {
+      this.clearFloatingAction();
+    }
 
     document.body.classList.add('modal-open');
     this.modalEl.style.display = 'flex';
@@ -2261,6 +3320,18 @@ export class BaseSystem {
   attachDepotEventListeners() {
     const body = this.modalBodyEl;
     if (!body) return;
+
+    // Tab-Umschaltung
+    body.querySelectorAll('.depot-tab-btn').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const tab = btn.getAttribute('data-tab');
+        if (tab) {
+          this.depot.currentTab = tab;
+          this.renderDepotModal();
+        }
+      };
+    });
 
     // Bulk Aktionen: Nur Erze aus dem Bohrer einlagern
     const btnAllOres = document.getElementById('btn-depot-all-ores');
@@ -2282,11 +3353,33 @@ export class BaseSystem {
       };
     });
 
-    // Ausbau
+    // Ausbau (in Tab 2 oder Floating)
     const btnUpgrade = body.querySelector('#btn-depot-upgrade');
     if (btnUpgrade) {
-      btnUpgrade.onclick = () => this.upgradeDepot();
+      btnUpgrade.onclick = (e) => {
+        e.stopPropagation();
+        this.upgradeDepot();
+      };
     }
+    const btnFloatingUpgrade = document.getElementById('btn-depot-floating-upgrade');
+    if (btnFloatingUpgrade) {
+      btnFloatingUpgrade.onclick = (e) => {
+        e.stopPropagation();
+        this.upgradeDepot();
+      };
+    }
+
+    // Expeditions-Ausrüstung & Untertage-Stationen kaufen
+    body.querySelectorAll('.btn-buy-gadget').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const key = btn.getAttribute('data-gadget');
+        const price = parseInt(btn.getAttribute('data-price'), 10);
+        if (this.buyGadget(key, price)) {
+          this.renderDepotModal();
+        }
+      };
+    });
   }
 
   depositOre(oreKey, count = 1) {
@@ -2660,6 +3753,7 @@ export class BaseSystem {
     this.depot.tier = nextTierData.tier;
     this.depot.capacity = nextTierData.capacity;
 
+    this.updateBuildingVisuals();
     soundFx.playUpgrade();
     this.renderDepotModal();
     if (this.scene.hud) this.scene.hud.update();
@@ -2815,10 +3909,52 @@ export class BaseSystem {
   // =========================================================
   // 3. TECH-LABOR (KOMPLEXES UPGRADE-SYSTEM OHNE FILTERLEISTE)
   // =========================================================
-  openLabModal() {
+  openLabModal(tab = null) {
     const p = this.player;
+    if (tab && ['vehicle', 'infrastructure', 'infra'].includes(tab)) {
+      this.activeLabTab = tab === 'infra' ? 'infrastructure' : tab;
+    }
+    if (!this.activeLabTab) this.activeLabTab = 'vehicle';
+    const activeLabTab = this.activeLabTab;
 
-    const tracks = [
+    const labTabs = [
+      { id: 'vehicle', label: 'Bohrfahrzeug-Module', icon: 'wrench' },
+      { id: 'infrastructure', label: 'Infrastruktur & Expedition', icon: 'package' }
+    ];
+
+    const tabNavHtml = `
+      <div style="display: flex; gap: 8px; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 10px;">
+        ${labTabs.map(t => {
+          const isActive = activeLabTab === t.id;
+          return `
+            <button class="lab-tab-btn tab-btn" data-tab="${t.id}" style="
+              flex: 1;
+              height: 36px;
+              box-sizing: border-box;
+              background: ${isActive ? 'linear-gradient(180deg, #0284c7 0%, #0369a1 100%)' : 'rgba(15,23,42,0.6)'};
+              border: 1px solid ${isActive ? '#38bdf8' : 'rgba(255,255,255,0.08)'};
+              border-bottom: ${isActive ? '3px solid #075985' : '1px solid rgba(255,255,255,0.08)'};
+              color: ${isActive ? '#ffffff' : '#94a3b8'};
+              padding: 0 10px;
+              font-size: 12px;
+              font-weight: 700;
+              border-radius: 8px;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              gap: 6px;
+              cursor: pointer;
+              transition: all 0.15s ease;
+            ">
+              ${icon(t.icon, '', 14)}
+              <span>${t.label}</span>
+            </button>
+          `;
+        }).join('')}
+      </div>
+    `;
+
+    const vehicleTracks = [
       {
         id: 'tank',
         title: 'TREIBSTOFF-TANK',
@@ -2893,11 +4029,140 @@ export class BaseSystem {
       }
     ];
 
-    // Feste Kategorien mit Segmented Progress Bar (OHNE Filterleiste!)
+    const infraTracks = [
+      {
+        id: 'tnt',
+        title: 'SPRENGTECHNIK & DYNAMIT (TNT)',
+        iconName: 'flame',
+        currentTier: p.researchedTnt || 0,
+        installedTier: p.researchedTnt || 0,
+        maxTier: 1,
+        tiers: [
+          {
+            tier: 1,
+            name: 'Dynamit-Sprengsatz Mk.I (TNT)',
+            stat: '3x3 Feld Sprengung',
+            cost: 350,
+            level: 1,
+            comp: { key: 'iron_tube', name: 'Stahl-Rohr', count: 1 },
+            desc: 'Erforscht die kontrollierte Gesteinssprengung. Schaltet Dynamit im Depot-Shop frei.'
+          }
+        ],
+        apply: (tier) => {
+          p.researchedTnt = tier;
+        }
+      },
+      {
+        id: 'emergency_gear',
+        title: 'NOTFALL-EXPEDITIONSAUSRÜSTUNG',
+        iconName: 'package',
+        currentTier: p.researchedEmergency || 0,
+        installedTier: p.researchedEmergency || 0,
+        maxTier: 1,
+        tiers: [
+          {
+            tier: 1,
+            name: 'Treibstoffkanister & Feld-Reparatur-Kits',
+            stat: '+20L Tank & +40HP Reparatur',
+            cost: 200,
+            level: 1,
+            comp: null,
+            desc: 'Schaltet Notfall-Treibstoffkanister und Feld-Reparatur-Kits im Depot-Shop frei.'
+          }
+        ],
+        apply: (tier) => {
+          p.researchedEmergency = tier;
+        }
+      },
+      {
+        id: 'station_tube',
+        title: 'UNTERTAGE-ERZFÖRDERSCHÄCHTE',
+        iconName: 'rocket',
+        currentTier: p.researchedStationTube || 0,
+        installedTier: p.researchedStationTube || 0,
+        maxTier: 3,
+        tiers: [
+          {
+            tier: 1,
+            name: 'Förderschacht Schicht 1 & 2',
+            stat: '0–180m Tiefe (Humus & Schiefer)',
+            cost: 350,
+            level: 1,
+            comp: { key: 'iron_tube', name: 'Stahl-Rohr', count: 1 },
+            desc: 'Schaltet pneumatische Förderschächte für Schicht 1 & 2 im Depot-Shop frei.'
+          },
+          {
+            tier: 2,
+            name: 'Förderschacht Schicht 3 & 4',
+            stat: '180–950m Tiefe (Granit & Obsidian)',
+            cost: 1600,
+            level: 2,
+            comp: { key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1 },
+            desc: 'Schaltet druckfeste Förderschächte für Schicht 3 & 4 im Depot-Shop frei.'
+          },
+          {
+            tier: 3,
+            name: 'Förderschacht Schicht 5 (Urgestein)',
+            stat: '>950m Tiefe (Urgestein)',
+            cost: 6500,
+            level: 4,
+            comp: { key: 'titan_bolt', name: 'Titan-Bolzen', count: 1 },
+            desc: 'Schaltet Tiefen-Förderschächte für Urgestein (>950m) im Depot-Shop frei.'
+          }
+        ],
+        apply: (tier) => {
+          p.researchedStationTube = tier;
+        }
+      },
+      {
+        id: 'station_fuel',
+        title: 'UNTERTAGE-TANKANLAGEN',
+        iconName: 'fuel',
+        currentTier: p.researchedStationFuel || 0,
+        installedTier: p.researchedStationFuel || 0,
+        maxTier: 3,
+        tiers: [
+          {
+            tier: 1,
+            name: 'Tankanlage Schicht 1 & 2',
+            stat: '0–180m Tiefe (Humus & Schiefer)',
+            cost: 450,
+            level: 1,
+            comp: { key: 'iron_tube', name: 'Stahl-Rohr', count: 1 },
+            desc: 'Schaltet Untertage-Tankanlagen für Schicht 1 & 2 im Depot-Shop frei.'
+          },
+          {
+            tier: 2,
+            name: 'Tankanlage Schicht 3 & 4',
+            stat: '180–950m Tiefe (Granit & Obsidian)',
+            cost: 2200,
+            level: 2,
+            comp: { key: 'silver_coil', name: 'Silber-Spule', count: 1 },
+            desc: 'Schaltet Hochdruck-Tankanlagen für Schicht 3 & 4 im Depot-Shop frei.'
+          },
+          {
+            tier: 3,
+            name: 'Tankanlage Schicht 5 (Urgestein)',
+            stat: '>950m Tiefe (Urgestein)',
+            cost: 8500,
+            level: 4,
+            comp: { key: 'crystal_lens', name: 'Kristall-Linse', count: 1 },
+            desc: 'Schaltet thermo-resistente Tankanlagen für Urgestein (>950m) im Depot-Shop frei.'
+          }
+        ],
+        apply: (tier) => {
+          p.researchedStationFuel = tier;
+        }
+      }
+    ];
+
+    const tracks = activeLabTab === 'infrastructure' ? infraTracks : vehicleTracks;
+
+    // Feste Kategorien mit Segmented Progress Bar
     let cardsHtml = '<div class="tech-lab-categories" style="display: flex; flex-direction: column; gap: 14px;">';
 
     tracks.forEach((track) => {
-      const currentTierData = track.tiers[track.currentTier - 1];
+      const currentTierData = track.currentTier > 0 ? track.tiers[track.currentTier - 1] : { stat: 'Nicht erforscht' };
       const hasNext = track.currentTier < track.maxTier;
       const nextTier = hasNext ? track.tiers[track.currentTier] : null;
 
@@ -3000,6 +4265,8 @@ export class BaseSystem {
         `;
       }
 
+      const showInstalledBadge = track.installedTier !== undefined && track.installedTier > 0 && track.installedTier < track.currentTier && activeLabTab === 'vehicle';
+
       cardsHtml += `
         <div class="tech-category-card" id="cat-block-${track.id}">
           <div class="cat-header-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3008,8 +4275,8 @@ export class BaseSystem {
               <span>${track.title}</span>
             </div>
             <div class="cat-status-pill" style="font-size: 11px; color: #94a3b8; display: flex; align-items: center; gap: 8px;">
-              <span>Erforscht: Stufe ${track.currentTier}/${track.maxTier} • <strong style="color: #10b981;">${currentTierData.stat}</strong></span>
-              ${(track.installedTier !== undefined && track.installedTier < track.currentTier) ? `<span style="color: #f59e0b; font-weight: 700; background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); padding: 2px 6px; border-radius: 4px; white-space: nowrap;">Montiert: Stufe ${track.installedTier} – Hangar!</span>` : ''}
+              <span>Erforscht: Stufe ${track.currentTier}/${track.maxTier} • <strong style="color: ${track.currentTier > 0 ? '#10b981' : '#94a3b8'};">${currentTierData.stat}</strong></span>
+              ${showInstalledBadge ? `<span style="color: #f59e0b; font-weight: 700; background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); padding: 2px 6px; border-radius: 4px; white-space: nowrap;">Montiert: Stufe ${track.installedTier} – Hangar!</span>` : ''}
             </div>
           </div>
 
@@ -3020,13 +4287,28 @@ export class BaseSystem {
     });
     cardsHtml += '</div>';
 
-    const fullContent = cardsHtml;
+    const fullContent = tabNavHtml + cardsHtml;
     this.openModal(`
       <div style="display: flex; align-items: center; gap: 8px;">
         ${icon('microscope', '', 18)}
         <span>LABOR</span>
       </div>
     `, fullContent);
+
+    // Tab-Buttons Event Listener
+    const modalBody = this.modalBodyEl;
+    if (modalBody) {
+      modalBody.querySelectorAll('.lab-tab-btn').forEach(btn => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          const tab = btn.getAttribute('data-tab');
+          if (tab) {
+            this.activeLabTab = tab;
+            this.openLabModal();
+          }
+        };
+      });
+    }
 
     // Kauf-Buttons Event Listener
     tracks.forEach((track) => {
@@ -3045,15 +4327,20 @@ export class BaseSystem {
               p.components[nextTier.comp.key] -= nextTier.comp.count;
             }
             track.apply(track.currentTier + 1);
+            this.updateBuildingVisuals();
             soundFx.playPurchase();
             this.openLabModal();
-            this.scene.events.emit('notify', `Bauplan für ${nextTier.name} erforscht! Im HANGAR montieren.`);
+
+            let notifyMsg = `Bauplan für ${nextTier.name} erforscht! Im HANGAR montieren.`;
+            if (track.id === 'tnt') notifyMsg = `💥 Sprengtechnik (${nextTier.name}) erforscht! Jetzt im Depot-Shop erhältlich.`;
+            else if (track.id === 'emergency_gear') notifyMsg = `🧰 Notfall-Versorgung (${nextTier.name}) erforscht! Jetzt im Depot-Shop erhältlich.`;
+            else if (track.id === 'station_tube') notifyMsg = `🚀 Förderschächte (${nextTier.name}) erforscht! Jetzt im Depot-Shop erhältlich.`;
+            else if (track.id === 'station_fuel') notifyMsg = `⛽ Tankanlagen (${nextTier.name}) erforscht! Jetzt im Depot-Shop erhältlich.`;
+            this.scene.events.emit('notify', notifyMsg);
           }
         };
       }
     });
-
-
   }
 
   // =========================================================
@@ -3717,47 +5004,30 @@ export class BaseSystem {
       </div>
     `;
 
-    const gadgetsData = [
-      {
-        key: 'dynamite',
-        name: 'Dynamit-Sprengsatz',
-        desc: 'Sprengt ein 3x3 Feld frei und birgt Erze sofort. (Hot-Key: B, T oder 1)',
-        price: 250,
-        icon: '🧨'
-      },
-      {
-        key: 'fuel_canister',
-        name: 'Notfall-Treibstoffkanister',
-        desc: 'Füllt unter Tage sofort +20L Treibstoff nach. (Hot-Key: F oder 2)',
-        price: 120,
-        icon: '⛽'
-      },
-      {
-        key: 'repair_kit',
-        name: 'Feld-Reparatur-Kit',
-        desc: 'Repariert im Notfall sofort +40 HP Panzerung. (Hot-Key: R oder 3)',
-        price: 180,
-        icon: '🧰'
-      }
-    ];
-
     const currentGadgets = this.player.gadgets || { dynamite: 0, fuel_canister: 0, repair_kit: 0 };
-    const gadgetsCardsHtml = gadgetsData.map(g => {
+    const gadgetsCardsHtml = EXPEDITION_ITEMS.map(g => {
       const count = currentGadgets[g.key] || 0;
       const canAfford = this.player.cash >= g.price;
+      const isStation = g.category === 'station';
+      const badgeColor = isStation ? (g.stationType === 'tube' ? '#38bdf8' : '#f59e0b') : '#a855f7';
+      const badgeBg = isStation ? (g.stationType === 'tube' ? 'rgba(56,189,248,0.15)' : 'rgba(245,158,11,0.15)') : 'rgba(168,85,247,0.15)';
+
       return `
         <div style="background: rgba(15,23,42,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
           <div style="display: flex; align-items: center; gap: 10px;">
             <div style="font-size: 22px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); border-radius: 8px;">${g.icon}</div>
             <div>
-              <div style="font-size: 13px; font-weight: 700; color: #f8fafc;">${g.name}</div>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <div style="font-size: 13px; font-weight: 700; color: #f8fafc;">${g.name}</div>
+                <span style="font-size: 9.5px; font-weight: 800; padding: 1px 6px; border-radius: 5px; background: ${badgeBg}; color: ${badgeColor};">${g.badge}</span>
+              </div>
               <div style="font-size: 11px; color: #94a3b8;">${g.desc}</div>
             </div>
           </div>
           <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
             <span style="font-size: 11px; background: rgba(56,189,248,0.15); color: #38bdf8; font-weight: 700; padding: 2px 8px; border-radius: 6px;">Vorrat: ${count}</span>
             <button class="btn-buy-gadget btn-buy" data-gadget="${g.key}" data-price="${g.price}" style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 800; background: ${canAfford ? 'linear-gradient(135deg, #10b981, #059669)' : '#334155'}; color: ${canAfford ? '#ffffff' : '#94a3b8'};" ${canAfford ? '' : 'disabled'}>
-              + Kaufen ($${g.price})
+              + Kaufen (€${g.price.toLocaleString()})
             </button>
           </div>
         </div>
@@ -3811,6 +5081,8 @@ export class BaseSystem {
         }
         this.hangarTier = curHangarTier + 1;
         this.updateHangarBuildingLabel();
+        this.updateBuildingVisuals();
+        this.updateSurfaceVisuals();
         soundFx.playUpgrade();
         this.scene.events.emit('player_updated');
         this.scene.events.emit('notify', `Hangar auf Stufe ${this.hangarTier} ausgebaut! Tankrate: ${nextHangarData.fuelSpeed} L/s, Reparatur: ${nextHangarData.repairSpeed} HP/s`);
@@ -3858,17 +5130,9 @@ export class BaseSystem {
           e.stopPropagation();
           const key = btn.getAttribute('data-gadget');
           const price = parseInt(btn.getAttribute('data-price'), 10);
-          if (this.player.cash < price) {
-            soundFx.playError();
-            this.scene.events.emit('notify', 'Nicht genug Geld!');
-            return;
+          if (this.buyGadget(key, price)) {
+            this.openDockModal();
           }
-          this.player.cash -= price;
-          this.player.gadgets = this.player.gadgets || { dynamite: 0, fuel_canister: 0, repair_kit: 0 };
-          this.player.gadgets[key] = (this.player.gadgets[key] || 0) + 1;
-          soundFx.playPurchase();
-          this.scene.events.emit('player_updated');
-          this.openDockModal();
         };
       });
     }
@@ -4138,6 +5402,7 @@ export class BaseSystem {
 
     this.player.cash -= nextTierData.costCash;
     this.refinery.machineTier = currentTier + 1;
+    this.updateBuildingVisuals();
     soundFx.playPurchase();
     this.renderRefineryModalBody();
     if (this.scene.hud) this.scene.hud.update();

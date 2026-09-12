@@ -1077,6 +1077,71 @@ class SoundManager {
       osc.stop(now + idx * 0.08 + 0.65);
     });
   }
+
+  playPneumaticDeposit() {
+    if (this.muted) return;
+    this.ensureContext();
+    if (!this.ctx) return;
+
+    const now = this.ctx.currentTime;
+    // 1. Zischender Druckluft-Saugsound (Bandpass-Rauschen swept nach oben)
+    const noise = this.createNoiseBufferSource('pink') || this.createNoiseBufferSource('white');
+    if (noise) {
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(350, now);
+      filter.frequency.exponentialRampToValueAtTime(2400, now + 0.35);
+      filter.Q.value = 3.5;
+
+      const nGain = this.ctx.createGain();
+      nGain.gain.setValueAtTime(0.35, now);
+      nGain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+      noise.connect(filter);
+      filter.connect(nGain);
+      nGain.connect(this.masterGain);
+      noise.start(now);
+      noise.stop(now + 0.5);
+    }
+
+    // 2. Befriedigender pneumatischer "Plop/Ding"-Bestätigungston (Aufsteigende Quinte)
+    [587.33, 880].forEach((freq, i) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + 0.15 + i * 0.1);
+
+      gain.gain.setValueAtTime(0.2, now + 0.15 + i * 0.1);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15 + i * 0.1 + 0.3);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+      osc.start(now + 0.15 + i * 0.1);
+      osc.stop(now + 0.15 + i * 0.1 + 0.35);
+    });
+  }
+
+  playGeothermalRefuel() {
+    if (this.muted) return;
+    this.ensureContext();
+    if (!this.ctx) return;
+
+    const now = this.ctx.currentTime;
+    // Warmer harmonischer Erdwärme-Ladeton (Sinus 160Hz mit Phasing)
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(120, now);
+    osc.frequency.linearRampToValueAtTime(220, now + 0.4);
+
+    gain.gain.setValueAtTime(0.18, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+    osc.connect(gain);
+    gain.connect(this.masterGain);
+    osc.start(now);
+    osc.stop(now + 0.48);
+  }
 }
 
 export const soundFx = new SoundManager();

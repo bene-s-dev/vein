@@ -123,9 +123,13 @@ export class Player {
     let lastDrillerClickTime = 0;
     this.sprite.on('pointerdown', (pointer) => {
       if (isModalActive()) return;
+      const canvas = this.scene.game?.canvas;
       if (pointer && pointer.event) {
         const target = pointer.event.target;
-        if (target && target.closest && target.closest('#building-modal, .modal-backdrop, .modal-window, .hud-card, button, input, #toast-container, .game-toast')) {
+        if (target && canvas && target !== canvas) {
+          return;
+        }
+        if (target && target.closest && target.closest('#building-modal, .modal-backdrop, .modal-window, #ore-info-backdrop, #hud-overlay, #hud-action-fab, .hud-card, button, input, #toast-container, .game-toast')) {
           return;
         }
         if (pointer.event.stopPropagation) {
@@ -173,7 +177,7 @@ export class Player {
     this.moveTargetGy = this.gy;
     this.moveTargetX = this.x;
     this.moveTargetY = this.y;
-    this.moveSpeed = 125;
+    this.moveSpeed = Math.max(80, TILE_SIZE / ((this.moveDuration || 160) / 1000));
 
     this.maxCargo = 12;
     this.cargo = [];
@@ -234,12 +238,18 @@ export class Player {
       quantum_processor: 0 // Quanten-Prozessor → Tier 10
     };
 
-    // Notfall-Kits & Gadgets (Verbrauchsgüter)
+    // Notfall-Kits & Gadgets (Verbrauchsgüter - werden im Labor erforscht und im Depot-Shop gekauft)
     this.gadgets = {
-      dynamite: 3,
-      fuel_canister: 2,
-      repair_kit: 2
+      dynamite: 0,
+      fuel_canister: 0,
+      repair_kit: 0
     };
+
+    // Im Labor erforschte Technologien für Ausrüstung & Infrastruktur
+    this.researchedTnt = 0; // Sprengtechnik & TNT (Stufe 0..1)
+    this.researchedEmergency = 0; // Notfallausrüstung (Kanister & Rep.-Kit, Stufe 0..1)
+    this.researchedStationFuel = 0; // Untertage-Tankanlagen (Stufe 0..3)
+    this.researchedStationTube = 0; // Untertage-Förderschächte (Stufe 0..3)
 
     // Gefundene Relikte & Fossilien (Museum / Bergmann-Buch)
     this.discoveredArtifacts = [];
@@ -277,7 +287,10 @@ export class Player {
       curTipY: -28 + 20,
       curMidX: 15 * TILE_SIZE - 36 + 14,
       curMidY: -28 + 8,
-      activeWeight: 0 // 0 = geparkt, 1 = voll am Fahrzeug
+      activeWeight: 0, // 0 = geparkt, 1 = voll am Fahrzeug
+      lastBaseX: 15 * TILE_SIZE - 36,
+      lastBaseY: -28,
+      isParkedDrawn: false
     };
 
     // Spiel-Statistiken
@@ -380,6 +393,7 @@ export class Player {
     const data = ENGINE_TIERS[tier - 1] || ENGINE_TIERS[0];
     this.moveDuration = data.moveDuration || 160;
     this.flightSpeed = data.flightSpeed || 175;
+    this.moveSpeed = Math.max(80, TILE_SIZE / (this.moveDuration / 1000));
   }
 
   drawScanner() {
@@ -493,7 +507,10 @@ export class Player {
 
     // Eingaben verarbeiten
     if (inputDir) {
-      this.handleInput(inputDir);
+      const handled = this.handleInput(inputDir);
+      if (handled && this.state === PLAYER_STATES.MOVING) {
+        this.processMoving(delta, inputDir);
+      }
     }
   }
 
@@ -697,6 +714,11 @@ export class Player {
     const isVehicleStationary = (this.state !== PLAYER_STATES.MOVING && this.state !== PLAYER_STATES.FLYING);
     const isParkedAtHangar = isNearHangar && isVehicleStationary;
 
+    // Untertage: Tankanlage in der Nähe suchen
+    const nearbyStation = !isAtSurface ? this.scene?.baseSystem?.getNearbyStation(this.gx, this.gy, 2.5) : null;
+    const isUndergroundFuel = nearbyStation && (nearbyStation.type === 'fuel' || nearbyStation.type === 'geothermal') && nearbyStation.isBuilt;
+    const isParkedAtUndergroundFuel = isUndergroundFuel && isVehicleStationary;
+
     if (isAtSurface) {
       if (!this.isDocked) {
         this.isDocked = true;
@@ -713,7 +735,7 @@ export class Player {
         }
       }
 
-      // Betankung über Kabel: Verlängerte Betankungszeit (7 L/s = ~14s für 100L)
+      // Betankung über Kabel am Hangar
       const isFuelReady = isParkedAtHangar && this.fuelArmState && this.fuelArmState.activeWeight > 0.8;
       const chargeSpeed = this.getChargeSpeed();
       const wasFuelFull = this.fuel >= this.maxFuel;
@@ -744,7 +766,7 @@ export class Player {
         }
       } else {
         // Nicht am Tanken oder Tank bereits voll: Tank-Sound sofort beenden!
-        if (soundFx && soundFx._refuelActive && soundFx.stopRefuel) {
+        if (soundFx && soundFx._refuelActive && soundFx.stopRefuel && !isParkedAtUndergroundFuel) {
           soundFx.stopRefuel();
         }
       }
@@ -752,31 +774,64 @@ export class Player {
       if (this.isDocked) {
         this.isDocked = false;
       }
-      if (soundFx && soundFx._refuelActive && soundFx.stopRefuel) {
+      if (!isParkedAtUndergroundFuel && soundFx && soundFx._refuelActive && soundFx.stopRefuel) {
         soundFx.stopRefuel();
       }
     }
 
-    // Beide Roboterarme fahren nur aus, solange das Fahrzeug am Hangar STEHT und die jeweilige Aufgabe noch ansteht.
-    // Sobald das Auto weiterfährt ODER die Aufgabe erledigt ist (Tank voll / Bohrer ganz),
-    // fahren die Arme sofort einzeln zur Parkposition ein, anstatt dem Auto hinterherzugehen!
-    const shouldDeployFuel = isParkedAtHangar && (this.fuel < this.maxFuel);
+    // Untertage-Tankanlage: Betankung über den mechanischen Tankarm
+    if (isParkedAtUndergroundFuel) {
+      const isUndergroundFuelReady = this.fuelArmState && this.fuelArmState.activeWeight > 0.8;
+      const undergroundChargeSpeed = 35; // 35 L/s Durchfluss
+      const wasFuelFull = this.fuel >= this.maxFuel;
+
+      if (isUndergroundFuelReady && this.fuel < this.maxFuel) {
+        this.fuel = Math.min(this.maxFuel, this.fuel + (delta / 1000) * undergroundChargeSpeed);
+        if (this.fuel >= this.maxFuel - 0.05) {
+          this.fuel = this.maxFuel;
+        }
+
+        if (soundFx && !soundFx._refuelActive && soundFx.startRefuel) {
+          soundFx.startRefuel();
+        }
+
+        if (this.fuel >= this.maxFuel && !wasFuelFull) {
+          if (soundFx) {
+            if (soundFx.stopRefuel) soundFx.stopRefuel();
+            if (soundFx.playRefuelComplete) soundFx.playRefuelComplete();
+          }
+          this.scene.events.emit('notify', '⛽ Untertage-Tankanlage: Treibstoff-Tank vollständig aufgeladen (100%)');
+        }
+      } else if (this.fuel >= this.maxFuel) {
+        if (soundFx && soundFx._refuelActive && soundFx.stopRefuel) {
+          soundFx.stopRefuel();
+        }
+      }
+    }
+
+    // Beide Roboterarme fahren nur aus, solange das Fahrzeug am Hangar bzw. an der Station STEHT und Treibstoff benötigt
+    const shouldDeployFuel = (isParkedAtHangar || isParkedAtUndergroundFuel) && (this.fuel < this.maxFuel);
     const shouldDeployRepair = isParkedAtHangar && (this.hull < this.maxHull);
 
     if (!shouldDeployFuel && soundFx && soundFx._refuelActive && soundFx.stopRefuel) {
       soundFx.stopRefuel();
     }
 
-    this.updateFuelArm(shouldDeployFuel, delta);
+    const customPumpBase = isParkedAtUndergroundFuel ? {
+      x: nearbyStation.gx * TILE_SIZE + 16,
+      y: nearbyStation.gy * TILE_SIZE - 4
+    } : null;
+
+    this.updateFuelArm(shouldDeployFuel, delta, customPumpBase);
     this.updateRepairArm(shouldDeployRepair, delta);
   }
 
-  updateFuelArm(shouldDeploy, delta) {
+  updateFuelArm(shouldDeploy, delta, customPumpBase = null) {
     if (!this.refuelBeam) return;
 
-    // Tanksäulen-Sockel an der Hangar-Bucht links (x=444, y=-28)
-    const pumpBaseX = 15 * TILE_SIZE - 36;
-    const pumpBaseY = -28;
+    // Tanksäulen-Sockel an der Hangar-Bucht links (x=444, y=-28) oder Untertage-Tankanlage
+    const pumpBaseX = customPumpBase ? customPumpBase.x : (15 * TILE_SIZE - 36);
+    const pumpBaseY = customPumpBase ? customPumpBase.y : -28;
 
     if (!this.fuelArmState) {
       this.fuelArmState = {
@@ -785,15 +840,33 @@ export class Player {
         curMidX: pumpBaseX + 14,
         curMidY: pumpBaseY + 8,
         activeWeight: 0,
-        isParkedDrawn: false
+        isParkedDrawn: false,
+        lastBaseX: pumpBaseX,
+        lastBaseY: pumpBaseY
       };
+    }
+
+    // Bei Wechsel der Station Sockelpositionen synchronisieren
+    const baseDist = Math.hypot((this.fuelArmState.lastBaseX != null ? this.fuelArmState.lastBaseX : pumpBaseX) - pumpBaseX, (this.fuelArmState.lastBaseY != null ? this.fuelArmState.lastBaseY : pumpBaseY) - pumpBaseY);
+    if (baseDist > 30) {
+      this.fuelArmState.curTipX = pumpBaseX + 6;
+      this.fuelArmState.curTipY = pumpBaseY + 18;
+      this.fuelArmState.curMidX = pumpBaseX + 14;
+      this.fuelArmState.curMidY = pumpBaseY + 8;
+      this.fuelArmState.activeWeight = 0;
+      this.fuelArmState.lastBaseX = pumpBaseX;
+      this.fuelArmState.lastBaseY = pumpBaseY;
+      this.fuelArmState.isParkedDrawn = false;
     }
 
     if (!shouldDeploy) {
       if (soundFx && soundFx._refuelActive && soundFx.stopRefuel) {
         soundFx.stopRefuel();
       }
-      if (this.fuelArmState.isParkedDrawn) {
+      if (this.fuelArmState.isParkedDrawn && this.fuelArmState.activeWeight <= 0.02) {
+        if (customPumpBase == null && Math.hypot(this.sprite.x - pumpBaseX, this.sprite.y - pumpBaseY) > 80) {
+          this.refuelBeam.clear();
+        }
         return;
       }
     }
@@ -809,24 +882,31 @@ export class Player {
     const parkMidX = pumpBaseX + 14;
     const parkMidY = pumpBaseY + 8;
 
-    // Zielposition: Wenn aktiv am Fahrzeug (strikt auf die Hangar-Bucht begrenzt),
-    // andernfalls direkt die Park-Position (kein Nachziehen beim Wegfahren des Autos!)
+    // Zielposition: Wenn aktiv am Fahrzeug
     let targetTipX, targetTipY, targetMidX, targetMidY;
 
     if (shouldDeploy) {
-      const clampedVehX = Phaser.Math.Clamp(this.sprite.x, 15 * TILE_SIZE - 20, 15 * TILE_SIZE + 20);
-      const clampedVehY = Phaser.Math.Clamp(this.sprite.y, -32, -4);
-      const portX = clampedVehX - 12;
-      const portY = clampedVehY - 4;
+      let portX, portY;
+      if (customPumpBase) {
+        const vehX = this.sprite ? this.sprite.x : (this.gx * TILE_SIZE + 16);
+        const vehY = this.sprite ? this.sprite.y : (this.gy * TILE_SIZE + 16);
+        const sideOffset = vehX >= pumpBaseX ? -12 : 12;
+        portX = vehX + sideOffset;
+        portY = vehY - 4;
+      } else {
+        const clampedVehX = Phaser.Math.Clamp(this.sprite.x, 15 * TILE_SIZE - 20, 15 * TILE_SIZE + 20);
+        const clampedVehY = Phaser.Math.Clamp(this.sprite.y, -32, -4);
+        portX = clampedVehX - 12;
+        portY = clampedVehY - 4;
+      }
 
       targetTipX = portX;
       targetTipY = portY;
-      targetMidX = (pumpBaseX + portX) / 2 - 4;
+      targetMidX = (pumpBaseX + portX) / 2 - 3;
       targetMidY = Math.min(pumpBaseY, portY) - 14;
 
       const hTier = this.scene?.baseSystem?.hangarTier || 1;
-      const deploySpeed = 3.5 + hTier * 0.7;
-      const lerpSpeed = 5.0 + hTier * 1.0;
+      const deploySpeed = customPumpBase ? 4.5 : (3.5 + hTier * 0.7);
 
       this.fuelArmState.activeWeight = Phaser.Math.Linear(this.fuelArmState.activeWeight, 1.0, dt * deploySpeed);
     } else {
@@ -836,14 +916,15 @@ export class Player {
       targetMidX = parkMidX;
       targetMidY = parkMidY;
 
-      const hTier = this.scene?.baseSystem?.hangarTier || 1;
-      const deploySpeed = 3.5 + hTier * 0.7;
+      const deploySpeed = 4.5;
       this.fuelArmState.activeWeight = Phaser.Math.Linear(this.fuelArmState.activeWeight, 0.0, dt * (deploySpeed * 1.2));
+      if (this.fuelArmState.activeWeight <= 0.02) {
+        this.fuelArmState.isParkedDrawn = true;
+      }
     }
 
     // Sanftes Nachführen der Gelenke (kinematisches Nachziehen, kein Springen oder Strecken)
-    const hTier = this.scene?.baseSystem?.hangarTier || 1;
-    const lerpSpeed = 5.0 + hTier * 1.0;
+    const lerpSpeed = 6.0;
     this.fuelArmState.curTipX = Phaser.Math.Linear(this.fuelArmState.curTipX, targetTipX, dt * lerpSpeed);
     this.fuelArmState.curTipY = Phaser.Math.Linear(this.fuelArmState.curTipY, targetTipY, dt * lerpSpeed);
     this.fuelArmState.curMidX = Phaser.Math.Linear(this.fuelArmState.curMidX, targetMidX, dt * lerpSpeed);
@@ -951,6 +1032,15 @@ export class Player {
 
   updateRepairArm(shouldDeploy, delta) {
     if (!this.repairArm) return;
+
+    if (this.gy > -1) {
+      if (this.repairArmState) {
+        this.repairArmState.activeWeight = 0;
+        this.repairArmState.isParkedDrawn = true;
+      }
+      this.repairArm.clear();
+      return;
+    }
 
     // Roboterarm-Sockel an der Hangar-Überdachung rechts (x=512, y=-30)
     const armBaseX = 15 * TILE_SIZE + 32;
@@ -1252,8 +1342,10 @@ export class Player {
       return true;
     }
 
-    // Grenzprüfung Weltbreite
-    if (targetGx < 0 || targetGx >= this.gridSystem.width) {
+    // Grenzprüfung Weltbreite (Oberfläche umfasst alle Gebäude von Drohnen-Hangar gx -16 bis Kraftwerk gx 42; Untertage prozedural endlos)
+    const minGx = targetGy <= 0 ? -60 : -1000;
+    const maxGx = targetGy <= 0 ? 70 : 1000;
+    if (targetGx < minGx || targetGx > maxGx) {
       soundFx.stopDrive();
       return false;
     }
@@ -1294,8 +1386,7 @@ export class Player {
       return;
     }
 
-    // Erlaube bis zu 50ms Delta-Kompensation (wie bei processMoving), um Geschwindigkeitseinbrüche bei 20-30 FPS zu verhindern
-    const dt = Math.min(delta, 50) / 1000;
+    const dt = Math.min(delta, 100) / 1000;
 
     // Sanfter, gleichmäßiger Treibstoffverbrauch im Flug
     this.consumeFuel(dt * 1.8);
@@ -1324,12 +1415,12 @@ export class Player {
     const dy = flightSpeed * dt;
     const nextY = this.sprite.y - dy;
 
-    // Horizontale Steuerung während des Flugs
+    // Horizontale Steuerung während des Flugs (konsistente Geschwindigkeit wie Steigflug)
     let isSteeringHoriz = false;
     if (inputHandler) {
       const isLeft = inputHandler.cursors?.left?.isDown || inputHandler.wasd?.A?.isDown || inputHandler.touchDirection === 'LEFT';
       const isRight = inputHandler.cursors?.right?.isDown || inputHandler.wasd?.D?.isDown || inputHandler.touchDirection === 'RIGHT';
-      const horizSpeed = (flightSpeed * 0.7) * dt;
+      const horizSpeed = flightSpeed * dt;
 
       const topGy = Math.floor((this.sprite.y - 10) / TILE_SIZE);
       const bottomGy = Math.floor((this.sprite.y + 10) / TILE_SIZE);
@@ -1338,7 +1429,8 @@ export class Player {
         isSteeringHoriz = true;
         const nextX = this.sprite.x - horizSpeed;
         const leftGx = Math.floor((nextX - 10) / TILE_SIZE);
-        const canMoveLeft = leftGx >= 0 && (
+        const minGx = this.sprite.y <= -16 ? -60 : -1000;
+        const canMoveLeft = leftGx >= minGx && (
           this.sprite.y <= -16 ||
           ((topGy < 0 || !this.gridSystem.isSolid(leftGx, topGy)) &&
            (bottomGy < 0 || !this.gridSystem.isSolid(leftGx, bottomGy)))
@@ -1353,7 +1445,8 @@ export class Player {
         isSteeringHoriz = true;
         const nextX = this.sprite.x + horizSpeed;
         const rightGx = Math.floor((nextX + 10) / TILE_SIZE);
-        const canMoveRight = rightGx < this.gridSystem.width && (
+        const maxGx = this.sprite.y <= -16 ? 70 : 1000;
+        const canMoveRight = rightGx <= maxGx && (
           this.sprite.y <= -16 ||
           ((topGy < 0 || !this.gridSystem.isSolid(rightGx, topGy)) &&
            (bottomGy < 0 || !this.gridSystem.isSolid(rightGx, bottomGy)))
@@ -1385,8 +1478,8 @@ export class Player {
       const headLeftGx = Math.floor((this.sprite.x - 7) / TILE_SIZE);
       const headRightGx = Math.floor((this.sprite.x + 7) / TILE_SIZE);
       const hitCeiling = (
-        (headLeftGx >= 0 && this.gridSystem.isSolid(headLeftGx, checkGy)) ||
-        (headRightGx < this.gridSystem.width && this.gridSystem.isSolid(headRightGx, checkGy))
+        this.gridSystem.isSolid(headLeftGx, checkGy) ||
+        this.gridSystem.isSolid(headRightGx, checkGy)
       );
 
       if (hitCeiling) {
@@ -1461,10 +1554,27 @@ export class Player {
       this.rightThrustParticles.stop();
     }
 
-    // Direkt nahtlos stoppen - kein blockierender 50ms-Tween mehr, der die Steuerung abhackt!
-    this.y = this.sprite.y;
-    this.gy = Math.round((this.y - TILE_SIZE / 2) / TILE_SIZE);
+    // Präzise Kachel-Zentrierung beim Beenden des Flugs (verhindert ungleiche Teilstrecken/Geschwindigkeits-Sprünge)
+    if (this.sprite.y <= -16 || this.gy <= -1) {
+      this.sprite.y = -16;
+      this.y = -16;
+      this.gy = -1;
+      this.gx = Math.round((this.sprite.x - TILE_SIZE / 2) / TILE_SIZE);
+      this.sprite.x = this.gx * TILE_SIZE + TILE_SIZE / 2;
+      this.x = this.sprite.x;
+    } else {
+      this.gx = Math.round((this.sprite.x - TILE_SIZE / 2) / TILE_SIZE);
+      this.gy = Math.round((this.sprite.y - TILE_SIZE / 2) / TILE_SIZE);
+      if (!this.isHoveringInAir()) {
+        this.sprite.x = this.gx * TILE_SIZE + TILE_SIZE / 2;
+        this.sprite.y = this.gy * TILE_SIZE + TILE_SIZE / 2;
+      }
+      this.x = this.sprite.x;
+      this.y = this.sprite.y;
+    }
+
     this.state = PLAYER_STATES.IDLE;
+    this.syncAttachments();
     this.checkDepthProgress();
   }
 
@@ -1485,14 +1595,25 @@ export class Player {
     this.moveTargetGx = targetGx;
     this.moveTargetGy = targetGy;
     this.moveTargetX = targetGx * TILE_SIZE + TILE_SIZE / 2;
-    this.moveTargetY = targetGy * TILE_SIZE + TILE_SIZE / 2;
+    this.moveTargetY = (targetGy <= -1) ? -16 : (targetGy * TILE_SIZE + TILE_SIZE / 2);
+
+    // Orthogonale Begradigung: Falls das Fahrzeug leicht versetzt auf einer Achse anfährt
+    // (z. B. nach Beenden des Schwebens), die Querachse sofort bündig ausrichten,
+    // damit die gefahrene Strecke immer EXAKT 32 Pixel beträgt und keine zufälligen Verzögerungen auftreten!
+    if (targetGx !== this.gx) {
+      this.sprite.y = this.moveTargetY;
+      this.y = this.moveTargetY;
+    } else if (targetGy !== this.gy) {
+      this.sprite.x = this.moveTargetX;
+      this.x = this.moveTargetX;
+    }
 
     const moveDur = duration !== null ? duration : (this.moveDuration || 160);
     this.moveSpeed = Math.max(80, TILE_SIZE / (moveDur / 1000));
   }
 
   processMoving(delta, inputDir) {
-    const dt = Math.min(delta, 50) / 1000;
+    const dt = Math.min(delta, 100) / 1000;
     let step = (this.moveSpeed || 200) * dt;
 
     while (step > 0 && this.state === PLAYER_STATES.MOVING) {
@@ -1525,7 +1646,9 @@ export class Player {
             break;
           }
 
-          if (nextGx < 0 || nextGx >= this.gridSystem.width) {
+          const minGx = nextGy <= 0 ? -60 : -1000;
+          const maxGx = nextGy <= 0 ? 70 : 1000;
+          if (nextGx < minGx || nextGx > maxGx) {
             this.state = PLAYER_STATES.IDLE;
             soundFx.stopDrive();
             break;
@@ -1638,24 +1761,7 @@ export class Player {
     // Spürbarer Treibstoffverbrauch während des schweren Bohrvorgangs durch Gestein
     this.consumeFuel(1.5 * (delta / 1000));
 
-    // Karosserie-Verschleiß beim Bohren (nur beim Bohren, nicht beim Fahren)
-    // Grundverschleiß: 1.8 HP/s beim Fräsen durch die Gesteinsschichten
-    // Zähere Erze und tiefere Schichten erhöhen den Reibungsdruck zusätzlich
-    const targetTile = this.gridSystem.getTile(this.drillTarget.gx, this.drillTarget.gy);
-    let hardnessMult = 1.0;
-    if (targetTile && targetTile.ore && ORE_DATA[targetTile.ore]) {
-      hardnessMult = Math.min(2.0, Math.max(1.0, ORE_DATA[targetTile.ore].hardness * 0.85));
-    }
-    const baseWear = 1.8 * hardnessMult;
-    // Höhere Gehäuseschutz-Stufen (hullTier) reduzieren Reibungsverschleiß spürbar (Tier 1: 100%, Tier 2: 92%, Tier 3: 84%, ..., Tier 10: 25%)
-    const tierReduction = Math.max(0.25, 1.0 - ((this.hullTier || 1) - 1) * 0.08);
-    const hullWearPerSec = baseWear * tierReduction;
-    this.hull = Math.max(0, this.hull - hullWearPerSec * (delta / 1000));
-    if (this.hull <= 0) {
-      this.cancelDrilling();
-      this.scene.hud?.showToast('⚠️ Karosserie kritisch beschädigt (0 HP)! Bohrer blockiert – zur Basis zurückkehren oder Notfall-Reparatur (Taste R)!', 'danger');
-      return;
-    }
+
 
     // Animierte Bohrkopf-Drehung (Spiral-Wendeln wechseln flüssig alle 28ms über 6 Frames)
     this.drillAnimTimer = (this.drillAnimTimer || 0) + delta;

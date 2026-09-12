@@ -1331,6 +1331,118 @@ export class AssetLoader {
       }
     });
 
+    // A1) STARTER-HANGAR TIER 1 (64x42) - Kleiner Reparatur-Schuppen & Wellblech-Garage
+    createTexture('building_dock_t1', 64, 42, (ctx) => {
+      // Kiesbett & Ölfleck
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(2, 38, 60, 4);
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.6)';
+      ctx.fillRect(16, 39, 20, 2);
+
+      // Wände aus Holz- und Wellblechlatten
+      ctx.fillStyle = '#3f2d1d';
+      ctx.fillRect(6, 12, 52, 26);
+      ctx.fillStyle = '#5c4028';
+      for (let x = 8; x < 56; x += 4) {
+        ctx.fillRect(x, 13, 3, 24);
+      }
+
+      // Vordach aus rostigem Wellblech
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(4, 8, 56, 5);
+      ctx.fillStyle = '#64748b';
+      ctx.fillRect(4, 8, 56, 1.5);
+      ctx.fillStyle = '#b45309';
+      ctx.fillRect(18, 9, 8, 2);
+      ctx.fillRect(42, 9, 6, 2);
+
+      // Offenes Werkstatttor / Innenraum dunkel
+      ctx.fillStyle = '#18130e';
+      ctx.fillRect(16, 16, 24, 22);
+
+      // Werkzeugwand & kleine Arbeitsleuchte innen
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(18, 18, 14, 8);
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillRect(20, 20, 2, 4);
+      ctx.fillRect(24, 21, 2, 3);
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(27, 17, 2, 2);
+
+      // Gelbes 200L Treibstoff-Fass außen rechts
+      ctx.fillStyle = '#d97706';
+      ctx.fillRect(44, 24, 10, 14);
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillRect(45, 25, 8, 12);
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(44, 28, 10, 1.5);
+      ctx.fillRect(44, 33, 10, 1.5);
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(48, 20, 2, 4);
+      ctx.fillRect(46, 20, 6, 1.5);
+
+      // Holzschild über dem Tor
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(20, 11, 16, 4);
+      ctx.fillStyle = '#fef08a';
+      ctx.font = 'bold 3.5px sans-serif';
+      ctx.fillText('HANGAR', 21, 14);
+    });
+
+    // A2) INTERMEDIATE-HANGAR TIER 2-3 (88x56) - Solide Metallbau-Werkstatthalle
+    createTexture('building_dock_t2', 88, 56, (ctx) => {
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(2, 51, 84, 5);
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(4, 49, 80, 3);
+
+      // Fassade aus dunkelgrauem Trapezblech
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(8, 12, 72, 38);
+      for (let x = 10; x < 78; x += 4) {
+        ctx.fillStyle = '#111827';
+        ctx.fillRect(x, 13, 1.5, 36);
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(x + 1.5, 13, 1.5, 36);
+      }
+
+      // Dachrahmen
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(6, 9, 76, 4);
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(6, 8, 76, 1.5);
+
+      // Sektionaltor mit Gelb/Schwarz-Streifen
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(20, 18, 36, 32);
+      ctx.fillStyle = '#eab308';
+      ctx.fillRect(20, 18, 36, 3);
+      ctx.fillStyle = '#0f172a';
+      for (let sx = 20; sx < 56; sx += 6) {
+        ctx.fillRect(sx, 18, 3, 3);
+      }
+      ctx.fillStyle = '#334155';
+      for (let ry = 23; ry < 48; ry += 5) {
+        ctx.fillRect(22, ry, 32, 1);
+      }
+
+      // Zapfsäule & Tankstand rechts
+      ctx.fillStyle = '#d97706';
+      ctx.fillRect(62, 28, 12, 22);
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillRect(63, 29, 10, 20);
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(65, 32, 6, 4);
+      ctx.fillStyle = '#10b981';
+      ctx.fillRect(66, 33, 4, 2);
+
+      // Lüfterkasten auf dem Dach
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(14, 4, 12, 5);
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(16, 5, 8, 3);
+    });
+
     // B) ERZ-BÖRSE & ROHSTOFF-LAGERHALLE (100x68) - Schweres Logistik- & Güterdepot
     createTexture('building_market', 100, 68, (ctx) => {
       // 1. Schweres Beton-Laderampen-Fundament mit Dehnungsfugen & Anfahrschutz
@@ -1541,6 +1653,87 @@ export class AssetLoader {
       ctx.fill();
     });
 
+    // B1) STARTER-ERZBÖRSE / RAFFINERIE TIER 1 (56x40) - Rustikaler Schmelzofen & Schürfer-Stand
+    createTexture('building_market_t1', 56, 40, (ctx) => {
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(2, 36, 52, 4);
+
+      // Gemauerter Schmelzofen rechts
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(34, 14, 18, 23);
+      ctx.fillStyle = '#64748b';
+      ctx.fillRect(35, 15, 16, 21);
+      // Schornstein
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(40, 4, 6, 10);
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(39, 3, 8, 2);
+
+      // Glühender Ofenschlund
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(38, 23, 10, 11);
+      ctx.fillStyle = '#ea580c';
+      ctx.fillRect(39, 25, 8, 8);
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(41, 27, 4, 4);
+
+      // Verkaufsstand links mit Holztheke & Sonnensegel
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(6, 22, 24, 15);
+      ctx.fillStyle = '#92400e';
+      ctx.fillRect(5, 21, 26, 2.5);
+
+      // Gestreiftes Stoffdach (Rot-Weiß)
+      for (let i = 0; i < 6; i++) {
+        ctx.fillStyle = (i % 2 === 0) ? '#dc2626' : '#f8fafc';
+        ctx.fillRect(4 + i * 4.5, 11, 4.5, 4);
+      }
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(5, 15, 2, 7);
+
+      // Waage & Preistafel
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillRect(10, 18, 5, 3);
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(18, 14, 8, 6);
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(19, 16, 6, 2);
+    });
+
+    // B2-MID) INTERMEDIATE-ERZBÖRSE TIER 2 (78x54) - Massives Handels- & Schmelzhaus
+    createTexture('building_market_t2', 78, 54, (ctx) => {
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(2, 49, 74, 5);
+
+      // Ziegelstein-Korpus
+      ctx.fillStyle = '#7f1d1d';
+      ctx.fillRect(6, 14, 66, 36);
+      ctx.fillStyle = '#991b1b';
+      ctx.fillRect(8, 15, 62, 34);
+
+      // Kupferschornstein
+      ctx.fillStyle = '#b45309';
+      ctx.fillRect(52, 6, 8, 12);
+      ctx.fillStyle = '#d97706';
+      ctx.fillRect(50, 4, 12, 3);
+
+      // Verglastes Schmelzfeuer
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(48, 24, 16, 16);
+      ctx.fillStyle = '#ea580c';
+      ctx.fillRect(50, 26, 12, 12);
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(53, 29, 6, 6);
+
+      // Börsen-Schalterfenster links
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(14, 20, 26, 22);
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(16, 22, 22, 14);
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillRect(18, 37, 18, 3);
+    });
+
     // B2) ROHSTOFF- & WAREN-DEPOT (92x70) - Hochregallager & Schwergut-Containerterminal
     createTexture('building_depot', 92, 70, (ctx) => {
       // 1. Schweres Beton-Fundament mit Laderampe & Dehnungsfugen
@@ -1709,6 +1902,193 @@ export class AssetLoader {
       ctx.fillRect(14, 16, 2.5, 3);
       ctx.fillStyle = '#0ea5e9';
       ctx.fillRect(14.5, 16.5, 1.5, 2);
+    });
+
+    // B2-T1) STARTER-DEPOT TIER 1 (56x40) - Kleiner Holzunterstand & Erzlagerplatz
+    createTexture('building_depot_t1', 56, 40, (ctx) => {
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(2, 36, 52, 4);
+
+      // Kleine Holzhütte links
+      ctx.fillStyle = '#451a03';
+      ctx.fillRect(4, 14, 26, 23);
+      ctx.fillStyle = '#78350f';
+      for (let x = 6; x < 28; x += 4) {
+        ctx.fillRect(x, 15, 2.5, 21);
+      }
+      ctx.fillStyle = '#291104';
+      ctx.fillRect(8, 20, 10, 17);
+      ctx.fillStyle = '#d97706';
+      ctx.fillRect(16, 28, 1.5, 1.5);
+
+      // Schrägdach mit Holzlatten
+      ctx.fillStyle = '#291104';
+      ctx.fillRect(2, 10, 30, 4);
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(3, 9, 28, 2);
+
+      // Überdachter Lagerbereich rechts mit grüner Plane
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(50, 14, 3, 23);
+      ctx.fillStyle = '#065f46';
+      ctx.fillRect(30, 13, 23, 4);
+      ctx.fillStyle = '#047857';
+      ctx.fillRect(30, 13, 23, 1.5);
+
+      // Gestapelte Erzkisten & Säcke
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(34, 25, 14, 12);
+      ctx.fillStyle = '#92400e';
+      ctx.fillRect(35, 26, 12, 10);
+      ctx.fillStyle = '#451a03';
+      ctx.fillRect(35, 30, 12, 1.5);
+      ctx.fillStyle = '#18181b';
+      ctx.fillRect(36, 22, 4, 3);
+      ctx.fillStyle = '#b45309';
+      ctx.fillRect(42, 22, 4, 3);
+
+      // Holzschild "DEPOT"
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(10, 12, 14, 4);
+      ctx.fillStyle = '#fef08a';
+      ctx.font = 'bold 3.5px sans-serif';
+      ctx.fillText('DEPOT', 11, 15);
+    });
+
+    // B2-T2) INTERMEDIATE-DEPOT TIER 2-3 (74x54) - Solide Lagerhalle mit Laderampe
+    createTexture('building_depot_t2', 74, 54, (ctx) => {
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(2, 49, 70, 5);
+
+      // Mauerwerk & Stahlblech
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(6, 14, 62, 36);
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(8, 15, 58, 34);
+
+      // Rolltor Mitte
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(18, 22, 26, 28);
+      ctx.fillStyle = '#64748b';
+      for (let y = 24; y < 48; y += 4) {
+        ctx.fillRect(20, y, 22, 1.5);
+      }
+
+      // Laderampe & Kisten rechts
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(48, 36, 18, 14);
+      ctx.fillStyle = '#b45309';
+      ctx.fillRect(50, 26, 12, 10);
+
+      // Dach mit Oberlicht
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(4, 10, 66, 5);
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(24, 7, 16, 4);
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.fillRect(26, 8, 12, 1.5);
+    });
+
+    // B2-T3) ADVANCED-DEPOT TIER 4-5 (84x62) - Modernes Logistikterminal mit Kranbahn & Hochregalen
+    createTexture('building_depot_t3', 84, 62, (ctx) => {
+      // 1. Beton-Fundament
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 58, 84, 4);
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(2, 54, 80, 5);
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(2, 53, 80, 1.5);
+
+      // Puffer an der Rampe
+      ctx.fillStyle = '#090d16';
+      ctx.fillRect(8, 54, 3, 5);
+      ctx.fillRect(38, 54, 3, 5);
+      ctx.fillRect(72, 54, 3, 5);
+
+      // 2. Haupthalle
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(4, 14, 76, 40);
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(5, 15, 74, 38);
+
+      // Vertikale Profilrippen
+      for (let x = 6; x < 78; x += 3.5) {
+        ctx.fillStyle = '#162032';
+        ctx.fillRect(x, 16, 1, 36);
+        ctx.fillStyle = '#26354a';
+        ctx.fillRect(x + 1, 16, 1, 36);
+      }
+
+      // Eckpfeiler
+      [4, 76].forEach(px => {
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(px, 14, 4, 40);
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(px + 1, 14, 2, 40);
+      });
+
+      // 3. Dach mit Kran-Ausleger oben
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(2, 10, 80, 4);
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(2, 9, 80, 1.5);
+
+      // Kranbahn & Katze oben
+      ctx.fillStyle = '#eab308';
+      ctx.fillRect(18, 5, 48, 3);
+      ctx.fillStyle = '#ca8a04';
+      ctx.fillRect(18, 8, 48, 1);
+      // Laufkatze & Haken
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(36, 4, 8, 5);
+      ctx.fillStyle = '#64748b';
+      ctx.fillRect(39, 9, 2, 4);
+
+      // 4. Fracht-Rolltor links (offen mit Lagergut)
+      ctx.fillStyle = '#0b0f19';
+      ctx.fillRect(8, 24, 32, 30);
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(9, 25, 30, 28);
+      // Glimmende Innenbeleuchtung
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.16)';
+      ctx.beginPath();
+      ctx.moveTo(24, 25);
+      ctx.lineTo(9, 53);
+      ctx.lineTo(39, 53);
+      ctx.closePath();
+      ctx.fill();
+
+      // Regalkisten innen
+      ctx.fillStyle = '#b45309';
+      ctx.fillRect(12, 43, 8, 9);
+      ctx.fillStyle = '#d97706';
+      ctx.fillRect(13, 44, 6, 7);
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(22, 45, 7, 7);
+      ctx.fillStyle = '#64748b';
+      ctx.fillRect(23, 46, 5, 5);
+      ctx.fillStyle = '#0284c7';
+      ctx.fillRect(14, 36, 6, 6);
+
+      // 5. Rechtes Sektionaltor mit Warnstreifen (geschlossen)
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(44, 24, 28, 30);
+      ctx.fillStyle = '#334155';
+      for (let y = 26; y < 52; y += 4) {
+        ctx.fillRect(46, y, 24, 2);
+      }
+      // Status-LEDs
+      ctx.fillStyle = '#22c55e';
+      ctx.fillRect(46, 22, 2, 2);
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(50, 22, 2, 2);
+
+      // Schild "DEPOT"
+      ctx.fillStyle = '#0284c7';
+      ctx.fillRect(46, 16, 24, 5);
+      ctx.fillStyle = '#f0fdf4';
+      ctx.font = 'bold 3.5px sans-serif';
+      ctx.fillText('DEPOT', 49, 19.5);
     });
 
     // C) FABRIK & WERKSTOFF-PRODUKTION (104x72) - Authentisches Schmelzwerk mit Abstichrinne & Gießerei
@@ -2036,6 +2416,195 @@ export class AssetLoader {
       if (src) ctx.drawImage(src, 0, 0);
     });
 
+    // C1) STARTER-FABRIK TIER 1 (58x42) - Kleine Feldschmiede & Werkstatt
+    createTexture('building_factory_t1', 58, 42, (ctx) => {
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(2, 38, 54, 4);
+
+      // Ziegelstein- & Holzwerkstatt
+      ctx.fillStyle = '#451a03';
+      ctx.fillRect(6, 14, 46, 25);
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(8, 15, 42, 23);
+
+      // Einzelschornstein aus Klinkern
+      ctx.fillStyle = '#991b1b';
+      ctx.fillRect(38, 4, 8, 11);
+      ctx.fillStyle = '#7f1d1d';
+      ctx.fillRect(37, 3, 10, 2);
+
+      // Amboss und Feuerstelle links
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(12, 20, 16, 18);
+      ctx.fillStyle = '#ea580c';
+      ctx.fillRect(14, 26, 12, 10);
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillRect(17, 28, 6, 6);
+
+      // Amboss vor der Hütte
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(32, 28, 8, 6);
+      ctx.fillRect(34, 34, 4, 4);
+    });
+
+    // C1-T2) INTERMEDIATE-FABRIK TIER 2 (78x56) - Ziegelwerkstatt mit Doppelofen & Abluftrohr
+    createTexture('building_factory_t2', 78, 56, (ctx) => {
+      // 1. Fundament
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 52, 78, 4);
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(2, 48, 74, 5);
+
+      // 2. Mauerwerk-Halle aus Klinkern
+      ctx.fillStyle = '#451a03';
+      ctx.fillRect(4, 16, 70, 33);
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(5, 17, 68, 31);
+
+      // Ziegelstein-Textur
+      for (let y = 18; y < 47; y += 4) {
+        ctx.fillStyle = '#291104';
+        ctx.fillRect(5, y, 68, 1);
+      }
+
+      // Dachstuhl (Satteldach mit Schiefer)
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(2, 12, 74, 5);
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(3, 11, 72, 2);
+
+      // Haupt-Schornstein rechts
+      ctx.fillStyle = '#991b1b';
+      ctx.fillRect(54, 2, 10, 15);
+      ctx.fillStyle = '#7f1d1d';
+      ctx.fillRect(53, 1, 12, 2.5);
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(54, 7, 10, 1.5);
+      ctx.fillRect(54, 12, 10, 1.5);
+
+      // Sekundär-Abluftrohr links mit Winkel
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(14, 8, 4, 12);
+      ctx.fillStyle = '#64748b';
+      ctx.fillRect(13, 7, 6, 2);
+
+      // Schmelzofen-Bogen Mitte mit Gluthitze
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(24, 24, 24, 25);
+      ctx.fillStyle = '#451a03';
+      ctx.fillRect(22, 22, 28, 3);
+
+      // Glühender Ofeninnenraum
+      ctx.fillStyle = '#ea580c';
+      ctx.fillRect(26, 30, 20, 18);
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillRect(28, 34, 16, 13);
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(31, 38, 10, 8);
+
+      // Werkbank & Amboss rechts
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(52, 38, 14, 11);
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(54, 32, 10, 6);
+      ctx.fillRect(56, 28, 6, 4);
+
+      // Barren-Stapel links
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillRect(10, 42, 8, 4);
+      ctx.fillStyle = '#cbd5e1';
+      ctx.fillRect(11, 39, 6, 3);
+    });
+
+    // C1-T3) ADVANCED-FABRIK TIER 3 (92x64) - Industrie-Gießerei mit Sheddach & Hochkamin
+    createTexture('building_factory_t3', 92, 64, (ctx) => {
+      // 1. Schwerlast-Betonfundament
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 60, 92, 4);
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(2, 55, 88, 6);
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(2, 54, 88, 1.5);
+
+      // 2. Industriehalle aus Profilstahl
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(4, 16, 84, 39);
+      ctx.fillStyle = '#1f2937';
+      ctx.fillRect(5, 17, 82, 37);
+
+      // Sheddach-Aufbauten oben mit Oberlichtern
+      ctx.fillStyle = '#111827';
+      ctx.beginPath();
+      ctx.moveTo(32, 17);
+      ctx.lineTo(44, 9);
+      ctx.lineTo(44, 17);
+      ctx.lineTo(56, 9);
+      ctx.lineTo(56, 17);
+      ctx.lineTo(68, 9);
+      ctx.lineTo(68, 17);
+      ctx.closePath();
+      ctx.fill();
+
+      // Oberlicht-Verglasung (blau)
+      ctx.fillStyle = '#0284c7';
+      ctx.beginPath();
+      ctx.moveTo(34, 16);
+      ctx.lineTo(43, 10.5);
+      ctx.lineTo(43, 16);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(46, 16);
+      ctx.lineTo(55, 10.5);
+      ctx.lineTo(55, 16);
+      ctx.closePath();
+      ctx.fill();
+
+      // Stahlträger
+      for (let cx = 8; cx < 86; cx += 14) {
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(cx, 17, 3, 37);
+        ctx.fillStyle = '#374151';
+        ctx.fillRect(cx + 0.8, 17, 1.4, 37);
+      }
+
+      // Großer Industrie-Schornstein links
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(16, 0, 13, 20);
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(17, 0, 11, 20);
+      // Warnstreifen
+      ctx.fillStyle = '#ea580c';
+      ctx.fillRect(15, 0, 15, 3);
+      ctx.fillStyle = '#f8fafc';
+      ctx.fillRect(15, 3, 15, 2.5);
+      ctx.fillStyle = '#ea580c';
+      ctx.fillRect(15, 5.5, 15, 2.5);
+
+      // Schmelztiegel-Halle (Mitte) mit flüssigem Metallfluss
+      ctx.fillStyle = '#0b0f19';
+      ctx.fillRect(28, 28, 30, 27);
+      ctx.fillStyle = '#ea580c';
+      ctx.fillRect(32, 38, 22, 16);
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillRect(34, 42, 18, 11);
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(37, 46, 12, 6);
+
+      // Drucktank / Wärmetauscher rechts
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(66, 26, 16, 28);
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(67, 27, 14, 26);
+      // Druckrohre
+      ctx.fillStyle = '#64748b';
+      ctx.fillRect(69, 32, 10, 2);
+      ctx.fillRect(69, 42, 10, 2);
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(72, 36, 4, 4);
+    });
+
     // C2) EXPEDITIONS- & AUFTRAGS-BÜRO (100x70) - 2-stöckige High-Tech Kommandozentrale
     createTexture('building_office', 100, 70, (ctx) => {
       // 1. Granit-Fundament & Eingangspodest mit Stufen
@@ -2218,6 +2787,48 @@ export class AssetLoader {
       ctx.stroke();
       ctx.fillStyle = '#38bdf8';
       ctx.fillRect(74, 2, 2, 2);
+    });
+
+    // C2-T1) STARTER-BÜRO TIER 1 (52x40) - Bauleitungs-Container
+    createTexture('building_office_t1', 52, 40, (ctx) => {
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(2, 36, 48, 4);
+
+      // Container-Stahlwände (Marineblau)
+      ctx.fillStyle = '#1e3a8a';
+      ctx.fillRect(4, 12, 44, 25);
+      ctx.fillStyle = '#1d4ed8';
+      for (let x = 6; x < 46; x += 4) {
+        ctx.fillRect(x, 13, 2, 23);
+      }
+
+      // Flachdach mit Kante
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(2, 9, 48, 3.5);
+
+      // Bürofenster mit warmem Licht
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(8, 17, 14, 10);
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(9, 18, 12, 8);
+      ctx.fillStyle = '#ca8a04';
+      ctx.fillRect(9, 21, 12, 1);
+      ctx.fillRect(9, 24, 12, 1);
+
+      // Stahltür rechts mit Trittstufe
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(28, 16, 12, 20);
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillRect(36, 25, 2, 2);
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(26, 36, 16, 2);
+
+      // Schild "BÜRO"
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(10, 12, 12, 3.5);
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = 'bold 3px sans-serif';
+      ctx.fillText('BÜRO', 11, 15);
     });
 
     // D) MODERNES WEISSES LABOR (108x72) - Exaktes Design nach dem Foto (Modernist White Lab / MVZ Clotten)
@@ -2882,6 +3493,79 @@ export class AssetLoader {
       ctx.fill();
     });
 
+    // D1) STARTER-LABOR TIER 1 (54x40) - Geologen-Feldhütte
+    createTexture('building_lab_t1', 54, 40, (ctx) => {
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(2, 36, 50, 4);
+
+      // Hütte aus hellgrauen Holzplanken
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(6, 14, 42, 23);
+      ctx.fillStyle = '#475569';
+      for (let x = 8; x < 46; x += 4) {
+        ctx.fillRect(x, 15, 2.5, 21);
+      }
+
+      // Schrägdach mit Zinkblech
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(4, 10, 46, 4);
+      ctx.fillStyle = '#64748b';
+      ctx.fillRect(5, 9, 44, 2);
+
+      // Fenster mit blauem Scanner-/Lampen-Licht
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(12, 18, 12, 10);
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(13, 19, 10, 8);
+      ctx.fillStyle = '#bae6fd';
+      ctx.fillRect(14, 20, 3, 3);
+
+      // Eingangstür
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(28, 18, 12, 18);
+      ctx.fillStyle = '#cbd5e1';
+      ctx.fillRect(36, 26, 2, 2);
+
+      // Dünne Funk-/Messantenne auf dem Dach
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillRect(10, 1, 1.5, 9);
+      ctx.fillStyle = '#ef4444';
+      ctx.fillRect(9, 0, 3.5, 2);
+    });
+
+    // D2) INTERMEDIATE-LABOR TIER 2-3 (80x56) - Solide Forschungsstation
+    createTexture('building_lab_t2', 80, 56, (ctx) => {
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(2, 50, 76, 5);
+
+      // High-Tech Fassade (Weiß/Grau/Cyan)
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(6, 12, 68, 39);
+      ctx.fillStyle = '#64748b';
+      ctx.fillRect(8, 13, 64, 37);
+
+      // Doppelfenster mit Analyse-Konsolen
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(14, 18, 24, 16);
+      ctx.fillStyle = '#0284c7';
+      ctx.fillRect(16, 20, 20, 12);
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(18, 22, 16, 2);
+
+      // Schleusentür mit Bullauge
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(44, 18, 18, 32);
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(49, 24, 8, 8);
+
+      // Satellitenschüssel auf dem Dach
+      ctx.fillStyle = '#94a3b8';
+      ctx.beginPath();
+      ctx.arc(62, 7, 7, Math.PI * 0.8, Math.PI * 1.8);
+      ctx.stroke();
+      ctx.fillRect(60, 8, 4, 4);
+    });
+
     // H) SPRECHBLASE FÜR STEINEFORSCHER (18x14)
     createTexture('speech_bubble', 18, 14, (ctx) => {
       // Äußerer Kontur-Rand (Dunkelblau/Grau)
@@ -2960,6 +3644,241 @@ export class AssetLoader {
       ctx.beginPath();
       ctx.arc(4, 4, 3.5, 0, Math.PI * 2);
       ctx.fill();
+    });
+
+    // =======================================================
+    // 9. UNTERTAGE-INFRASTRUKTUR & BASISLAGER
+    // =======================================================
+
+    // Pneumatische Förderstation / Rohrpost (36x48)
+    createTexture('station_pneumatic_tube', 36, 48, (ctx) => {
+      // 1. Stabile Wandverankerung / Stahlplatte in den Felsen
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 4, 36, 42);
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(2, 6, 32, 38);
+      // Felsanker-Bolzen
+      ctx.fillStyle = '#64748b';
+      ctx.fillRect(3, 8, 2, 2);
+      ctx.fillRect(31, 8, 2, 2);
+      ctx.fillRect(3, 40, 2, 2);
+      ctx.fillRect(31, 40, 2, 2);
+
+      // 2. Vakuum-Transportrohr (vertikal nach oben)
+      ctx.fillStyle = '#0284c7';
+      ctx.fillRect(10, 0, 16, 26);
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(12, 0, 12, 26);
+      // Glanzkante Glaszylinder
+      ctx.fillStyle = '#e0f2fe';
+      ctx.fillRect(13, 0, 3, 26);
+      // Saug-Strömungspfeile nach oben
+      ctx.fillStyle = '#10b981';
+      ctx.fillRect(17, 4, 2, 4);
+      ctx.fillRect(16, 3, 4, 2);
+      ctx.fillRect(17, 13, 2, 4);
+      ctx.fillRect(16, 12, 4, 2);
+
+      // 3. Rohrschellen & Druckluftventile
+      ctx.fillStyle = '#090d16';
+      ctx.fillRect(8, 7, 20, 3);
+      ctx.fillRect(8, 20, 20, 3);
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillRect(9, 8, 18, 1.5);
+      ctx.fillRect(9, 21, 18, 1.5);
+
+      // 4. Trichtereinlauf / Lade-Schleuse unten
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.moveTo(6, 26);
+      ctx.lineTo(30, 26);
+      ctx.lineTo(26, 42);
+      ctx.lineTo(10, 42);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.moveTo(8, 28);
+      ctx.lineTo(28, 28);
+      ctx.lineTo(24, 40);
+      ctx.lineTo(12, 40);
+      ctx.closePath();
+      ctx.fill();
+
+      // Grüne Status-Leuchte "BEREIT"
+      ctx.fillStyle = '#10b981';
+      ctx.beginPath();
+      ctx.arc(18, 34, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#a7f3d0';
+      ctx.beginPath();
+      ctx.arc(17, 33, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Geothermie-Zapfsäule / Basislager-Energieterminal (36x48)
+    createTexture('station_geothermal', 36, 48, (ctx) => {
+      // 1. Felsbefestigung & Wärmeisolierte Rückwand
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(2, 6, 32, 40);
+      ctx.fillStyle = '#292524'; // Vulkan-Graphit
+      ctx.fillRect(4, 8, 28, 36);
+
+      // 2. Kupferne Geothermie-Dampfrohre
+      ctx.fillStyle = '#b45309';
+      ctx.fillRect(5, 0, 5, 46);
+      ctx.fillRect(26, 0, 5, 46);
+      ctx.fillStyle = '#d97706';
+      ctx.fillRect(6, 0, 3, 46);
+      ctx.fillRect(27, 0, 3, 46);
+
+      // 3. Glühender Magma-Energie-Konverter im Zentrum
+      ctx.fillStyle = '#090d16';
+      ctx.fillRect(11, 12, 14, 20);
+      ctx.fillStyle = '#ef4444';
+      ctx.fillRect(12, 13, 12, 18);
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillRect(13, 15, 10, 14);
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(15, 17, 6, 10);
+
+      // 4. Zapf-Arm & Ladekabel mit Magnethalter
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(18, 32);
+      ctx.quadraticCurveTo(24, 42, 18, 44);
+      ctx.stroke();
+
+      // Cyan-farbene Ladekupplung
+      ctx.fillStyle = '#0284c7';
+      ctx.fillRect(15, 42, 6, 5);
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(16, 43, 4, 3);
+
+      // Batterie-Blitzsymbol oben
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillRect(17, 3, 2, 5);
+      ctx.fillRect(16, 5, 4, 2);
+    });
+
+    // Untertage-Tankanlage / Treibstoff-Terminal (36x48)
+    createTexture('station_fuel', 36, 48, (ctx) => {
+      // 1. Schwerer Panzerstahl-Körper & Sockel
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(2, 6, 32, 40);
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(4, 8, 28, 36);
+
+      // 2. Vertikale Kerosin-Drucktanks links & rechts
+      ctx.fillStyle = '#b45309';
+      ctx.fillRect(5, 4, 5, 40);
+      ctx.fillRect(26, 4, 5, 40);
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillRect(6, 4, 3, 40);
+      ctx.fillRect(27, 4, 3, 40);
+
+      // 3. Digital-Anzeige & Messinstrumente im Zentrum
+      ctx.fillStyle = '#020617';
+      ctx.fillRect(11, 12, 14, 18);
+      ctx.fillStyle = '#0369a1';
+      ctx.fillRect(12, 13, 12, 8);
+      // Digitaler Füllbalken
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(13, 15, 10, 4);
+
+      // Status-LEDs
+      ctx.fillStyle = '#10b981';
+      ctx.fillRect(13, 24, 3, 3);
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillRect(17, 24, 3, 3);
+      ctx.fillStyle = '#ef4444';
+      ctx.fillRect(21, 24, 3, 3);
+
+      // 4. Robuster Schwenkarm-Sockel & Zapfschlauch
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(14, 32, 8, 8);
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(18, 34);
+      ctx.quadraticCurveTo(24, 42, 18, 44);
+      ctx.stroke();
+
+      // Zapfpistolen-Kupplung (Goldgelb / Orange)
+      ctx.fillStyle = '#d97706';
+      ctx.fillRect(15, 42, 6, 5);
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillRect(16, 43, 4, 3);
+
+      // Zapfsäulen-Symbol / Kanister oben
+      ctx.fillStyle = '#ef4444';
+      ctx.fillRect(16, 1, 4, 5);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(17, 3, 2, 2);
+    });
+
+    // =======================================================
+    // 10. OPTISCHE OBERFLÄCHEN-AUSBAUSTUFEN (KRAN, STRASSE, LATERNE)
+    // =======================================================
+
+    // Straße wurde auf Spielerwunsch komplett entfernt.
+    createTexture('surface_road_paved', 1, 1, () => {});
+
+    // Schwerlast-Hafen/Schacht-Kran im Hintergrund (64x80)
+    createTexture('surface_crane', 64, 80, (ctx) => {
+      // Stahlgitter-Turm in Caterpillar-Gelb
+      ctx.strokeStyle = '#ca8a04';
+      ctx.lineWidth = 2.5;
+
+      // Vertikale Stützen
+      ctx.strokeRect(16, 20, 32, 58);
+      // Diagonale Streben
+      ctx.beginPath();
+      ctx.moveTo(16, 20); ctx.lineTo(48, 45);
+      ctx.moveTo(48, 20); ctx.lineTo(16, 45);
+      ctx.moveTo(16, 45); ctx.lineTo(48, 70);
+      ctx.moveTo(48, 45); ctx.lineTo(16, 70);
+      ctx.stroke();
+
+      // Ausleger oben (horizontal)
+      ctx.fillStyle = '#eab308';
+      ctx.fillRect(0, 14, 64, 7);
+      ctx.fillStyle = '#ca8a04';
+      ctx.fillRect(0, 19, 64, 2);
+
+      // Gegengewicht links
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(2, 8, 12, 12);
+
+      // Seilzug & Haken rechts
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillRect(48, 21, 1, 24);
+      ctx.fillStyle = '#cbd5e1';
+      ctx.fillRect(46, 45, 5, 4);
+
+      // Rotes Hindernisfeuer / Warnblinker ganz oben
+      ctx.fillStyle = '#ef4444';
+      ctx.beginPath();
+      ctx.arc(32, 10, 3, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Industrie-Straßenlaterne mit warmem LED-Licht (16x48)
+    createTexture('surface_lantern', 16, 48, (ctx) => {
+      // Mast
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(7, 6, 2, 40);
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(5, 44, 6, 4); // Fuß
+
+      // Lampenkopf gebogen
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(2, 4, 8, 3);
+      // Warmweißes LED-Leuchtfeld
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(3, 7, 6, 2);
     });
   }
 }

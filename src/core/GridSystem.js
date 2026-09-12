@@ -289,6 +289,7 @@ export class GridSystem {
     // Verfolgung aller besuchten Positionen (wo man schon war bleibt hell angezeigt)
     this.exploredStamps = [];
     this.exploredTiles = new Set();
+    this.destroyedTiles = new Set();
     this.lastStampX = null;
     this.lastStampY = null;
 
@@ -562,6 +563,7 @@ export class GridSystem {
       tile.explored = true;
       this.fogDirty = true;
       if (this.exploredTiles) this.exploredTiles.add(`${gx},${gy}`);
+      if (this.destroyedTiles) this.destroyedTiles.add(`${gx},${gy}`);
 
       // Spezielle Beute- & Gefahreneffekte
       if (prevType === TILE_TYPES.CACHE) {
@@ -821,6 +823,7 @@ export class GridSystem {
     }
     this.activeSprites.clear();
     this.neededKeys.clear();
+    if (this.destroyedTiles) this.destroyedTiles.clear();
     this.lastCamX = null;
     this.lastCamY = null;
     this.lastPlayerX = null;

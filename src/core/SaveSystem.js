@@ -121,13 +121,18 @@ export class SaveSystem {
     const bs = scene.baseSystem;
     const ms = scene.missionSystem;
 
-    // Abgebaute Kacheln ermitteln (Kacheln, die jetzt leer sind)
-    const destroyedTiles = [];
-    gs.tiles.forEach((tile, key) => {
-      if (tile.type === TILE_TYPES.EMPTY) {
-        destroyedTiles.push(key);
-      }
-    });
+    // Abgebaute Kacheln ermitteln (blitzschnell aus Set ohne 20.000-Iteration-Scan)
+    let destroyedTiles;
+    if (gs.destroyedTiles && gs.destroyedTiles.size > 0) {
+      destroyedTiles = Array.from(gs.destroyedTiles);
+    } else {
+      destroyedTiles = [];
+      gs.tiles.forEach((tile, key) => {
+        if (tile.type === TILE_TYPES.EMPTY) {
+          destroyedTiles.push(key);
+        }
+      });
+    }
 
     // Gebäude-Stati speichern
     const buildingsData = [];
@@ -190,9 +195,13 @@ export class SaveSystem {
         factoryProducts: { ...(p.factoryProducts || {}) },
         sensorTier: p.sensorTier,
         researchedSensorTier: p.researchedSensorTier || p.sensorTier || 1,
+        researchedTnt: p.researchedTnt || 0,
+        researchedEmergency: p.researchedEmergency || 0,
+        researchedStationFuel: p.researchedStationFuel || 0,
+        researchedStationTube: p.researchedStationTube || 0,
         sensorRadius: p.sensorRadius,
         freeRescues: typeof p.freeRescues === 'number' ? p.freeRescues : 3,
-        gadgets: { ...(p.gadgets || { dynamite: 3, fuel_canister: 2, repair_kit: 2 }) },
+        gadgets: { ...(p.gadgets || { dynamite: 0, fuel_canister: 0, repair_kit: 0 }) },
         discoveredArtifacts: [...(p.discoveredArtifacts || [])]
       },
       grid: {
@@ -204,6 +213,7 @@ export class SaveSystem {
       refinery: bs && bs.getRefinerySaveData ? bs.getRefinerySaveData() : null,
       depot: bs && bs.getDepotSaveData ? bs.getDepotSaveData() : null,
       hangar: bs && bs.getHangarSaveData ? bs.getHangarSaveData() : { tier: bs?.hangarTier || 1 },
+      subsurfaceStations: bs && bs.getSubsurfaceSaveData ? bs.getSubsurfaceSaveData() : [],
       mission: missionData
     };
   }
@@ -299,6 +309,9 @@ export class SaveSystem {
           if (gs.exploredTiles) {
             gs.exploredTiles.add(key);
           }
+          if (gs.destroyedTiles) {
+            gs.destroyedTiles.add(key);
+          }
         });
       }
 
@@ -371,10 +384,21 @@ export class SaveSystem {
 
       p.components = { ...(data.player.components || {}) };
       p.factoryProducts = { ...(data.player.factoryProducts || {}) };
+      p.researchedTnt = typeof data.player.researchedTnt === 'number' ? data.player.researchedTnt : (data.player.gadgets?.dynamite > 0 ? 1 : 0);
+      p.researchedEmergency = typeof data.player.researchedEmergency === 'number' ? data.player.researchedEmergency : (data.player.gadgets?.fuel_canister > 0 ? 1 : 0);
+      p.researchedStationFuel = data.player.researchedStationFuel || 0;
+      p.researchedStationTube = data.player.researchedStationTube || 0;
+
       p.gadgets = {
-        dynamite: data.player.gadgets?.dynamite ?? 3,
-        fuel_canister: data.player.gadgets?.fuel_canister ?? 2,
-        repair_kit: data.player.gadgets?.repair_kit ?? 2
+        dynamite: data.player.gadgets?.dynamite ?? 0,
+        fuel_canister: data.player.gadgets?.fuel_canister ?? 0,
+        repair_kit: data.player.gadgets?.repair_kit ?? 0,
+        tube_s1: data.player.gadgets?.tube_s1 ?? 0,
+        tube_s2: data.player.gadgets?.tube_s2 ?? 0,
+        tube_s3: data.player.gadgets?.tube_s3 ?? 0,
+        fuel_s1: data.player.gadgets?.fuel_s1 ?? 0,
+        fuel_s2: data.player.gadgets?.fuel_s2 ?? 0,
+        fuel_s3: data.player.gadgets?.fuel_s3 ?? 0
       };
 
       // Spielerposition setzen
@@ -438,6 +462,13 @@ export class SaveSystem {
           bs.hangarTier = data.hangar?.tier || 1;
           bs.updateHangarBuildingLabel?.();
         }
+
+        if (data.subsurfaceStations && bs.loadSubsurfaceSaveData) {
+          bs.loadSubsurfaceSaveData(data.subsurfaceStations);
+        }
+
+        bs.updateBuildingVisuals?.();
+        bs.updateSurfaceVisuals?.();
       }
 
       // 4. Missionsfortschritt

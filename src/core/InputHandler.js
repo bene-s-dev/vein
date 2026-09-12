@@ -6,7 +6,7 @@
  */
 
 import Phaser from 'phaser';
-import { isModalActive, closeActiveModal } from './BaseSystem.js';
+import { isModalActive, closeActiveModal, notifyModalClosed } from './BaseSystem.js';
 import { TILE_SIZE, TILE_TYPES } from './GridSystem.js';
 import { showOreInfoModal, showSpecialTileInfoModal } from '../ui/OreInfoModal.js';
 
@@ -37,6 +37,7 @@ export class InputHandler {
     this.key3 = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.THREE, false);
     this.keyF = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F, false);
     this.keyR = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R, false);
+    this.keyE = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E, false);
 
     // Tastatur-Capture für Buchstaben und Ziffern freigeben, damit Texteingaben überall funktionieren
     if (scene.input.keyboard.removeCapture) {
@@ -53,7 +54,8 @@ export class InputHandler {
         Phaser.Input.Keyboard.KeyCodes.TWO,
         Phaser.Input.Keyboard.KeyCodes.THREE,
         Phaser.Input.Keyboard.KeyCodes.F,
-        Phaser.Input.Keyboard.KeyCodes.R
+        Phaser.Input.Keyboard.KeyCodes.R,
+        Phaser.Input.Keyboard.KeyCodes.E
       ]);
     }
 
@@ -93,6 +95,12 @@ export class InputHandler {
       this.scene.player?.useRepairKit();
     };
 
+    const triggerInteract = () => {
+      if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
+      if (isModalActive()) return;
+      this.scene.baseSystem?.handleStationInteraction?.();
+    };
+
     this.keyB.on('down', triggerDynamite);
     this.keyT.on('down', triggerDynamite);
     this.key1.on('down', triggerDynamite);
@@ -102,6 +110,8 @@ export class InputHandler {
 
     this.keyR.on('down', triggerRepair);
     this.key3.on('down', triggerRepair);
+
+    this.keyE.on('down', triggerInteract);
 
     this.setupControls();
   }
@@ -166,12 +176,22 @@ export class InputHandler {
 
     // POINTER DOWN: Frei auf dem Bildschirm berühren spawnt den Joystick
     this.scene.input.on('pointerdown', (pointer, currentlyOver) => {
-      if (isModalActive()) return;
+      if (isModalActive()) {
+        const hud = this.scene.hud;
+        if (hud && hud.actionFabContainer && hud.actionFabContainer.classList.contains('open')) {
+          hud.actionFabContainer.classList.remove('open');
+          notifyModalClosed();
+        }
+        return;
+      }
       if (activePointerId !== null) return;
 
-      // Wenn Klick/Touch auf HTML UI oder Buttons liegt, ignorieren
+      const canvas = this.scene.game?.canvas;
       const evTarget = pointer.event ? pointer.event.target : null;
-      if (evTarget && evTarget.closest && evTarget.closest('.hud-card, #mission-tracker, button, .modal-window, .modal-backdrop, #orientation-tip, .mobile-fly-btn, input, #toast-container, .game-toast')) {
+      if (evTarget && canvas && evTarget !== canvas) {
+        return;
+      }
+      if (evTarget && evTarget.closest && evTarget.closest('#hud-overlay, #hud-action-fab, #building-modal, #ore-info-backdrop, .modal-backdrop, .modal-window, .hud-card, button, input, #toast-container, .game-toast, #orientation-tip, .mobile-fly-btn')) {
         return;
       }
 
@@ -269,6 +289,14 @@ export class InputHandler {
       const tapDist = Math.hypot(upClientX - startClientX, upClientY - startClientY);
 
       hideJoystick();
+
+      if (isModalActive()) return;
+      const canvas = this.scene.game?.canvas;
+      const evTarget = pointer && pointer.event ? pointer.event.target : null;
+      if (evTarget && canvas && evTarget !== canvas) return;
+      if (evTarget && evTarget.closest && evTarget.closest('#hud-overlay, #hud-action-fab, #building-modal, #ore-info-backdrop, .modal-backdrop, .modal-window, .hud-card, button, input, #toast-container, .game-toast, #orientation-tip, .mobile-fly-btn')) {
+        return;
+      }
 
       // Tap / Klick-Erkennung auf Erze unter Tage
       if (!hasMovedBeyondTap && tapDist < 14 && (upTime - startTime) < 550) {

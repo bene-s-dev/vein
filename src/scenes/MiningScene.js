@@ -242,9 +242,9 @@ export class MiningScene extends Phaser.Scene {
       this.baseSystem.update(delta);
     }
 
-    // Automatisches Speichern alle 10 Sekunden (überschreibt alten Stand)
+    // Automatisches Speichern alle 30 Sekunden (überschreibt alten Stand)
     this.autoSaveTimer = (this.autoSaveTimer || 0) + delta;
-    if (this.autoSaveTimer >= 10000) {
+    if (this.autoSaveTimer >= 30000) {
       this.autoSaveTimer = 0;
       if (!SaveSystem.isClearing) {
         SaveSystem.save(this);

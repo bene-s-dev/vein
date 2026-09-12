@@ -136,6 +136,16 @@ export class HUD {
     this.levelRight = document.getElementById('hud-level-right');
     this.returnWarn = document.getElementById('hud-return-warn');
 
+    // Action FAB & Speed Dial (Ausrüstung & Untertage-Stationen)
+    this.actionFabContainer = document.getElementById('hud-action-fab');
+    this.btnActionMain = document.getElementById('btn-action-main');
+    this.btnActionPneumatic = document.getElementById('btn-action-pneumatic');
+    this.btnActionGeothermal = document.getElementById('btn-action-geothermal');
+    this.labelActionPneumatic = document.getElementById('label-action-pneumatic');
+    this.labelActionGeothermal = document.getElementById('label-action-geothermal');
+    this.badgeActionPneumatic = document.getElementById('badge-action-pneumatic');
+    this.badgeActionGeothermal = document.getElementById('badge-action-geothermal');
+
     // Gadget Buttons
     this.btnDynamite = document.getElementById('btn-gadget-dynamite');
     this.btnFuel = document.getElementById('btn-gadget-fuel');
@@ -144,7 +154,7 @@ export class HUD {
     this.countFuel = document.getElementById('gadget-count-fuel');
     this.countRepair = document.getElementById('gadget-count-repair');
 
-    const bindGadgetBtn = (btn, action) => {
+    const bindActionBtn = (btn, action) => {
       if (!btn) return;
       let lastTrigger = 0;
       const trigger = (e) => {
@@ -157,12 +167,54 @@ export class HUD {
         lastTrigger = now;
         action();
       };
-      ['pointerdown', 'click'].forEach(evt => btn.addEventListener(evt, trigger));
+      ['pointerdown', 'mousedown', 'touchstart', 'click'].forEach(evt => btn.addEventListener(evt, trigger, { passive: false }));
     };
 
-    bindGadgetBtn(this.btnDynamite, () => this.scene.useDynamite?.());
-    bindGadgetBtn(this.btnFuel, () => this.player?.useFuelCanister());
-    bindGadgetBtn(this.btnRepair, () => this.player?.useRepairKit());
+    // Toggle Action FAB Speed Dial
+    if (this.btnActionMain && this.actionFabContainer) {
+      let lastToggle = 0;
+      const toggleFab = (e) => {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        const now = Date.now();
+        if (now - lastToggle < 200) return;
+        lastToggle = now;
+        const willOpen = !this.actionFabContainer.classList.contains('open');
+        this.actionFabContainer.classList.toggle('open');
+        if (!willOpen) {
+          notifyModalClosed();
+        }
+      };
+      ['pointerdown', 'mousedown', 'touchstart', 'click'].forEach(evt => this.btnActionMain.addEventListener(evt, toggleFab, { passive: false }));
+
+      window.addEventListener('click', (e) => {
+        if (this.actionFabContainer.classList.contains('open')) {
+          if (!this.actionFabContainer.contains(e.target)) {
+            this.actionFabContainer.classList.remove('open');
+            notifyModalClosed();
+          }
+        }
+      });
+    }
+
+    // Action-Items binden
+    bindActionBtn(this.btnDynamite, () => this.scene.useDynamite?.());
+    bindActionBtn(this.btnFuel, () => this.player?.useFuelCanister());
+    bindActionBtn(this.btnRepair, () => this.player?.useRepairKit());
+    bindActionBtn(this.btnActionPneumatic, () => this.scene.baseSystem?.buildPneumaticStationAtPlayer?.());
+    bindActionBtn(this.btnActionGeothermal, () => this.scene.baseSystem?.buildGeothermalStationAtPlayer?.());
+
+    // Klick auf Text-Labels löst ebenfalls aus
+    const rowDyn = document.getElementById('row-action-dynamite')?.querySelector('.fab-label');
+    if (rowDyn) bindActionBtn(rowDyn, () => this.scene.useDynamite?.());
+    const rowFuel = document.getElementById('row-action-fuel')?.querySelector('.fab-label');
+    if (rowFuel) bindActionBtn(rowFuel, () => this.player?.useFuelCanister());
+    const rowRep = document.getElementById('row-action-repair')?.querySelector('.fab-label');
+    if (rowRep) bindActionBtn(rowRep, () => this.player?.useRepairKit());
+    if (this.labelActionPneumatic) bindActionBtn(this.labelActionPneumatic, () => this.scene.baseSystem?.buildPneumaticStationAtPlayer?.());
+    if (this.labelActionGeothermal) bindActionBtn(this.labelActionGeothermal, () => this.scene.baseSystem?.buildGeothermalStationAtPlayer?.());
 
     // Toast- und Alarm-Tracking (nur 1x beim Point of No Return)
     this.warnedPointOfNoReturn = false;
@@ -170,7 +222,10 @@ export class HUD {
     // Oberes linkes Bohrer-Status-Widget (Tank, Hülle, Fracht) als ein einheitliches klick-/tippbares Element
     let lastDrillerModalOpen = 0;
     const handleOpenDriller = (e) => {
-      if (e && e.stopPropagation) e.stopPropagation();
+      if (e) {
+        if (e.preventDefault) e.preventDefault();
+        if (e.stopPropagation) e.stopPropagation();
+      }
       const now = Date.now();
       if (now - lastDrillerModalOpen < 300) return;
       lastDrillerModalOpen = now;
@@ -182,7 +237,7 @@ export class HUD {
     if (this.cardGauges) {
       this.cardGauges.style.cursor = 'pointer';
       ['pointerdown', 'click'].forEach((evt) => {
-        this.cardGauges.addEventListener(evt, handleOpenDriller);
+        this.cardGauges.addEventListener(evt, handleOpenDriller, { passive: false });
       });
     }
 
@@ -321,7 +376,11 @@ export class HUD {
 
     const btnOk = document.getElementById('btn-discovery-ok');
     if (btnOk) {
-      btnOk.onclick = () => {
+      btnOk.onclick = (e) => {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
         modalEl.classList.remove('discovery-modal-active');
         document.body.classList.remove('discovery-modal-open');
         modalEl.style.display = 'none';
@@ -362,23 +421,16 @@ export class HUD {
         this.fuelBar.style.width = `${fuelPercent.toFixed(1)}%`;
       }
     }
-    const curFuel = Math.round(this.player.fuel);
-    const maxFuel = this.player.maxFuel || 40;
+    const roundedFuelPct = Math.round(fuelPercent);
     if (this.fuelNum) {
-      if (this._lastFuel !== curFuel) {
-        this.fuelNum.textContent = curFuel;
-        this._lastFuel = curFuel;
+      if (this._lastFuel !== roundedFuelPct) {
+        this.fuelNum.textContent = roundedFuelPct;
+        this._lastFuel = roundedFuelPct;
       }
-    }
-    if (this.fuelMax) {
-      if (this._lastMaxFuel !== maxFuel) {
-        this.fuelMax.textContent = maxFuel;
-        this._lastMaxFuel = maxFuel;
-      }
-    } else if (this.fuelText && !this.fuelNum) {
-      if (this._lastFuel !== curFuel) {
-        this.fuelText.textContent = `${curFuel}/${maxFuel}L`;
-        this._lastFuel = curFuel;
+    } else if (this.fuelText) {
+      if (this._lastFuel !== roundedFuelPct) {
+        this.fuelText.textContent = `${roundedFuelPct}%`;
+        this._lastFuel = roundedFuelPct;
       }
     }
 
@@ -399,6 +451,8 @@ export class HUD {
     }
 
     if (this.fuelBarContainer) {
+      const curFuel = Math.round(this.player.fuel);
+      const maxFuel = Math.round(this.player.maxFuel);
       const roundedReturn = Math.round(effectiveReturnThreshold);
       const fuelPct = Math.round(fuelPercent);
       const returnCost = Math.round(this.player.getReturnFuelCost ? this.player.getReturnFuelCost() : 0);
@@ -429,6 +483,83 @@ export class HUD {
         this.countRepair.textContent = rCount;
         this._lastCountRepair = rCount;
         if (this.btnRepair) this.btnRepair.classList.toggle('empty', rCount <= 0);
+      }
+    }
+
+    // Action FAB & Speed Dial: Generell NUR unter Tage anzeigen!
+    if (this.actionFabContainer) {
+      if (!isBelowGround) {
+        if (this.actionFabContainer.style.display !== 'none') {
+          this.actionFabContainer.style.display = 'none';
+          this.actionFabContainer.classList.remove('open');
+        }
+      } else {
+        if (this.actionFabContainer.style.display !== 'flex') {
+          this.actionFabContainer.style.display = 'flex';
+        }
+      }
+    }
+
+    // Action Speed Dial: Inventar-Vorrat & Status nach Tiefe aktualisieren (nur unter Tage aktiv)
+    if (isBelowGround) {
+      const depthMeters = Math.max(0, Math.floor(this.player.depthMeters || this.player.gy || 0));
+      const bs = this.scene.baseSystem;
+      if (bs) {
+        const nearby = bs.getNearbyStation(this.player.gx, this.player.gy, 2.5);
+        const tubeCount = bs.getAvailableStationCount ? bs.getAvailableStationCount(this.player, 'tube', depthMeters) : 0;
+        const fuelCount = bs.getAvailableStationCount ? bs.getAvailableStationCount(this.player, 'fuel', depthMeters) : 0;
+
+        // 1. Erzförderung / Rohrpost
+        if (this.labelActionPneumatic) {
+          if (nearby && (nearby.type === 'pneumatic' || nearby.type === 'tube')) {
+            const rawOresCount = (this.player.cargo || []).filter(item => !String(item).startsWith('bar_')).length;
+            if (rawOresCount > 0) {
+              this.labelActionPneumatic.textContent = `Erze absaugen (${rawOresCount}x)`;
+              if (this.badgeActionPneumatic) {
+                this.badgeActionPneumatic.textContent = rawOresCount;
+                this.badgeActionPneumatic.style.display = 'flex';
+              }
+            } else {
+              this.labelActionPneumatic.textContent = 'Rohrpost bereit (leer)';
+              if (this.badgeActionPneumatic) {
+                this.badgeActionPneumatic.textContent = '0';
+                this.badgeActionPneumatic.style.display = 'flex';
+              }
+            }
+          } else {
+            this.labelActionPneumatic.textContent = tubeCount > 0 ? `Erzförderung (${tubeCount}x)` : 'Erzförderung (Kein Modul)';
+            if (this.badgeActionPneumatic) {
+              this.badgeActionPneumatic.textContent = tubeCount;
+              this.badgeActionPneumatic.style.display = 'flex';
+            }
+          }
+          if (this.btnActionPneumatic) {
+            const isUsable = (nearby && (nearby.type === 'pneumatic' || nearby.type === 'tube')) || tubeCount > 0;
+            this.btnActionPneumatic.classList.toggle('empty', !isUsable);
+          }
+        }
+
+        // 2. Tankanlage (Untertage-Tankanlage mit mechanischem Tankarm)
+        if (this.labelActionGeothermal) {
+          if (nearby && (nearby.type === 'fuel' || nearby.type === 'geothermal')) {
+            const pct = Math.round((this.player.fuel / this.player.maxFuel) * 100);
+            this.labelActionGeothermal.textContent = `⛽ Tankanlage aktiv (${pct}%)`;
+            if (this.badgeActionGeothermal) {
+              this.badgeActionGeothermal.textContent = pct + '%';
+              this.badgeActionGeothermal.style.display = 'flex';
+            }
+          } else {
+            this.labelActionGeothermal.textContent = fuelCount > 0 ? `Tankanlage (${fuelCount}x)` : 'Tankanlage (Kein Modul)';
+            if (this.badgeActionGeothermal) {
+              this.badgeActionGeothermal.textContent = fuelCount;
+              this.badgeActionGeothermal.style.display = 'flex';
+            }
+          }
+          if (this.btnActionGeothermal) {
+            const isUsable = (nearby && (nearby.type === 'fuel' || nearby.type === 'geothermal')) || fuelCount > 0;
+            this.btnActionGeothermal.classList.toggle('empty', !isUsable);
+          }
+        }
       }
     }
 
@@ -466,25 +597,18 @@ export class HUD {
       }
     }
 
-    // Karosserie / Rumpfintegrität (Reale HP-Werte statt reiner Prozentwert)
+    // Karosserie / Rumpfintegrität (Reine Prozent-Anzeige)
     const hullPercent = Math.max(0, Math.min(100, (this.player.hull / this.player.maxHull) * 100));
-    const curHull = Math.round(this.player.hull);
-    const maxHull = this.player.maxHull || 50;
+    const roundedHullPct = Math.round(hullPercent);
     if (this.hullNum) {
-      if (this._lastHull !== curHull) {
-        this.hullNum.textContent = curHull;
-        this._lastHull = curHull;
+      if (this._lastHull !== roundedHullPct) {
+        this.hullNum.textContent = roundedHullPct;
+        this._lastHull = roundedHullPct;
       }
-    }
-    if (this.hullMax) {
-      if (this._lastMaxHull !== maxHull) {
-        this.hullMax.textContent = maxHull;
-        this._lastMaxHull = maxHull;
-      }
-    } else if (this.hullText && !this.hullNum) {
-      if (this._lastHull !== curHull) {
-        this.hullText.textContent = `${curHull}/${maxHull}HP`;
-        this._lastHull = curHull;
+    } else if (this.hullText) {
+      if (this._lastHull !== roundedHullPct) {
+        this.hullText.textContent = `${roundedHullPct}%`;
+        this._lastHull = roundedHullPct;
       }
     }
 
@@ -503,6 +627,8 @@ export class HUD {
     }
 
     if (this.hullCluster) {
+      const curHull = Math.round(this.player.hull);
+      const maxHull = Math.round(this.player.maxHull);
       const roundedHullPct = Math.round(hullPercent);
       if (this._lastHullTitleHp !== curHull || this._lastHullTitleMax !== maxHull) {
         this._lastHullTitleHp = curHull;

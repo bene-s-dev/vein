@@ -137,6 +137,17 @@ export function showOreInfoModal(oreKey, scene) {
   const modalTitle = document.getElementById('modal-title');
   const isDepotOpen = buildingModal && buildingModal.style.display !== 'none' && modalTitle && modalTitle.innerText.includes('DEPOT');
 
+function shieldBackdrop(el) {
+  if (!el || el.__shielded) return;
+  el.__shielded = true;
+  const events = ['pointerdown', 'pointerup', 'pointermove', 'mousedown', 'mouseup', 'click', 'touchstart', 'touchend'];
+  events.forEach((eventType) => {
+    el.addEventListener(eventType, (e) => {
+      e.stopPropagation();
+    }, { passive: false });
+  });
+}
+
   // DOM Container erstellen oder wiederverwenden
   let backdropEl = document.getElementById('ore-info-backdrop');
   if (!backdropEl) {
@@ -157,6 +168,7 @@ export function showOreInfoModal(oreKey, scene) {
     `;
     document.body.appendChild(backdropEl);
   }
+  shieldBackdrop(backdropEl);
 
   const closeModal = () => {
     notifyModalClosed();
@@ -197,21 +209,22 @@ export function showOreInfoModal(oreKey, scene) {
       <!-- Schließen X-Button oben rechts -->
       <button id="btn-ore-info-x" style="
         position: absolute;
-        top: 12px;
-        right: 12px;
+        top: 10px;
+        right: 10px;
         background: rgba(255, 255, 255, 0.08);
         border: none;
         border-radius: 99px;
-        width: 28px;
-        height: 28px;
+        width: 32px;
+        height: 32px;
         display: flex;
         align-items: center;
         justify-content: center;
         color: #94a3b8;
         cursor: pointer;
+        touch-action: manipulation;
         transition: background 0.15s, color 0.15s;
       ">
-        ${icon('x', '', 14)}
+        ${icon('x', '', 16)}
       </button>
 
       <!-- Kopf-Badge: MINERALIEN-INFO -->
@@ -301,6 +314,7 @@ export function showOreInfoModal(oreKey, scene) {
 
   // Klick auf Backdrop schließt Modal
   backdropEl.onclick = (e) => {
+    e.stopPropagation();
     if (e.target === backdropEl) {
       closeModal();
     }
@@ -308,7 +322,11 @@ export function showOreInfoModal(oreKey, scene) {
 
   const btnOk = document.getElementById('btn-ore-info-ok');
   if (btnOk) {
-    btnOk.onclick = () => {
+    btnOk.onclick = (e) => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
       soundFx.playClick();
       closeModal();
     };
@@ -316,7 +334,11 @@ export function showOreInfoModal(oreKey, scene) {
 
   const btnX = document.getElementById('btn-ore-info-x');
   if (btnX) {
-    btnX.onclick = () => {
+    btnX.onclick = (e) => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
       soundFx.playClick();
       closeModal();
     };
@@ -393,6 +415,7 @@ export function showSpecialTileInfoModal(tileType, scene, isDiscovery = false) {
     `;
     document.body.appendChild(backdropEl);
   }
+  shieldBackdrop(backdropEl);
 
   const closeModal = () => {
     notifyModalClosed();
@@ -454,21 +477,22 @@ export function showSpecialTileInfoModal(tileType, scene, isDiscovery = false) {
       <!-- Schließen X-Button oben rechts -->
       <button id="btn-ore-info-x" style="
         position: absolute;
-        top: 12px;
-        right: 12px;
+        top: 10px;
+        right: 10px;
         background: rgba(255, 255, 255, 0.08);
         border: none;
         border-radius: 99px;
-        width: 28px;
-        height: 28px;
+        width: 32px;
+        height: 32px;
         display: flex;
         align-items: center;
         justify-content: center;
         color: #94a3b8;
         cursor: pointer;
+        touch-action: manipulation;
         transition: background 0.15s, color 0.15s;
       ">
-        ${icon('x', '', 14)}
+        ${icon('x', '', 16)}
       </button>
 
       <!-- Kopf-Badge: NEUE ENTDECKUNG / SPEZIALFELD -->
@@ -515,6 +539,7 @@ export function showSpecialTileInfoModal(tileType, scene, isDiscovery = false) {
   refreshIcons(backdropEl);
 
   backdropEl.onclick = (e) => {
+    e.stopPropagation();
     if (e.target === backdropEl) {
       closeModal();
     }
@@ -522,7 +547,11 @@ export function showSpecialTileInfoModal(tileType, scene, isDiscovery = false) {
 
   const btnOk = document.getElementById('btn-ore-info-ok');
   if (btnOk) {
-    btnOk.onclick = () => {
+    btnOk.onclick = (e) => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
       soundFx.playClick();
       closeModal();
     };
@@ -530,7 +559,11 @@ export function showSpecialTileInfoModal(tileType, scene, isDiscovery = false) {
 
   const btnX = document.getElementById('btn-ore-info-x');
   if (btnX) {
-    btnX.onclick = () => {
+    btnX.onclick = (e) => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
       soundFx.playClick();
       closeModal();
     };
