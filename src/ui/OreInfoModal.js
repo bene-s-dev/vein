@@ -27,16 +27,17 @@ export const SPECIAL_TILE_DATA = {
   tile_boulder: {
     id: 'tile_boulder',
     name: 'Felsbrocken & Geröll',
-    badge: 'GEFAHR & HINDERNIS',
+    badge: 'GEFAHR & BEUTE',
     badgeColor: '#f59e0b',
+    depth: 'Ab 12m Tiefe',
     icon: 'mountain',
     sprite: 'tile_boulder',
     stats: [
-      { label: 'Eigenschaft', val: 'Instabil', color: '#ef4444' },
+      { label: 'Eigenschaft', val: 'Instabil (stürzt)', color: '#ef4444' },
       { label: 'Gesteinshärte', val: '110 HP', color: '#38bdf8' },
-      { label: 'Taktik', val: 'Sprengen (B) / Umgehen', color: '#fbbf24' }
+      { label: 'Ertrag', val: '+€25 & +8 XP', color: '#10b981' }
     ],
-    desc: 'Ein massiver, abgerundeter Felsbrocken im Schacht. Wenn du den Boden direkt unter ihm wegbohrst, stürzt er ungebremst herab und zerschmettert alles darunter! Kann mit starkem Bohrkopf abgebaut oder mit Dynamit (Taste B) gesprengt werden.',
+    desc: 'Ein massiver, schwerer Felsbrocken im Schacht. Wenn du den Boden direkt unter ihm wegbohrst, stürzt er ungebremst herab und zerschmettert alles darunter! Kann mit starkem Bohrkopf abgebaut oder mit Dynamit (Taste B) gesprengt werden.',
     hint: '💡 Tipp: Stehe niemals unter einem untergrabenen Felsbrocken! Nutze Dynamit, um Schächte schnell freizusprengen.'
   },
   tile_cache: {
@@ -102,6 +103,19 @@ export function getLayerForOre(oreKey, oreData) {
 
 let activeKeydownListener = null;
 
+// Verhindert Klick-Durchgriff auf den Phaser-Canvas
+function shieldBackdrop(el) {
+  if (!el || el.__shielded) return;
+  el.__shielded = true;
+  const events = ['pointerdown', 'pointerup', 'pointermove', 'mousedown', 'mouseup', 'click', 'touchstart', 'touchend'];
+  events.forEach((eventType) => {
+    el.addEventListener(eventType, (e) => {
+      // Wenn das Event auf dem Schließen-Button oder innerhalb des Dialogs liegt, normales Verhalten erlauben
+      e.stopPropagation();
+    }, { passive: false });
+  });
+}
+
 /**
  * Zeigt das detailreiche Erz-Informations-Popup an (unter Tage, im Depot oder im Bohrermenü).
  */
@@ -137,54 +151,43 @@ export function showOreInfoModal(oreKey, scene) {
   const modalTitle = document.getElementById('modal-title');
   const isDepotOpen = buildingModal && buildingModal.style.display !== 'none' && modalTitle && modalTitle.innerText.includes('DEPOT');
 
-function shieldBackdrop(el) {
-  if (!el || el.__shielded) return;
-  el.__shielded = true;
-  const events = ['pointerdown', 'pointerup', 'pointermove', 'mousedown', 'mouseup', 'click', 'touchstart', 'touchend'];
-  events.forEach((eventType) => {
-    el.addEventListener(eventType, (e) => {
-      e.stopPropagation();
-    }, { passive: false });
-  });
-}
-
-  // DOM Container erstellen oder wiederverwenden
-  let backdropEl = document.getElementById('ore-info-backdrop');
-  if (!backdropEl) {
-    backdropEl = document.createElement('div');
-    backdropEl.id = 'ore-info-backdrop';
-    backdropEl.style.cssText = `
-      display: none;
-      position: fixed;
-      inset: 0;
-      justify-content: center;
-      align-items: center;
-      padding: 16px;
-      background: rgba(3, 7, 18, 0.78);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      z-index: 10050;
-      box-sizing: border-box;
-    `;
-    document.body.appendChild(backdropEl);
-  }
-  shieldBackdrop(backdropEl);
-
-  const closeModal = () => {
-    notifyModalClosed();
-    backdropEl.style.display = 'none';
-    if (activeKeydownListener) {
-      window.removeEventListener('keydown', activeKeydownListener);
-      activeKeydownListener = null;
+  try {
+    // DOM Container erstellen oder wiederverwenden
+    let backdropEl = document.getElementById('ore-info-backdrop');
+    if (!backdropEl) {
+      backdropEl = document.createElement('div');
+      backdropEl.id = 'ore-info-backdrop';
+      backdropEl.style.cssText = `
+        display: none;
+        position: fixed;
+        inset: 0;
+        justify-content: center;
+        align-items: center;
+        padding: 16px;
+        background: rgba(3, 7, 18, 0.78);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        z-index: 10050;
+        box-sizing: border-box;
+      `;
+      document.body.appendChild(backdropEl);
     }
+    shieldBackdrop(backdropEl);
 
-    // Wenn das Spiel vorher nicht pausiert war und kein anderes Hauptmodal offen ist, unpausieren
-    if (!wasAlreadyPaused && !isModalActive()) {
-      scene.isPaused = false;
-    }
-  };
+    const closeModal = () => {
+      backdropEl.style.display = 'none';
+      if (activeKeydownListener) {
+        window.removeEventListener('keydown', activeKeydownListener);
+        activeKeydownListener = null;
+      }
 
-  backdropEl.innerHTML = `
+      if (!wasAlreadyPaused) {
+        scene.isPaused = false;
+      }
+      notifyModalClosed();
+    };
+
+    backdropEl.innerHTML = `
     <div class="ore-info-window" style="
       width: 90%;
       max-width: 380px;
@@ -227,33 +230,32 @@ function shieldBackdrop(el) {
         ${icon('x', '', 16)}
       </button>
 
-      <!-- Kopf-Badge: MINERALIEN-INFO -->
-      <div style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; color: #38bdf8; background: rgba(56, 189, 248, 0.12); padding: 4px 12px; border-radius: 9999px; border: 1px solid rgba(56, 189, 248, 0.25);">
-        ${icon('sparkles', '', 13)}
-        <span>MINERALIEN-INFO</span>
+      <!-- Kopf-Badge: Schichtzugehörigkeit -->
+      <div style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; color: ${layer.color}; background: ${layer.color}18; padding: 4px 12px; border-radius: 9999px; border: 1px solid ${layer.color}35;">
+        ${icon('layers', '', 13)}
+        <span>${layer.name}</span>
       </div>
 
-      <!-- Icon & Name -->
-      <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 2px;">
-        ${oreIcon(oreKey, 34)}
-        <h2 style="margin: 0; font-size: 21px; font-weight: 800; color: #f8fafc; letter-spacing: 0.5px;">
+      <!-- Erz Icon & Name -->
+      <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 2px;">
+        <div style="transform: scale(1.35); filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5)); display: flex; align-items: center;">
+          ${oreIcon(oreKey, 34)}
+        </div>
+        <h2 style="margin: 0; font-size: 22px; font-weight: 800; color: #f8fafc; letter-spacing: 0.5px;">
           ${oreData.name.toUpperCase()}
         </h2>
       </div>
 
-      <!-- Pillen / Werte -->
+      <!-- Stat-Pills -->
       <div style="display: flex; justify-content: center; gap: 6px; font-size: 12px; flex-wrap: wrap;">
         <span style="background: rgba(251, 191, 36, 0.12); border: 1px solid rgba(251, 191, 36, 0.25); color: #fbbf24; font-weight: 800; padding: 4px 10px; border-radius: 8px;">
-          +€${oreData.value}
+          Wert: €${oreData.value}
         </span>
         <span style="background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.25); color: #38bdf8; font-weight: 700; padding: 4px 10px; border-radius: 8px;">
-          ab ${oreData.minDepth}m
+          ab ${oreData.minDepth}m Tiefe
         </span>
-        <span style="background: rgba(148, 163, 184, 0.12); border: 1px solid rgba(148, 163, 184, 0.2); color: #cbd5e1; font-weight: 700; padding: 4px 10px; border-radius: 8px;">
+        <span style="background: rgba(148, 163, 184, 0.12); border: 1px solid rgba(148, 163, 184, 0.25); color: #cbd5e1; font-weight: 700; padding: 4px 10px; border-radius: 8px;">
           Härte ${oreData.hardness}x
-        </span>
-        <span style="background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.2); color: #c084fc; font-weight: 700; padding: 4px 10px; border-radius: 8px;">
-          ${oreData.weight || 1}t / Stk.
         </span>
       </div>
 
@@ -280,16 +282,16 @@ function shieldBackdrop(el) {
 
       <!-- Verwendung & Nutzen -->
       <div style="width: 100%; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 10px; padding: 8px 12px; text-align: left; box-sizing: border-box; display: flex; flex-direction: column; gap: 3px;">
-        <span style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 4px;">
+        <span style="font-size: 10px; font-weight: 800; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 4px;">
           ${icon('wrench', '', 11)} Verwendung
         </span>
-        <span style="font-size: 11.5px; line-height: 1.4; color: #94a3b8;">
+        <span style="font-size: 11.5px; line-height: 1.4; color: #cbd5e1;">
           ${usage}
         </span>
       </div>
 
       <!-- Bestand-Info -->
-      <div style="display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 12px; color: #64748b;">
+      <div style="display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 12px; color: #cbd5e1;">
         <span>Im Bohrer: <strong style="color: #38bdf8;">${cargoCount}x</strong></span>
         <span>•</span>
         <span>Im Depot: <strong style="color: #a855f7;">${depotCount}x</strong></span>
@@ -356,16 +358,24 @@ function shieldBackdrop(el) {
     };
   }
 
-  // Escape-Taste schließt das Modal
-  if (activeKeydownListener) {
-    window.removeEventListener('keydown', activeKeydownListener);
-  }
-  activeKeydownListener = (e) => {
-    if (e.key === 'Escape') {
-      closeModal();
+    // Escape-Taste schließt das Modal
+    if (activeKeydownListener) {
+      window.removeEventListener('keydown', activeKeydownListener);
     }
-  };
-  window.addEventListener('keydown', activeKeydownListener);
+    activeKeydownListener = (e) => {
+      if (e.key === 'Escape') {
+        closeModal();
+      }
+    };
+    window.addEventListener('keydown', activeKeydownListener);
+  } catch (err) {
+    console.error('Error in showOreInfoModal:', err);
+    if (!wasAlreadyPaused && scene) {
+      scene.isPaused = false;
+    }
+    const backdropEl = document.getElementById('ore-info-backdrop');
+    if (backdropEl) backdropEl.style.display = 'none';
+  }
 }
 
 /**
@@ -395,40 +405,41 @@ export function showSpecialTileInfoModal(tileType, scene, isDiscovery = false) {
     if (soundFx.stopRefuel) soundFx.stopRefuel();
   }
 
-  // DOM Container erstellen oder wiederverwenden
-  let backdropEl = document.getElementById('ore-info-backdrop');
-  if (!backdropEl) {
-    backdropEl = document.createElement('div');
-    backdropEl.id = 'ore-info-backdrop';
-    backdropEl.style.cssText = `
-      display: none;
-      position: fixed;
-      inset: 0;
-      justify-content: center;
-      align-items: center;
-      padding: 16px;
-      background: rgba(3, 7, 18, 0.78);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      z-index: 10050;
-      box-sizing: border-box;
-    `;
-    document.body.appendChild(backdropEl);
-  }
-  shieldBackdrop(backdropEl);
-
-  const closeModal = () => {
-    notifyModalClosed();
-    backdropEl.style.display = 'none';
-    if (activeKeydownListener) {
-      window.removeEventListener('keydown', activeKeydownListener);
-      activeKeydownListener = null;
+  try {
+    // DOM Container erstellen oder wiederverwenden
+    let backdropEl = document.getElementById('ore-info-backdrop');
+    if (!backdropEl) {
+      backdropEl = document.createElement('div');
+      backdropEl.id = 'ore-info-backdrop';
+      backdropEl.style.cssText = `
+        display: none;
+        position: fixed;
+        inset: 0;
+        justify-content: center;
+        align-items: center;
+        padding: 16px;
+        background: rgba(3, 7, 18, 0.78);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        z-index: 10050;
+        box-sizing: border-box;
+      `;
+      document.body.appendChild(backdropEl);
     }
+    shieldBackdrop(backdropEl);
 
-    if (!wasAlreadyPaused && !isModalActive()) {
-      scene.isPaused = false;
-    }
-  };
+    const closeModal = () => {
+      backdropEl.style.display = 'none';
+      if (activeKeydownListener) {
+        window.removeEventListener('keydown', activeKeydownListener);
+        activeKeydownListener = null;
+      }
+
+      if (!wasAlreadyPaused) {
+        scene.isPaused = false;
+      }
+      notifyModalClosed();
+    };
 
   // Textur-DataURL für kristallklares Pixelart im Popup
   let textureImgHtml = '';
@@ -569,13 +580,21 @@ export function showSpecialTileInfoModal(tileType, scene, isDiscovery = false) {
     };
   }
 
-  if (activeKeydownListener) {
-    window.removeEventListener('keydown', activeKeydownListener);
-  }
-  activeKeydownListener = (e) => {
-    if (e.key === 'Escape') {
-      closeModal();
+    if (activeKeydownListener) {
+      window.removeEventListener('keydown', activeKeydownListener);
     }
-  };
-  window.addEventListener('keydown', activeKeydownListener);
+    activeKeydownListener = (e) => {
+      if (e.key === 'Escape') {
+        closeModal();
+      }
+    };
+    window.addEventListener('keydown', activeKeydownListener);
+  } catch (err) {
+    console.error('Error in showSpecialTileInfoModal:', err);
+    if (!wasAlreadyPaused && scene) {
+      scene.isPaused = false;
+    }
+    const backdropEl = document.getElementById('ore-info-backdrop');
+    if (backdropEl) backdropEl.style.display = 'none';
+  }
 }

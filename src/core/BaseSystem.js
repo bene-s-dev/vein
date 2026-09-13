@@ -6,9 +6,10 @@
  * und das erweiterte Tech-Upgrade-System.
  */
 
+import Phaser from 'phaser';
 import { TILE_SIZE, ORE_DATA } from './GridSystem.js';
 import { soundFx } from './SoundEffects.js';
-import { icon, refreshIcons, COMPONENT_ICONS, oreIcon, ORE_COLORS, REFINED_ORE_DATA, getRefinedOreName, refinedItemIcon, itemDisplayIcon } from '../ui/IconHelper.js';
+import { icon, refreshIcons, COMPONENT_ICONS, oreIcon, ORE_COLORS, REFINED_ORE_DATA, getRefinedOreName, refinedItemIcon, itemDisplayIcon, drillerVehicleIcon } from '../ui/IconHelper.js';
 import { TANK_TIERS, HULL_TIERS, ENGINE_TIERS, CARGO_TIERS, SENSOR_TIERS } from './Player.js';
 import { showOreInfoModal } from '../ui/OreInfoModal.js';
 
@@ -57,6 +58,10 @@ export function closeActiveModal(scene) {
     floatingContainer.innerHTML = '';
     floatingContainer.style.display = 'none';
   }
+  const oreBackdrop = document.getElementById('ore-info-backdrop');
+  if (oreBackdrop) {
+    oreBackdrop.style.display = 'none';
+  }
   document.body.classList.remove('modal-open');
   document.body.classList.remove('discovery-modal-open');
 
@@ -99,7 +104,7 @@ export function isModalActive() {
       return true;
     }
   }
-  if (Date.now() - lastModalCloseTimestamp < 400) {
+  if (Date.now() - lastModalCloseTimestamp < 100) {
     return true;
   }
   return false;
@@ -247,7 +252,7 @@ export const EXPEDITION_ITEMS = [
     badge: '0–180m',
     desc: 'Förderschacht für Humus & Schiefer (bis 180m). Saugt Erze direkt ins Depot ab.',
     price: 350,
-    icon: '🚀',
+    icon: 'conveyor-belt',
     minDepth: 5,
     maxDepth: 180,
     reqResearch: { track: 'station_tube', tier: 1, label: 'Förderschacht Stufe 1' }
@@ -260,7 +265,7 @@ export const EXPEDITION_ITEMS = [
     badge: '180–950m',
     desc: 'Verstärkter Förderschacht für Granit & Obsidian (180–950m). Druckfeste Rohre.',
     price: 1800,
-    icon: '🚀',
+    icon: 'conveyor-belt',
     minDepth: 5,
     maxDepth: 950,
     reqResearch: { track: 'station_tube', tier: 2, label: 'Förderschacht Stufe 2' }
@@ -273,7 +278,7 @@ export const EXPEDITION_ITEMS = [
     badge: '>950m',
     desc: 'Titan-Kernbohr-Förderschacht für Urgestein (>950m). Höchste Tiefenbeständigkeit.',
     price: 7500,
-    icon: '🚀',
+    icon: 'conveyor-belt',
     minDepth: 5,
     maxDepth: 99999,
     reqResearch: { track: 'station_tube', tier: 3, label: 'Förderschacht Stufe 3' }
@@ -288,7 +293,7 @@ export const EXPEDITION_ITEMS = [
     badge: '0–180m',
     desc: 'Untertage-Tankanlage für Humus & Schiefer (bis 180m). Roboter-Betankungsarm.',
     price: 500,
-    icon: '⛽',
+    icon: 'fuel',
     minDepth: 5,
     maxDepth: 180,
     reqResearch: { track: 'station_fuel', tier: 1, label: 'Tankanlage Stufe 1' }
@@ -301,7 +306,7 @@ export const EXPEDITION_ITEMS = [
     badge: '180–950m',
     desc: 'Hochdruck-Tankanlage für Granit & Obsidian (180–950m). Schnelles Tiefenbetanken.',
     price: 2600,
-    icon: '⛽',
+    icon: 'fuel',
     minDepth: 5,
     maxDepth: 950,
     reqResearch: { track: 'station_fuel', tier: 2, label: 'Tankanlage Stufe 2' }
@@ -314,7 +319,7 @@ export const EXPEDITION_ITEMS = [
     badge: '>950m',
     desc: 'Thermo-resistente Tiefen-Tankanlage für Urgestein (>950m). Für extremste Tiefen.',
     price: 11000,
-    icon: '⛽',
+    icon: 'fuel',
     minDepth: 5,
     maxDepth: 99999,
     reqResearch: { track: 'station_fuel', tier: 3, label: 'Tankanlage Stufe 3' }
@@ -325,11 +330,11 @@ export const EXPEDITION_ITEMS = [
     key: 'dynamite',
     category: 'gadget',
     name: 'Dynamit-Sprengsatz',
-    badge: '3x3 Feld',
-    desc: 'Sprengt ein 3x3 Feld frei und birgt Erze sofort. (Taste B, T oder 1)',
+    badge: 'Sprengladung',
+    desc: 'Platziert TNT im Fels. Kann mehrfach gelegt und per Aktions-Button gezündet werden (Taste B, T oder 1).',
+    reqResearch: { track: 'tnt', tier: 1, label: 'Sprengtechnik Stufe 1' },
     price: 250,
-    icon: '🧨',
-    reqResearch: { track: 'tnt', tier: 1, label: 'Sprengtechnik & TNT' }
+    icon: 'bomb'
   },
   {
     key: 'fuel_canister',
@@ -338,8 +343,7 @@ export const EXPEDITION_ITEMS = [
     badge: '+20L Tank',
     desc: 'Füllt unter Tage sofort +20L Treibstoff nach. (Taste F oder 2)',
     price: 120,
-    icon: '⛽',
-    reqResearch: { track: 'emergency_gear', tier: 1, label: 'Notfall-Ausrüstung' }
+    icon: 'fuel'
   },
   {
     key: 'repair_kit',
@@ -348,8 +352,7 @@ export const EXPEDITION_ITEMS = [
     badge: '+40 HP Hülle',
     desc: 'Repariert im Notfall sofort +40 HP Panzerung. (Taste R oder 3)',
     price: 180,
-    icon: '🧰',
-    reqResearch: { track: 'emergency_gear', tier: 1, label: 'Notfall-Ausrüstung' }
+    icon: 'wrench'
   }
 ];
 
@@ -872,7 +875,10 @@ export class BaseSystem {
     this.subsurfaceStations = [];
     this.activeStationAction = null;
     this.geothermalAudioTimer = 0;
+    this.worldLabelsList = [];
+    this.worldLabelsContainer = null;
 
+    this.initWorldLabelsLayer();
     this.initWorldSprites();
     this.initPurchasableWorldSprites();
     this.initSubsurfaceStations();
@@ -880,6 +886,122 @@ export class BaseSystem {
     this.initSteinsammler();
     this.initSmokeParticles();
     this.initEvents();
+  }
+
+  initWorldLabelsLayer() {
+    this.worldLabelsList = [];
+    let container = document.getElementById('world-labels-layer');
+    if (!container) {
+      const gameContainer = document.getElementById('game-container') || document.body;
+      container = document.createElement('div');
+      container.id = 'world-labels-layer';
+      container.style.cssText = 'position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 6;';
+      gameContainer.appendChild(container);
+    }
+    container.innerHTML = '';
+    this.worldLabelsContainer = container;
+
+    // Post-update Hook: Garantiert, dass die Labels NACH dem Phaser CameraManager
+    // auf den exakten Frame-Stand des Viewports positioniert werden (0ms Lag, absolut wackelfrei)
+    if (this.scene && this.scene.events && !this._hasPostUpdateListener) {
+      this._hasPostUpdateListener = true;
+      this.scene.events.on('postupdate', () => this.updateWorldLabels());
+    }
+  }
+
+  createWorldLabel(worldX, worldY, text, color = '#ffffff', onClick = null) {
+    if (!this.worldLabelsContainer || !this.worldLabelsContainer.parentNode) {
+      this.initWorldLabelsLayer();
+    }
+
+    const el = document.createElement('div');
+    el.className = 'world-badge-label';
+    el.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 11.5px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: ${color};
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+      white-space: nowrap;
+      user-select: none;
+      pointer-events: auto;
+      cursor: ${onClick ? 'pointer' : 'default'};
+      display: none;
+      transform: translate3d(-9999px, -9999px, 0) translate(-50%, -50%);
+      transition: none !important;
+      will-change: transform;
+    `;
+    el.textContent = text;
+
+    if (onClick) {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (typeof isModalActive === 'function' && isModalActive()) return;
+        onClick();
+      });
+      el.addEventListener('pointerdown', (e) => e.stopPropagation());
+    }
+
+    this.worldLabelsContainer.appendChild(el);
+
+    const labelObj = {
+      worldX,
+      worldY,
+      el,
+      setText: (newText) => {
+        el.textContent = newText;
+      },
+      setColor: (newColor) => {
+        el.style.color = newColor;
+      },
+      setY: (newY) => {
+        labelObj.worldY = newY;
+      },
+      setX: (newX) => {
+        labelObj.worldX = newX;
+      },
+      destroy: () => {
+        if (el.parentNode) el.parentNode.removeChild(el);
+        if (this.worldLabelsList) {
+          const idx = this.worldLabelsList.indexOf(labelObj);
+          if (idx !== -1) this.worldLabelsList.splice(idx, 1);
+        }
+      }
+    };
+
+    if (!this.worldLabelsList) this.worldLabelsList = [];
+    this.worldLabelsList.push(labelObj);
+    return labelObj;
+  }
+
+  updateWorldLabels() {
+    if (!this.worldLabelsList || this.worldLabelsList.length === 0) return;
+    const cam = this.scene?.cameras?.main;
+    if (!cam || !cam.worldView) return;
+    const wv = cam.worldView;
+    const zoom = cam.zoom;
+    const cw = cam.width;
+    const ch = cam.height;
+
+    for (let i = 0; i < this.worldLabelsList.length; i++) {
+      const lbl = this.worldLabelsList[i];
+      const sx = (lbl.worldX - wv.x) * zoom;
+      const sy = (lbl.worldY - wv.y) * zoom;
+      if (sx < -140 || sx > cw + 140 || sy < -80 || sy > ch + 80) {
+        if (lbl.el.style.display !== 'none') lbl.el.style.display = 'none';
+      } else {
+        if (lbl.el.style.display !== 'block') lbl.el.style.display = 'block';
+        lbl.el.style.transform = `translate3d(${sx.toFixed(1)}px, ${sy.toFixed(1)}px, 0) translate(-50%, -50%)`;
+      }
+    }
   }
 
   initWorldSprites() {
@@ -890,27 +1012,6 @@ export class BaseSystem {
       const sprite = this.scene.add.image(px, py, b.spriteKey)
         .setDepth(4)
         .setOrigin(0.5, 1.0)
-        .setInteractive({ useHandCursor: true });
-
-      const label = b.label || b.title;
-      const text = this.scene.add.text(px, -b.height - 14, label, {
-        fontFamily: 'Plus Jakarta Sans, system-ui, sans-serif',
-        fontSize: '11px',
-        fontStyle: 'bold',
-        color: '#ffffff',
-        stroke: '#000000',
-        strokeThickness: 3,
-        shadow: {
-          offsetX: 0,
-          offsetY: 1,
-          color: '#000000',
-          blur: 3,
-          stroke: true,
-          fill: true
-        },
-        padding: { x: 4, y: 2 },
-        resolution: 4
-      }).setOrigin(0.5, 0.5).setDepth(20)
         .setInteractive({ useHandCursor: true });
 
       const onTrigger = (pointer) => {
@@ -934,8 +1035,10 @@ export class BaseSystem {
         b.action();
       };
 
+      const label = b.label || b.title;
+      const text = this.createWorldLabel(px, -b.height - 14, label, '#ffffff', () => onTrigger());
+
       sprite.on('pointerdown', onTrigger);
-      text.on('pointerdown', onTrigger);
 
       b.sprite = sprite;
       b.textLabel = text;
@@ -950,24 +1053,7 @@ export class BaseSystem {
       .setDepth(11) // Über dem Bohrfahrzeug (Tiefe 10)
       .setOrigin(0.5, 1.0);
 
-    this.scene.add.text(entranceX, -56, 'SCHACHTEINGANG', {
-      fontFamily: 'Plus Jakarta Sans, system-ui, sans-serif',
-      fontSize: '11px',
-      fontStyle: 'bold',
-      color: '#ffffff',
-      stroke: '#000000',
-      strokeThickness: 3,
-      shadow: {
-        offsetX: 0,
-        offsetY: 1,
-        color: '#000000',
-        blur: 3,
-        stroke: true,
-        fill: true
-      },
-      padding: { x: 4, y: 2 },
-      resolution: 4
-    }).setOrigin(0.5, 0.5).setDepth(20);
+    const entranceText = this.createWorldLabel(entranceX, -56, 'SCHACHTEINGANG', '#ffffff');
   }
 
   initPurchasableWorldSprites() {
@@ -982,26 +1068,6 @@ export class BaseSystem {
 
       const labelText = pb.isBuilt ? (pb.label || pb.title) : `BAUPLATZ: ${pb.label || pb.title}`;
       const textColor = pb.isBuilt ? '#ffffff' : '#fb923c';
-
-      const text = this.scene.add.text(px, -pb.height - 14, labelText, {
-        fontFamily: 'Plus Jakarta Sans, system-ui, sans-serif',
-        fontSize: '11px',
-        fontStyle: 'bold',
-        color: textColor,
-        stroke: '#000000',
-        strokeThickness: 3,
-        shadow: {
-          offsetX: 0,
-          offsetY: 1,
-          color: '#000000',
-          blur: 3,
-          stroke: true,
-          fill: true
-        },
-        padding: { x: 4, y: 2 },
-        resolution: 4
-      }).setOrigin(0.5, 0.5).setDepth(20)
-        .setInteractive({ useHandCursor: true });
 
       const onTriggerPb = (pointer) => {
         if (isModalActive()) return;
@@ -1022,8 +1088,9 @@ export class BaseSystem {
         }
       };
 
+      const text = this.createWorldLabel(px, -pb.height - 14, labelText, textColor, () => onTriggerPb());
+
       sprite.on('pointerdown', onTriggerPb);
-      text.on('pointerdown', onTriggerPb);
 
       pb.sprite = sprite;
       pb.textLabel = text;
@@ -1139,6 +1206,7 @@ export class BaseSystem {
 
   update(delta) {
     const dt = delta / 1000;
+    this.updateWorldLabels();
 
     // Steineforscher Zustand & Lauf-Verhalten
     if (this.sammlerSprite && this.sammlerBubble) {
@@ -1258,11 +1326,6 @@ export class BaseSystem {
 
     // 5. Unterirdische Basislager & Stationen (Förderschächte & Geothermie-Zapfsäulen)
     this.updateSubsurfaceStations(delta);
-
-    // 6. Oberflächen-Förderband Animation
-    if (this.surfaceVisuals && this.surfaceVisuals.conveyor && this.surfaceVisuals.conveyor.visible) {
-      this.renderSurfaceConveyor();
-    }
   }
 
   initSubsurfaceStations() {
@@ -1276,36 +1339,10 @@ export class BaseSystem {
 
   initSurfaceVisualUpgrades() {
     this.surfaceVisuals = {
-      crane: null,
-      craneBeacon: null,
-      lanterns: [],
-      conveyor: null
+      lanterns: []
     };
 
-    // 1. Industrie-Kran am Schachtrand (gx = 22 * 32 = 704px, y = 0)
-    const craneX = 22 * TILE_SIZE;
-    const crane = this.scene.add.image(craneX, 0, 'surface_crane')
-      .setOrigin(0.5, 1.0)
-      .setDepth(4.2)
-      .setVisible(false);
-    
-    // Rote Blinkwarnleuchte an der Kranspitze
-    const beacon = this.scene.add.circle(craneX - 16, -78, 3, 0xef4444)
-      .setDepth(4.5)
-      .setVisible(false);
-    
-    this.scene.tweens.add({
-      targets: beacon,
-      alpha: 0.1,
-      duration: 500,
-      yoyo: true,
-      repeat: -1
-    });
-
-    this.surfaceVisuals.crane = crane;
-    this.surfaceVisuals.craneBeacon = beacon;
-
-    // 2. Neon-Laternen entlang des Werksgeländes
+    // Neon-Laternen entlang des Werksgeländes (ohne Bodenkreis)
     const lanternGXs = [-13, -6, 0, 6, 12, 17, 24, 31, 39];
     lanternGXs.forEach(lgx => {
       const lx = lgx * TILE_SIZE;
@@ -1313,18 +1350,9 @@ export class BaseSystem {
         .setOrigin(0.5, 1.0)
         .setDepth(4.4)
         .setVisible(false);
-      
-      const glow = this.scene.add.circle(lx, 0, 22, 0x38bdf8, 0.15)
-        .setOrigin(0.5, 0.5)
-        .setDepth(2.5)
-        .setVisible(false);
 
-      this.surfaceVisuals.lanterns.push({ lantern, glow });
+      this.surfaceVisuals.lanterns.push(lantern);
     });
-
-    // 3. Förderband-System (vom Schacht zum Depot)
-    const conveyorG = this.scene.add.graphics().setDepth(3.5).setVisible(false);
-    this.surfaceVisuals.conveyor = conveyorG;
 
     this.updateSurfaceVisuals();
     this.updateBuildingVisuals();
@@ -1334,28 +1362,12 @@ export class BaseSystem {
     if (!this.surfaceVisuals) return;
     const hTier = this.hangarTier || 1;
     const builtPurchasedCount = (this.purchasableBuildings || []).filter(b => b.isBuilt).length;
-    const builtTubesCount = (this.subsurfaceStations || []).filter(s => s.isBuilt && s.type === 'pneumatic').length;
 
-    // 1. Industrie-Kran ab Hangar Tier >= 3 oder 2 Bauwerken
-    const showCrane = hTier >= 3 || builtPurchasedCount >= 2;
-    if (this.surfaceVisuals.crane) this.surfaceVisuals.crane.setVisible(showCrane);
-    if (this.surfaceVisuals.craneBeacon) this.surfaceVisuals.craneBeacon.setVisible(showCrane);
-
-    // 2. Neon-Laternen ab Hangar Tier >= 4 oder 2 Bauwerken
+    // Neon-Laternen ab Hangar Tier >= 4 oder 2 Bauwerken
     const showLanterns = hTier >= 4 || builtPurchasedCount >= 2;
-    this.surfaceVisuals.lanterns.forEach(l => {
-      l.lantern.setVisible(showLanterns);
-      l.glow.setVisible(showLanterns);
+    this.surfaceVisuals.lanterns.forEach(lantern => {
+      lantern.setVisible(showLanterns);
     });
-
-    // 3. Förderband ab mindestens 1 gebauter Förderstation
-    const showConveyor = builtTubesCount >= 1;
-    if (this.surfaceVisuals.conveyor) {
-      this.surfaceVisuals.conveyor.setVisible(showConveyor);
-      if (showConveyor) {
-        this.renderSurfaceConveyor();
-      }
-    }
   }
 
   updateBuildingVisuals() {
@@ -1457,46 +1469,6 @@ export class BaseSystem {
     }
   }
 
-  renderSurfaceConveyor() {
-    if (!this.surfaceVisuals.conveyor) return;
-    const g = this.surfaceVisuals.conveyor;
-    g.clear();
-    const startX = 608;
-    const endX = 300;
-    const y = -6;
-
-    // Stützpfeiler
-    g.lineStyle(2, 0x475569, 1);
-    for (let px = endX + 30; px <= startX - 20; px += 50) {
-      g.beginPath();
-      g.moveTo(px, y);
-      g.lineTo(px, 0);
-      g.strokePath();
-    }
-
-    // Förderband-Körper
-    g.fillStyle(0x1e293b, 1);
-    g.fillRect(endX, y - 4, startX - endX, 8);
-
-    g.lineStyle(1.5, 0x0284c7, 0.9);
-    g.beginPath();
-    g.moveTo(endX, y - 4);
-    g.lineTo(startX, y - 4);
-    g.strokePath();
-
-    g.lineStyle(1.5, 0x0f172a, 1);
-    g.beginPath();
-    g.moveTo(endX, y + 4);
-    g.lineTo(startX, y + 4);
-    g.strokePath();
-
-    const t = (Date.now() / 60) % 50;
-    g.fillStyle(0xf59e0b, 1);
-    for (let px = startX - t; px >= endX; px -= 50) {
-      g.fillCircle(px, y - 6, 2.5);
-    }
-  }
-
   getPneumaticCost(depthMeters) {
     const d = Math.max(0, depthMeters || 0);
     if (d <= 180) return 350;
@@ -1568,16 +1540,8 @@ export class BaseSystem {
       .setOrigin(0.5, 0.5)
       .setInteractive({ useHandCursor: true });
 
-    const labelText = st.name || (isTube ? 'Förder-Schacht' : 'Tankanlage');
-    const text = this.scene.add.text(px, py - 26, labelText, {
-      fontFamily: 'Plus Jakarta Sans, system-ui, sans-serif',
-      fontSize: '10px',
-      fontStyle: 'bold',
-      color: isTube ? '#38bdf8' : '#fb923c',
-      stroke: '#020617',
-      strokeThickness: 2.5,
-      resolution: 3
-    }).setOrigin(0.5, 0.5).setDepth(20).setInteractive({ useHandCursor: true });
+    const labelText = isTube ? 'Förder-Schacht' : 'Tankanlage';
+    const textColor = isTube ? '#38bdf8' : '#fb923c';
 
     const onTrigger = (pointer) => {
       if (isModalActive()) return;
@@ -1594,8 +1558,8 @@ export class BaseSystem {
       this.handleStationInteraction(st);
     };
 
+    const text = this.createWorldLabel(px, py - 26, labelText, textColor, () => onTrigger());
     sprite.on('pointerdown', onTrigger);
-    text.on('pointerdown', onTrigger);
 
     st.sprite = sprite;
     st.textLabel = text;
@@ -1613,7 +1577,7 @@ export class BaseSystem {
 
     const nearby = this.getNearbyStation(this.player.gx, this.player.gy, 2.5);
     if (nearby && (nearby.type === 'pneumatic' || nearby.type === 'tube')) {
-      this.depositOresAtStation(nearby);
+      this.openSubsurfaceStationModal(nearby);
       return;
     }
 
@@ -1633,14 +1597,17 @@ export class BaseSystem {
     this.player.gadgets[usableKey] = Math.max(0, (this.player.gadgets[usableKey] || 0) - 1);
 
     const count = (this.subsurfaceStations || []).filter(s => s.type === 'pneumatic' || s.type === 'tube').length + 1;
+    const itemData = EXPEDITION_ITEMS.find(i => i.key === usableKey);
+    const cost = itemData ? itemData.price : 350;
     const newStation = {
       id: 'tube_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
       type: 'pneumatic',
-      name: `Förder-Schacht #${count} (${depthMeters}m)`,
+      name: 'Förder-Schacht',
       depth: depthMeters,
       gx: Math.round(this.player.gx),
       gy: Math.round(this.player.gy),
       usedItem: usableKey,
+      costCash: cost,
       isBuilt: true
     };
 
@@ -1649,8 +1616,8 @@ export class BaseSystem {
     this.depot.capacity = (this.depot.capacity || 10) + 20;
 
     soundFx.playUpgrade();
-    this.showFloatingText(newStation.gx * TILE_SIZE + 16, newStation.gy * TILE_SIZE - 20, `🏗️ Förderstation #${count} zementiert!`, '#38bdf8');
-    this.scene.events.emit('notify', `🏗️ Förderstation #${count} in ${depthMeters}m Tiefe errichtet! (+20 Depot-Kapazität)`);
+    this.showFloatingText(newStation.gx * TILE_SIZE + 16, newStation.gy * TILE_SIZE - 20, '🏗️ Förderstation zementiert!', '#38bdf8');
+    this.scene.events.emit('notify', '🏗️ Förderstation errichtet! (+20 Depot-Kapazität)');
     this.updateSurfaceVisuals();
     if (this.scene.hud) this.scene.hud.update();
   }
@@ -1666,7 +1633,7 @@ export class BaseSystem {
 
     const nearby = this.getNearbyStation(this.player.gx, this.player.gy, 2.5);
     if (nearby && (nearby.type === 'fuel' || nearby.type === 'geothermal')) {
-      this.scene.events.emit('notify', '⛽ Du bist bereits an einer Tankanlage! Halte an der Station an, um aufzutanken.');
+      this.openSubsurfaceStationModal(nearby);
       return;
     }
 
@@ -1686,14 +1653,17 @@ export class BaseSystem {
     this.player.gadgets[usableKey] = Math.max(0, (this.player.gadgets[usableKey] || 0) - 1);
 
     const count = (this.subsurfaceStations || []).filter(s => s.type === 'fuel' || s.type === 'geothermal').length + 1;
+    const itemData = EXPEDITION_ITEMS.find(i => i.key === usableKey);
+    const cost = itemData ? itemData.price : 500;
     const newStation = {
       id: 'fuel_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
       type: 'fuel',
-      name: `Tankanlage #${count} (${depthMeters}m)`,
+      name: 'Tankanlage',
       depth: depthMeters,
       gx: Math.round(this.player.gx),
       gy: Math.round(this.player.gy),
       usedItem: usableKey,
+      costCash: cost,
       isBuilt: true
     };
 
@@ -1701,8 +1671,8 @@ export class BaseSystem {
     this.spawnStationInWorld(newStation);
 
     soundFx.playUpgrade();
-    this.showFloatingText(newStation.gx * TILE_SIZE + 16, newStation.gy * TILE_SIZE - 20, `⛽ Tankanlage #${count} einsatzbereit!`, '#f59e0b');
-    this.scene.events.emit('notify', `⛽ Tankanlage #${count} in ${depthMeters}m Tiefe errichtet! Halte an der Station an, um automatisch aufzutanken.`);
+    this.showFloatingText(newStation.gx * TILE_SIZE + 16, newStation.gy * TILE_SIZE - 20, '⛽ Tankanlage einsatzbereit!', '#f59e0b');
+    this.scene.events.emit('notify', '⛽ Tankanlage errichtet! Halte an der Station an oder nutze das Menü zum Auftanken.');
     this.updateSurfaceVisuals();
     if (this.scene.hud) this.scene.hud.update();
   }
@@ -1754,37 +1724,313 @@ export class BaseSystem {
 
     let station = targetStation || this.getNearbyStation(playerGx, playerGy, 2.5);
     if (station) {
-      if (station.type === 'pneumatic' || station.type === 'tube') {
-        this.depositOresAtStation(station);
-      } else if (station.type === 'fuel' || station.type === 'geothermal') {
-        this.scene.events.emit('notify', '⛽ Tankanlage: Halte an der Station an, um automatisch über den Betankungsarm aufzutanken.');
-      }
+      this.openSubsurfaceStationModal(station);
     } else {
       const fab = document.getElementById('hud-action-fab');
       if (fab) fab.classList.add('open');
     }
   }
 
-  showFloatingText(x, y, message, color = '#38bdf8') {
-    if (!this.scene || !this.scene.add) return;
-    const txt = this.scene.add.text(x, y, message, {
-      fontFamily: 'Plus Jakarta Sans, system-ui, sans-serif',
-      fontSize: '12px',
-      fontStyle: 'bold',
-      color: color,
-      stroke: '#020617',
-      strokeThickness: 3,
-      resolution: 3
-    }).setOrigin(0.5, 0.5).setDepth(35);
+  openSubsurfaceStationModal(station) {
+    if (!station || !this.player) return;
 
-    this.scene.tweens.add({
-      targets: txt,
-      y: y - 36,
-      alpha: 0,
-      duration: 1600,
-      ease: 'Cubic.easeOut',
-      onComplete: () => txt.destroy()
-    });
+    const isTube = (station.type === 'pneumatic' || station.type === 'tube');
+    const isFuel = (station.type === 'fuel' || station.type === 'geothermal');
+
+    const titleIcon = isTube ? icon('conveyor-belt', '', 20) : icon('fuel', '', 20);
+    const titleColor = isTube ? '#38bdf8' : '#fb923c';
+    const stationName = isTube ? 'Pneumatische Erzförderung' : 'Untertage-Tankanlage';
+
+    const itemData = EXPEDITION_ITEMS.find(i => i.key === station.usedItem);
+    let fallbackPrice = isTube ? 350 : 500;
+    if (station.depth > 950) fallbackPrice = isTube ? 7500 : 11000;
+    else if (station.depth > 180) fallbackPrice = isTube ? 1800 : 2600;
+    const refundPrice = itemData ? itemData.price : (station.costCash || fallbackPrice);
+
+    const dist = Math.hypot(this.player.gx - station.gx, this.player.gy - station.gy);
+    const isNearby = dist <= 3.5;
+
+    // Fuel data
+    const curFuel = Math.round(this.player.fuel);
+    const maxFuel = Math.round(this.player.maxFuel);
+    const fuelPct = Math.min(100, Math.round((curFuel / maxFuel) * 100));
+
+    // Cargo data
+    const cargo = this.player.cargo || [];
+    const rawOres = cargo.filter(item => typeof item === 'string' && !item.startsWith('bar_'));
+    const rawOreCount = rawOres.length;
+    const maxCargo = this.player.maxCargo || 10;
+
+    let actionSectionHtml = '';
+    if (isFuel) {
+      const isAlreadyFull = curFuel >= maxFuel;
+      actionSectionHtml = `
+        <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(251, 146, 60, 0.25); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.3);">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; background: rgba(251, 146, 60, 0.15); border: 1px solid rgba(251, 146, 60, 0.3); color: #fb923c;">
+                ${icon('fuel', '', 18)}
+              </span>
+              <div>
+                <div style="font-size: 13px; font-weight: 800; color: #f8fafc;">Treibstofftank des Bohrers</div>
+                <div style="font-size: 11px; color: #94a3b8;">Füllt den Treibstofftank vollständig auf (100%)</div>
+              </div>
+            </div>
+            <div style="font-size: 13px; font-weight: 800; color: #fb923c; font-variant-numeric: tabular-nums;">
+              ${curFuel} / ${maxFuel} L (${fuelPct}%)
+            </div>
+          </div>
+
+          <!-- Fuel Progress Bar -->
+          <div style="width: 100%; height: 8px; background: rgba(0, 0, 0, 0.5); border-radius: 999px; overflow: hidden; margin-bottom: 14px; border: 1px solid rgba(255, 255, 255, 0.08);">
+            <div style="width: ${fuelPct}%; height: 100%; background: linear-gradient(90deg, #f59e0b, #fb923c); border-radius: 999px; transition: width 0.3s ease;"></div>
+          </div>
+
+          ${!isNearby ? `
+            <div style="display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 8px; font-size: 11.5px; color: #fca5a5;">
+              ${icon('alert-circle', '', 14)} Bohrer ist zu weit entfernt (${dist.toFixed(1)}m). Fahre innerhalb von 3.5m an die Station heran, um aufzutanken.
+            </div>
+          ` : isAlreadyFull ? `
+            <div style="display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; font-size: 11.5px; color: #6ee7b7;">
+              ${icon('check-circle', '', 14)} Tank ist bereits zu 100% gefüllt.
+            </div>
+          ` : `
+            <button id="btn-station-use-fuel" class="btn-buy" style="width: 100%; height: 38px; font-size: 12.5px; font-weight: 800; background: linear-gradient(135deg, #f59e0b, #d97706); color: #ffffff; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 10px rgba(245, 158, 11, 0.3); cursor: pointer;">
+              ${icon('zap', '', 15)} Jetzt vollständig auftanken (Kostenlos)
+            </button>
+          `}
+        </div>
+      `;
+    } else {
+      // Pneumatic Tube / Förder-Schacht
+      const hasOres = rawOreCount > 0;
+      actionSectionHtml = `
+        <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.3);">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8;">
+                ${icon('conveyor-belt', '', 18)}
+              </span>
+              <div>
+                <div style="font-size: 13px; font-weight: 800; color: #f8fafc;">Erzförderung ins Oberflächen-Depot</div>
+                <div style="font-size: 11px; color: #94a3b8;">Saugt Roh-Erze aus dem Laderaum nach oben ab (+20 t Depot-Kapazität)</div>
+              </div>
+            </div>
+            <div style="font-size: 13px; font-weight: 800; color: #38bdf8; font-variant-numeric: tabular-nums;">
+              ${rawOreCount} Roh-Erze (${cargo.length} / ${maxCargo})
+            </div>
+          </div>
+
+          ${!isNearby ? `
+            <div style="display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 8px; font-size: 11.5px; color: #fca5a5;">
+              ${icon('alert-circle', '', 14)} Bohrer ist zu weit entfernt (${dist.toFixed(1)}m). Fahre innerhalb von 3.5m an die Station heran, um Erze abzusaugen.
+            </div>
+          ` : !hasOres ? `
+            <div style="display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: rgba(148, 163, 184, 0.12); border: 1px solid rgba(148, 163, 184, 0.25); border-radius: 8px; font-size: 11.5px; color: #94a3b8;">
+              ${icon('package-open', '', 14)} Laderaum enthält keine Roh-Erze zum Absaugen.
+            </div>
+          ` : `
+            <button id="btn-station-use-tube" class="btn-buy" style="width: 100%; height: 38px; font-size: 12.5px; font-weight: 800; background: linear-gradient(135deg, #0284c7, #0369a1); color: #ffffff; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 10px rgba(2, 132, 199, 0.3); cursor: pointer;">
+              ${icon('upload-cloud', '', 15)} ${rawOreCount}x Erze nach oben befördern
+            </button>
+          `}
+        </div>
+      `;
+    }
+
+    const dismantleSectionHtml = `
+      <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 12px; padding: 14px 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.3);">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171;">
+              ${icon('wrench', '', 18)}
+            </span>
+            <div>
+              <div style="font-size: 13px; font-weight: 800; color: #f8fafc;">Rückbau & Verkauf</div>
+              <div style="font-size: 11px; color: #94a3b8;">
+                ${isTube ? 'Baut den Förderschacht ab (-20 t Depot-Kapazität) und erstattet den vollen Kaufpreis' : 'Baut die Tankanlage ab und erstattet den vollen Kaufpreis'}
+              </div>
+            </div>
+          </div>
+          <div style="font-size: 13px; font-weight: 800; color: #4ade80; font-variant-numeric: tabular-nums;">
+            +${refundPrice.toLocaleString('de-DE')} €
+          </div>
+        </div>
+
+        <button id="btn-station-dismantle" class="btn-buy" style="width: 100%; height: 38px; font-size: 12px; font-weight: 800; background: rgba(239, 68, 68, 0.12); border: 1.5px solid rgba(239, 68, 68, 0.4); color: #fca5a5; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; transition: all 0.2s ease;">
+          ${icon('trash-2', '', 14)} Station abbauen & verkaufen (+${refundPrice.toLocaleString('de-DE')} €)
+        </button>
+      </div>
+    `;
+
+    const contentHtml = `
+      <!-- Station Info Card -->
+      <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="font-size: 12px; font-weight: 700; color: #94a3b8;">
+            Tiefe: <strong style="color: #f8fafc;">${Math.round(station.gy)}m</strong>
+          </div>
+          <span style="color: rgba(255,255,255,0.2);">|</span>
+          <div style="font-size: 12px; font-weight: 700; color: #94a3b8;">
+            Position: <strong style="color: #f8fafc;">X: ${station.gx} / Y: ${station.gy}</strong>
+          </div>
+        </div>
+        <div style="font-size: 11.5px; font-weight: 700; padding: 3px 8px; border-radius: 6px; background: ${isNearby ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)'}; border: 1px solid ${isNearby ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}; color: ${isNearby ? '#34d399' : '#f87171'};">
+          ${isNearby ? `● In Reichweite (${dist.toFixed(1)}m)` : `● Zu weit entfernt (${dist.toFixed(1)}m)`}
+        </div>
+      </div>
+
+      <!-- Action Section (Benutzen) -->
+      ${actionSectionHtml}
+
+      <!-- Dismantle Section (Abbauen / Verkaufen) -->
+      ${dismantleSectionHtml}
+    `;
+
+    this.openModal(`
+      <span style="color: ${titleColor}; display: inline-flex; align-items: center; gap: 8px;">
+        ${titleIcon} ${stationName}
+      </span>
+    `, contentHtml);
+
+    // Event Listeners
+    if (isFuel) {
+      const useBtn = document.getElementById('btn-station-use-fuel');
+      if (useBtn) {
+        useBtn.onclick = () => {
+          this.player.fuel = this.player.maxFuel;
+          if (soundFx.playRefuel) soundFx.playRefuel();
+          else soundFx.playUpgrade();
+          const posX = this.player.gx * TILE_SIZE + 16;
+          const posY = this.player.gy * TILE_SIZE + 16;
+          this.showFloatingText(posX, posY - 20, '⛽ 100% Aufgetankt!', '#10b981');
+          this.scene.events.emit('notify', '⛽ Bohrer an der Tankanlage vollständig aufgetankt!');
+          if (this.scene.hud) this.scene.hud.update();
+          this.openSubsurfaceStationModal(station);
+        };
+      }
+    } else {
+      const useBtn = document.getElementById('btn-station-use-tube');
+      if (useBtn) {
+        useBtn.onclick = () => {
+          this.depositOresAtStation(station);
+          this.openSubsurfaceStationModal(station);
+        };
+      }
+    }
+
+    // Dismantle button with 2-step confirmation
+    const dismantleBtn = document.getElementById('btn-station-dismantle');
+    if (dismantleBtn) {
+      let isConfirming = false;
+      dismantleBtn.onclick = () => {
+        if (!isConfirming) {
+          isConfirming = true;
+          dismantleBtn.style.background = 'linear-gradient(135deg, #dc2626, #b91c1c)';
+          dismantleBtn.style.borderColor = '#ef4444';
+          dismantleBtn.style.color = '#ffffff';
+          dismantleBtn.innerHTML = `⚠️ Wirklich abbauen & für ${refundPrice.toLocaleString('de-DE')} € verkaufen? (Erneut klicken)`;
+          refreshIcons(dismantleBtn);
+        } else {
+          this.dismantleSubsurfaceStation(station, refundPrice);
+        }
+      };
+    }
+  }
+
+  dismantleSubsurfaceStation(station, refundPrice) {
+    if (!station) return;
+
+    // 1. Sprite & World Label entfernen
+    if (station.sprite) {
+      station.sprite.destroy();
+      station.sprite = null;
+    }
+    if (station.textLabel && typeof station.textLabel.destroy === 'function') {
+      station.textLabel.destroy();
+      station.textLabel = null;
+    }
+
+    // 2. Falls Förderschacht: Depot-Kapazität um 20 reduzieren
+    const isTube = (station.type === 'pneumatic' || station.type === 'tube');
+    if (isTube && this.depot) {
+      this.depot.capacity = Math.max(10, (this.depot.capacity || 10) - 20);
+    }
+
+    // 3. Aus Liste subsurfaceStations entfernen
+    this.subsurfaceStations = (this.subsurfaceStations || []).filter(s => s !== station && s.id !== station.id);
+
+    // 4. Kaufpreis erstatten
+    if (this.player) {
+      this.player.cash = (this.player.cash || 0) + refundPrice;
+    }
+
+    // 5. Sound & Text
+    soundFx.playUpgrade();
+    const posX = station.gx * TILE_SIZE + 16;
+    const posY = station.gy * TILE_SIZE + 16;
+    this.showFloatingText(posX, posY - 20, `+${refundPrice.toLocaleString('de-DE')} € (Abgebaut)`, '#4ade80');
+    this.scene.events.emit('notify', `🏗️ ${station.name || 'Station'} abgebaut und für ${refundPrice.toLocaleString('de-DE')} € verkauft.`);
+
+    // 6. Visuals & HUD
+    this.updateSurfaceVisuals();
+    if (this.scene.hud) this.scene.hud.update();
+
+    // 7. Modal schließen
+    this.closeModal();
+  }
+
+  showFloatingText(worldX, worldY, message, color = '#38bdf8') {
+    if (!this.worldLabelsContainer || !this.worldLabelsContainer.parentNode) {
+      this.initWorldLabelsLayer();
+    }
+    const el = document.createElement('div');
+    el.className = 'floating-world-text';
+    el.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 12px;
+      font-weight: 800;
+      color: ${color};
+      text-shadow: 0 1px 3px rgba(0,0,0,0.9), 0 0 6px rgba(0,0,0,0.8);
+      pointer-events: none;
+      white-space: nowrap;
+      user-select: none;
+      transform: translate3d(-9999px, -9999px, 0) translate(-50%, -50%);
+      transition: opacity 1.4s ease-out;
+    `;
+    el.textContent = message;
+    if (this.worldLabelsContainer) {
+      this.worldLabelsContainer.appendChild(el);
+    }
+
+    let startY = worldY;
+    let curY = worldY;
+    const startTime = performance.now();
+    const duration = 1400;
+
+    const anim = (now) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      curY = startY - progress * 36;
+      if (progress >= 0.5) {
+        el.style.opacity = (1 - (progress - 0.5) / 0.5).toFixed(2);
+      }
+      const c = this.scene?.cameras?.main;
+      if (c && c.worldView) {
+        const sx = (worldX - c.worldView.x) * c.zoom;
+        const sy = (curY - c.worldView.y) * c.zoom;
+        el.style.transform = `translate3d(${Math.round(sx)}px, ${Math.round(sy)}px, 0) translate(-50%, -50%)`;
+      }
+      if (progress < 1) {
+        requestAnimationFrame(anim);
+      } else {
+        el.remove();
+      }
+    };
+    requestAnimationFrame(anim);
   }
 
   getSubsurfaceSaveData() {
@@ -1796,7 +2042,8 @@ export class BaseSystem {
       isBuilt: !!st.isBuilt,
       gx: st.gx,
       gy: st.gy,
-      costCash: st.costCash
+      costCash: st.costCash,
+      usedItem: st.usedItem
     }));
   }
 
@@ -1814,11 +2061,12 @@ export class BaseSystem {
       const st = {
         id: saved.id,
         type: isFuel ? 'fuel' : 'pneumatic',
-        name: saved.name || (isFuel ? 'Tankanlage' : 'Förder-Schacht'),
+        name: isFuel ? 'Tankanlage' : 'Förder-Schacht',
         depth: saved.depth || saved.gy || 0,
         gx: saved.gx,
         gy: saved.gy,
-        costCash: saved.costCash || 250,
+        costCash: saved.costCash || (isFuel ? 500 : 350),
+        usedItem: saved.usedItem,
         isBuilt: !!saved.isBuilt
       };
       this.subsurfaceStations.push(st);
@@ -1837,7 +2085,7 @@ export class BaseSystem {
     this.clearFloatingAction();
     this.modalTitleEl.innerHTML = title;
     this.modalBodyEl.innerHTML = `
-      <div style="display: flex; flex-direction: column; max-width: 620px; margin: 0 auto; width: 100%; box-sizing: border-box; padding: 0 4px 36px 4px; gap: 12px;">
+      <div style="display: flex; flex-direction: column; max-width: 760px; margin: 0 auto; width: 100%; box-sizing: border-box; padding: 0 4px 36px 4px;">
         ${contentHtml}
       </div>
     `;
@@ -1887,7 +2135,14 @@ export class BaseSystem {
   // =========================================================
   // 1. ERZ-BÖRSE (EINHEITLICHES INVENTAR OHNE STANDORT-TRENNUNG)
   // =========================================================
-  openMarketModal() {
+  openMarketModal(initialTab = null) {
+    if (initialTab && ['ores', 'products'].includes(initialTab)) {
+      this.activeMarketTab = initialTab;
+    }
+    if (!this.activeMarketTab) {
+      this.activeMarketTab = 'ores';
+    }
+
     const cargo = this.player.cargo || [];
     const depotOres = this.depot?.ores || {};
 
@@ -1943,12 +2198,13 @@ export class BaseSystem {
         const isBoom = this.activeBoom && this.activeBoom.oreKey === ore;
         const boomBadge = isBoom ? `<span style="background: #ea580c; color: #fff; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; margin-left: 6px;">2X BOOM</span>` : '';
         oreListHtml += `
-          <div class="market-ore-card" data-ore="${ore}" style="background: #141c2b; padding: 10px 14px; border-radius: 10px; border: none; display: flex; flex-direction: column; gap: 8px;">
+          <div class="market-ore-card" data-ore="${ore}" style="background: #090e1a; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35); padding: 10px 14px; border-radius: 10px; display: flex; flex-direction: column; gap: 8px;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
               <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-weight: 700; color: #f8fafc; font-size: 13.5px; display: inline-flex; align-items: center; gap: 6px;">${oreIcon(ore, 16)} ${data.name}</span>
-                <span style="background: rgba(56, 189, 248, 0.15); padding: 2px 8px; border-radius: 6px; font-size: 11px; color: #38bdf8; font-weight: 700;">${count}x</span>
-                <span style="font-size: 11px; color: #94a3b8;">(€${val}/Stk)</span>
+                <span style="font-weight: 700; color: #f8fafc; font-size: 13.5px; display: inline-flex; align-items: center; gap: 6px; width: 140px; min-width: 140px; flex-shrink: 0;">${oreIcon(ore, 16)} ${data.name}</span>
+                <span style="background: rgba(56, 189, 248, 0.15); padding: 2px 8px; border-radius: 6px; font-size: 11px; color: #38bdf8; font-weight: 700; width: 44px; min-width: 44px; text-align: center; justify-content: center; display: inline-flex; flex-shrink: 0;">${count}x</span>
+                <span style="font-size: 11px; color: #94a3b8; width: 75px; min-width: 75px; font-variant-numeric: tabular-nums; flex-shrink: 0;">(€${val}/Stk)</span>
+                ${boomBadge}
               </div>
               <div style="display: flex; align-items: center; gap: 4px;">
                 <strong class="ore-subtotal" id="subtotal-${ore}" style="color: #fbbf24; font-size: 13.5px; font-weight: 800;">€${(val * count).toLocaleString()}</strong>
@@ -1956,8 +2212,8 @@ export class BaseSystem {
             </div>
 
             <!-- Freie Mengenwahl: Einheitliche Höhe 32px, zentriertes Plus/Minus, 3D Look -->
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 10px;">
-              <div style="display: flex; align-items: center; gap: 6px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 10px; flex-wrap: nowrap;">
+              <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
                 <span style="font-size: 11.5px; color: #94a3b8; font-weight: 700; margin-right: 2px;">Menge:</span>
                 
                 <button class="btn-qty-step btn-3d-secondary" data-ore="${ore}" data-step="-1" style="
@@ -1993,9 +2249,10 @@ export class BaseSystem {
               </div>
 
               <button class="btn-sell-custom btn-buy" data-ore="${ore}" style="
-                height: 32px; padding: 0 14px; box-sizing: border-box;
-                font-size: 12px; font-weight: 800;
-                display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+                width: 105px; min-width: 105px; flex-shrink: 0;
+                height: 32px; padding: 0 8px; box-sizing: border-box;
+                font-size: 11.5px; font-weight: 800; white-space: nowrap;
+                display: inline-flex; align-items: center; justify-content: center; gap: 5px;
               ">
                 ${icon('coins', '', 14)}
                 <span id="btn-sell-text-${ore}">Verkaufen</span>
@@ -2008,7 +2265,6 @@ export class BaseSystem {
     }
 
     // Fabrik-Produkte & Barren (aus Bohrer-Inventar und Depot-Lager summiert)
-    let factoryHtml = '';
     const fp = this.player.factoryProducts || {};
     const dp = this.depot?.products || {};
     const allProductKeys = Array.from(new Set([
@@ -2023,14 +2279,15 @@ export class BaseSystem {
 
     let fpListHtml = '';
     if (!hasAnyFp) {
-      fpListHtml = '<p style="color: #64748b; font-style: italic; margin: 10px 0; text-align: center; font-size: 12px;">Keine Fabrik-Waren oder Barren auf Lager. Fertige Erzeugnisse in der FABRIK, um hier Spitzenpreise zu erzielen!</p>';
+      fpListHtml = '<p style="color: #64748b; font-style: italic; margin: 18px 0; text-align: center; font-size: 12px;">Keine Fabrik-Waren oder Barren auf Lager. Fertige Erzeugnisse in der FABRIK, um hier Spitzenpreise zu erzielen!</p>';
     } else {
-      fpListHtml = '<div style="display: flex; flex-direction: column; gap: 8px; margin: 8px 0;">';
+      fpListHtml = '<div style="display: flex; flex-direction: column; gap: 10px; margin: 12px 0;">';
       for (const prodId of allProductKeys) {
         const pCount = fp[prodId] || 0;
         const dCount = dp[prodId] || 0;
         const count = pCount + dCount;
         if (count <= 0) continue;
+
         totalFpCount += count;
         const isBar = prodId.startsWith('bar_');
         let prodName = '';
@@ -2056,23 +2313,23 @@ export class BaseSystem {
         totalFpValue += subtotal;
 
         fpListHtml += `
-          <div class="market-fp-card" data-prod="${prodId}" style="background: #141c2b; padding: 10px 14px; border-radius: 10px; border: none; display: flex; flex-direction: column; gap: 8px;">
+          <div class="market-fp-card" data-prod="${prodId}" style="background: #090e1a; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35); padding: 10px 14px; border-radius: 10px; display: flex; flex-direction: column; gap: 8px;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
               <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background: rgba(56,189,248,0.15); border-radius: 6px; color: #38bdf8;">
+                <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background: rgba(56,189,248,0.15); border-radius: 6px; color: #38bdf8; flex-shrink: 0;">
                   ${iconHtml}
                 </span>
-                <span style="font-weight: 700; color: #f8fafc; font-size: 13.5px;">${prodName}</span>
-                <span style="background: rgba(16, 185, 129, 0.15); padding: 2px 8px; border-radius: 6px; font-size: 11px; color: #10b981; font-weight: 700;">${count}x</span>
-                <span style="font-size: 11px; color: #94a3b8;">(€${val}/Stk)</span>
+                <span style="font-weight: 700; color: #f8fafc; font-size: 13.5px; width: 140px; min-width: 140px; flex-shrink: 0;">${prodName}</span>
+                <span style="background: rgba(16, 185, 129, 0.15); padding: 2px 8px; border-radius: 6px; font-size: 11px; color: #10b981; font-weight: 700; width: 44px; min-width: 44px; text-align: center; justify-content: center; display: inline-flex; flex-shrink: 0;">${count}x</span>
+                <span style="font-size: 11px; color: #94a3b8; width: 75px; min-width: 75px; font-variant-numeric: tabular-nums; flex-shrink: 0;">(€${val}/Stk)</span>
               </div>
               <div style="display: flex; align-items: center; gap: 4px;">
                 <strong class="fp-subtotal" id="subtotal-fp-${prodId}" style="color: #fbbf24; font-size: 13.5px; font-weight: 800;">€${subtotal.toLocaleString()}</strong>
               </div>
             </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 10px;">
-              <div style="display: flex; align-items: center; gap: 6px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 10px; flex-wrap: nowrap;">
+              <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
                 <span style="font-size: 11.5px; color: #94a3b8; font-weight: 700;">Menge:</span>
                 <button class="btn-fp-qty-step btn-3d-secondary" data-prod="${prodId}" data-step="-1" style="width: 32px; height: 32px; padding: 0; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 800; border-radius: 8px;">-</button>
                 <input type="number" class="input-fp-qty" id="qty-input-fp-${prodId}" data-prod="${prodId}" data-unit-val="${val}" data-max="${count}" min="1" max="${count}" value="${count}" style="width: 50px; height: 32px; padding: 0 4px; box-sizing: border-box; background: #090d16; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #f8fafc; text-align: center; font-weight: 800; font-size: 13px; outline: none;">
@@ -2080,7 +2337,7 @@ export class BaseSystem {
                 <button class="btn-fp-qty-quick btn-3d-secondary" data-prod="${prodId}" data-set="1" style="height: 32px; padding: 0 10px; font-size: 11.5px; font-weight: 700; border-radius: 8px;">1x</button>
                 <button class="btn-fp-qty-quick btn-action" data-prod="${prodId}" data-set="${count}" style="height: 32px; padding: 0 10px; font-size: 11.5px; font-weight: 700; border-radius: 8px;">Alle (${count})</button>
               </div>
-              <button class="btn-sell-fp-custom btn-buy" data-prod="${prodId}" style="height: 32px; padding: 0 14px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px;">
+              <button class="btn-sell-fp-custom btn-buy" data-prod="${prodId}" style="width: 105px; min-width: 105px; flex-shrink: 0; height: 32px; padding: 0 8px; font-size: 11.5px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap;">
                 ${icon('coins', '', 14)}
                 <span id="btn-sell-fp-text-${prodId}">Verkaufen</span>
               </button>
@@ -2091,30 +2348,57 @@ export class BaseSystem {
       fpListHtml += '</div>';
     }
 
-    factoryHtml = `
-      <div style="background: rgba(15, 23, 42, 0.7); border-radius: 10px; padding: 12px; margin-top: 14px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-          <strong style="color: #38bdf8; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
-            ${icon('container', '', 15)} FABRIK-ERZEUGNISSE & BARREN
-          </strong>
-          <span style="color: #fbbf24; font-size: 13px; font-weight: 700;">Warenwert: €${totalFpValue.toLocaleString()}</span>
-        </div>
-        ${fpListHtml}
+    const marketTabs = [
+      { id: 'ores', label: 'Roherze & Mineralien', icon: 'gem', count: totalOreCount, val: totalOreValue },
+      { id: 'products', label: 'Fabrikerzeugnisse & Barren', icon: 'factory', count: totalFpCount, val: totalFpValue }
+    ];
+
+    const tabNavHtml = `
+      <div class="register-tab-bar">
+        ${marketTabs.map(t => {
+          const isActive = this.activeMarketTab === t.id;
+          return `
+            <button class="register-tab market-tab-btn ${isActive ? 'active' : ''}" data-tab="${t.id}">
+              ${icon(t.icon, '', 14)}
+              <span>${t.label}</span>
+              <span class="tab-badge">${t.count}x · €${t.val.toLocaleString()}</span>
+            </button>
+          `;
+        }).join('')}
       </div>
     `;
 
-    const content = `
-      <div style="display: flex; flex-direction: column; gap: 12px; padding-bottom: 54px;">
-        <div style="background: rgba(15, 23, 42, 0.7); border-radius: 10px; padding: 12px;">
+    let activeTabContentHtml = '';
+    if (this.activeMarketTab === 'ores') {
+      activeTabContentHtml = `
+        <div class="register-tab-panel">
           <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 4px;">
             <strong style="color: #38bdf8; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
-              ${icon('coins', '', 15)} ROHERZE & MINERALIEN (${totalOreCount} Erze verfügbar)
+              ${icon('gem', '', 15)} ROHERZE & MINERALIEN (${totalOreCount} Erze verfügbar)
             </strong>
             <strong style="color: #fbbf24; font-size: 14px; font-weight: 800;">Gesamtwert: €${totalOreValue.toLocaleString()}</strong>
           </div>
           ${oreListHtml}
         </div>
-        ${factoryHtml}
+      `;
+    } else {
+      activeTabContentHtml = `
+        <div class="register-tab-panel">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <strong style="color: #38bdf8; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
+              ${icon('factory', '', 15)} FABRIK-ERZEUGNISSE & BARREN (${totalFpCount} Waren verfügbar)
+            </strong>
+            <span style="color: #fbbf24; font-size: 14px; font-weight: 800;">Warenwert: €${totalFpValue.toLocaleString()}</span>
+          </div>
+          ${fpListHtml}
+        </div>
+      `;
+    }
+
+    const content = `
+      <div class="register-tab-container" style="display: flex; flex-direction: column; max-width: 760px; margin: 0 auto; width: 100%; box-sizing: border-box; padding-bottom: 54px; gap: 0 !important; row-gap: 0 !important;">
+        ${tabNavHtml}
+        ${activeTabContentHtml}
       </div>
     `;
 
@@ -2125,27 +2409,59 @@ export class BaseSystem {
       </div>
     `, content);
 
-    const totalSellCount = totalOreCount + totalFpCount;
-    const totalSellValue = totalOreValue + totalFpValue;
+    // Floating Action Button je nach aktivem Register-Tab
+    if (this.activeMarketTab === 'ores') {
+      this.setFloatingAction(`
+        <button id="btn-market-sell-ores-flyover" class="btn-buy btn-flyover" style="gap: 6px;" ${totalOreCount > 0 ? '' : 'disabled'}>
+          ${icon('coins', '', 14)}
+          <span>Alle Erze verkaufen (${totalOreCount}${totalOreCount > 0 ? ` · €${totalOreValue.toLocaleString()}` : ''})</span>
+        </button>
+      `, (container) => {
+        const btn = container.querySelector('#btn-market-sell-ores-flyover');
+        if (btn) {
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            const res = this.sellAllMarketOres();
+            if (res.totalEarned > 0) {
+              soundFx.playPurchase();
+              this.openMarketModal('ores');
+              this.scene.events.emit('notify', `${res.totalCount} Erze vollständig verkauft für +€${res.totalEarned.toLocaleString()}!`);
+            }
+          };
+        }
+      });
+    } else {
+      this.setFloatingAction(`
+        <button id="btn-market-sell-fp-flyover" class="btn-buy btn-flyover" style="gap: 6px;" ${totalFpCount > 0 ? '' : 'disabled'}>
+          ${icon('coins', '', 14)}
+          <span>Alle Erzeugnisse verkaufen (${totalFpCount}${totalFpCount > 0 ? ` · €${totalFpValue.toLocaleString()}` : ''})</span>
+        </button>
+      `, (container) => {
+        const btn = container.querySelector('#btn-market-sell-fp-flyover');
+        if (btn) {
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            const res = this.sellAllMarketProducts();
+            if (res.totalEarned > 0) {
+              soundFx.playPurchase();
+              this.openMarketModal('products');
+              this.scene.events.emit('notify', `${res.totalCount} Fabrikerzeugnisse vollständig verkauft für +€${res.totalEarned.toLocaleString()}!`);
+            }
+          };
+        }
+      });
+    }
 
-    this.setFloatingAction(`
-      <button id="btn-market-sell-all-flyover" class="btn-buy btn-flyover" style="gap: 6px;" ${totalSellCount > 0 ? '' : 'disabled'}>
-        ${icon('coins', '', 14)}
-        <span>Alles verkaufen (${totalSellCount}${totalSellCount > 0 ? ` · €${totalSellValue.toLocaleString()}` : ''})</span>
-      </button>
-    `, (container) => {
-      const btn = container.querySelector('#btn-market-sell-all-flyover');
-      if (btn) {
-        btn.onclick = (e) => {
-          e.stopPropagation();
-          const res = this.sellAllMarketItems();
-          if (res.totalEarned > 0) {
-            soundFx.playPurchase();
-            this.openMarketModal();
-            this.scene.events.emit('notify', `${res.totalCount} Einheiten vollständig verkauft für +€${res.totalEarned.toLocaleString()}!`);
-          }
-        };
-      }
+    // Register-Tab Umschaltung
+    document.querySelectorAll('.market-tab-btn').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const tab = btn.getAttribute('data-tab');
+        if (tab) {
+          soundFx.playClick();
+          this.openMarketModal(tab);
+        }
+      };
     });
 
     // Mengen-Aktualisierungshelfer (Erze)
@@ -2200,7 +2516,7 @@ export class BaseSystem {
         const earned = this.sellMarketOreFromPlayerOrDepot(ore, qty);
         if (earned > 0) {
           soundFx.playPurchase();
-          this.openMarketModal();
+          this.openMarketModal(this.activeMarketTab);
           this.scene.events.emit('notify', `${qty}x ${ORE_DATA[ore]?.name || ore} verkauft für +€${earned.toLocaleString()}!`);
         }
       };
@@ -2258,7 +2574,7 @@ export class BaseSystem {
         const earned = this.sellMarketProductFromPlayerOrDepot(prodId, qty);
         if (earned > 0) {
           soundFx.playPurchase();
-          this.openMarketModal();
+          this.openMarketModal(this.activeMarketTab);
           const displayName = prodId.startsWith('bar_')
             ? getRefinedOreName(prodId.replace('bar_', ''))
             : (FACTORY_PRODUCTS[prodId]?.name || prodId);
@@ -2339,6 +2655,30 @@ export class BaseSystem {
       if (this.scene.hud) this.scene.hud.update();
     }
     return { totalEarned, totalCount };
+  }
+
+  sellAllMarketProducts() {
+    let totalFpEarned = 0;
+    let totalFpCount = 0;
+    const allKeys = Array.from(new Set([
+      ...Object.keys(FACTORY_PRODUCTS),
+      ...Object.keys(this.player.factoryProducts || {}),
+      ...Object.keys(this.depot?.products || {})
+    ]));
+    for (const prodId of allKeys) {
+      const avail = (this.player.factoryProducts?.[prodId] || 0) + (this.depot?.products?.[prodId] || 0);
+      if (avail > 0) {
+        const earned = this.sellMarketProductFromPlayerOrDepot(prodId, avail);
+        if (earned > 0) {
+          totalFpCount += avail;
+          totalFpEarned += earned;
+        }
+      }
+    }
+    return {
+      totalEarned: totalFpEarned,
+      totalCount: totalFpCount
+    };
   }
 
   sellAllMarketItems() {
@@ -2468,8 +2808,7 @@ export class BaseSystem {
   updateHangarBuildingLabel() {
     const dockBuilding = this.buildings?.find(b => b.id === 'dock');
     if (dockBuilding && dockBuilding.textLabel) {
-      const tier = this.hangarTier || 1;
-      dockBuilding.textLabel.setText(tier > 1 ? `HANGAR (Stufe ${tier})` : 'HANGAR');
+      dockBuilding.textLabel.setText('HANGAR');
     }
   }
 
@@ -2483,6 +2822,314 @@ export class BaseSystem {
     if (!data) return;
     this.hangarTier = Math.max(1, Math.min(HANGAR_TIERS.length, Number(data.tier) || 1));
     this.updateHangarBuildingLabel();
+  }
+
+  getDrillerUpgradeTracks() {
+    return [
+      {
+        id: 'tank',
+        iconName: 'fuel',
+        title: 'TREIBSTOFF-TANK',
+        curTier: this.player.tankTier || 1,
+        resTier: this.player.researchedTankTier || (this.player.tankTier || 1),
+        maxTier: TANK_TIERS.length,
+        tiers: TANK_TIERS,
+        onMount: (nextTier) => {
+          if (this.player.upgradeTank) {
+            this.player.upgradeTank(nextTier.tier);
+          } else {
+            this.player.tankTier = nextTier.tier;
+            this.player.maxFuel = nextTier.maxFuel;
+          }
+        }
+      },
+      {
+        id: 'hull',
+        iconName: 'shield-cog',
+        title: 'GEHÄUSESCHUTZ / PANZERUNG',
+        curTier: this.player.hullTier || 1,
+        resTier: this.player.researchedHullTier || (this.player.hullTier || 1),
+        maxTier: HULL_TIERS.length,
+        tiers: HULL_TIERS,
+        onMount: (nextTier) => {
+          if (this.player.upgradeHull) {
+            this.player.upgradeHull(nextTier.tier);
+          } else {
+            this.player.hullTier = nextTier.tier;
+            this.player.maxHull = nextTier.maxHull;
+            this.player.hull = this.player.maxHull;
+          }
+        }
+      },
+      {
+        id: 'drill',
+        iconName: 'pickaxe',
+        title: 'BOHRKOPF-WERKSTATT',
+        curTier: this.player.drillTier || 1,
+        resTier: this.player.researchedDrillTier || (this.player.drillTier || 1),
+        maxTier: DRILL_DATA.length,
+        tiers: DRILL_DATA,
+        onMount: (nextTier) => {
+          this.player.drillTier = nextTier.tier;
+          this.player.drillPower = DRILL_DPS[nextTier.tier - 1];
+        }
+      },
+      {
+        id: 'engine',
+        iconName: 'zap',
+        title: 'ANTRIEB & STEIGFLUG',
+        curTier: this.player.engineTier || 1,
+        resTier: this.player.researchedEngineTier || (this.player.engineTier || 1),
+        maxTier: ENGINE_TIERS.length,
+        tiers: ENGINE_TIERS,
+        onMount: (nextTier) => {
+          if (this.player.upgradeEngine) {
+            this.player.upgradeEngine(nextTier.tier);
+          } else {
+            this.player.engineTier = nextTier.tier;
+          }
+        }
+      },
+      {
+        id: 'cargo',
+        iconName: 'container',
+        title: 'FRACHTRAUM-KAPAZITÄT',
+        curTier: this.player.cargoTier || 1,
+        resTier: this.player.researchedCargoTier || (this.player.cargoTier || 1),
+        maxTier: CARGO_TIERS.length,
+        tiers: CARGO_TIERS,
+        onMount: (nextTier) => {
+          if (this.player.upgradeCargo) {
+            this.player.upgradeCargo(nextTier.tier);
+          } else {
+            this.player.cargoTier = nextTier.tier;
+            this.player.maxCargo = nextTier.maxCargo;
+          }
+        }
+      },
+      {
+        id: 'sensor',
+        iconName: 'radio',
+        title: 'GEO-SENSOR & RADAR',
+        curTier: this.player.sensorTier || 1,
+        resTier: this.player.researchedSensorTier || (this.player.sensorTier || 1),
+        maxTier: SENSOR_TIERS.length,
+        tiers: SENSOR_TIERS,
+        onMount: (nextTier) => {
+          if (this.player.upgradeSensor) {
+            this.player.upgradeSensor(nextTier.tier);
+          } else {
+            this.player.sensorTier = nextTier.tier;
+          }
+        }
+      }
+    ];
+  }
+
+  renderDrillerUpgradeCards(prefix = 'dock') {
+    const tracks = this.getDrillerUpgradeTracks();
+    let sectionsHtml = '';
+
+    const getRequiredComps = (tierData) => {
+      if (!tierData) return [];
+      if (Array.isArray(tierData.mountComps)) return tierData.mountComps;
+      if (tierData.mountComp) return [tierData.mountComp];
+      return [];
+    };
+
+    const checkMountComp = (tierData) => {
+      const compsNeeded = getRequiredComps(tierData);
+      if (compsNeeded.length === 0) return true;
+      return compsNeeded.every(mc => (this.player.components[mc.key] || 0) >= mc.count);
+    };
+
+    const getMountCompBadge = (tierData) => {
+      const compsNeeded = getRequiredComps(tierData);
+      if (compsNeeded.length === 0) return '<span style="color: #94a3b8; font-size: 10.5px; white-space: nowrap;">Keine Teile nötig</span>';
+      return compsNeeded.map(mc => {
+        const have = this.player.components[mc.key] || 0;
+        const isMet = have >= mc.count;
+        const iconName = COMPONENT_ICONS[mc.key] || 'box';
+        const srcPrefix = mc.source ? `<span style="opacity: 0.8; font-size: 9.5px; margin-right: 2px;">[${mc.source}]</span>` : '';
+        return `<span style="background: ${isMet ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)'}; border: 1px solid ${isMet ? 'rgba(16,185,129,0.35)' : 'rgba(239,68,68,0.35)'}; color: ${isMet ? '#34d399' : '#f87171'}; font-weight: 700; font-size: 10.5px; padding: 2px 6px; border-radius: 5px; display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; flex-shrink: 0;">${icon(iconName, '', 11)} ${srcPrefix}${mc.count}x ${mc.name} <span style="font-size: 9.5px; opacity: 0.85;">(${have}/${mc.count})</span></span>`;
+      }).join(' ');
+    };
+
+    tracks.forEach((track) => {
+      const curData = track.tiers[track.curTier - 1] || track.tiers[0];
+      const hasNext = track.curTier < track.maxTier;
+      const nextData = hasNext ? (track.tiers[track.curTier] || null) : null;
+      const isResearched = hasNext && (track.resTier > track.curTier);
+      const hasMountComp = isResearched && checkMountComp(nextData);
+      const mountBtnId = `btn-mount-${track.id}-${prefix}`;
+
+      // Segmented Progress Bar
+      let segmentsHtml = '<div class="segmented-progress-bar">';
+      for (let s = 1; s <= track.maxTier; s++) {
+        if (s <= track.curTier) {
+          segmentsHtml += `
+            <div class="seg-step completed${s === track.curTier ? ' current' : ''}">
+              <span><span class="step-label">Stufe </span>${s}</span>
+            </div>
+          `;
+        } else if (s === track.curTier + 1) {
+          segmentsHtml += `
+            <div class="seg-step active">
+              <span><span class="step-label">Stufe </span>${s}</span>
+            </div>
+          `;
+        } else {
+          segmentsHtml += `
+            <div class="seg-step locked">
+              <span><span class="step-label">Stufe </span>${s}</span>
+            </div>
+          `;
+        }
+      }
+      segmentsHtml += '</div>';
+
+      let actionRowHtml = '';
+      if (!hasNext) {
+        actionRowHtml = `
+          <div class="cat-action-row" style="margin-top: 6px; display: flex; align-items: center; justify-content: space-between; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.08); padding: 7px 12px; border-radius: 8px; gap: 10px; box-sizing: border-box; flex-wrap: nowrap; min-height: 44px; overflow-x: auto; scrollbar-width: none;">
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 6px; white-space: nowrap;">
+              <strong style="color: #10b981; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;">
+                ${icon('award', '', 14)} Vollständig montiert
+              </strong>
+            </div>
+            <div style="width: 105px; min-width: 105px; flex-shrink: 0; margin-left: auto;">
+              <span style="font-size: 11px; color: #10b981; font-weight: 700; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); padding: 3px 8px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; white-space: nowrap;">MAX</span>
+            </div>
+          </div>
+        `;
+      } else if (!isResearched) {
+        actionRowHtml = `
+          <div class="cat-action-row" style="margin-top: 6px; display: flex; align-items: center; justify-content: space-between; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.08); padding: 7px 12px; border-radius: 8px; gap: 10px; box-sizing: border-box; flex-wrap: nowrap; min-height: 44px; overflow-x: auto; scrollbar-width: none;">
+            <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0; flex-wrap: nowrap;">
+              <strong style="color: #f8fafc; font-size: 12.5px; white-space: nowrap; flex-shrink: 0; width: 185px; min-width: 185px;">${nextData.name}</strong>
+              <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 6px; white-space: nowrap; flex-shrink: 0; font-variant-numeric: tabular-nums; width: 68px; min-width: 68px; text-align: center; justify-content: center; display: inline-flex;">
+                ${nextData.stat}
+              </span>
+              <span style="color: #f59e0b; font-size: 10.5px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25); padding: 2px 6px; border-radius: 6px; white-space: nowrap; flex-shrink: 0;">
+                ${icon('microscope', '', 12)} Im Labor erforschen
+              </span>
+            </div>
+            <div style="width: 105px; min-width: 105px; flex-shrink: 0; margin-left: auto;">
+              <button class="btn-buy" disabled style="opacity: 0.45; background: #334155; color: #94a3b8; cursor: not-allowed; width: 100%; height: 30px; font-size: 11px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap;">
+                ${icon('lock', '', 12)} Gesperrt
+              </button>
+            </div>
+          </div>
+        `;
+      } else {
+        const compBadge = getMountCompBadge(nextData);
+        const mountBtnHtml = hasMountComp ? `
+          <button id="${mountBtnId}" class="btn-buy" style="width: 100%; height: 30px; padding: 0 8px; font-size: 11px; font-weight: 800; background: linear-gradient(135deg, #10b981, #059669); display: inline-flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap;">
+            ${icon('wrench', '', 12)} Montieren
+          </button>
+        ` : `
+          <button id="${mountBtnId}" class="btn-buy" style="width: 100%; height: 30px; padding: 0 6px; font-size: 10.5px; font-weight: 700; background: #334155; color: #f87171; border: 1px solid rgba(239,68,68,0.3); display: inline-flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap;" title="Benötigt Bauteile aus der Fabrik oder vom Sammler">
+            ${icon('wrench', '', 12)} Fehlt Bauteil
+          </button>
+        `;
+
+        actionRowHtml = `
+          <div class="cat-action-row" style="margin-top: 6px; display: flex; align-items: center; justify-content: space-between; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.08); padding: 7px 12px; border-radius: 8px; gap: 10px; box-sizing: border-box; flex-wrap: nowrap; min-height: 44px; overflow-x: auto; scrollbar-width: none;">
+            <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0; flex-wrap: nowrap;">
+              <strong style="color: #f8fafc; font-size: 12.5px; white-space: nowrap; flex-shrink: 0; width: 185px; min-width: 185px;">${nextData.name}</strong>
+              <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 6px; white-space: nowrap; flex-shrink: 0; font-variant-numeric: tabular-nums; width: 68px; min-width: 68px; text-align: center; justify-content: center; display: inline-flex;">
+                ${nextData.stat}
+              </span>
+              <div style="display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; white-space: nowrap;">
+                ${compBadge}
+              </div>
+            </div>
+            <div style="width: 105px; min-width: 105px; flex-shrink: 0; margin-left: auto;">
+              ${mountBtnHtml}
+            </div>
+          </div>
+        `;
+      }
+
+      sectionsHtml += `
+        <div class="tech-category-card" style="margin-bottom: 8px;">
+          <div class="cat-header-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <div class="cat-title-wrap" style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; color: #f8fafc;">
+              ${icon(track.iconName, '', 16)}
+              <span>${track.title}</span>
+            </div>
+            <div class="cat-status-pill" style="font-size: 11px; color: #94a3b8; background: rgba(255, 255, 255, 0.06); padding: 3px 8px; border-radius: 6px;">
+              Stufe ${track.curTier}/${track.maxTier} • <strong style="color: #10b981;">${curData.stat}</strong>
+            </div>
+          </div>
+
+          ${segmentsHtml}
+          ${actionRowHtml}
+        </div>
+      `;
+    });
+
+    return sectionsHtml;
+  }
+
+  bindDrillerMountHandlers(prefix = 'dock', onMountedCallback = null) {
+    const tracks = this.getDrillerUpgradeTracks();
+
+    const getRequiredComps = (tierData) => {
+      if (!tierData) return [];
+      if (Array.isArray(tierData.mountComps)) return tierData.mountComps;
+      if (tierData.mountComp) return [tierData.mountComp];
+      return [];
+    };
+
+    const checkMountComp = (tierData) => {
+      const compsNeeded = getRequiredComps(tierData);
+      if (compsNeeded.length === 0) return true;
+      return compsNeeded.every(mc => (this.player.components[mc.key] || 0) >= mc.count);
+    };
+
+    const consumeMountComp = (tierData) => {
+      const compsNeeded = getRequiredComps(tierData);
+      compsNeeded.forEach(mc => {
+        this.player.components[mc.key] = Math.max(0, (this.player.components[mc.key] || 0) - mc.count);
+      });
+    };
+
+    tracks.forEach((track) => {
+      const hasNext = track.curTier < track.maxTier;
+      if (!hasNext) return;
+      const nextData = track.tiers[track.curTier] || null;
+      const isResearched = hasNext && (track.resTier > track.curTier);
+      const mountBtnId = `btn-mount-${track.id}-${prefix}`;
+
+      const btn = document.getElementById(mountBtnId);
+      if (btn) {
+        btn.onclick = (e) => {
+          if (e) { e.preventDefault(); e.stopPropagation(); }
+          if (!isResearched) {
+            this.scene.events.emit('notify', `Dieser Bauplan muss zuerst im Labor erforscht werden!`);
+            return;
+          }
+          if (!checkMountComp(nextData)) {
+            const compsNeeded = getRequiredComps(nextData);
+            const missing = compsNeeded
+              .filter(mc => (this.player.components[mc.key] || 0) < mc.count)
+              .map(mc => `${mc.count}x ${mc.name} [${mc.source || 'Werkstatt'}]`)
+              .join(', ');
+            this.scene.events.emit('notify', `Fehlende Bauteile: ${missing}! Fabrik & Forscher nutzen.`);
+            return;
+          }
+          consumeMountComp(nextData);
+          track.onMount(nextData);
+          soundFx.playUpgrade();
+          this.scene.events.emit('player_upgraded');
+          this.scene.events.emit('notify', `${nextData.name} montiert (${nextData.stat})!`);
+          if (typeof onMountedCallback === 'function') {
+            onMountedCallback();
+          }
+        };
+      }
+    });
   }
 
   openDepotModal(tab = null) {
@@ -2543,93 +3190,8 @@ export class BaseSystem {
     }
     const canAffordDepot = nextTierData && (this.player.cash >= nextTierData.costCash) && canAffordDepotComp;
 
-    // 1. Oben: Drei Status-Karten (wie im Bohrermenü)
     const totalStoredOresCount = Object.values(this.depot.ores || {}).reduce((s, v) => s + v, 0);
     const totalStoredGoodsCount = Object.values(this.depot.products || {}).reduce((s, v) => s + v, 0) + Object.values(this.player.components || {}).reduce((s, v) => s + v, 0);
-
-    const statusBarsHtml = `
-      <div style="
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-        gap: 8px;
-        margin-bottom: 2px;
-      ">
-        <!-- Kapazität -->
-        <div style="
-          background: rgba(15, 23, 42, 0.7);
-          border-radius: 10px;
-          padding: 8px 10px;
-          display: flex;
-          flex-direction: column;
-          gap: 5px;
-        ">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 11px; font-weight: 700; color: #94a3b8; display: inline-flex; align-items: center; gap: 4px;">
-              ${icon('warehouse', '', 12)} Belegung
-            </span>
-            <span style="font-size: 13px; font-weight: 800; color: ${isFull ? '#ef4444' : occPct >= 80 ? '#f59e0b' : '#38bdf8'}; width: 44px; min-width: 44px; text-align: right; font-variant-numeric: tabular-nums; display: inline-block;">
-              ${occPct}%
-            </span>
-          </div>
-          <div style="height: 6px; background: rgba(0, 0, 0, 0.5); border-radius: 99px; overflow: hidden;">
-            <div style="width: ${occPct}%; height: 100%; background: ${isFull ? '#ef4444' : occPct >= 80 ? '#f59e0b' : '#38bdf8'}; border-radius: 99px; transition: width 0.2s ease;"></div>
-          </div>
-          <div style="font-size: 9.5px; color: #64748b; text-align: right; font-variant-numeric: tabular-nums;">
-            ${totalStored} / ${capacity} Plätze
-          </div>
-        </div>
-
-        <!-- Gesamtwert -->
-        <div style="
-          background: rgba(15, 23, 42, 0.7);
-          border-radius: 10px;
-          padding: 8px 10px;
-          display: flex;
-          flex-direction: column;
-          gap: 5px;
-        ">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 11px; font-weight: 700; color: #94a3b8; display: inline-flex; align-items: center; gap: 4px;">
-              ${icon('coins', '', 12)} Depotwert
-            </span>
-            <span style="font-size: 13px; font-weight: 800; color: #fbbf24; text-align: right; font-variant-numeric: tabular-nums; display: inline-block;">
-              €${totalVal.toLocaleString()}
-            </span>
-          </div>
-          <div style="height: 6px; background: rgba(0, 0, 0, 0.5); border-radius: 99px; overflow: hidden;">
-            <div style="width: 100%; height: 100%; background: #fbbf24; border-radius: 99px;"></div>
-          </div>
-          <div style="font-size: 9.5px; color: #64748b; text-align: right; font-variant-numeric: tabular-nums;">
-            ${totalStoredOresCount} Erze · ${totalStoredGoodsCount} Waren
-          </div>
-        </div>
-
-        <!-- Fracht im Bohrer -->
-        <div style="
-          background: rgba(15, 23, 42, 0.7);
-          border-radius: 10px;
-          padding: 8px 10px;
-          display: flex;
-          flex-direction: column;
-          gap: 5px;
-        ">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 11px; font-weight: 700; color: #94a3b8; display: inline-flex; align-items: center; gap: 4px;">
-              ${icon('container', '', 12)} Fracht
-            </span>
-            <span style="font-size: 13px; font-weight: 800; color: ${playerCargoOreLength > 0 ? '#34d399' : '#64748b'}; width: 44px; min-width: 44px; text-align: right; font-variant-numeric: tabular-nums; display: inline-block;">
-              ${playerCargoOreLength > 0 ? `+${playerCargoOreLength}` : '0'}
-            </span>
-          </div>
-          <div style="height: 6px; background: rgba(0, 0, 0, 0.5); border-radius: 99px; overflow: hidden;">
-            <div style="width: ${Math.min(100, Math.round((playerCargoOreLength / Math.max(1, this.player.maxCargo || 10)) * 100))}%; height: 100%; background: #34d399; border-radius: 99px; transition: width 0.2s ease;"></div>
-          </div>
-          <div style="font-size: 9.5px; color: #64748b; text-align: right; font-variant-numeric: tabular-nums;">
-            ${playerCargoOreLength} / ${this.player.maxCargo} im Bohrer
-          </div>
-        </div>
-      </div>
-    `;
 
     // 2. OBERES INVENTAR: ERZE & MINERALIEN
 
@@ -2653,20 +3215,22 @@ export class BaseSystem {
       oresItemsHtml += `
         <div class="depot-ore-card" data-key="${key}" style="
           position: relative;
-          background: rgba(18, 26, 42, 0.85);
-          border: ${canDeposit ? '1px solid rgba(56, 189, 248, 0.4)' : '1px solid rgba(255, 255, 255, 0.08)'};
+          background: #090e1a;
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
           border-radius: 10px;
-          padding: 10px 6px 8px 6px;
+          padding: 8px 5px 8px 5px;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 6px;
-          min-height: 84px;
+          gap: 8px;
+          min-height: 90px;
           box-sizing: border-box;
           cursor: pointer;
           user-select: none;
-          transition: transform 0.12s ease, border-color 0.12s ease;
+          -webkit-tap-highlight-color: transparent;
+          outline: none;
         " title="${data.name}: ${depotCount}x im Depot${inCargo > 0 ? ` · ${inCargo}x im Bohrer` : ''} (Klicken für Details)">
           <!-- Anzahl Badge -->
           <span style="
@@ -2680,6 +3244,7 @@ export class BaseSystem {
             padding: 1px 5px;
             border-radius: 99px;
             line-height: 1.2;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
           ">${depotCount}x</span>
 
           ${inCargo > 0 ? `
@@ -2695,24 +3260,28 @@ export class BaseSystem {
               padding: 1px 4px;
               border-radius: 99px;
               line-height: 1.2;
+              box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
             ">+${inCargo}</span>
           ` : ''}
 
           <!-- Stein Icon -->
-          <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; margin-top: 2px;">
+          <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px;">
             ${oreIcon(key, 28)}
           </div>
 
           <!-- Name -->
           <span style="
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 700;
             color: #f8fafc;
             text-align: center;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            line-height: 1.15;
             max-width: 100%;
+            white-space: normal;
+            overflow: visible;
+            text-overflow: clip;
+            word-break: break-word;
+            hyphens: auto;
           ">${data.name}</span>
         </div>
       `;
@@ -2725,15 +3294,16 @@ export class BaseSystem {
     for (let i = 0; i < emptyOreSlots; i++) {
       oresItemsHtml += `
         <div style="
-          background: rgba(255, 255, 255, 0.02);
+          background: rgba(5, 8, 15, 0.55);
+          border: 1px dashed rgba(255, 255, 255, 0.12);
           border-radius: 10px;
-          min-height: 84px;
+          min-height: 90px;
           box-sizing: border-box;
           display: flex;
           align-items: center;
           justify-content: center;
         ">
-          <span style="color: rgba(255, 255, 255, 0.06); font-size: 14px; font-weight: 700;">•</span>
+          <span style="color: rgba(255, 255, 255, 0.18); font-size: 16px; font-weight: 700;">•</span>
         </div>
       `;
     }
@@ -2755,15 +3325,17 @@ export class BaseSystem {
       goodsItemsHtml += `
         <div class="depot-goods-card" data-type="product" data-key="${key}" style="
           position: relative;
-          background: rgba(18, 26, 42, 0.85);
+          background: #090e1a;
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
           border-radius: 10px;
-          padding: 10px 6px 8px 6px;
+          padding: 8px 5px 8px 5px;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 6px;
-          min-height: 84px;
+          gap: 8px;
+          min-height: 90px;
           box-sizing: border-box;
           user-select: none;
           cursor: default;
@@ -2780,23 +3352,27 @@ export class BaseSystem {
             padding: 1px 5px;
             border-radius: 99px;
             line-height: 1.2;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
           ">${depotCount}x</span>
 
           <!-- Icon -->
-          <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; margin-top: 2px;">
+          <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px;">
             ${itemDisplayIcon(key, 26)}
           </div>
 
           <!-- Name -->
           <span style="
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 700;
             color: #f8fafc;
             text-align: center;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            line-height: 1.15;
             max-width: 100%;
+            white-space: normal;
+            overflow: visible;
+            text-overflow: clip;
+            word-break: break-word;
+            hyphens: auto;
           ">${name}</span>
         </div>
       `;
@@ -2815,15 +3391,17 @@ export class BaseSystem {
       goodsItemsHtml += `
         <div class="depot-goods-card" data-type="product" data-key="${key}" style="
           position: relative;
-          background: rgba(18, 26, 42, 0.85);
+          background: #090e1a;
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
           border-radius: 10px;
-          padding: 10px 6px 8px 6px;
+          padding: 8px 5px 8px 5px;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 6px;
-          min-height: 84px;
+          gap: 8px;
+          min-height: 90px;
           box-sizing: border-box;
           user-select: none;
           cursor: default;
@@ -2840,23 +3418,27 @@ export class BaseSystem {
             padding: 1px 5px;
             border-radius: 99px;
             line-height: 1.2;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
           ">${depotCount}x</span>
 
           <!-- Icon -->
-          <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; margin-top: 2px;">
+          <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px;">
             ${itemDisplayIcon(key, 26)}
           </div>
 
           <!-- Name -->
           <span style="
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 700;
             color: #f8fafc;
             text-align: center;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            line-height: 1.15;
             max-width: 100%;
+            white-space: normal;
+            overflow: visible;
+            text-overflow: clip;
+            word-break: break-word;
+            hyphens: auto;
           ">${name}</span>
         </div>
       `;
@@ -2875,15 +3457,17 @@ export class BaseSystem {
       goodsItemsHtml += `
         <div class="depot-goods-card" data-type="component" data-key="${key}" style="
           position: relative;
-          background: rgba(18, 26, 42, 0.85);
+          background: #090e1a;
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
           border-radius: 10px;
-          padding: 10px 6px 8px 6px;
+          padding: 8px 5px 8px 5px;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 6px;
-          min-height: 84px;
+          gap: 8px;
+          min-height: 90px;
           box-sizing: border-box;
           user-select: none;
           cursor: default;
@@ -2900,23 +3484,27 @@ export class BaseSystem {
             padding: 1px 5px;
             border-radius: 99px;
             line-height: 1.2;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
           ">${count}x</span>
 
           <!-- Icon -->
-          <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; margin-top: 2px; color: ${compInfo.color || '#c084fc'};">
+          <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; color: ${compInfo.color || '#c084fc'};">
             ${icon(compInfo.icon, '', 24)}
           </div>
 
           <!-- Name -->
           <span style="
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 700;
             color: #f8fafc;
             text-align: center;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            line-height: 1.15;
             max-width: 100%;
+            white-space: normal;
+            overflow: visible;
+            text-overflow: clip;
+            word-break: break-word;
+            hyphens: auto;
           ">${compInfo.name}</span>
         </div>
       `;
@@ -2929,15 +3517,16 @@ export class BaseSystem {
     for (let i = 0; i < emptyGoodsSlots; i++) {
       goodsItemsHtml += `
         <div style="
-          background: rgba(255, 255, 255, 0.02);
+          background: rgba(5, 8, 15, 0.55);
+          border: 1px dashed rgba(255, 255, 255, 0.12);
           border-radius: 10px;
-          min-height: 84px;
+          min-height: 90px;
           box-sizing: border-box;
           display: flex;
           align-items: center;
           justify-content: center;
         ">
-          <span style="color: rgba(255, 255, 255, 0.06); font-size: 14px; font-weight: 700;">•</span>
+          <span style="color: rgba(255, 255, 255, 0.18); font-size: 16px; font-weight: 700;">•</span>
         </div>
       `;
     }
@@ -2957,7 +3546,7 @@ export class BaseSystem {
 
         <div style="
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+          grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
           gap: 8px;
         ">
           ${oresItemsHtml}
@@ -2975,7 +3564,7 @@ export class BaseSystem {
 
         <div style="
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+          grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
           gap: 8px;
         ">
           ${goodsItemsHtml}
@@ -2996,34 +3585,14 @@ export class BaseSystem {
     ];
 
     const tabNavHtml = `
-      <div style="display: flex; gap: 8px; margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 10px;">
+      <div class="register-tab-bar">
         ${depotTabs.map(t => {
           const isActive = currentTab === t.id;
           return `
-            <button class="depot-tab-btn tab-btn" data-tab="${t.id}" style="
-              flex: 1;
-              height: 36px;
-              box-sizing: border-box;
-              background: ${isActive ? 'linear-gradient(180deg, #0284c7 0%, #0369a1 100%)' : 'rgba(15,23,42,0.6)'};
-              border: 1px solid ${isActive ? '#38bdf8' : 'rgba(255,255,255,0.08)'};
-              border-bottom: ${isActive ? '3px solid #075985' : '1px solid rgba(255,255,255,0.08)'};
-              color: ${isActive ? '#ffffff' : '#94a3b8'};
-              padding: 0 10px;
-              font-size: 12px;
-              font-weight: 700;
-              border-radius: 8px;
-              display: inline-flex;
-              align-items: center;
-              justify-content: center;
-              gap: 6px;
-              cursor: pointer;
-              transition: all 0.15s ease;
-            ">
+            <button class="register-tab depot-tab-btn ${isActive ? 'active' : ''}" data-tab="${t.id}">
               ${icon(t.icon, '', 14)}
               <span>${t.label}</span>
-              <span style="font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 99px; background: ${isActive ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.3)'}; color: ${isActive ? '#ffffff' : '#64748b'};">
-                ${t.badge}
-              </span>
+              <span class="tab-badge">${t.badge}</span>
             </button>
           `;
         }).join('')}
@@ -3035,38 +3604,14 @@ export class BaseSystem {
     if (currentTab === 'storage') {
       tabContentHtml = `
         <div style="display: flex; flex-direction: column; gap: 14px;">
-          ${statusBarsHtml}
           ${oresSectionHtml}
           ${goodsSectionHtml}
         </div>
       `;
     } else if (currentTab === 'upgrades') {
+      // 1. Kompakter Gebäude-Ausbau (Depot)
       const curTierInfo = DEPOT_TIERS.find(t => t.tier === currentTier) || DEPOT_TIERS[0];
-      let segmentsHtml = '<div class="segmented-progress-bar">';
-      for (let s = 1; s <= DEPOT_TIERS.length; s++) {
-        if (s <= currentTier) {
-          segmentsHtml += `
-            <div class="seg-step completed${s === currentTier ? ' current' : ''}">
-              <span><span class="step-label">Stufe </span>${s}</span>
-            </div>
-          `;
-        } else if (s === currentTier + 1) {
-          segmentsHtml += `
-            <div class="seg-step active">
-              <span><span class="step-label">Stufe </span>${s}</span>
-            </div>
-          `;
-        } else {
-          segmentsHtml += `
-            <div class="seg-step locked">
-              <span><span class="step-label">Stufe </span>${s}</span>
-            </div>
-          `;
-        }
-      }
-      segmentsHtml += '</div>';
-
-      let upgradeActionCard = '';
+      let depotUpgradeBtnHtml = '';
       if (nextTierData) {
         const compBadgesHtml = nextTierData.costComp ? Object.entries(nextTierData.costComp).map(([compKey, need]) => {
           const have = this.player.components[compKey] || 0;
@@ -3074,106 +3619,76 @@ export class BaseSystem {
           const compIconName = COMPONENT_ICONS[compKey] || 'box';
           const cName = COMPONENT_DATA[compKey]?.name || compKey;
           return `
-            <span style="background: rgba(192, 132, 252, 0.14); color: ${isMet ? '#c084fc' : '#ef4444'}; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">
-              ${icon(compIconName, '', 11)} ${need}x ${cName} <span style="font-size: 9.5px; opacity: 0.85; font-variant-numeric: tabular-nums;">(${have}/${need})</span>
+            <span style="background: rgba(192, 132, 252, 0.14); color: ${isMet ? '#c084fc' : '#ef4444'}; font-weight: 700; font-size: 10.5px; padding: 2px 6px; border-radius: 6px; display: inline-flex; align-items: center; gap: 3px; white-space: nowrap;">
+              ${icon(compIconName, '', 11)} ${need}x ${cName} <span style="font-size: 9.5px; opacity: 0.85;">(${have}/${need})</span>
             </span>
           `;
         }).join('') : '';
 
-        upgradeActionCard = `
-          <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
-            <div style="display: flex; flex-direction: column; gap: 4px;">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 13.5px; font-weight: 800; color: #38bdf8;">Nächster Ausbau: Stufe ${nextTierData.tier}</span>
-                <span style="font-size: 11px; font-weight: 700; color: #10b981; background: rgba(16,185,129,0.15); padding: 2px 8px; border-radius: 6px;">
-                  +${nextTierData.capacity - capacity} Plätze (${nextTierData.capacity} gesamt)
-                </span>
-              </div>
-              <div style="font-size: 11.5px; color: #94a3b8;">${nextTierData.label}</div>
-            </div>
-            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-              <span style="background: rgba(251, 191, 36, 0.14); color: ${this.player.cash >= nextTierData.costCash ? '#fbbf24' : '#ef4444'}; font-weight: 800; font-size: 12px; padding: 3px 9px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
-                ${icon('coins', '', 12)} €${nextTierData.costCash.toLocaleString()}
-              </span>
-              ${compBadgesHtml}
-              <button id="btn-depot-upgrade" class="btn-buy" style="height: 32px; padding: 0 14px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px;" ${canAffordDepot ? '' : 'disabled'}>
-                ${icon('wrench', '', 14)}
-                <span>Depot Ausbauen</span>
+        depotUpgradeBtnHtml = `
+          <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-shrink: 0; margin-left: auto; flex-wrap: nowrap;">
+            <span style="background: rgba(251, 191, 36, 0.14); color: ${this.player.cash >= nextTierData.costCash ? '#fbbf24' : '#ef4444'}; font-weight: 800; font-size: 11.5px; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; flex-shrink: 0;">
+              ${icon('coins', '', 12)} €${nextTierData.costCash.toLocaleString()}
+            </span>
+            ${compBadgesHtml}
+            <div style="width: 105px; min-width: 105px; flex-shrink: 0;">
+              <button id="btn-depot-upgrade" class="btn-buy" style="width: 100%; height: 30px; padding: 0 6px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap; box-sizing: border-box;" ${canAffordDepot ? '' : 'disabled'}>
+                ${icon('wrench', '', 12)}
+                <span>Ausbauen</span>
               </button>
             </div>
           </div>
         `;
       } else {
-        upgradeActionCard = `
-          <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 12px; text-align: center; color: #10b981; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-            ${icon('award', '', 18)}
-            <span>MAXIMALER DEPOT-AUSBAU ERREICHT (3.000 PLÄTZE)</span>
+        depotUpgradeBtnHtml = `
+          <div style="width: 105px; min-width: 105px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end; margin-left: auto;">
+            <span style="color: #10b981; font-weight: 800; font-size: 11px; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); padding: 3px 8px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; white-space: nowrap;">
+              ${icon('award', '', 12)} MAX
+            </span>
           </div>
         `;
       }
 
-      // Alle 10 Tiers Liste
-      const tiersListHtml = DEPOT_TIERS.map(t => {
-        const isCurrent = t.tier === currentTier;
-        const isUnlocked = t.tier <= currentTier;
-        const isNext = t.tier === currentTier + 1;
-        let statusBadge = '';
-        if (isCurrent) {
-          statusBadge = `<span style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; font-weight: 800; font-size: 10px; padding: 2px 7px; border-radius: 6px;">AKTUELL</span>`;
-        } else if (isUnlocked) {
-          statusBadge = `<span style="background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 800; font-size: 10px; padding: 2px 7px; border-radius: 6px;">ERREICHT</span>`;
-        } else if (isNext) {
-          statusBadge = `<span style="background: rgba(251, 191, 36, 0.15); color: #fbbf24; font-weight: 800; font-size: 10px; padding: 2px 7px; border-radius: 6px;">NÄCHSTE</span>`;
-        } else {
-          statusBadge = `<span style="background: rgba(100, 116, 139, 0.2); color: #64748b; font-weight: 700; font-size: 10px; padding: 2px 7px; border-radius: 6px;">GESPERRT</span>`;
-        }
-
-        const costStr = t.costCash === 0 ? 'Kostenlos' : `€${t.costCash.toLocaleString()}${t.compName ? ` + ${t.compName}` : ''}`;
-
-        return `
-          <div style="background: ${isCurrent ? 'rgba(56, 189, 248, 0.08)' : 'rgba(15, 23, 42, 0.5)'}; border: 1px solid ${isCurrent ? 'rgba(56, 189, 248, 0.3)' : 'rgba(255, 255, 255, 0.05)'}; border-radius: 8px; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-              <span style="font-size: 11px; font-weight: 800; color: ${isUnlocked ? '#38bdf8' : '#64748b'}; width: 22px;">T${t.tier}</span>
-              <div>
-                <div style="font-size: 12px; font-weight: 700; color: ${isUnlocked ? '#f8fafc' : '#94a3b8'};">${t.label}</div>
-                <div style="font-size: 10.5px; color: #64748b;">${costStr}</div>
-              </div>
+      const compactBuildingHtml = `
+        <div style="background: #090e1a; border: 1px solid rgba(255, 255, 255, 0.14); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: nowrap; min-height: 52px; box-sizing: border-box;">
+          <div style="display: flex; align-items: center; gap: 8px; flex: 1 1 auto; min-width: 0; overflow: hidden; flex-wrap: nowrap;">
+            <div style="width: 32px; height: 32px; border-radius: 6px; background: rgba(56,189,248,0.15); display: flex; align-items: center; justify-content: center; color: #38bdf8; flex-shrink: 0;">
+              ${icon('warehouse', '', 16)}
             </div>
-            <div style="display: flex; align-items: center; gap: 10px;">
-              <span style="font-size: 12px; font-weight: 800; color: ${isUnlocked ? '#10b981' : '#64748b'}; font-variant-numeric: tabular-nums;">
-                ${t.capacity} Plätze
-              </span>
-              ${statusBadge}
+            <div style="min-width: 0; overflow: hidden; flex: 1 1 auto;">
+              <div style="display: flex; align-items: center; gap: 6px; white-space: nowrap;">
+                <span style="font-size: 12.5px; font-weight: 800; color: #f8fafc;">DEPOT</span>
+                <span style="font-size: 10px; font-weight: 800; color: #38bdf8; background: rgba(56,189,248,0.15); padding: 1px 6px; border-radius: 4px; flex-shrink: 0;">Stufe ${currentTier}/10</span>
+              </div>
+              <div style="font-size: 10.5px; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Kapazität: <strong style="color: #38bdf8;">${capacity} Plätze</strong> (${totalStored} belegt · ${occPct}%)</div>
             </div>
           </div>
-        `;
-      }).join('');
+          ${depotUpgradeBtnHtml}
+        </div>
+      `;
+
+      // 2. Bohrer-Upgrades (alle 6 Tracks)
+      const drillerSectionsHtml = this.renderDrillerUpgradeCards('depot');
 
       tabContentHtml = `
-        <div style="display: flex; flex-direction: column; gap: 12px;">
-          <div style="background: rgba(15, 23, 42, 0.7); border-radius: 12px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-              <div style="width: 38px; height: 38px; border-radius: 8px; background: rgba(56,189,248,0.15); display: flex; align-items: center; justify-content: center; color: #38bdf8;">
-                ${icon('warehouse', '', 20)}
-              </div>
-              <div>
-                <div style="font-size: 13.5px; font-weight: 800; color: #f8fafc;">Stufe ${currentTier} von 10: ${curTierInfo.label}</div>
-                <div style="font-size: 11px; color: #94a3b8;">Lagerkapazität: ${capacity} Plätze (${totalStored} belegt)</div>
-              </div>
-            </div>
-            <span style="font-size: 13px; font-weight: 800; color: #38bdf8; background: rgba(56,189,248,0.15); padding: 4px 10px; border-radius: 8px;">
-              ${occPct}% Belegt
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <!-- Gebäude-Ausbau (Kompakt) -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: -2px;">
+            <span style="font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.6px; display: inline-flex; align-items: center; gap: 5px;">
+              ${icon('building-2', '', 13)} Gebäude-Ausbau
             </span>
           </div>
+          ${compactBuildingHtml}
 
-          ${segmentsHtml}
-          ${upgradeActionCard}
-
-          <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px;">
-            <span style="font-size: 11.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 5px;">
-              ${icon('list', '', 12)} Alle Ausbaustufen (1–10)
+          <!-- Bohrer-Ausbau (Werkstatt) -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; margin-bottom: -2px;">
+            <span style="font-size: 11px; font-weight: 800; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.6px; display: inline-flex; align-items: center; gap: 5px;">
+              ${drillerVehicleIcon(16)} Bohrer-Upgrades & Werkstatt
             </span>
-            ${tiersListHtml}
+            <span style="font-size: 10.5px; color: #94a3b8;">Montiere erforschte Bauteile</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            ${drillerSectionsHtml}
           </div>
         </div>
       `;
@@ -3192,45 +3707,51 @@ export class BaseSystem {
 
         return `
           <div style="
-            background: ${isResearched ? 'rgba(15, 23, 42, 0.7)' : 'rgba(15, 23, 42, 0.45)'};
-            border: 1px solid ${isResearched ? 'rgba(255,255,255,0.07)' : 'rgba(239, 68, 68, 0.2)'};
+            background: #090e1a;
+            border: 1px solid ${isResearched ? 'rgba(255,255,255,0.12)' : 'rgba(239, 68, 68, 0.25)'};
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
             border-radius: 10px;
             padding: 9px 12px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 10px;
+            min-height: 52px;
+            box-sizing: border-box;
             opacity: ${isResearched ? '1' : '0.85'};
           ">
-            <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
-              <div style="font-size: 20px; width: 36px; height: 36px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.35); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
-                ${item.icon}
+            <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1 1 auto;">
+              <div style="width: 36px; height: 36px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.35); border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); color: #38bdf8;">
+                ${icon(item.icon || 'package', '', 20)}
               </div>
-              <div style="min-width: 0;">
-                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                  <span style="font-size: 12.5px; font-weight: 700; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.name}</span>
-                  <span style="font-size: 9.5px; font-weight: 800; padding: 1px 6px; border-radius: 5px; background: ${badgeBg}; color: ${badgeColor}; white-space: nowrap;">${item.badge}</span>
-                  ${!isResearched ? `<span style="font-size: 9.5px; font-weight: 800; padding: 1px 6px; border-radius: 5px; background: rgba(239, 68, 68, 0.18); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); white-space: nowrap;">🔒 Nicht erforscht</span>` : ''}
+              <div style="min-width: 0; flex: 1 1 auto;">
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;">
+                  <span style="font-size: 12.5px; font-weight: 700; color: #f8fafc; white-space: nowrap; width: 220px; min-width: 220px; max-width: 220px; overflow: hidden; text-overflow: ellipsis;">${item.name}</span>
+                  <span style="font-size: 9.5px; font-weight: 800; padding: 2px 6px; border-radius: 5px; background: ${badgeBg}; color: ${badgeColor}; white-space: nowrap; flex-shrink: 0; width: 76px; min-width: 76px; text-align: center; display: inline-flex; align-items: center; justify-content: center;">${item.badge}</span>
+                  ${!isResearched ? `<span style="font-size: 9.5px; font-weight: 800; padding: 2px 6px; border-radius: 5px; background: rgba(239, 68, 68, 0.18); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); white-space: nowrap; flex-shrink: 0; display: inline-flex; align-items: center; gap: 3px;">${icon('lock', '', 11)} Im Labor erforschen</span>` : ''}
                 </div>
-                <div style="font-size: 10.5px; color: #94a3b8; line-height: 1.3; margin-top: 1px;">
+                <div style="font-size: 10.5px; color: #94a3b8; line-height: 1.35; margin-top: 2px;">
                   ${item.desc}
-                  ${!isResearched ? `<span style="color: #ef4444; font-weight: 700; display: block; margin-top: 2px;">⚠️ Im LABOR erforschen: ${item.reqResearch?.label || 'Labor'}</span>` : ''}
                 </div>
               </div>
             </div>
-            <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-shrink: 0; margin-left: auto; flex-wrap: nowrap;">
               ${isResearched ? `
-                <span style="font-size: 11px; font-weight: 700; color: ${count > 0 ? '#38bdf8' : '#64748b'}; background: rgba(0,0,0,0.3); padding: 2px 7px; border-radius: 6px; white-space: nowrap; font-variant-numeric: tabular-nums;">
-                  ${count}x
+                <span style="font-size: 11px; font-weight: 700; color: #38bdf8; background: rgba(56,189,248,0.15); padding: 2px 7px; border-radius: 6px; white-space: nowrap; font-variant-numeric: tabular-nums; flex-shrink: 0; min-width: 68px; text-align: center; justify-content: center; display: inline-flex;">
+                  Vorrat: ${count}
                 </span>
-                <button id="btn-buy-${item.key}" class="btn-buy-gadget btn-buy" data-gadget="${item.key}" data-price="${item.price}" style="height: 28px; padding: 0 10px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; background: ${canAfford ? 'linear-gradient(135deg, #10b981, #059669)' : '#334155'}; color: ${canAfford ? '#ffffff' : '#94a3b8'};" ${canAfford ? '' : 'disabled'}>
-                  + Kaufen (€${item.price.toLocaleString()})
-                </button>
+                <div style="width: 115px; min-width: 115px; flex-shrink: 0;">
+                  <button id="btn-buy-${item.key}" class="btn-buy-gadget btn-buy" data-gadget="${item.key}" data-price="${item.price}" style="width: 100%; height: 30px; padding: 0 4px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap; box-sizing: border-box; background: ${canAfford ? 'linear-gradient(135deg, #10b981, #059669)' : '#334155'}; color: ${canAfford ? '#ffffff' : '#94a3b8'};" ${canAfford ? '' : 'disabled'}>
+                    + Kaufen (€${item.price.toLocaleString()})
+                  </button>
+                </div>
               ` : `
-                <button class="btn-buy" disabled style="height: 28px; padding: 0 10px; font-size: 10.5px; font-weight: 700; background: #1e293b; border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; display: inline-flex; align-items: center; gap: 4px; opacity: 0.85;">
-                  ${icon('lock', '', 12)}
-                  <span>Labor</span>
-                </button>
+                <div style="width: 115px; min-width: 115px; flex-shrink: 0;">
+                  <button class="btn-buy" disabled style="width: 100%; height: 30px; padding: 0 6px; font-size: 10.5px; font-weight: 700; background: #1e293b; border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; display: inline-flex; align-items: center; justify-content: center; gap: 4px; opacity: 0.85; white-space: nowrap; box-sizing: border-box;">
+                    ${icon('lock', '', 12)}
+                    <span>Labor</span>
+                  </button>
+                </div>
               `}
             </div>
           </div>
@@ -3239,13 +3760,6 @@ export class BaseSystem {
 
       tabContentHtml = `
         <div style="display: flex; flex-direction: column; gap: 14px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.6); padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.06);">
-            <span style="font-size: 12px; color: #94a3b8;">Verfügbares Guthaben:</span>
-            <span style="font-size: 13.5px; font-weight: 800; color: #fbbf24; display: inline-flex; align-items: center; gap: 4px;">
-              ${icon('coins', '', 13)} €${this.player.cash.toLocaleString()}
-            </span>
-          </div>
-
           <div style="display: flex; flex-direction: column; gap: 8px;">
             <span style="font-size: 11.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 5px;">
               ${icon('package', '', 12)} Expeditions- & Notfallausrüstung
@@ -3269,9 +3783,11 @@ export class BaseSystem {
 
     // Zusammenbau des scrollbaren Modals
     this.modalBodyEl.innerHTML = `
-      <div style="display: flex; flex-direction: column; max-width: 620px; margin: 0 auto; width: 100%; box-sizing: border-box; padding: 0 4px 54px 4px; gap: 14px;">
+      <div class="register-tab-container" style="display: flex; flex-direction: column; max-width: 760px; margin: 0 auto; width: 100%; box-sizing: border-box; padding: 0 4px 54px 4px; gap: 0 !important; row-gap: 0 !important;">
         ${tabNavHtml}
-        ${tabContentHtml}
+        <div class="register-tab-panel">
+          ${tabContentHtml}
+        </div>
       </div>
     `;
 
@@ -3368,6 +3884,9 @@ export class BaseSystem {
         this.upgradeDepot();
       };
     }
+
+    // Bohrer-Upgrades Montage-Handler im Depot registrieren
+    this.bindDrillerMountHandlers('depot', () => this.renderDepotModal());
 
     // Expeditions-Ausrüstung & Untertage-Stationen kaufen
     body.querySelectorAll('.btn-buy-gadget').forEach(btn => {
@@ -3923,29 +4442,11 @@ export class BaseSystem {
     ];
 
     const tabNavHtml = `
-      <div style="display: flex; gap: 8px; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 10px;">
+      <div class="register-tab-bar">
         ${labTabs.map(t => {
           const isActive = activeLabTab === t.id;
           return `
-            <button class="lab-tab-btn tab-btn" data-tab="${t.id}" style="
-              flex: 1;
-              height: 36px;
-              box-sizing: border-box;
-              background: ${isActive ? 'linear-gradient(180deg, #0284c7 0%, #0369a1 100%)' : 'rgba(15,23,42,0.6)'};
-              border: 1px solid ${isActive ? '#38bdf8' : 'rgba(255,255,255,0.08)'};
-              border-bottom: ${isActive ? '3px solid #075985' : '1px solid rgba(255,255,255,0.08)'};
-              color: ${isActive ? '#ffffff' : '#94a3b8'};
-              padding: 0 10px;
-              font-size: 12px;
-              font-weight: 700;
-              border-radius: 8px;
-              display: inline-flex;
-              align-items: center;
-              justify-content: center;
-              gap: 6px;
-              cursor: pointer;
-              transition: all 0.15s ease;
-            ">
+            <button class="register-tab lab-tab-btn ${isActive ? 'active' : ''}" data-tab="${t.id}">
               ${icon(t.icon, '', 14)}
               <span>${t.label}</span>
             </button>
@@ -4036,16 +4537,70 @@ export class BaseSystem {
         iconName: 'flame',
         currentTier: p.researchedTnt || 0,
         installedTier: p.researchedTnt || 0,
-        maxTier: 1,
+        maxTier: 7,
         tiers: [
           {
             tier: 1,
-            name: 'Dynamit-Sprengsatz Mk.I (TNT)',
-            stat: '3x3 Feld Sprengung',
+            name: 'Dynamit-Sprengsatz Stufe 1',
+            stat: '3x3 Feld',
             cost: 350,
             level: 1,
             comp: { key: 'iron_tube', name: 'Stahl-Rohr', count: 1 },
-            desc: 'Erforscht die kontrollierte Gesteinssprengung. Schaltet Dynamit im Depot-Shop frei.'
+            desc: 'Erforscht die kontrollierte Gesteinssprengung per Fernzünder. Schaltet Dynamit im Depot-Shop frei.'
+          },
+          {
+            tier: 2,
+            name: 'Verstärkte Ladung Stufe 2',
+            stat: '4x4 Feld',
+            cost: 1200,
+            level: 2,
+            comp: { key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1 },
+            desc: 'Kompaktierter Sprengstoff vergrößert den Explosionsradius auf ein 4x4-Feld.'
+          },
+          {
+            tier: 3,
+            name: 'Hohlladungs-Sprengstoff Stufe 3',
+            stat: '5x5 Feld',
+            cost: 3200,
+            level: 3,
+            comp: { key: 'silver_coil', name: 'Silber-Spule', count: 1 },
+            desc: 'Gerichtete Detonationswellen sprengen gigantische 5x5-Kavernen in den Fels.'
+          },
+          {
+            tier: 4,
+            name: 'Seismische Megaladung Stufe 4',
+            stat: '6x6 Feld',
+            cost: 7500,
+            level: 4,
+            comp: { key: 'crystal_lens', name: 'Kristall-Linse', count: 1 },
+            desc: 'Maximale seismische Sprengkraft bis 6x6 Kacheln für massive Durchbrüche im tiefsten Gestein.'
+          },
+          {
+            tier: 5,
+            name: 'Thermo-Kavitationsladung Stufe 5',
+            stat: '7x7 Feld',
+            cost: 18000,
+            level: 5,
+            comp: { key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1 },
+            desc: 'Hochenergetische Implosions-Kavitation sprengt ein gewaltiges 7x7-Feld im Gestein frei.'
+          },
+          {
+            tier: 6,
+            name: 'Subatomare Schockwelle Stufe 6',
+            stat: '8x8 Feld',
+            cost: 45000,
+            level: 6,
+            comp: { key: 'titan_bolt', name: 'Titan-Bolzen', count: 2 },
+            desc: 'Verdichtete Schockwellen pulverisieren selbst härtestes Basaltgestein in einem 8x8-Feld.'
+          },
+          {
+            tier: 7,
+            name: 'Gravitations-Kollapsor Stufe 7',
+            stat: '9x9 Feld',
+            cost: 95000,
+            level: 8,
+            comp: { key: 'graviton_core', name: 'Gravitations-Modulator', count: 1 },
+            desc: 'Ultimative Detonations-Matrix erzeugt einen gewaltigen 9x9-Durchbruch in tiefsten Urgesteinschichten.'
           }
         ],
         apply: (tier) => {
@@ -4062,8 +4617,8 @@ export class BaseSystem {
         tiers: [
           {
             tier: 1,
-            name: 'Treibstoffkanister & Feld-Reparatur-Kits',
-            stat: '+20L Tank & +40HP Reparatur',
+            name: 'Notfall-Expeditionsset',
+            stat: '+20L / +40HP',
             cost: 200,
             level: 1,
             comp: null,
@@ -4077,15 +4632,15 @@ export class BaseSystem {
       {
         id: 'station_tube',
         title: 'UNTERTAGE-ERZFÖRDERSCHÄCHTE',
-        iconName: 'rocket',
+        iconName: 'conveyor-belt',
         currentTier: p.researchedStationTube || 0,
         installedTier: p.researchedStationTube || 0,
         maxTier: 3,
         tiers: [
           {
             tier: 1,
-            name: 'Förderschacht Schicht 1 & 2',
-            stat: '0–180m Tiefe (Humus & Schiefer)',
+            name: 'Förderschacht (Schicht 1 & 2)',
+            stat: '0–180m',
             cost: 350,
             level: 1,
             comp: { key: 'iron_tube', name: 'Stahl-Rohr', count: 1 },
@@ -4093,8 +4648,8 @@ export class BaseSystem {
           },
           {
             tier: 2,
-            name: 'Förderschacht Schicht 3 & 4',
-            stat: '180–950m Tiefe (Granit & Obsidian)',
+            name: 'Förderschacht (Schicht 3 & 4)',
+            stat: '180–950m',
             cost: 1600,
             level: 2,
             comp: { key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1 },
@@ -4102,8 +4657,8 @@ export class BaseSystem {
           },
           {
             tier: 3,
-            name: 'Förderschacht Schicht 5 (Urgestein)',
-            stat: '>950m Tiefe (Urgestein)',
+            name: 'Förderschacht (Schicht 5)',
+            stat: '>950m',
             cost: 6500,
             level: 4,
             comp: { key: 'titan_bolt', name: 'Titan-Bolzen', count: 1 },
@@ -4124,8 +4679,8 @@ export class BaseSystem {
         tiers: [
           {
             tier: 1,
-            name: 'Tankanlage Schicht 1 & 2',
-            stat: '0–180m Tiefe (Humus & Schiefer)',
+            name: 'Tankanlage (Schicht 1 & 2)',
+            stat: '0–180m',
             cost: 450,
             level: 1,
             comp: { key: 'iron_tube', name: 'Stahl-Rohr', count: 1 },
@@ -4133,8 +4688,8 @@ export class BaseSystem {
           },
           {
             tier: 2,
-            name: 'Tankanlage Schicht 3 & 4',
-            stat: '180–950m Tiefe (Granit & Obsidian)',
+            name: 'Tankanlage (Schicht 3 & 4)',
+            stat: '180–950m',
             cost: 2200,
             level: 2,
             comp: { key: 'silver_coil', name: 'Silber-Spule', count: 1 },
@@ -4142,8 +4697,8 @@ export class BaseSystem {
           },
           {
             tier: 3,
-            name: 'Tankanlage Schicht 5 (Urgestein)',
-            stat: '>950m Tiefe (Urgestein)',
+            name: 'Tankanlage (Schicht 5)',
+            stat: '>950m',
             cost: 8500,
             level: 4,
             comp: { key: 'crystal_lens', name: 'Kristall-Linse', count: 1 },
@@ -4225,26 +4780,28 @@ export class BaseSystem {
         `;
 
         actionHtml = `
-          <div class="cat-action-row" style="margin-top: 8px; display: flex; align-items: center; justify-content: space-between; background: rgba(15,23,42,0.6); padding: 8px 12px; border-radius: 8px; gap: 8px 12px; box-sizing: border-box; flex-wrap: wrap;">
+          <div class="cat-action-row" style="margin-top: 8px; display: flex; align-items: center; justify-content: space-between; background: rgba(15,23,42,0.6); padding: 7px 12px; border-radius: 8px; gap: 8px; box-sizing: border-box; flex-wrap: nowrap; min-height: 44px;">
             <!-- Linke Seite: Name, Stat, Level und Komponenten -->
-            <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 220px; flex-wrap: wrap;">
-              <strong style="color: #f8fafc; font-size: 13px; white-space: nowrap;">${nextTier.name}</strong>
-              <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 6px; white-space: nowrap; font-variant-numeric: tabular-nums;">
+            <div style="display: flex; align-items: center; gap: 8px; flex: 1 1 auto; min-width: 0; flex-wrap: nowrap;">
+              <strong style="color: #f8fafc; font-size: 12.5px; white-space: nowrap; flex-shrink: 0; width: 205px; min-width: 205px;">${nextTier.name}</strong>
+              <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 6px; white-space: nowrap; flex-shrink: 0; font-variant-numeric: tabular-nums; width: 78px; min-width: 78px; text-align: center; justify-content: center; display: inline-flex;">
                 ${nextTier.stat}
               </span>
-              ${levelBadge}
-              <div style="display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+              <div style="flex-shrink: 0; white-space: nowrap;">
+                ${levelBadge}
+              </div>
+              <div style="display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; white-space: nowrap;">
                 ${compBadge}
               </div>
             </div>
 
             <!-- Rechte Seite: Preis und Erforschen-Button -->
-            <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0; margin-left: auto;">
-              <div style="min-width: 80px;">
+            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-shrink: 0; margin-left: auto; flex-wrap: nowrap;">
+              <div style="flex-shrink: 0; white-space: nowrap;">
                 ${costBadge}
               </div>
-              <div style="width: 110px; min-width: 110px;">
-                <button class="btn-buy" id="btn-buy-track-${track.id}" ${canBuy ? '' : 'disabled'} style="width: 100%; height: 30px; padding: 0 10px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+              <div style="width: 105px; min-width: 105px; flex-shrink: 0;">
+                <button class="btn-buy" id="btn-buy-track-${track.id}" ${canBuy ? '' : 'disabled'} style="width: 100%; height: 30px; padding: 0 6px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap; box-sizing: border-box;">
                   ${icon('cpu', '', 12)}
                   <span>Erforschen</span>
                 </button>
@@ -4254,12 +4811,12 @@ export class BaseSystem {
         `;
       } else {
         actionHtml = `
-          <div class="cat-action-row" style="margin-top: 8px; display: flex; align-items: center; background: rgba(15,23,42,0.6); padding: 8px 12px; border-radius: 8px; gap: 10px; box-sizing: border-box;">
-            <div style="flex: 1; display: flex; align-items: center; gap: 6px;">
-              <strong style="color: #10b981; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px;">${icon('award', '', 14)} Vollständig erforscht</strong>
+          <div class="cat-action-row" style="margin-top: 8px; display: flex; align-items: center; justify-content: space-between; background: rgba(15,23,42,0.6); padding: 7px 12px; border-radius: 8px; gap: 8px; box-sizing: border-box; flex-wrap: nowrap; min-height: 44px;">
+            <div style="flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              <strong style="color: #10b981; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;">${icon('award', '', 14)} Vollständig erforscht</strong>
             </div>
-            <div style="width: 110px; min-width: 110px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end;">
-              <span style="font-size: 11px; color: #10b981; font-weight: 700; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); padding: 3px 8px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box;">MAX</span>
+            <div style="width: 105px; min-width: 105px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end; margin-left: auto;">
+              <span style="font-size: 11px; color: #10b981; font-weight: 700; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); padding: 3px 8px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; white-space: nowrap;">MAX</span>
             </div>
           </div>
         `;
@@ -4287,7 +4844,14 @@ export class BaseSystem {
     });
     cardsHtml += '</div>';
 
-    const fullContent = tabNavHtml + cardsHtml;
+    const fullContent = `
+      <div class="register-tab-container" style="display: flex; flex-direction: column; max-width: 760px; margin: 0 auto; width: 100%; box-sizing: border-box; padding: 0 4px 50px 4px; gap: 0 !important; row-gap: 0 !important;">
+        ${tabNavHtml}
+        <div class="register-tab-panel">
+          ${cardsHtml}
+        </div>
+      </div>
+    `;
     this.openModal(`
       <div style="display: flex; align-items: center; gap: 8px;">
         ${icon('microscope', '', 18)}
@@ -4371,7 +4935,7 @@ export class BaseSystem {
         <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 6px;">
           <strong style="color: #f8fafc; font-size: 12px; text-transform: uppercase;">Baukosten:</strong>
           <div style="font-size: 13px;">
-            Finanzierung: <strong style="color: ${canAffordCash ? '#fbbf24' : '#f87171'};">€${pb.costCash}</strong> (Dein Guthaben: €${p.cash})
+            Finanzierung: <strong style="color: ${canAffordCash ? '#fbbf24' : '#f87171'};">€${pb.costCash.toLocaleString()}</strong>
           </div>
           <div style="font-size: 13px;">
             Bauteile: ${reqCompsHtml.join(', ')}
@@ -4552,7 +5116,6 @@ export class BaseSystem {
             <span style="font-size: 11px; color: #94a3b8;">Generiert automatisch +€35 alle 8 Sekunden</span>
           </div>
           <span style="font-size: 13px; font-weight: 800; color: #fbbf24;">Gesamt generiert: €${totalAcc}</span>
-        </div>
         <div style="background: #141c2c; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px; font-size: 12px; color: #38bdf8;">
           Bonus-Effekt: Das Kraftwerk versorgt die Docking-Station mit Starkstrom (Verdoppelte Tank- und Reparatur-Geschwindigkeit)!
         </div>
@@ -4565,304 +5128,17 @@ export class BaseSystem {
         <span>KRAFTWERK</span>
       </div>
     `, content);
-
-
   }
 
   // =========================================================
   // BASIS-DOCKING & SCHMELZOFEN
   // =========================================================
-  openDockModal() {
-    // Helper für Bauteil- und Levelanforderungen
-    const checkAfford = (nextData) => {
-      if (!nextData) return false;
-      let compOk = true;
-      if (nextData.comp) {
-        const have = this.player.components[nextData.comp.key] || 0;
-        if (have < nextData.comp.count) compOk = false;
-      }
-      return this.player.cash >= nextData.cost && compOk && (this.player.level || 1) >= nextData.level;
-    };
-
-    const formatCompReq = (nextData) => {
-      if (!nextData || !nextData.comp) return '';
-      const have = this.player.components[nextData.comp.key] || 0;
-      const isMet = have >= nextData.comp.count;
-      const compIconName = COMPONENT_ICONS[nextData.comp.key] || 'box';
-      return ` &bull; <span style="color: ${isMet ? '#38bdf8' : '#f87171'}; font-weight: 600;">${icon(compIconName, '', 12)} ${nextData.comp.count}x ${nextData.comp.name} (${have}/${nextData.comp.count})</span>`;
-    };
-
-    const formatLevelReq = (nextData) => {
-      if (!nextData || (this.player.level || 1) >= nextData.level) return '';
-      return ` &bull; <span style="color: #f87171; font-weight: 600;">Ab Level ${nextData.level}</span>`;
-    };
-
-    // Helper: Holt alle benötigten Montage-Bauteile (mountComps Array oder altes mountComp Objekt)
-    const getRequiredComps = (tierData) => {
-      if (!tierData) return [];
-      if (Array.isArray(tierData.mountComps)) return tierData.mountComps;
-      if (tierData.mountComp) return [tierData.mountComp];
-      return [];
-    };
-
-    // Helper: Prüft ob die nötigen Montage-Bauteile vorhanden sind
-    const checkMountComp = (tierData) => {
-      const compsNeeded = getRequiredComps(tierData);
-      if (compsNeeded.length === 0) return true;
-      return compsNeeded.every(mc => (this.player.components[mc.key] || 0) >= mc.count);
-    };
-
-    // Helper: Badge für benötigte Montage-Bauteile
-    const getMountCompBadge = (tierData) => {
-      const compsNeeded = getRequiredComps(tierData);
-      if (compsNeeded.length === 0) return '<span style="color: #94a3b8; font-size: 11px;">Keine Teile nötig</span>';
-      return compsNeeded.map(mc => {
-        const have = this.player.components[mc.key] || 0;
-        const isMet = have >= mc.count;
-        const iconName = COMPONENT_ICONS[mc.key] || 'box';
-        const srcPrefix = mc.source ? `<span style="opacity: 0.75; font-size: 10px; margin-right: 2px;">[${mc.source}]</span>` : '';
-        return `<span style="background: ${isMet ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)'}; border: 1px solid ${isMet ? 'rgba(16,185,129,0.35)' : 'rgba(239,68,68,0.35)'}; color: ${isMet ? '#34d399' : '#f87171'}; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">${icon(iconName, '', 12)} ${srcPrefix}${mc.count}x ${mc.name} (${have}/${mc.count})</span>`;
-      }).join(' ');
-    };
-
-    // Helper: Verbraucht die nötigen Montage-Bauteile
-    const consumeMountComp = (tierData) => {
-      const compsNeeded = getRequiredComps(tierData);
-      compsNeeded.forEach(mc => {
-        this.player.components[mc.key] = Math.max(0, (this.player.components[mc.key] || 0) - mc.count);
-      });
-    };
-
-    // Die 6 Upgrade-Tracks
-    const tracks = [
-      {
-        id: 'tank',
-        mountBtnId: 'btn-mount-tank-dock',
-        iconName: 'fuel',
-        title: 'TREIBSTOFF-TANK',
-        curTier: this.player.tankTier || 1,
-        resTier: this.player.researchedTankTier || (this.player.tankTier || 1),
-        maxTier: TANK_TIERS.length,
-        tiers: TANK_TIERS,
-        onMount: (nextTier) => {
-          if (this.player.upgradeTank) {
-            this.player.upgradeTank(nextTier.tier);
-          } else {
-            this.player.tankTier = nextTier.tier;
-            this.player.maxFuel = nextTier.maxFuel;
-          }
-        }
-      },
-      {
-        id: 'hull',
-        mountBtnId: 'btn-mount-hull-dock',
-        iconName: 'shield-cog',
-        title: 'GEHÄUSESCHUTZ / PANZERUNG',
-        curTier: this.player.hullTier || 1,
-        resTier: this.player.researchedHullTier || (this.player.hullTier || 1),
-        maxTier: HULL_TIERS.length,
-        tiers: HULL_TIERS,
-        onMount: (nextTier) => {
-          if (this.player.upgradeHull) {
-            this.player.upgradeHull(nextTier.tier);
-          } else {
-            this.player.hullTier = nextTier.tier;
-            this.player.maxHull = nextTier.maxHull;
-            this.player.hull = this.player.maxHull;
-          }
-        }
-      },
-      {
-        id: 'drill',
-        mountBtnId: 'btn-mount-drill-dock',
-        iconName: 'pickaxe',
-        title: 'BOHRKOPF-WERKSTATT',
-        curTier: this.player.drillTier || 1,
-        resTier: this.player.researchedDrillTier || (this.player.drillTier || 1),
-        maxTier: DRILL_DATA.length,
-        tiers: DRILL_DATA,
-        onMount: (nextTier) => {
-          this.player.drillTier = nextTier.tier;
-          this.player.drillPower = DRILL_DPS[nextTier.tier - 1];
-        }
-      },
-      {
-        id: 'engine',
-        mountBtnId: 'btn-mount-engine-dock',
-        iconName: 'zap',
-        title: 'ANTRIEB & STEIGFLUG',
-        curTier: this.player.engineTier || 1,
-        resTier: this.player.researchedEngineTier || (this.player.engineTier || 1),
-        maxTier: ENGINE_TIERS.length,
-        tiers: ENGINE_TIERS,
-        onMount: (nextTier) => {
-          if (this.player.upgradeEngine) {
-            this.player.upgradeEngine(nextTier.tier);
-          } else {
-            this.player.engineTier = nextTier.tier;
-          }
-        }
-      },
-      {
-        id: 'cargo',
-        mountBtnId: 'btn-mount-cargo-dock',
-        iconName: 'container',
-        title: 'FRACHTRAUM-KAPAZITÄT',
-        curTier: this.player.cargoTier || 1,
-        resTier: this.player.researchedCargoTier || (this.player.cargoTier || 1),
-        maxTier: CARGO_TIERS.length,
-        tiers: CARGO_TIERS,
-        onMount: (nextTier) => {
-          if (this.player.upgradeCargo) {
-            this.player.upgradeCargo(nextTier.tier);
-          } else {
-            this.player.cargoTier = nextTier.tier;
-            this.player.maxCargo = nextTier.maxCargo;
-          }
-        }
-      },
-      {
-        id: 'sensor',
-        mountBtnId: 'btn-mount-sensor-dock',
-        iconName: 'radio',
-        title: 'GEO-SENSOR & RADAR',
-        curTier: this.player.sensorTier || 1,
-        resTier: this.player.researchedSensorTier || (this.player.sensorTier || 1),
-        maxTier: SENSOR_TIERS.length,
-        tiers: SENSOR_TIERS,
-        onMount: (nextTier) => {
-          if (this.player.upgradeSensor) {
-            this.player.upgradeSensor(nextTier.tier);
-          } else {
-            this.player.sensorTier = nextTier.tier;
-          }
-        }
-      }
-    ];
-
-    let sectionsHtml = '';
-
-    tracks.forEach((track) => {
-      const curData = track.tiers[track.curTier - 1] || track.tiers[0];
-      const hasNext = track.curTier < track.maxTier;
-      const nextData = hasNext ? (track.tiers[track.curTier] || null) : null;
-      const isResearched = hasNext && (track.resTier > track.curTier);
-      const hasMountComp = isResearched && checkMountComp(nextData);
-
-      // Segmented Progress Bar
-      let segmentsHtml = '<div class="segmented-progress-bar">';
-      for (let s = 1; s <= track.maxTier; s++) {
-        if (s <= track.curTier) {
-          segmentsHtml += `
-            <div class="seg-step completed${s === track.curTier ? ' current' : ''}">
-              <span><span class="step-label">Stufe </span>${s}</span>
-            </div>
-          `;
-        } else if (s === track.curTier + 1) {
-          segmentsHtml += `
-            <div class="seg-step active">
-              <span><span class="step-label">Stufe </span>${s}</span>
-            </div>
-          `;
-        } else {
-          segmentsHtml += `
-            <div class="seg-step locked">
-              <span><span class="step-label">Stufe </span>${s}</span>
-            </div>
-          `;
-        }
-      }
-      segmentsHtml += '</div>';
-
-      let actionRowHtml = '';
-      if (!hasNext) {
-        actionRowHtml = `
-          <div class="cat-action-row" style="margin-top: 6px; display: flex; align-items: center; justify-content: space-between; background: rgba(15,23,42,0.6); padding: 8px 12px; border-radius: 8px; gap: 10px; box-sizing: border-box;">
-            <div style="flex: 1; min-width: 0;">
-              <strong style="color: #10b981; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px;">
-                ${icon('award', '', 14)} Vollständig montiert
-              </strong>
-            </div>
-            <div style="width: 110px; min-width: 110px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end;">
-              <span style="font-size: 11px; color: #10b981; font-weight: 700; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); padding: 3px 8px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box;">MAX</span>
-            </div>
-          </div>
-        `;
-      } else if (!isResearched) {
-        // Noch nicht im Labor erforscht
-        actionRowHtml = `
-          <div class="cat-action-row" style="margin-top: 6px; display: flex; align-items: center; justify-content: space-between; background: rgba(15,23,42,0.6); padding: 8px 12px; border-radius: 8px; gap: 8px 12px; box-sizing: border-box; flex-wrap: wrap;">
-            <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 220px; flex-wrap: wrap;">
-              <strong style="color: #94a3b8; font-size: 13px; white-space: nowrap;">${nextData.name}</strong>
-              <span style="background: rgba(148, 163, 184, 0.1); border: 1px solid rgba(148, 163, 184, 0.2); color: #94a3b8; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 6px; white-space: nowrap; font-variant-numeric: tabular-nums;">
-                ${nextData.stat}
-              </span>
-              <span style="color: #f59e0b; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25); padding: 2px 7px; border-radius: 6px; white-space: nowrap;">
-                ${icon('microscope', '', 12)} Erst im Labor erforschen
-              </span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0; margin-left: auto;">
-              <span style="color: #64748b; font-size: 11px;">–</span>
-              <div style="width: 110px; min-width: 110px;">
-                <button class="btn-buy" disabled style="opacity: 0.45; background: #334155; color: #94a3b8; cursor: not-allowed; width: 100%; height: 30px; font-size: 11px; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
-                  ${icon('lock', '', 12)} Gesperrt
-                </button>
-              </div>
-            </div>
-          </div>
-        `;
-      } else {
-        // Erforscht! Kann montiert werden, wenn Bauteile vorhanden sind
-        const compBadge = getMountCompBadge(nextData);
-
-        const mountBtnHtml = hasMountComp ? `
-          <button id="${track.mountBtnId}" class="btn-buy" style="width: 100%; height: 30px; padding: 0 10px; font-size: 11px; font-weight: 800; background: linear-gradient(135deg, #10b981, #059669); display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
-            ${icon('wrench', '', 12)} Montieren
-          </button>
-        ` : `
-          <button id="${track.mountBtnId}" class="btn-buy" style="width: 100%; height: 30px; padding: 0 6px; font-size: 10.5px; font-weight: 700; background: #334155; color: #f87171; border: 1px solid rgba(239,68,68,0.3); display: inline-flex; align-items: center; justify-content: center; gap: 4px;" title="Benötigt Bauteile aus der Fabrik oder vom Sammler">
-            ${icon('wrench', '', 12)} Fehlt Bauteil
-          </button>
-        `;
-
-        actionRowHtml = `
-          <div class="cat-action-row" style="margin-top: 6px; display: flex; align-items: center; justify-content: space-between; background: rgba(15,23,42,0.6); padding: 8px 12px; border-radius: 8px; gap: 8px 12px; box-sizing: border-box; flex-wrap: wrap;">
-            <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 220px; flex-wrap: wrap;">
-              <strong style="color: #f8fafc; font-size: 13px; white-space: nowrap;">${nextData.name}</strong>
-              <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 6px; white-space: nowrap; font-variant-numeric: tabular-nums;">
-                ${nextData.stat}
-              </span>
-              <div style="display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                ${compBadge}
-              </div>
-            </div>
-            <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0; margin-left: auto;">
-              <span style="color: #10b981; font-weight: 700; font-size: 11.5px; white-space: nowrap;">Kostenlos</span>
-              <div style="width: 110px; min-width: 110px;">
-                ${mountBtnHtml}
-              </div>
-            </div>
-          </div>
-        `;
-      }
-
-      sectionsHtml += `
-        <div class="tech-category-card">
-          <div class="cat-header-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <div class="cat-title-wrap" style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; color: #f8fafc;">
-              ${icon(track.iconName, '', 16)}
-              <span>${track.title}</span>
-            </div>
-            <div class="cat-status-pill" style="font-size: 11px; color: #94a3b8; background: rgba(255, 255, 255, 0.06); padding: 3px 8px; border-radius: 6px;">
-              Stufe ${track.curTier}/${track.maxTier} • <strong style="color: #10b981;">${curData.stat}</strong>
-            </div>
-          </div>
-
-          ${segmentsHtml}
-          ${actionRowHtml}
-        </div>
-      `;
-    });
+  openDockModal(tab = null) {
+    if (tab && ['workshop', 'gear'].includes(tab)) {
+      this.activeDockTab = tab;
+    }
+    if (!this.activeDockTab) this.activeDockTab = 'workshop';
+    const currentTab = this.activeDockTab;
 
     // ── Hangar-Infrastruktur (Betankungs- & Reparaturrate) ──
     const curHangarTier = Math.max(1, Math.min(HANGAR_TIERS.length, this.hangarTier || 1));
@@ -4890,8 +5166,8 @@ export class BaseSystem {
           const cData = COMPONENT_DATA[mc.key];
           const iconStr = cData ? icon(cData.icon, '', 11) : '';
           return `
-            <span style="background: ${ok ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'}; border: 1px solid ${ok ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'}; color: ${ok ? '#34d399' : '#f87171'}; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">
-              ${iconStr} ${mc.source ? `[${mc.source}] ` : ''}${mc.count}x ${mc.name} (${count}/${mc.count})
+            <span style="background: rgba(16, 185, 129, 0.12); border: 1px solid ${ok ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'}; color: ${ok ? '#34d399' : '#f87171'}; font-weight: 700; font-size: 10.5px; padding: 2px 6px; border-radius: 6px; display: inline-flex; align-items: center; gap: 3px; white-space: nowrap;">
+              ${iconStr} ${mc.source ? `[${mc.source}] ` : ''}${mc.count}x ${mc.name} <span style="font-size: 9.5px; opacity: 0.85;">(${count}/${mc.count})</span>
             </span>
           `;
         }).join(' ');
@@ -4902,158 +5178,188 @@ export class BaseSystem {
       else if (!hasComps) missingHangarReason = `Fehlende Bauteile: ${missingComps.join(', ')}`;
     }
 
-    // Segmentierte Fortschrittsanzeige für Hangar-Stufen
-    let hangarSegmentsHtml = '<div class="segmented-progress-bar" style="margin-top: 6px; margin-bottom: 8px;">';
-    for (let s = 1; s <= HANGAR_TIERS.length; s++) {
-      if (s <= curHangarTier) {
-        hangarSegmentsHtml += `
-          <div class="seg-step completed${s === curHangarTier ? ' current' : ''}">
-            <span><span class="step-label">Stufe </span>${s}</span>
-          </div>
-        `;
-      } else if (s === curHangarTier + 1) {
-        hangarSegmentsHtml += `
-          <div class="seg-step active">
-            <span><span class="step-label">Stufe </span>${s}</span>
-          </div>
-        `;
-      } else {
-        hangarSegmentsHtml += `
-          <div class="seg-step">
-            <span><span class="step-label">Stufe </span>${s}</span>
-          </div>
-        `;
-      }
-    }
-    hangarSegmentsHtml += '</div>';
-
     const hasPowerplant = !!(this.purchasableBuildings?.find(b => b.id === 'powerplant')?.isBuilt);
     const effFuelSpeed = curHangarData.fuelSpeed * (hasPowerplant ? 2 : 1);
     const effRepairSpeed = Math.round(curHangarData.repairSpeed * (hasPowerplant ? 1.5 : 1));
 
-    let hangarUpgradeRowHtml = '';
-    if (hasNextHangar && nextHangarData) {
-      const upgradeBtnHtml = canAffordHangar ? `
-        <button id="btn-upgrade-hangar-dock" class="btn-buy" style="height: 30px; padding: 0 14px; font-size: 11px; font-weight: 800; background: linear-gradient(135deg, #0284c7, #0369a1); display: inline-flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap; color: #ffffff;">
-          ${icon('wrench', '', 12)} Hangar Ausbauen
-        </button>
-      ` : `
-        <button id="btn-upgrade-hangar-dock" class="btn-buy" style="height: 30px; padding: 0 10px; font-size: 10.5px; font-weight: 700; background: #334155; color: #f87171; border: 1px solid rgba(239,68,68,0.3); display: inline-flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap;" title="${missingHangarReason}">
-          ${icon('lock', '', 12)} Ausbau gesperrt
-        </button>
-      `;
+    // Register-Tabs wie im Depot
+    const dockTabs = [
+      { id: 'workshop', label: 'Werkstatt & Bohrer', icon: 'wrench', badge: `Stufe ${curHangarTier}` },
+      { id: 'gear', label: 'Ausrüstung', icon: 'shopping-bag', badge: 'Shop' }
+    ];
 
-      hangarUpgradeRowHtml = `
-        <div class="cat-action-row" style="margin-top: 8px; display: flex; align-items: center; justify-content: space-between; background: rgba(15,23,42,0.7); padding: 8px 12px; border-radius: 8px; gap: 10px; box-sizing: border-box; flex-wrap: wrap;">
-          <div style="min-width: 180px; flex: 1;">
-            <div style="color: #f8fafc; font-weight: 700; font-size: 12.5px;">Nächste Stufe: ${nextHangarData.name}</div>
-            <div style="color: #38bdf8; font-size: 11px; margin-top: 2px;">
-              ⛽ Tank: <strong>${nextHangarData.fuelSpeed * (hasPowerplant ? 2 : 1)} L/s</strong> (+${(nextHangarData.fuelSpeed - curHangarData.fuelSpeed) * (hasPowerplant ? 2 : 1)}) • 🛡️ Reparatur: <strong>${Math.round(nextHangarData.repairSpeed * (hasPowerplant ? 1.5 : 1))} HP/s</strong> (+${Math.round((nextHangarData.repairSpeed - curHangarData.repairSpeed) * (hasPowerplant ? 1.5 : 1))})
+    const tabNavHtml = `
+      <div class="register-tab-bar">
+        ${dockTabs.map(t => {
+          const isActive = currentTab === t.id;
+          return `
+            <button class="register-tab dock-tab-btn ${isActive ? 'active' : ''}" data-tab="${t.id}">
+              ${icon(t.icon, '', 14)}
+              <span>${t.label}</span>
+              <span class="tab-badge">${t.badge}</span>
+            </button>
+          `;
+        }).join('')}
+      </div>
+    `;
+
+    let tabContentHtml = '';
+
+    if (currentTab === 'workshop') {
+      // 1. Kompakter Gebäude-Ausbau (Hangar) wie im Depot!
+      let hangarUpgradeBtnHtml = '';
+      if (hasNextHangar && nextHangarData) {
+        hangarUpgradeBtnHtml = `
+          <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-shrink: 0; margin-left: auto; flex-wrap: nowrap;">
+            <span style="background: rgba(251, 191, 36, 0.14); color: ${this.player.cash >= nextHangarData.costCash ? '#fbbf24' : '#ef4444'}; font-weight: 800; font-size: 11.5px; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; flex-shrink: 0;">
+              ${icon('coins', '', 12)} €${nextHangarData.costCash.toLocaleString()}
+            </span>
+            ${compsBadgeHtml}
+            <div style="width: 105px; min-width: 105px; flex-shrink: 0;">
+              <button id="btn-upgrade-hangar-dock" class="btn-buy" style="width: 100%; height: 30px; padding: 0 6px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap; box-sizing: border-box;" ${canAffordHangar ? '' : 'disabled'} title="${missingHangarReason}">
+                ${icon('wrench', '', 12)}
+                <span>Ausbauen</span>
+              </button>
             </div>
           </div>
-          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            ${compsBadgeHtml}
-            <span style="font-size: 11.5px; color: #f59e0b; font-weight: 800; background: rgba(245,158,11,0.12); padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(245,158,11,0.25);">
-              € ${nextHangarData.costCash.toLocaleString('de-DE')}
+        `;
+      } else {
+        hangarUpgradeBtnHtml = `
+          <div style="width: 105px; min-width: 105px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end; margin-left: auto;">
+            <span style="color: #10b981; font-weight: 800; font-size: 11px; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); padding: 3px 8px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; white-space: nowrap;">
+              ${icon('award', '', 12)} MAX
             </span>
-            ${upgradeBtnHtml}
           </div>
+        `;
+      }
+
+      const compactBuildingHtml = `
+        <div style="background: #090e1a; border: 1px solid rgba(255, 255, 255, 0.14); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: nowrap; min-height: 52px; box-sizing: border-box;">
+          <div style="display: flex; align-items: center; gap: 8px; flex: 1 1 auto; min-width: 0; overflow: hidden; flex-wrap: nowrap;">
+            <div style="width: 32px; height: 32px; border-radius: 6px; background: rgba(56,189,248,0.15); display: flex; align-items: center; justify-content: center; color: #38bdf8; flex-shrink: 0;">
+              ${icon('wrench', '', 16)}
+            </div>
+            <div style="min-width: 0; overflow: hidden; flex: 1 1 auto;">
+              <div style="display: flex; align-items: center; gap: 6px; white-space: nowrap;">
+                <span style="font-size: 12.5px; font-weight: 800; color: #f8fafc;">HANGAR</span>
+                <span style="font-size: 10px; font-weight: 800; color: #38bdf8; background: rgba(56,189,248,0.15); padding: 1px 6px; border-radius: 4px; flex-shrink: 0;">Stufe ${curHangarTier}/${HANGAR_TIERS.length}</span>
+              </div>
+              <div style="font-size: 10.5px; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                Tankrate: <strong style="color: #38bdf8;">${effFuelSpeed} L/s</strong> &bull; Reparatur: <strong style="color: #10b981;">${effRepairSpeed} HP/s</strong>
+                ${hasPowerplant ? ' &bull; <span style="color: #f59e0b; font-weight: 700;">⚡ Kraftwerk x2</span>' : ''}
+              </div>
+            </div>
+          </div>
+          ${hangarUpgradeBtnHtml}
+        </div>
+      `;
+
+      // 2. Bohrer-Upgrades (alle 6 Tracks)
+      const drillerSectionsHtml = this.renderDrillerUpgradeCards('dock');
+
+      tabContentHtml = `
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <!-- Gebäude-Ausbau (Kompakt) -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: -2px;">
+            <span style="font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.6px; display: inline-flex; align-items: center; gap: 5px;">
+              ${icon('building-2', '', 13)} Gebäude-Ausbau
+            </span>
+          </div>
+          ${compactBuildingHtml}
+
+          <!-- Bohrer-Upgrades -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; margin-bottom: -2px;">
+            <span style="font-size: 11px; font-weight: 800; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.6px; display: inline-flex; align-items: center; gap: 5px;">
+              ${icon('wrench', '', 13)} Bohrer-Upgrades & Werkstatt
+            </span>
+            <span style="font-size: 10.5px; color: #64748b;">Montiere erforschte Bauteile</span>
+          </div>
+          ${drillerSectionsHtml}
         </div>
       `;
     } else {
-      hangarUpgradeRowHtml = `
-        <div style="margin-top: 6px; background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3); border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; gap: 8px; color: #10b981; font-size: 12px; font-weight: 700;">
-          ${icon('check', '', 14)} Maximale Hangar-Stufe erreicht! Höchste Betankungs- und Reparaturgeschwindigkeit aktiv.
+      // Ausrüstung / Shop Tab
+      const currentGadgets = this.player.gadgets || { dynamite: 0, fuel_canister: 0, repair_kit: 0 };
+      const gadgetsCardsHtml = EXPEDITION_ITEMS.map(g => {
+        const count = currentGadgets[g.key] || 0;
+        const canAfford = this.player.cash >= g.price;
+        const isResearched = isExpeditionItemResearched(this.player, g);
+        const isStation = g.category === 'station';
+        const badgeColor = isStation ? (g.stationType === 'tube' ? '#38bdf8' : '#f59e0b') : '#a855f7';
+        const badgeBg = isStation ? (g.stationType === 'tube' ? 'rgba(56,189,248,0.15)' : 'rgba(245,158,11,0.15)') : 'rgba(168,85,247,0.15)';
+
+        return `
+          <div style="
+            background: #090e1a;
+            border: 1px solid ${isResearched ? 'rgba(255,255,255,0.12)' : 'rgba(239, 68, 68, 0.25)'};
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
+            border-radius: 10px;
+            padding: 9px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            min-height: 52px;
+            box-sizing: border-box;
+            opacity: ${isResearched ? '1' : '0.85'};
+          ">
+            <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1 1 auto;">
+              <div style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; flex-shrink: 0; color: #38bdf8;">
+                ${icon(g.icon || 'package', '', 20)}
+              </div>
+              <div style="min-width: 0; flex: 1 1 auto;">
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;">
+                  <span style="font-size: 12.5px; font-weight: 700; color: #f8fafc; white-space: nowrap; width: 220px; min-width: 220px; max-width: 220px; overflow: hidden; text-overflow: ellipsis;">${g.name}</span>
+                  <span style="font-size: 9.5px; font-weight: 800; padding: 2px 6px; border-radius: 5px; background: ${badgeBg}; color: ${badgeColor}; white-space: nowrap; flex-shrink: 0; width: 76px; min-width: 76px; text-align: center; display: inline-flex; align-items: center; justify-content: center;">${g.badge}</span>
+                  ${!isResearched ? `<span style="font-size: 9.5px; font-weight: 800; padding: 2px 6px; border-radius: 5px; background: rgba(239, 68, 68, 0.18); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); white-space: nowrap; flex-shrink: 0; display: inline-flex; align-items: center; gap: 3px;">${icon('lock', '', 11)} Im Labor erforschen</span>` : ''}
+                </div>
+                <div style="font-size: 10.5px; color: #94a3b8; line-height: 1.35; margin-top: 2px;">
+                  ${g.desc}
+                </div>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-shrink: 0; margin-left: auto; flex-wrap: nowrap;">
+              ${isResearched ? `
+                <span style="font-size: 11px; background: rgba(56,189,248,0.15); color: #38bdf8; font-weight: 700; padding: 2px 7px; border-radius: 6px; white-space: nowrap; font-variant-numeric: tabular-nums; flex-shrink: 0; min-width: 68px; text-align: center; justify-content: center; display: inline-flex;">Vorrat: ${count}</span>
+                <div style="width: 115px; min-width: 115px; flex-shrink: 0;">
+                  <button class="btn-buy-gadget btn-buy" data-gadget="${g.key}" data-price="${g.price}" style="width: 100%; height: 30px; padding: 0 4px; font-size: 11px; font-weight: 800; background: ${canAfford ? 'linear-gradient(135deg, #10b981, #059669)' : '#334155'}; color: ${canAfford ? '#ffffff' : '#94a3b8'}; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap;" ${canAfford ? '' : 'disabled'}>
+                    + Kaufen (€${g.price.toLocaleString()})
+                  </button>
+                </div>
+              ` : `
+                <div style="width: 115px; min-width: 115px; flex-shrink: 0;">
+                  <button class="btn-buy" disabled style="width: 100%; height: 30px; padding: 0 6px; font-size: 10.5px; font-weight: 700; background: #1e293b; border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; display: inline-flex; align-items: center; justify-content: center; gap: 4px; opacity: 0.85; white-space: nowrap; box-sizing: border-box;">
+                    ${icon('lock', '', 12)}
+                    <span>Labor</span>
+                  </button>
+                </div>
+              `}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      tabContentHtml = `
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: -2px;">
+            <span style="font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.6px; display: inline-flex; align-items: center; gap: 5px;">
+              ${icon('package', '', 13)} Expeditions-Ausrüstung & Verbrauchsgüter
+            </span>
+            <span style="font-size: 10.5px; color: #64748b;">Für lange Tiefenbohrungen</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            ${gadgetsCardsHtml}
+          </div>
         </div>
       `;
     }
 
-    const hangarInfrastructureCardHtml = `
-      <div class="tech-category-card" style="border: 1px solid rgba(56,189,248,0.3); background: linear-gradient(180deg, rgba(15,23,42,0.85) 0%, rgba(30,41,59,0.7) 100%); margin-bottom: 2px;">
-        <div class="cat-header-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-          <div class="cat-title-wrap" style="display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 13.5px; color: #38bdf8;">
-            ${icon('wrench', '', 16)}
-            <span>HANGAR-INFRASTRUKTUR (SCHNELL-SERVICE & BETANKUNG)</span>
-          </div>
-          <div class="cat-status-pill" style="font-size: 11px; color: #94a3b8; background: rgba(255, 255, 255, 0.08); padding: 3px 8px; border-radius: 6px;">
-            Stufe ${curHangarTier}/${HANGAR_TIERS.length} • <strong style="color: #38bdf8;">${curHangarData.name}</strong>
-          </div>
+    const fullContent = `
+      <div class="register-tab-container" style="display: flex; flex-direction: column; max-width: 760px; margin: 0 auto; width: 100%; box-sizing: border-box; padding: 0 4px 50px 4px; gap: 0 !important; row-gap: 0 !important;">
+        ${tabNavHtml}
+        <div class="register-tab-panel">
+          ${tabContentHtml}
         </div>
-
-        <div style="display: flex; align-items: center; gap: 10px; margin-top: 4px; font-size: 11.5px; color: #cbd5e1; flex-wrap: wrap;">
-          <span style="display: inline-flex; align-items: center; gap: 4px; background: rgba(56,189,248,0.12); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(56,189,248,0.25);">
-            ⛽ Tankrate: <strong style="color: #38bdf8;">${effFuelSpeed} L/s</strong>
-          </span>
-          <span style="display: inline-flex; align-items: center; gap: 4px; background: rgba(16,185,129,0.12); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(16,185,129,0.25);">
-            🛡️ Reparaturrate: <strong style="color: #10b981;">${effRepairSpeed} HP/s</strong>
-          </span>
-          ${hasPowerplant ? '<span style="color: #f59e0b; font-size: 10.5px; font-weight: 700;">⚡ Kraftwerk x2 Boost aktiv</span>' : ''}
-          <span style="color: #94a3b8; font-size: 11px; margin-left: auto;">${curHangarData.desc}</span>
-        </div>
-
-        ${hangarSegmentsHtml}
-        ${hangarUpgradeRowHtml}
-      </div>
-    `;
-
-    const infoNotice = `
-      <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(30, 41, 59, 0.6); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); margin-bottom: 8px;">
-        <span style="font-size: 11.5px; color: #94a3b8; display: inline-flex; align-items: center; gap: 6px;">
-          ${icon('info', '', 14)} <span><strong>Montage-Hangar:</strong> Erforsche neue Module im <strong>Labor</strong>. Die Montage ist <strong>kostenlos</strong> und benötigt Bauteile aus der <strong>Fabrik</strong> oder vom <strong>Sammler</strong>.</span>
-        </span>
-      </div>
-    `;
-
-    const currentGadgets = this.player.gadgets || { dynamite: 0, fuel_canister: 0, repair_kit: 0 };
-    const gadgetsCardsHtml = EXPEDITION_ITEMS.map(g => {
-      const count = currentGadgets[g.key] || 0;
-      const canAfford = this.player.cash >= g.price;
-      const isStation = g.category === 'station';
-      const badgeColor = isStation ? (g.stationType === 'tube' ? '#38bdf8' : '#f59e0b') : '#a855f7';
-      const badgeBg = isStation ? (g.stationType === 'tube' ? 'rgba(56,189,248,0.15)' : 'rgba(245,158,11,0.15)') : 'rgba(168,85,247,0.15)';
-
-      return `
-        <div style="background: rgba(15,23,42,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <div style="font-size: 22px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); border-radius: 8px;">${g.icon}</div>
-            <div>
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <div style="font-size: 13px; font-weight: 700; color: #f8fafc;">${g.name}</div>
-                <span style="font-size: 9.5px; font-weight: 800; padding: 1px 6px; border-radius: 5px; background: ${badgeBg}; color: ${badgeColor};">${g.badge}</span>
-              </div>
-              <div style="font-size: 11px; color: #94a3b8;">${g.desc}</div>
-            </div>
-          </div>
-          <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
-            <span style="font-size: 11px; background: rgba(56,189,248,0.15); color: #38bdf8; font-weight: 700; padding: 2px 8px; border-radius: 6px;">Vorrat: ${count}</span>
-            <button class="btn-buy-gadget btn-buy" data-gadget="${g.key}" data-price="${g.price}" style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 800; background: ${canAfford ? 'linear-gradient(135deg, #10b981, #059669)' : '#334155'}; color: ${canAfford ? '#ffffff' : '#94a3b8'};" ${canAfford ? '' : 'disabled'}>
-              + Kaufen (€${g.price.toLocaleString()})
-            </button>
-          </div>
-        </div>
-      `;
-    }).join('');
-
-    const gadgetsSectionHtml = `
-      <div class="tech-category-card" style="margin-top: 10px;">
-        <div class="cat-header-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <div class="cat-title-wrap" style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; color: #f8fafc;">
-            ${icon('package', '', 16)}
-            <span>EXPEDITIONS-AUSRÜSTUNG & VERBRAUCHSGÜTER</span>
-          </div>
-        </div>
-        <div style="display: flex; flex-direction: column; gap: 6px;">
-          ${gadgetsCardsHtml}
-        </div>
-      </div>
-    `;
-
-    const content = `
-      <div style="display: flex; flex-direction: column; gap: 8px;">
-        ${infoNotice}
-        ${hangarInfrastructureCardHtml}
-        ${sectionsHtml}
-        ${gadgetsSectionHtml}
       </div>
     `;
 
@@ -5062,65 +5368,76 @@ export class BaseSystem {
         ${icon('wrench', '', 18)}
         <span>HANGAR</span>
       </div>
-    `, content);
+    `, fullContent);
+
+    const executeHangarUpgrade = () => {
+      if (!canAffordHangar) {
+        this.scene.events.emit('notify', missingHangarReason);
+        soundFx.playError();
+        return;
+      }
+      this.player.cash -= nextHangarData.costCash;
+      if (nextHangarData.costComps) {
+        for (const c of nextHangarData.costComps) {
+          this.player.components[c.key] = Math.max(0, (this.player.components[c.key] || 0) - c.count);
+        }
+      }
+      this.hangarTier = curHangarTier + 1;
+      this.updateHangarBuildingLabel();
+      this.updateBuildingVisuals();
+      this.updateSurfaceVisuals();
+      soundFx.playUpgrade();
+      this.scene.events.emit('player_updated');
+      this.scene.events.emit('notify', `Hangar auf Stufe ${this.hangarTier} ausgebaut! Tankrate: ${nextHangarData.fuelSpeed} L/s, Reparatur: ${nextHangarData.repairSpeed} HP/s`);
+      this.openDockModal();
+    };
 
     // Event-Handler für Hangar-Infrastruktur Ausbau
     const hangarUpgradeBtn = document.getElementById('btn-upgrade-hangar-dock');
     if (hangarUpgradeBtn) {
-      hangarUpgradeBtn.onclick = () => {
-        if (!canAffordHangar) {
-          this.scene.events.emit('notify', missingHangarReason);
-          soundFx.playError();
-          return;
-        }
-        this.player.cash -= nextHangarData.costCash;
-        if (nextHangarData.costComps) {
-          for (const c of nextHangarData.costComps) {
-            this.player.components[c.key] = Math.max(0, (this.player.components[c.key] || 0) - c.count);
-          }
-        }
-        this.hangarTier = curHangarTier + 1;
-        this.updateHangarBuildingLabel();
-        this.updateBuildingVisuals();
-        this.updateSurfaceVisuals();
-        soundFx.playUpgrade();
-        this.scene.events.emit('player_updated');
-        this.scene.events.emit('notify', `Hangar auf Stufe ${this.hangarTier} ausgebaut! Tankrate: ${nextHangarData.fuelSpeed} L/s, Reparatur: ${nextHangarData.repairSpeed} HP/s`);
-        this.openDockModal();
+      hangarUpgradeBtn.onclick = (e) => {
+        e.stopPropagation();
+        executeHangarUpgrade();
       };
     }
 
-    // Event-Handler für alle Montage-Buttons registrieren
-    tracks.forEach((track) => {
-      const hasNext = track.curTier < track.maxTier;
-      if (!hasNext) return;
-      const nextData = track.tiers[track.curTier] || null;
-      const isResearched = hasNext && (track.resTier > track.curTier);
+    // Floating Action Button wie im Depot
+    if (currentTab === 'workshop' && nextHangarData && canAffordHangar) {
+      this.setFloatingAction(`
+        <button id="btn-hangar-floating-upgrade" class="btn-buy btn-flyover" style="gap: 6px; background: linear-gradient(135deg, #0284c7, #0369a1);">
+          ${icon('wrench', '', 14)}
+          <span>Hangar ausbauen auf Stufe ${curHangarTier + 1}</span>
+        </button>
+      `, (container) => {
+        const btn = container.querySelector('#btn-hangar-floating-upgrade');
+        if (btn) {
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            executeHangarUpgrade();
+          };
+        }
+      });
+    } else {
+      this.clearFloatingAction();
+    }
 
-      const btn = document.getElementById(track.mountBtnId);
-      if (btn) {
-        btn.onclick = () => {
-          if (!isResearched) {
-            this.scene.events.emit('notify', `Dieser Bauplan muss zuerst im Labor erforscht werden!`);
-            return;
+    // Tab-Umschaltung
+    const modalBody = this.modalBodyEl;
+    if (modalBody) {
+      modalBody.querySelectorAll('.dock-tab-btn').forEach(btn => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          const tab = btn.getAttribute('data-tab');
+          if (tab) {
+            this.activeDockTab = tab;
+            this.openDockModal();
           }
-          if (!checkMountComp(nextData)) {
-            const compsNeeded = getRequiredComps(nextData);
-            const missing = compsNeeded
-              .filter(mc => (this.player.components[mc.key] || 0) < mc.count)
-              .map(mc => `${mc.count}x ${mc.name} [${mc.source || 'Werkstatt'}]`)
-              .join(', ');
-            this.scene.events.emit('notify', `Fehlende Bauteile: ${missing}! Fabrik & Forscher nutzen.`);
-            return;
-          }
-          consumeMountComp(nextData);
-          track.onMount(nextData);
-          soundFx.playUpgrade();
-          this.scene.events.emit('notify', `${nextData.name} montiert (${nextData.stat})!`);
-          this.openDockModal();
         };
-      }
-    });
+      });
+    }
+
+    // Event-Handler für alle Montage-Buttons registrieren
+    this.bindDrillerMountHandlers('dock', () => this.openDockModal());
 
     // Gadget-Kauf Handler
     const modalEl = document.getElementById('building-modal');
@@ -5136,8 +5453,6 @@ export class BaseSystem {
         };
       });
     }
-
-
   }
 
   // =========================================================
@@ -5459,7 +5774,7 @@ export class BaseSystem {
               <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
                 <div style="display: flex; align-items: center; gap: 6px; min-width: 0;">
                   <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: ${isSmelting ? '#f97316' : '#64748b'}; box-shadow: 0 0 6px ${isSmelting ? '#f97316' : 'transparent'}; flex-shrink: 0;"></span>
-                  <strong style="color: #f8fafc; font-size: 11.5px; letter-spacing: 0.5px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">
+                  <strong style="color: #f8fafc; font-size: 11.5px; letter-spacing: 0.5px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; width: 156px; min-width: 156px; flex-shrink: 0;">
                     ${icon('flame', isSmelting ? 'flame-anim' : '', 13)} SCHMELZOFEN
                   </strong>
                   ${isSmelting ? `
@@ -5488,7 +5803,7 @@ export class BaseSystem {
               <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
                 <div style="display: flex; align-items: center; gap: 6px; min-width: 0;">
                   <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: ${isCrafting ? '#38bdf8' : '#64748b'}; box-shadow: 0 0 6px ${isCrafting ? '#38bdf8' : 'transparent'}; flex-shrink: 0;"></span>
-                  <strong style="color: #f8fafc; font-size: 11.5px; letter-spacing: 0.5px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">
+                  <strong style="color: #f8fafc; font-size: 11.5px; letter-spacing: 0.5px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; width: 156px; min-width: 156px; flex-shrink: 0;">
                     ${icon('anvil', isCrafting ? 'craft-icon-active' : '', 13)} INDUSTRIE-MASCHINE
                   </strong>
                   ${isCrafting ? `
@@ -5648,9 +5963,9 @@ export class BaseSystem {
               <strong style="color: #f8fafc; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${prod.name}</strong>
             </div>
 
-            <!-- Spalte 2: Fertigungs-Dauer (62px) -->
-            <div style="width: 62px; min-width: 62px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
-              <span style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); padding: 2px 7px; border-radius: 6px; font-size: 10.5px; color: #94a3b8; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 3px; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
+            <!-- Spalte 2: Fertigungs-Dauer (68px) -->
+            <div style="width: 68px; min-width: 68px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+              <span style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); padding: 2px 7px; border-radius: 6px; font-size: 10.5px; color: #94a3b8; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 4px; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
                 ${icon('clock', '', 10)} ${prod.durationSec}s
               </span>
             </div>
@@ -5735,24 +6050,24 @@ export class BaseSystem {
               <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.25); border-radius: 8px; flex-shrink: 0;">
                 ${itemDisplayIcon(oreKey, 18)}
               </span>
-              <strong style="color: #f8fafc; font-size: 12.5px; display: inline-flex; align-items: center; white-space: nowrap; min-width: 0;">
-                <span style="display: inline-block; width: 50px; min-width: 50px; text-align: right; overflow: hidden; text-overflow: ellipsis;">${oreName}</span>
-                <span style="color: #64748b; font-size: 11px; width: 16px; min-width: 16px; margin: 0 10px; display: inline-flex; justify-content: center; align-items: center; flex-shrink: 0;">➔</span>
-                <span style="color: #f8fafc; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${itemDisplayIcon('bar_' + oreKey, 14)} ${refinedName}</span>
+              <strong style="color: #f8fafc; font-size: 12.5px; display: inline-flex; align-items: center; min-width: 0; flex: 1;">
+                <span style="display: inline-block; min-width: 92px; text-align: left; white-space: nowrap;">${oreName}</span>
+                <span style="color: #64748b; font-size: 11px; width: 16px; min-width: 16px; margin: 0 8px; display: inline-flex; justify-content: center; align-items: center; flex-shrink: 0;">➔</span>
+                <span style="color: #f8fafc; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${itemDisplayIcon('bar_' + oreKey, 14)} ${refinedName}</span>
               </strong>
             </div>
 
-            <!-- Spalte 2: Dauer (62px) -->
-            <div style="width: 62px; min-width: 62px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
-              <span style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); padding: 2px 7px; border-radius: 6px; font-size: 10.5px; color: #94a3b8; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 3px; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
+            <!-- Spalte 2: Dauer (68px) -->
+            <div style="width: 68px; min-width: 68px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+              <span style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); padding: 2px 7px; border-radius: 6px; font-size: 10.5px; color: #94a3b8; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 4px; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
                 ${icon('clock', '', 10)} ${durSec}s
               </span>
             </div>
 
-            <!-- Spalte 3: Buttons -->
-            <div style="display: flex; gap: 6px; align-items: center; justify-content: flex-end; flex-shrink: 0;">
-              <button class="btn-deposit-one btn-3d-secondary" data-ore="${oreKey}" ${canSmeltThis ? '' : 'disabled'} style="height: 30px; padding: 0 10px; font-size: 11px; font-weight: 700; border-radius: 6px;">+1</button>
-              <button class="btn-deposit-all-type btn-action" data-ore="${oreKey}" ${canSmeltThis ? '' : 'disabled'} style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 700; border-radius: 6px;">Alle (${totalThisOre})</button>
+            <!-- Spalte 3: Buttons (136px - bündig und einheitlich) -->
+            <div style="width: 136px; min-width: 136px; flex-shrink: 0; display: flex; gap: 6px; align-items: center; justify-content: flex-end;">
+              <button class="btn-deposit-one btn-3d-secondary" data-ore="${oreKey}" ${canSmeltThis ? '' : 'disabled'} style="width: 42px; min-width: 42px; height: 30px; padding: 0; font-size: 11px; font-weight: 700; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;">+1</button>
+              <button class="btn-deposit-all-type btn-action" data-ore="${oreKey}" ${canSmeltThis ? '' : 'disabled'} style="width: 88px; min-width: 88px; height: 30px; padding: 0 4px; font-size: 11px; font-weight: 700; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; white-space: nowrap;">Alle (${totalThisOre})</button>
             </div>
           </div>
         `;

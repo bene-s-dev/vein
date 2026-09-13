@@ -2,6 +2,7 @@ import { ORE_DATA, ARTIFACT_CATALOG } from '../core/GridSystem.js';
 import { soundFx } from '../core/SoundEffects.js';
 import { icon, refreshIcons, oreIcon, itemDisplayIcon } from './IconHelper.js';
 import { closeActiveModal } from '../core/BaseSystem.js';
+import { SPECIAL_TILE_DATA } from './OreInfoModal.js';
 
 export const ORE_DESCRIPTIONS = {
   coal: 'Fossiler Kohlenstoff aus den oberen Schichten. Solide Einnahmequelle für den Einstieg und elementarer Brennstoff für Schmelzöfen.',
@@ -359,6 +360,7 @@ export class MinerBookModal {
     this.player = player;
     this.activeTab = 'ores';
     this.productsSubFilter = 'all';
+    this.layerSubTab = 'zones';
   }
 
   open(tab = 'ores') {
@@ -419,37 +421,24 @@ export class MinerBookModal {
       </div>
     `;
 
-    // Tabs
+    // Tabs (ohne (Y/X)-Zähler in den Reitern, um Überlappungen zu verhindern)
     const tabs = [
-      { id: 'ores', label: `Erze (${stats.discoveredOresCount}/${stats.allOresCount})`, icon: 'gem' },
-      { id: 'relics', label: `Relikte (${stats.discoveredArtifactsCount}/${stats.allArtifactsCount})`, icon: 'award' },
-      { id: 'layers', label: `Schichten (${stats.unlockedLayersCount}/${stats.totalLayersCount})`, icon: 'mountain' },
-      { id: 'products', label: `Waren (${stats.discoveredProductsCount}/${stats.totalProductsCount})`, icon: 'factory' },
+      { id: 'ores', label: 'Erze', icon: 'gem' },
+      { id: 'relics', label: 'Relikte', icon: 'award' },
+      { id: 'layers', label: 'Schichten', icon: 'mountain' },
+      { id: 'products', label: 'Waren', icon: 'factory' },
       { id: 'codex', label: 'Kodex', icon: 'shield-check' }
     ];
 
-    const tabButtonsHtml = tabs.map(t => `
-      <button class="book-tab-btn ${this.activeTab === t.id ? 'active' : ''}" data-tab="${t.id}" style="
-        flex: 1;
-        height: 32px;
-        font-size: 11px;
-        font-weight: 700;
-        border-radius: 8px;
-        border: none;
-        background: ${this.activeTab === t.id ? 'linear-gradient(180deg, #d97706 0%, #b45309 100%)' : 'rgba(30, 41, 59, 0.5)'};
-        color: ${this.activeTab === t.id ? '#ffffff' : '#94a3b8'};
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 5px;
-        white-space: nowrap;
-        transition: all 0.15s ease;
-      ">
-        ${icon(t.icon, '', 13)}
-        <span>${t.label}</span>
-      </button>
-    `).join('');
+    const tabButtonsHtml = tabs.map(t => {
+      const isActive = this.activeTab === t.id;
+      return `
+        <button class="register-tab book-tab-btn ${isActive ? 'active' : ''}" data-tab="${t.id}">
+          ${icon(t.icon, '', 13)}
+          <span>${t.label}</span>
+        </button>
+      `;
+    }).join('');
 
     let contentHtml = '';
     if (this.activeTab === 'ores') {
@@ -465,7 +454,7 @@ export class MinerBookModal {
     }
 
     bodyEl.innerHTML = `
-      <div style="display: flex; flex-direction: column; gap: 12px; max-width: 620px; margin: 0 auto; width: 100%; box-sizing: border-box; padding: 0 4px 36px 4px;">
+      <div style="display: flex; flex-direction: column; gap: 12px; max-width: 650px; margin: 0 auto; width: 100%; box-sizing: border-box; padding: 0 4px 36px 4px;">
         <!-- Zurück & Fortschritts-Kopf -->
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
           <button id="btn-book-back" class="btn-action" style="height: 32px; padding: 0 14px; font-size: 11.5px; display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: 8px;">
@@ -482,14 +471,14 @@ export class MinerBookModal {
           </div>
         </div>
 
-        <!-- Kapitel-Tabs -->
-        <div style="display: flex; gap: 6px; width: 100%; overflow-x: auto; padding-bottom: 2px;">
-          ${tabButtonsHtml}
-        </div>
-
-        <!-- Inhalt -->
-        <div style="display: flex; flex-direction: column; gap: 8px; max-height: 58vh; overflow-y: auto; padding-right: 4px;">
-          ${contentHtml}
+        <!-- Kapitel-Tabs & Inhalt -->
+        <div class="register-tab-container" style="display: flex; flex-direction: column; width: 100%; gap: 0 !important; row-gap: 0 !important;">
+          <div class="register-tab-bar" style="width: 100%;">
+            ${tabButtonsHtml}
+          </div>
+          <div class="register-tab-panel">
+            ${contentHtml}
+          </div>
         </div>
       </div>
     `;
@@ -516,6 +505,21 @@ export class MinerBookModal {
       });
     }
 
+    // Spezialformationen & Gefahren Canvases zeichnen
+    if (this.activeTab === 'layers' && this.layerSubTab === 'hazards') {
+      Object.entries(SPECIAL_TILE_DATA).forEach(([key, data]) => {
+        const can = document.getElementById(`canvas-spec-${key}`);
+        if (can && this.scene && this.scene.textures && this.scene.textures.exists(data.sprite)) {
+          const img = this.scene.textures.get(data.sprite).getSourceImage();
+          if (img) {
+            const ctx = can.getContext('2d');
+            ctx.clearRect(0, 0, 32, 32);
+            ctx.drawImage(img, 0, 0, 32, 32);
+          }
+        }
+      });
+    }
+
     // Tab-Klicks binden
     modalEl.querySelectorAll('.book-tab-btn').forEach(btn => {
       btn.onclick = (e) => {
@@ -523,6 +527,19 @@ export class MinerBookModal {
         const tab = btn.getAttribute('data-tab');
         if (tab && tab !== this.activeTab) {
           this.activeTab = tab;
+          soundFx.playClick();
+          this.render();
+        }
+      };
+    });
+
+    // Sub-Filter Klicks im Schichten-Tab binden (Tiefenschichten vs Gesteine & Gefahren)
+    modalEl.querySelectorAll('.layer-subfilter-btn').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const filter = btn.getAttribute('data-layer-tab');
+        if (filter && filter !== this.layerSubTab) {
+          this.layerSubTab = filter;
           soundFx.playClick();
           this.render();
         }
@@ -601,8 +618,92 @@ export class MinerBookModal {
 
   renderLayersTab() {
     const highestDepth = this.player.highestDepthReached || 0;
-    let html = '';
+    const currentSub = this.layerSubTab || 'zones';
 
+    const subFilterHtml = `
+      <div style="display: flex; gap: 6px; width: 100%; overflow-x: auto; padding-bottom: 4px; margin-bottom: 6px;">
+        <button class="layer-subfilter-btn ${currentSub === 'zones' ? 'active' : ''}" data-layer-tab="zones" style="
+          padding: 4px 12px;
+          font-size: 11px;
+          font-weight: 700;
+          border-radius: 6px;
+          border: 1px solid ${currentSub === 'zones' ? '#38bdf8' : 'rgba(255,255,255,0.08)'};
+          background: ${currentSub === 'zones' ? 'rgba(56, 189, 248, 0.18)' : 'rgba(15, 23, 42, 0.5)'};
+          color: ${currentSub === 'zones' ? '#38bdf8' : '#94a3b8'};
+          cursor: pointer;
+          white-space: nowrap;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+        ">
+          ${icon('mountain', '', 12)}
+          <span>Tiefenschichten</span>
+        </button>
+        <button class="layer-subfilter-btn ${currentSub === 'hazards' ? 'active' : ''}" data-layer-tab="hazards" style="
+          padding: 4px 12px;
+          font-size: 11px;
+          font-weight: 700;
+          border-radius: 6px;
+          border: 1px solid ${currentSub === 'hazards' ? '#f59e0b' : 'rgba(255,255,255,0.08)'};
+          background: ${currentSub === 'hazards' ? 'rgba(245, 158, 11, 0.18)' : 'rgba(15, 23, 42, 0.5)'};
+          color: ${currentSub === 'hazards' ? '#f59e0b' : '#94a3b8'};
+          cursor: pointer;
+          white-space: nowrap;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+        ">
+          ${icon('shield-alert', '', 12)}
+          <span>Gesteine & Gefahren</span>
+        </button>
+      </div>
+    `;
+
+    if (currentSub === 'hazards') {
+      const specials = Object.entries(SPECIAL_TILE_DATA);
+      const cardsHtml = specials.map(([key, data]) => {
+        return `
+          <div style="background: rgba(15, 23, 42, 0.75); border: none; border-left: 4px solid ${data.badgeColor}; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 38px; height: 38px; background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                  <canvas id="canvas-spec-${key}" width="32" height="32" style="width: 32px; height: 32px; image-rendering: pixelated;"></canvas>
+                </div>
+                <div>
+                  <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                    <strong style="color: #f8fafc; font-size: 13.5px;">${data.name.toUpperCase()}</strong>
+                    <span style="background: ${data.badgeColor}22; color: ${data.badgeColor}; font-size: 9.5px; font-weight: 800; padding: 2px 6px; border-radius: 4px; border: 1px solid ${data.badgeColor}44;">${data.badge}</span>
+                  </div>
+                  <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">Fundort: ${data.depth || 'Unter Tage'}</div>
+                </div>
+              </div>
+              <div style="display: flex; gap: 6px; font-size: 11px; flex-wrap: wrap;">
+                ${data.stats.map(s => `
+                  <span style="background: rgba(255, 255, 255, 0.06); color: ${s.color}; font-weight: 700; padding: 2px 8px; border-radius: 6px;">
+                    ${s.label}: ${s.val}
+                  </span>
+                `).join('')}
+              </div>
+            </div>
+            <p style="margin: 0; font-size: 11.5px; line-height: 1.45; color: #cbd5e1;">
+              ${data.desc}
+            </p>
+            <div style="font-size: 11px; color: #fbbf24; background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.18); padding: 7px 10px; border-radius: 6px; line-height: 1.4;">
+              ${data.hint}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          ${subFilterHtml}
+          ${cardsHtml}
+        </div>
+      `;
+    }
+
+    let layersHtml = '';
     for (const layer of GEOLOGICAL_LAYERS) {
       const isUnlocked = highestDepth >= layer.minDepth;
 
@@ -619,7 +720,7 @@ export class MinerBookModal {
           `;
         }).join(' ');
 
-        html += `
+        layersHtml += `
           <div style="background: rgba(15, 23, 42, 0.75); border: none; border-left: 4px solid ${layer.color}; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
               <strong style="color: #f8fafc; font-size: 13.5px; display: inline-flex; align-items: center; gap: 6px;">
@@ -631,28 +732,33 @@ export class MinerBookModal {
                 <span style="background: rgba(148, 163, 184, 0.12); color: #cbd5e1; font-weight: 700; padding: 2px 8px; border-radius: 6px;">${layer.hardnessMultiplier}</span>
               </div>
             </div>
-            <p style="margin: 0; font-size: 11.5px; line-height: 1.45; color: #94a3b8;">
+            <p style="margin: 0; font-size: 11.5px; line-height: 1.45; color: #cbd5e1;">
               ${layer.report}
             </p>
             <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px; flex-wrap: wrap;">
-              <span style="font-size: 10.5px; font-weight: 700; color: #64748b; text-transform: uppercase;">Erze der Schicht:</span>
+              <span style="font-size: 10.5px; font-weight: 700; color: #cbd5e1; text-transform: uppercase;">Erze der Schicht:</span>
               ${orePills}
             </div>
           </div>
         `;
       } else {
-        html += `
+        layersHtml += `
           <div style="background: rgba(15, 23, 42, 0.35); border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; gap: 8px; opacity: 0.6;">
-            <span style="display: inline-flex; align-items: center; justify-content: center; color: #64748b;">
+            <span style="display: inline-flex; align-items: center; justify-content: center; color: #94a3b8;">
               ${icon('lock', '', 15)}
             </span>
-            <span style="color: #64748b; font-size: 13px; font-weight: 700;">?</span>
+            <span style="color: #94a3b8; font-size: 13px; font-weight: 700;">?</span>
           </div>
         `;
       }
     }
 
-    return html;
+    return `
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        ${subFilterHtml}
+        ${layersHtml}
+      </div>
+    `;
   }
 
   renderProductsTab() {
@@ -881,6 +987,16 @@ export class MinerBookModal {
             • <strong>Labor:</strong> High-Tech-Forschung für neue Stufen und Radar-Sensoren.
           </div>
         </div>
+
+        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
+          <div style="font-size: 12px; font-weight: 800; color: #f59e0b; display: flex; align-items: center; gap: 6px;">
+            ${icon('mountain', '', 14)}
+            <span>§ 6 BESONDERE GESTEINE & GEFAHREN</span>
+          </div>
+          <div style="font-size: 11px; color: #94a3b8; line-height: 1.5;">
+            Achte beim Bohren auf instabile <strong>Felsbrocken</strong>: Werden sie untergraben, stürzen sie ungebremst herab und beschädigen deinen Driller. Baue sie von oben/seitlich ab oder sprenge sie mit Dynamit (+€25, +8 XP). Verlassene <strong>Expeditions-Kapseln</strong> schenken Notfall-Bargeld und Gadgets. <strong>Lava-Adern</strong> erfordern Hitzeschilde. Alle Kennwerte findest du unter <em>Schichten → Gesteine & Gefahren</em>.
+          </div>
+        </div>
       </div>
     `;
   }
@@ -910,7 +1026,7 @@ export class MinerBookModal {
               </div>
             </div>
             <div style="text-align: right; flex-shrink: 0;">
-              <span style="color: #64748b; font-size: 10.5px;">Ab ${art.minDepth}m</span>
+              <span style="color: #cbd5e1; font-size: 10.5px;">Ab ${art.minDepth}m</span>
             </div>
           </div>
         `;
@@ -919,11 +1035,11 @@ export class MinerBookModal {
           <div style="background: rgba(15,23,42,0.4); border: 1px dashed rgba(148,163,184,0.2); border-radius: 12px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; opacity: 0.65;">
             <div style="display: flex; align-items: center; gap: 12px;">
               <div style="width: 44px; height: 44px; background: rgba(15,23,42,0.6); border: 1px solid rgba(148,163,184,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                <span style="font-size: 20px; color: #64748b;">❓</span>
+                <span style="font-size: 20px; color: #94a3b8;">❓</span>
               </div>
               <div>
-                <strong style="color: #94a3b8; font-size: 13px;">Unentdecktes Relikt</strong>
-                <div style="font-size: 11px; color: #64748b; margin-top: 2px;">Grabe in Schichten ab ${art.minDepth}m Tiefe, um dieses Fossil zu bergen.</div>
+                <strong style="color: #cbd5e1; font-size: 13px;">Unentdecktes Relikt</strong>
+                <div style="font-size: 11px; color: #cbd5e1; margin-top: 2px;">Grabe in Schichten ab ${art.minDepth}m Tiefe, um dieses Fossil zu bergen.</div>
                 <div style="font-size: 11px; color: #f59e0b; font-weight: 600; margin-top: 4px;">Perk: ${art.perk}</div>
               </div>
             </div>

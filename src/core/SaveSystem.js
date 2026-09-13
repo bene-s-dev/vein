@@ -18,6 +18,7 @@ const ACTIVE_SLOT_KEY = 'deep_miner_active_slot_id';
 
 export class SaveSystem {
   static isClearing = false;
+  static isLoading = false;
 
   static getActiveSlotId() {
     try {
@@ -268,6 +269,9 @@ export class SaveSystem {
   static loadData(scene, data, sourceLabel = 'Speicherstand') {
     if (!scene || !scene.player || !scene.gridSystem || !data || !data.player) return false;
 
+    SaveSystem.isLoading = true;
+    if (scene) scene.isRestoringState = true;
+
     try {
       const p = scene.player;
       const gs = scene.gridSystem;
@@ -349,8 +353,8 @@ export class SaveSystem {
 
       p.drillTier = data.player.drillTier || 1;
       p.researchedDrillTier = data.player.researchedDrillTier || p.drillTier;
-      const drillData = DRILL_TIERS[p.drillTier - 1] || DRILL_TIERS[0];
-      p.drillPower = typeof data.player.drillPower === 'number' ? data.player.drillPower : drillData.stat;
+      const parsedPower = parseFloat(data.player.drillPower);
+      p.drillPower = (!isNaN(parsedPower) && parsedPower > 0) ? parsedPower : (DRILL_DPS[(p.drillTier || 1) - 1] || 38);
 
       p.engineTier = data.player.engineTier || 1;
       p.researchedEngineTier = data.player.researchedEngineTier || p.engineTier;
@@ -371,6 +375,17 @@ export class SaveSystem {
       p.sensorRadius = sensorData.radius || 1.8;
 
       p.discoveredOres = new Set(data.player.discoveredOres && data.player.discoveredOres.length ? data.player.discoveredOres : ['coal']);
+      if (Array.isArray(data.player.cargo)) {
+        data.player.cargo.forEach(c => {
+          const oreType = typeof c === 'string' ? c : c?.type;
+          if (oreType) p.discoveredOres.add(oreType);
+        });
+      }
+      if (data.depot?.ores) {
+        Object.keys(data.depot.ores).forEach(ore => {
+          if (data.depot.ores[ore] > 0) p.discoveredOres.add(ore);
+        });
+      }
       p.discoveredProducts = new Set(data.player.discoveredProducts && data.player.discoveredProducts.length ? data.player.discoveredProducts : []);
       p.discoveredSpecialTiles = new Set(Array.isArray(data.player.discoveredSpecialTiles) ? data.player.discoveredSpecialTiles : []);
       p.discoveredArtifacts = Array.isArray(data.player.discoveredArtifacts) ? [...data.player.discoveredArtifacts] : [];
@@ -401,14 +416,28 @@ export class SaveSystem {
         fuel_s3: data.player.gadgets?.fuel_s3 ?? 0
       };
 
-      // Spielerposition setzen
+      // Spielerposition & Bewegungszustand absolut sauber synchronisieren
       const targetGx = typeof data.player.gx === 'number' ? data.player.gx : 20;
       const targetGy = typeof data.player.gy === 'number' ? data.player.gy : 0;
       p.gx = targetGx;
       p.gy = targetGy;
       p.x = p.gx * TILE_SIZE + TILE_SIZE / 2;
       p.y = p.gy * TILE_SIZE + TILE_SIZE / 2;
-      if (p.sprite) p.sprite.setPosition(p.x, p.y);
+      p.moveTargetGx = targetGx;
+      p.moveTargetGy = targetGy;
+      p.moveTargetX = p.x;
+      p.moveTargetY = p.y;
+      p.state = 'idle';
+      if (scene.tweens) {
+        scene.tweens.killTweensOf(p.sprite);
+      }
+      // WICHTIG: Zuerst das Sprite auf die gespeicherte Position setzen, BEVOR syncAttachments aufgerufen wird!
+      if (p.sprite) {
+        p.sprite.setPosition(p.x, p.y);
+      }
+      p.syncAttachments?.();
+      p._lastEmittedDepth = -1;
+      p.highestDepthReached = Math.max(p.highestDepthReached || 0, Math.floor(targetGy));
       if (p.headlight) p.headlight.setPosition(p.x, p.y);
       if (p.scannerRing) p.scannerRing.setPosition(p.x, p.y);
 
@@ -429,12 +458,12 @@ export class SaveSystem {
             pb.storedOres = savedB?.storedOres || [];
             pb.accumulatedCash = savedB?.accumulatedCash || 0;
             if (pb.sprite) {
-              pb.sprite.setTexture(pb.spriteKey);
-              pb.sprite.setAlpha(isBuilt ? 1.0 : 0.45);
+              pb.sprite.setTexture(isBuilt ? pb.spriteKey : 'building_plot');
+              pb.sprite.setAlpha(isBuilt ? 1.0 : 0.85);
             }
             if (pb.textLabel) {
-              pb.textLabel.setText(pb.label || pb.title);
-              pb.textLabel.setColor(isBuilt ? '#ffffff' : '#94a3b8');
+              pb.textLabel.setText(isBuilt ? (pb.label || pb.title) : `BAUPLATZ: ${pb.label || pb.title}`);
+              pb.textLabel.setColor(isBuilt ? '#ffffff' : '#fb923c');
             }
           });
         }
@@ -483,8 +512,16 @@ export class SaveSystem {
         }
       }
 
+      // Eventuell aktive Sounds sofort stoppen
+      if (typeof soundFx !== 'undefined' && soundFx) {
+        soundFx.stopDrive?.();
+        soundFx.stopDrill?.();
+        soundFx.stopRefuel?.();
+      }
+
       // HUD synchronisieren
       if (scene.hud) {
+        scene.hud._lastDepth = -1;
         scene.hud.update();
       }
 
@@ -500,6 +537,9 @@ export class SaveSystem {
     } catch (err) {
       console.warn('Fehler beim Einspielen von Daten:', err);
       return false;
+    } finally {
+      SaveSystem.isLoading = false;
+      if (scene) scene.isRestoringState = false;
     }
   }
 
@@ -603,8 +643,10 @@ export class SaveSystem {
           researchedSensorTier: 2,
           sensorRadius: 2.4,
           freeRescues: 3,
+          researchedTnt: 1,
           gadgets: { dynamite: 5, fuel_canister: 3, repair_kit: 3 },
-          discoveredArtifacts: ['artifact_ammonite']
+          discoveredArtifacts: ['artifact_ammonite'],
+          discoveredSpecialTiles: ['tile_boulder', 'tile_cache', 'tile_fossil', 'tile_lava']
         },
         grid: gridData,
         buildings: [
@@ -706,8 +748,10 @@ export class SaveSystem {
           researchedSensorTier: 5,
           sensorRadius: 4.5,
           freeRescues: 2,
+          researchedTnt: 3,
           gadgets: { dynamite: 12, fuel_canister: 6, repair_kit: 6 },
-          discoveredArtifacts: ['artifact_ammonite', 'artifact_trilobite', 'artifact_dino_tooth', 'artifact_geode']
+          discoveredArtifacts: ['artifact_ammonite', 'artifact_trilobite', 'artifact_dino_tooth', 'artifact_geode'],
+          discoveredSpecialTiles: ['tile_boulder', 'tile_cache', 'tile_fossil', 'tile_lava']
         },
         grid: gridData,
         buildings: [
@@ -823,8 +867,10 @@ export class SaveSystem {
           researchedSensorTier: 9,
           sensorRadius: 9.0,
           freeRescues: 3,
+          researchedTnt: 7,
           gadgets: { dynamite: 25, fuel_canister: 10, repair_kit: 10 },
-          discoveredArtifacts: Object.keys(ARTIFACT_CATALOG)
+          discoveredArtifacts: Object.keys(ARTIFACT_CATALOG),
+          discoveredSpecialTiles: ['tile_boulder', 'tile_cache', 'tile_fossil', 'tile_lava']
         },
         grid: gridData,
         buildings: [

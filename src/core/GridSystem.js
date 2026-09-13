@@ -574,7 +574,7 @@ export class GridSystem {
         if (this.scene.player) {
           this.scene.player.cash += 25;
           this.scene.player.addXp?.(8);
-          this.scene.hud?.showToast('🪨 Felsbrocken zerkleinert! (+€25, +8 XP)', 'info');
+          // Keine Toast dazu zeigen (Infos im Bergmann-Buch)
         }
       } else if (prevType === TILE_TYPES.LAVA) {
         if (this.scene.player) {
@@ -887,9 +887,6 @@ export class GridSystem {
           if (!tile.explored) {
             tile.explored = true;
             this.fogDirty = true;
-            if (this.scene.player && ['tile_boulder', 'tile_cache', 'tile_fossil', 'tile_lava'].includes(tile.type)) {
-              this.scene.player.discoverSpecialTile?.(tile.type);
-            }
           }
           if (this.exploredTiles) this.exploredTiles.add(key);
         }

@@ -134,47 +134,82 @@ export class AssetLoader {
       ctx.strokeRect(0.5, 0.5, 31, 31);
     });
 
-    // 1A-1. Felsbrocken / Geröll (32x32) - Schwerer abgerundeter Fels
+    // 1A-1. Felsbrocken / Geröll (32x32) - Dichter massiver Fels, harmonisch ins Schacht-Erdreich eingebettet
     createTexture('tile_boulder', TILE_SIZE, TILE_SIZE, (ctx) => {
-      // Dunkler Schattenwurf im Kachelfeld
-      ctx.fillStyle = '#070a10';
-      ctx.beginPath();
-      ctx.arc(16, 17, 14.5, 0, Math.PI * 2);
-      ctx.fill();
+      // 1. Hintergrund-Matrix / Schachtsediment (Füllt die 32x32 Kachel vollständig, keine schwarzen Leerräume!)
+      ctx.fillStyle = '#52341f'; // Warme Erdbasis analog tile_dirt
+      ctx.fillRect(0, 0, 32, 32);
 
-      // Felskörper (massiver Granit-Schotter)
+      // Weiche Erd- & Schachtränder
+      ctx.fillStyle = '#3f2615';
+      ctx.fillRect(0, 31, 32, 1);
+      ctx.fillRect(31, 0, 1, 32);
+      ctx.fillRect(0, 0, 4, 3);
+      ctx.fillRect(28, 0, 4, 3);
+      ctx.fillRect(0, 29, 4, 3);
+      ctx.fillRect(28, 29, 4, 3);
+
+      // Tiefere Bettung im Erdreich (Felsbett-Schattenfuge)
+      ctx.fillStyle = '#26160d';
+      ctx.fillRect(2, 3, 28, 26);
+      ctx.fillRect(3, 2, 26, 28);
+
+      // 2. Massiver Felskörper (Dichter Granit / Tiefenstein)
       ctx.fillStyle = '#475569';
-      ctx.beginPath();
-      ctx.arc(16, 15.5, 14, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.fillRect(3, 4, 26, 24);
+      ctx.fillRect(4, 3, 24, 26);
+      ctx.fillRect(5, 2, 22, 28);
+      ctx.fillRect(2, 5, 28, 22);
 
-      // Oberflächen-Facetten & Riss-Struktur
+      // Obere / linke Lichtfacette (Gesteins-Lichtkante)
       ctx.fillStyle = '#64748b';
-      ctx.beginPath();
-      ctx.arc(13, 12, 9, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.fillRect(5, 4, 18, 10);
+      ctx.fillRect(4, 6, 8, 12);
+      ctx.fillRect(6, 3, 14, 3);
 
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillRect(7, 4, 9, 3);
+      ctx.fillRect(5, 7, 4, 5);
+
+      // Untere / rechte Schattenfacette (Schwere & Masse)
       ctx.fillStyle = '#334155';
-      ctx.fillRect(16, 16, 8, 7);
-      ctx.fillRect(8, 20, 9, 5);
+      ctx.fillRect(14, 14, 14, 13);
+      ctx.fillRect(9, 20, 16, 7);
+      ctx.fillRect(18, 8, 9, 8);
 
-      // Bruchlinien / Risse
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(16, 18, 11, 8);
+      ctx.fillRect(21, 13, 6, 8);
+      ctx.fillRect(8, 24, 15, 3);
+
+      // Natürliche Gesteinsrisse & mineralische Bruchlinien
       ctx.strokeStyle = '#1e293b';
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = 1.3;
       ctx.beginPath();
-      ctx.moveTo(9, 10);
-      ctx.lineTo(15, 15);
-      ctx.lineTo(21, 12);
-      ctx.moveTo(15, 15);
-      ctx.lineTo(17, 23);
+      ctx.moveTo(8, 9);
+      ctx.lineTo(13, 13);
+      ctx.lineTo(18, 11);
+      ctx.lineTo(24, 15);
+      ctx.moveTo(13, 13);
+      ctx.lineTo(14, 21);
+      ctx.lineTo(19, 23);
+      ctx.moveTo(18, 11);
+      ctx.lineTo(21, 7);
       ctx.stroke();
 
-      // Lichtkante oben
-      ctx.strokeStyle = '#94a3b8';
+      // Feine Riss-Lichtkanten (Kristall-Reflexion)
+      ctx.strokeStyle = '#cbd5e1';
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.arc(16, 15.5, 13, Math.PI * 1.1, Math.PI * 1.8);
+      ctx.moveTo(9, 8);
+      ctx.lineTo(13, 12);
       ctx.stroke();
+
+      // Subtile Erd-Einlagerungen an den Kanten (Verbindung zum Schacht)
+      ctx.fillStyle = '#5c3d28';
+      ctx.fillRect(2, 11, 2, 6);
+      ctx.fillRect(28, 14, 2, 5);
+      ctx.fillRect(12, 27, 5, 2);
     });
 
     // 1A-2. Lava-Ader (32x32) - Glühende Magmaschicht
@@ -244,43 +279,54 @@ export class AssetLoader {
 
     // 1A-3b. Fossil-Gestein (32x32) - Altes Sedimentgestein mit Knochen-/Fossilienabdrücken
     createTexture('tile_fossil', TILE_SIZE, TILE_SIZE, (ctx) => {
-      // Warmes Schiefer- / Kalksteinbett
-      ctx.fillStyle = '#44403c';
+      // 1. Warmes Schiefer- / Kalksedimentbett (passend zu Schachtgestein)
+      ctx.fillStyle = '#4a3f35';
       ctx.fillRect(0, 0, 32, 32);
-      ctx.fillStyle = '#292524';
+      ctx.fillStyle = '#3a3027';
       ctx.fillRect(2, 3, 28, 12);
       ctx.fillRect(4, 17, 24, 12);
 
-      // Gold-bernsteinfarbener Schimmer & Gesteinsrisse
-      ctx.fillStyle = '#78716c';
-      ctx.fillRect(5, 5, 22, 2);
-      ctx.fillRect(6, 26, 20, 2);
+      // Kanten & Schieferung
+      ctx.fillStyle = '#2b231b';
+      ctx.fillRect(0, 31, 32, 1);
+      ctx.fillRect(31, 0, 1, 32);
 
-      // Fossilien-Skelett / Spirale (Helles Knochenweiß & Bernstein)
-      ctx.fillStyle = '#fef08a';
+      // Sediment-Schichtrisse
+      ctx.fillStyle = '#5c4e42';
+      ctx.fillRect(4, 6, 24, 2);
+      ctx.fillRect(5, 25, 22, 2);
+
+      // 2. Eingebettetes Ammoniten-Fossil (Natürliches Elfenbein/Kalkstein statt grelles Neongelb)
+      ctx.fillStyle = '#261e17'; // Fossile Einbettungs-Vertiefung
       ctx.beginPath();
-      ctx.arc(16, 16, 9, 0, Math.PI * 2);
+      ctx.arc(16, 16, 9.5, 0, Math.PI * 2);
       ctx.fill();
 
-      // Knochenmuster innen
-      ctx.fillStyle = '#e2e8f0';
+      // Äußere Kalkschale
+      ctx.fillStyle = '#d6cbba';
       ctx.beginPath();
-      ctx.arc(16, 16, 6, 0, Math.PI * 2);
+      ctx.arc(16, 16, 8.5, 0, Math.PI * 2);
       ctx.fill();
 
-      // Spiralfurche / Wirbel
-      ctx.strokeStyle = '#78350f';
-      ctx.lineWidth = 1.4;
+      // Innere Schalenwindung
+      ctx.fillStyle = '#b8aa96';
       ctx.beginPath();
-      ctx.arc(16, 16, 4.5, 0, Math.PI * 1.5);
+      ctx.arc(16, 16, 5.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Spiralfurche / Bernstein-Kern
+      ctx.strokeStyle = '#6b4f2c';
+      ctx.lineWidth = 1.3;
+      ctx.beginPath();
+      ctx.arc(16, 16, 4, 0, Math.PI * 1.6);
       ctx.stroke();
 
-      // Kleine Knochen-Ausläufer
-      ctx.strokeStyle = '#f8fafc';
-      ctx.lineWidth = 1.2;
-      for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 3) {
+      // Feine Kalkstein-Rippen (Ammoniten-Rippen)
+      ctx.strokeStyle = '#f1ebe1';
+      ctx.lineWidth = 1;
+      for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 4) {
         ctx.beginPath();
-        ctx.moveTo(16 + Math.cos(angle) * 5, 16 + Math.sin(angle) * 5);
+        ctx.moveTo(16 + Math.cos(angle) * 4.5, 16 + Math.sin(angle) * 4.5);
         ctx.lineTo(16 + Math.cos(angle) * 8.5, 16 + Math.sin(angle) * 8.5);
         ctx.stroke();
       }
@@ -291,14 +337,13 @@ export class AssetLoader {
       // Rote Dynamitstangen
       ctx.fillStyle = '#dc2626';
       ctx.fillRect(8, 8, 16, 18);
-      // Haltebänder
+      // Haltebänder & Warnstreifen
       ctx.fillStyle = '#1e293b';
       ctx.fillRect(7, 12, 18, 3);
       ctx.fillRect(7, 20, 18, 3);
-      // Beschriftung TNT
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 8px monospace';
-      ctx.fillText('TNT', 9, 18);
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillRect(9, 13, 14, 1);
+      ctx.fillRect(9, 21, 14, 1);
       // Zündschnur
       ctx.strokeStyle = '#d97706';
       ctx.lineWidth = 1.5;
@@ -634,14 +679,11 @@ export class AssetLoader {
           ctx.stroke();
         };
 
-        // 1. Heller Glanzrand für exzellente Sichtbarkeit auf dunklen Felsen/Erzen
-        ctx.strokeStyle = '#f8fafc';
-        ctx.lineWidth = 2.6;
-        drawPaths();
-
-        // 2. Tiefer Risskern
-        ctx.strokeStyle = '#0f172a';
-        ctx.lineWidth = 1.2;
+        // Reiner tiefer Risskern ohne weiße Ränder
+        ctx.strokeStyle = '#05070d';
+        ctx.lineWidth = 1.6;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
         drawPaths();
       });
     }
@@ -1381,12 +1423,14 @@ export class AssetLoader {
       ctx.fillRect(48, 20, 2, 4);
       ctx.fillRect(46, 20, 6, 1.5);
 
-      // Holzschild über dem Tor
-      ctx.fillStyle = '#78350f';
-      ctx.fillRect(20, 11, 16, 4);
-      ctx.fillStyle = '#fef08a';
-      ctx.font = 'bold 3.5px sans-serif';
-      ctx.fillText('HANGAR', 21, 14);
+      // Messingblende & Nieten über dem Tor
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(19, 11, 18, 4);
+      ctx.fillStyle = '#b45309';
+      ctx.fillRect(20, 12, 16, 2);
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillRect(21, 12.5, 1.5, 1);
+      ctx.fillRect(33.5, 12.5, 1.5, 1);
     });
 
     // A2) INTERMEDIATE-HANGAR TIER 2-3 (88x56) - Solide Metallbau-Werkstatthalle
@@ -1888,20 +1932,17 @@ export class AssetLoader {
       ctx.fillStyle = '#ef4444';
       ctx.fillRect(7.5, 0, 1, 1);
 
-      // 6. Digitales Leuchtschild "DEPOT" über dem Tor
+      // 6. Signalleiste & Container-Kennung über dem Tor
       ctx.fillStyle = '#090d16';
       ctx.fillRect(12, 14, 32, 7);
       ctx.fillStyle = '#0284c7';
       ctx.strokeRect(12, 14, 32, 7);
-      // Leuchtschrift
+      ctx.fillStyle = '#0369a1';
+      ctx.fillRect(14, 16, 28, 3);
       ctx.fillStyle = '#38bdf8';
-      ctx.font = 'bold 5px sans-serif';
-      ctx.fillText('DEPOT', 18, 19.5);
-      // Kleines Container-Piktogramm
-      ctx.fillStyle = '#38bdf8';
-      ctx.fillRect(14, 16, 2.5, 3);
-      ctx.fillStyle = '#0ea5e9';
-      ctx.fillRect(14.5, 16.5, 1.5, 2);
+      ctx.fillRect(16, 17, 6, 1);
+      ctx.fillRect(24, 17, 6, 1);
+      ctx.fillRect(32, 17, 8, 1);
     });
 
     // B2-T1) STARTER-DEPOT TIER 1 (56x40) - Kleiner Holzunterstand & Erzlagerplatz
@@ -1947,12 +1988,11 @@ export class AssetLoader {
       ctx.fillStyle = '#b45309';
       ctx.fillRect(42, 22, 4, 3);
 
-      // Holzschild "DEPOT"
-      ctx.fillStyle = '#78350f';
+      // Holzblende über dem Eingang
+      ctx.fillStyle = '#291104';
       ctx.fillRect(10, 12, 14, 4);
-      ctx.fillStyle = '#fef08a';
-      ctx.font = 'bold 3.5px sans-serif';
-      ctx.fillText('DEPOT', 11, 15);
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(11, 13, 12, 2);
     });
 
     // B2-T2) INTERMEDIATE-DEPOT TIER 2-3 (74x54) - Solide Lagerhalle mit Laderampe
@@ -2083,12 +2123,11 @@ export class AssetLoader {
       ctx.fillStyle = '#38bdf8';
       ctx.fillRect(50, 22, 2, 2);
 
-      // Schild "DEPOT"
+      // Fracht-Kennzeichnung
       ctx.fillStyle = '#0284c7';
-      ctx.fillRect(46, 16, 24, 5);
-      ctx.fillStyle = '#f0fdf4';
-      ctx.font = 'bold 3.5px sans-serif';
-      ctx.fillText('DEPOT', 49, 19.5);
+      ctx.fillRect(46, 16, 24, 4);
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(48, 17.5, 20, 1);
     });
 
     // C) FABRIK & WERKSTOFF-PRODUKTION (104x72) - Authentisches Schmelzwerk mit Abstichrinne & Gießerei
@@ -2823,12 +2862,11 @@ export class AssetLoader {
       ctx.fillStyle = '#475569';
       ctx.fillRect(26, 36, 16, 2);
 
-      // Schild "BÜRO"
+      // Eingangsblende mit dezentem Leuchtstreifen
       ctx.fillStyle = '#1e293b';
       ctx.fillRect(10, 12, 12, 3.5);
-      ctx.fillStyle = '#f8fafc';
-      ctx.font = 'bold 3px sans-serif';
-      ctx.fillText('BÜRO', 11, 15);
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(11, 13, 10, 1.2);
     });
 
     // D) MODERNES WEISSES LABOR (108x72) - Exaktes Design nach dem Foto (Modernist White Lab / MVZ Clotten)

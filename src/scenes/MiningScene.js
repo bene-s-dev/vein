@@ -36,23 +36,33 @@ export class MiningScene extends Phaser.Scene {
     this.hud = new HUD(this, this.player, this.missionSystem);
     window.__activeMiningScene = this;
 
-    // 8. Gespeicherten Spielfortschritt aus localStorage laden
+    // 8. Kamera vorab initialisieren (korrekte Screen-Dimensionen & Zoom)
+    this.setupCamera();
+
+    // 9. Gespeicherten Spielfortschritt aus localStorage laden
     SaveSystem.load(this);
 
     // Initialen Status der Mission an HUD senden
     this.events.emit('mission_updated', this.missionSystem.getMissionStatus());
 
-    // Vor Schließen des Fensters automatisch sichern
-    window.addEventListener('beforeunload', () => {
+    // Vor Schließen des Fensters, Tab-Wechsel oder App-Minimieren automatisch sichern (auch iOS Safari)
+    const handleAutoSave = () => {
       if (!SaveSystem.isClearing) {
         SaveSystem.save(this);
       }
+    };
+    window.addEventListener('beforeunload', handleAutoSave);
+    window.addEventListener('pagehide', handleAutoSave);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        handleAutoSave();
+      }
     });
 
-    // 9. Kamera konfigurieren (Full-screen Follow)
+    // 10. Kamera nach dem Laden sauber auf den Spieler zentrieren & Viewport sofort rendern
     this.setupCamera();
-
-    // 10. Erstes Viewport-Rendering
+    this.gridSystem.fogDirty = true;
+    this.gridSystem.fogBufferReady = false;
     this.gridSystem.updateViewport(this.cameras.main, this.player);
 
     // 11. Resize-Listener
@@ -61,6 +71,9 @@ export class MiningScene extends Phaser.Scene {
       this.setupCamera();
       this.gridSystem.updateViewport(this.cameras.main, this.player);
     });
+
+    // 12. Platzierte TNT-Sprengsätze (Fernzündung)
+    this.placedTnt = [];
   }
 
   createSkyAndSurface() {
@@ -199,13 +212,18 @@ export class MiningScene extends Phaser.Scene {
   setupCamera() {
     const cam = this.cameras.main;
 
+    const screenW = Math.max(this.scale.width || 0, window.innerWidth || 0, document.documentElement.clientWidth || 0);
+    const screenH = Math.max(this.scale.height || 0, window.innerHeight || 0, document.documentElement.clientHeight || 0);
+
+    // Viewport und Display-Größe der Kamera zwingend setzen (verhindert 1px-Glitch auf Mobile)
+    cam.setViewport(0, 0, screenW, screenH);
+    cam.setSize(screenW, screenH);
+
     // Endlose Kamera-Grenzen nach links, rechts und in die Tiefe
     cam.setBounds(-100000, -280, 200000, 500000);
     cam.roundPixels = false;
     cam.startFollow(this.player.sprite, false, 1, 1);
 
-    const screenW = this.scale.width || window.innerWidth;
-    const screenH = this.scale.height || window.innerHeight;
     const isPortrait = screenH > screenW;
 
     // Intelligente Zoom-Berechnung für optimale Sichtweite:
@@ -224,6 +242,15 @@ export class MiningScene extends Phaser.Scene {
 
     zoom = Math.max(0.75, Math.min(2.0, zoom));
     cam.setZoom(zoom);
+
+    if (this.player && this.player.sprite) {
+      cam.centerOn(this.player.sprite.x, this.player.sprite.y);
+    }
+
+    // WorldView sofort synchron berechnen, damit Viewport-Culling und Fog-Buffer stets akkurat sind
+    if (cam.preRender) {
+      cam.preRender();
+    }
   }
 
   update(time, delta) {
@@ -273,135 +300,194 @@ export class MiningScene extends Phaser.Scene {
 
   useDynamite() {
     if (!this.player) return false;
-    if (!this.player.gadgets) this.player.gadgets = { dynamite: 3, fuel_canister: 2, repair_kit: 2 };
+    if (!this.player.gadgets) this.player.gadgets = { dynamite: 0, fuel_canister: 0, repair_kit: 0 };
     if ((this.player.gadgets.dynamite || 0) <= 0) {
-      this.hud?.showToast('Kein Dynamit im Vorrat! (Im Hangar erhältlich)', 'warning');
+      this.hud?.showToast('Kein Dynamit im Vorrat!', 'warning');
       soundFx.playError();
       return false;
     }
 
     const currentY = this.player.sprite ? this.player.sprite.y : (this.player.gy * TILE_SIZE + TILE_SIZE / 2);
     if (currentY <= -8 || this.player.gy < 0) {
-      this.hud?.showToast('Dynamit kann nur unter Tage platziert werden!', 'info');
+      this.hud?.showToast('Dynamit kann nur unter Tage platziert werden!', 'warning');
+      soundFx.playError();
       return false;
     }
-    if (this.isDynamiteActive) {
-      this.hud?.showToast('Ein Sprengsatz zündet bereits!', 'warning');
-      return false;
-    }
-
-    this.player.gadgets.dynamite--;
-    this.isDynamiteActive = true;
-    this.events.emit('player_updated');
 
     // Exakte ganzzahlige Gitterkoordinaten (verhindert Fehltreffer bei Float-Werten im Flug)
     const pX = this.player.sprite ? this.player.sprite.x : this.player.x;
     const pY = this.player.sprite ? this.player.sprite.y : this.player.y;
     const gx = Math.round((pX - TILE_SIZE / 2) / TILE_SIZE);
     const gy = Math.max(1, Math.round((pY - TILE_SIZE / 2) / TILE_SIZE));
+
+    if (!this.placedTnt) this.placedTnt = [];
+
+    // Prüfen, ob an dieser Position bereits eine Ladung scharf liegt
+    const alreadyPlaced = this.placedTnt.some(b => b.gx === gx && b.gy === gy);
+    if (alreadyPlaced) {
+      this.hud?.showToast('An dieser Stelle liegt bereits eine Sprengladung!', 'info');
+      soundFx.playError();
+      return false;
+    }
+
+    this.player.gadgets.dynamite--;
+
     const bombX = gx * TILE_SIZE + TILE_SIZE / 2;
     const bombY = gy * TILE_SIZE + TILE_SIZE / 2;
 
-    // Dynamit-Sprite platzieren
+    // Dynamit-Sprite scharf im Schacht platzieren
     const bombSprite = this.add.image(bombX, bombY, 'item_dynamite')
       .setDepth(15)
       .setScale(0.95);
 
-    // Zündschnur-Ticken & Blinken
-    soundFx.playClick();
-    this.hud?.showToast('🧨 Dynamit scharf gemacht! Detonation in 1.4s!', 'warning');
+    // Scharfschaltungs-LED (rotes Pulsieren signalisiert Fernzündungs-Bereitschaft)
+    const ledIndicator = this.add.circle(bombX, bombY - 10, 3.5, 0xef4444, 0.95)
+      .setDepth(16);
 
-    this.tweens.add({
-      targets: bombSprite,
-      scaleX: 1.25,
-      scaleY: 1.25,
+    const tween = this.tweens.add({
+      targets: [bombSprite, ledIndicator],
+      scaleX: 1.12,
+      scaleY: 1.12,
+      alpha: 0.85,
       yoyo: true,
-      repeat: 3,
-      duration: 175,
-      onComplete: () => {
-        try {
-          bombSprite.destroy();
-          this.explodeDynamite(gx, gy);
-        } catch (err) {
-          console.error('Fehler bei Detonation:', err);
-        } finally {
-          this.isDynamiteActive = false;
-        }
-      }
+      repeat: -1,
+      duration: 500,
+      ease: 'Sine.easeInOut'
     });
+
+    const blastSize = this.player.getTntBlastSize ? this.player.getTntBlastSize() : 3;
+
+    const tntEntry = {
+      gx,
+      gy,
+      bombX,
+      bombY,
+      sprite: bombSprite,
+      led: ledIndicator,
+      tween,
+      blastSize
+    };
+
+    this.placedTnt.push(tntEntry);
+
+    soundFx.playClick();
+    this.hud?.showToast(`💣 TNT platziert (${this.placedTnt.length}x scharf - Zünden per Aktions-Button)`, 'info');
+    this.events.emit('player_updated');
+    this.hud?.update();
     return true;
   }
 
-  explodeDynamite(centerGx, centerGy) {
+  detonateAllTnt() {
+    if (!this.placedTnt || this.placedTnt.length === 0) {
+      this.hud?.showToast('Keine scharfen TNT-Ladungen platziert!', 'info');
+      soundFx.playError();
+      return false;
+    }
+
+    const bombsToExplode = [...this.placedTnt];
+    this.placedTnt = [];
+
+    // Sofort HUD aktualisieren
+    this.events.emit('player_updated');
+    this.hud?.update();
+
+    // Detonations-Kaskade (schnelle Kaskade von 75ms zwischen Ladungen für kinoreife Action)
+    bombsToExplode.forEach((bomb, index) => {
+      this.time.delayedCall(index * 75, () => {
+        try {
+          if (bomb.tween) bomb.tween.stop();
+          if (bomb.led) bomb.led.destroy();
+          if (bomb.sprite) bomb.sprite.destroy();
+          this.explodeDynamite(bomb.gx, bomb.gy, bomb.blastSize);
+        } catch (err) {
+          console.error('Fehler bei Detonation:', err);
+        }
+      });
+    });
+
+    return true;
+  }
+
+  explodeDynamite(centerGx, centerGy, blastSize = 3) {
     try {
       centerGx = Math.round(centerGx);
       centerGy = Math.round(centerGy);
       const bombX = centerGx * TILE_SIZE + TILE_SIZE / 2;
       const bombY = centerGy * TILE_SIZE + TILE_SIZE / 2;
 
-      // Sound & Erschütterung
+      // Sound & Erschütterung (skaliert dynamisch mit Sprengkraft)
       soundFx.playExplosion();
-      this.cameras.main.shake(380, 0.028);
+      const shakeIntensity = 0.024 + (blastSize - 3) * 0.006;
+      this.cameras.main.shake(380 + (blastSize - 3) * 60, Math.min(0.045, shakeIntensity));
 
-    // Explosions-Flash
-    const blast = this.add.circle(bombX, bombY, 56, 0xfef08a, 0.95).setDepth(20);
-    this.tweens.add({
-      targets: blast,
-      scale: 1.6,
-      alpha: 0,
-      duration: 320,
-      onComplete: () => blast.destroy()
-    });
+      // Explosions-Flash (visuell skaliert mit Feldgröße)
+      const flashRadius = blastSize * 18;
+      const blast = this.add.circle(bombX, bombY, flashRadius, 0xfef08a, 0.95).setDepth(20);
+      this.tweens.add({
+        targets: blast,
+        scale: 1.6,
+        alpha: 0,
+        duration: 320,
+        onComplete: () => blast.destroy()
+      });
 
-    let oresCollected = 0;
+      // Sekundär-Flammenwelle
+      const blastFire = this.add.circle(bombX, bombY, flashRadius * 0.7, 0xf97316, 0.85).setDepth(21);
+      this.tweens.add({
+        targets: blastFire,
+        scale: 1.8,
+        alpha: 0,
+        duration: 260,
+        onComplete: () => blastFire.destroy()
+      });
 
-    // 3x3 Kacheln um das Zentrum sprengen
-    for (let dy = -1; dy <= 1; dy++) {
-      for (let dx = -1; dx <= 1; dx++) {
-        const tgx = centerGx + dx;
-        const tgy = centerGy + dy;
+      let oresCollected = 0;
 
-        // Oberfläche gy <= 0 Fundamente nicht sprengen
-        if (tgy <= 0) continue;
+      // Kacheln im Radius der erforschten Stufe (3x3 bis 9x9) sprengen
+      const minOffset = -Math.floor((blastSize - 1) / 2);
+      const maxOffset = Math.ceil((blastSize - 1) / 2);
 
-        const tile = this.gridSystem.getTile(tgx, tgy);
-        if (tile && tile.type !== 'empty' && !tile.indestructible) {
-          if (tile.ore) {
-            if (this.player.cargo.length < this.player.maxCargo) {
-              this.player.collectOre(tile.ore);
-              oresCollected++;
+      for (let dy = minOffset; dy <= maxOffset; dy++) {
+        for (let dx = minOffset; dx <= maxOffset; dx++) {
+          const tgx = centerGx + dx;
+          const tgy = centerGy + dy;
+
+          // Oberfläche gy <= 0 Fundamente nicht sprengen
+          if (tgy <= 0) continue;
+
+          const tile = this.gridSystem.getTile(tgx, tgy);
+          if (tile && tile.type !== 'empty' && !tile.indestructible) {
+            if (tile.ore) {
+              if (this.player.cargo.length < this.player.maxCargo) {
+                this.player.collectOre(tile.ore);
+                oresCollected++;
+              }
             }
+            this.gridSystem.damageTile(tgx, tgy, 999999);
           }
-          this.gridSystem.damageTile(tgx, tgy, 999999);
         }
       }
-    }
 
-    // Sofortige visuelle Aktualisierung der Kacheln und des Nebels
-    this.gridSystem.fogDirty = true;
-    this.gridSystem.lastCamX = null;
-    this.gridSystem.updateViewport(this.cameras.main, this.player);
+      // Sofortige visuelle Aktualisierung der Kacheln und des Nebels
+      this.gridSystem.fogDirty = true;
+      this.gridSystem.lastCamX = null;
+      this.gridSystem.updateViewport(this.cameras.main, this.player);
 
-    // Spieler-Schaden wenn noch im Explosionsradius
-    const curPx = this.player.sprite ? this.player.sprite.x : this.player.x;
-    const curPy = this.player.sprite ? this.player.sprite.y : this.player.y;
-    const curGx = Math.round((curPx - TILE_SIZE / 2) / TILE_SIZE);
-    const curGy = Math.round((curPy - TILE_SIZE / 2) / TILE_SIZE);
+      // Spieler-Schaden wenn noch im Explosionsradius
+      const curPx = this.player.sprite ? this.player.sprite.x : this.player.x;
+      const curPy = this.player.sprite ? this.player.sprite.y : this.player.y;
+      const curGx = Math.round((curPx - TILE_SIZE / 2) / TILE_SIZE);
+      const curGy = Math.round((curPy - TILE_SIZE / 2) / TILE_SIZE);
 
-    if (Math.abs(curGx - centerGx) <= 1 && Math.abs(curGy - centerGy) <= 1) {
-      this.player.takeDamage(20);
-      this.hud?.showToast('💥 Autsch! Eigene Sprengung hat dich erwischt! (-20 HP)', 'danger');
-    } else if (oresCollected > 0) {
-      this.hud?.showToast(`💥 BOOM! Sprengung erfolgreich: +${oresCollected} Erze geborgen!`, 'success');
-    } else {
-      this.hud?.showToast('💥 BOOM! Felsbereich freigesprengt!', 'info');
-    }
-    this.events.emit('player_updated');
+      if (Math.abs(curGx - centerGx) <= Math.abs(maxOffset) && Math.abs(curGy - centerGy) <= Math.abs(maxOffset)) {
+        this.player.takeDamage(20 + (blastSize - 3) * 5);
+      }
+      this.events.emit('player_updated');
 
-    // Geröll über dem Krater prüfen
-    for (let dx = -1; dx <= 1; dx++) {
-      this.gridSystem.checkBoulderFall(centerGx + dx, centerGy - 2);
-    }
+      // Geröll über dem Krater prüfen
+      for (let dx = minOffset; dx <= maxOffset; dx++) {
+        this.gridSystem.checkBoulderFall(centerGx + dx, centerGy + minOffset - 1);
+      }
     } catch (err) {
       console.error('Dynamite explosion error:', err);
     }

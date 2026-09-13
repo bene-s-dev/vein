@@ -59,28 +59,11 @@ export class MissionsProgressModal {
     ];
 
     const tabNavHtml = `
-      <div style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; scrollbar-width: none;">
+      <div class="register-tab-bar">
         ${tabs.map(t => {
           const isActive = this.currentTab === t.id;
           return `
-            <button class="tab-btn btn-3d-secondary" data-tab="${t.id}" style="
-              height: 32px;
-              box-sizing: border-box;
-              background: ${isActive ? 'linear-gradient(180deg, #0284c7 0%, #0369a1 100%)' : ''};
-              border-color: ${isActive ? '#38bdf8' : ''};
-              border-bottom: ${isActive ? '3px solid #075985' : ''};
-              color: ${isActive ? '#ffffff' : '#94a3b8'};
-              padding: 0 12px;
-              font-size: 11.5px;
-              font-weight: 700;
-              border-radius: 8px;
-              display: inline-flex;
-              align-items: center;
-              justify-content: center;
-              gap: 6px;
-              cursor: pointer;
-              white-space: nowrap;
-            ">
+            <button class="register-tab tab-btn ${isActive ? 'active' : ''}" data-tab="${t.id}">
               ${icon(t.icon, '', 14)}
               <span>${t.label}</span>
             </button>
@@ -104,9 +87,9 @@ export class MissionsProgressModal {
     }
 
     bodyEl.innerHTML = `
-      <div style="display: flex; flex-direction: column; max-width: 620px; margin: 0 auto; width: 100%; box-sizing: border-box; padding: 0 4px 36px 4px; gap: 12px;">
+      <div class="register-tab-container" style="display: flex; flex-direction: column; max-width: 760px; margin: 0 auto; width: 100%; box-sizing: border-box; padding: 0 4px 36px 4px; gap: 0 !important; row-gap: 0 !important;">
         ${tabNavHtml}
-        <div id="modal-tab-content">
+        <div id="modal-tab-content" class="register-tab-panel">
           ${contentHtml}
         </div>
       </div>
@@ -189,7 +172,7 @@ export class MissionsProgressModal {
             </div>
           </div>
 
-          <p style="font-size: 12.5px; line-height: 1.5; color: #94a3b8; margin-bottom: 14px;">
+          <p style="font-size: 12.5px; line-height: 1.5; color: #cbd5e1; margin-bottom: 14px;">
             ${mission.desc}
           </p>
 
@@ -248,8 +231,8 @@ export class MissionsProgressModal {
           align-items: center;
           font-size: 12px;
         ">
-          <span style="color: #94a3b8;">Aktuelle Schachttiefe: <strong style="color: #38bdf8;">${this.player.depthMeters}m</strong></span>
-          <span style="color: #94a3b8;">Frachtraum: <strong style="color: #f8fafc;">${this.player.cargoCount}/${this.player.maxCargo}</strong></span>
+          <span style="color: #cbd5e1; font-weight: 600;">Aktuelle Schachttiefe: <strong style="color: #38bdf8; font-weight: 800;">${this.player.depthMeters}m</strong></span>
+          <span style="color: #cbd5e1; font-weight: 600;">Frachtraum: <strong style="color: #f8fafc; font-weight: 800;">${this.player.cargoCount}/${this.player.maxCargo}</strong></span>
           <button id="btn-go-pool" class="btn-action" style="padding: 5px 10px; font-size: 11px;">
             ${icon('list', '', 12)} Alle Aufträge ansehen
           </button>
@@ -354,7 +337,7 @@ export class MissionsProgressModal {
           <div style="width: 100%; height: 8px; background: rgba(15, 23, 42, 0.9); border-radius: 99px; overflow: hidden; margin-top: 8px;">
             <div style="width: ${pct}%; height: 100%; background: linear-gradient(90deg, #9333ea, #c084fc); border-radius: 99px; transition: width 0.3s ease;"></div>
           </div>
-          <p style="font-size: 11px; color: #94a3b8; margin-top: 8px;">
+          <p style="font-size: 11px; color: #cbd5e1; margin-top: 8px;">
             Erhalte XP durch das Bohren von Kacheln (+1 XP), das Fördern seltener Erze (+15 bis +750 XP) und das Abschließen von Bergbau-Aufträgen.
           </p>
         </div>
@@ -376,18 +359,18 @@ export class MissionsProgressModal {
               ">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                   <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-weight: 800; font-size: 11px; color: ${isUnlocked ? '#10b981' : '#64748b'};">
+                    <span style="font-weight: 800; font-size: 11px; color: ${isUnlocked ? '#10b981' : '#94a3b8'};">
                       LVL ${r.level}
                     </span>
-                    <strong style="color: ${isCurrent ? '#38bdf8' : isUnlocked ? '#f8fafc' : '#94a3b8'}; font-size: 13px;">
+                    <strong style="color: ${isCurrent ? '#38bdf8' : isUnlocked ? '#f8fafc' : '#cbd5e1'}; font-size: 13px;">
                       ${r.title}
                     </strong>
                   </div>
-                  <span style="font-size: 10.5px; font-weight: 700; color: ${isCurrent ? '#38bdf8' : isUnlocked ? '#10b981' : '#64748b'};">
+                  <span style="font-size: 10.5px; font-weight: 700; color: ${isCurrent ? '#38bdf8' : isUnlocked ? '#10b981' : '#94a3b8'};">
                     ${isCurrent ? 'AKTUELL' : isUnlocked ? 'FREIGESCHALTET' : 'GESPERRT'}
                   </span>
                 </div>
-                <p style="font-size: 11.5px; color: #94a3b8;">${r.desc}</p>
+                <p style="font-size: 11.5px; color: #cbd5e1;">${r.desc}</p>
                 <div style="font-size: 11px; color: #38bdf8; display: inline-flex; align-items: center; gap: 4px;">
                   ${icon('sparkles', '', 11)} ${r.perks}
                 </div>
@@ -415,7 +398,7 @@ export class MissionsProgressModal {
 
     return `
       <div style="display: flex; flex-direction: column; gap: 10px;">
-        <p style="font-size: 12px; color: #94a3b8;">
+        <p style="font-size: 12px; color: #cbd5e1;">
           Wähle einen Bergbau-Auftrag aus. Aufträge mit höherer Stufe erfordern tiefere Vorstöße, bieten aber massive Geld- und XP-Prämien.
         </p>
         <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -438,7 +421,7 @@ export class MissionsProgressModal {
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
                   <div>
                     <strong style="color: #f8fafc; font-size: 13px;">${m.title}</strong>
-                    <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">${m.desc}</div>
+                    <div style="font-size: 11px; color: #cbd5e1; margin-top: 2px;">${m.desc}</div>
                   </div>
                   <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
                     <span style="color: #fbbf24; font-weight: 700; font-size: 11.5px; display: inline-flex; align-items: center; gap: 3px;">
@@ -456,7 +439,7 @@ export class MissionsProgressModal {
                 </div>
 
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; padding-top: 6px;">
-                  <span style="font-size: 11px; color: #94a3b8;">
+                  <span style="font-size: 11px; color: #cbd5e1; font-weight: 600;">
                     ${isLocked ? `<span style="color: #ef4444; font-weight: 700;">Benötigt Level ${m.minLevel}</span>` : `Ab Level ${m.minLevel}`}
                   </span>
                   <div>
@@ -533,7 +516,7 @@ export class MissionsProgressModal {
 
     return `
       <div style="display: flex; flex-direction: column; gap: 10px;">
-        <p style="font-size: 12px; color: #94a3b8;">
+        <p style="font-size: 12px; color: #cbd5e1;">
           Der Steineforscher analysiert Erzproben für geologische Studien. Gib gesuchte Erze ab (aus Frachtraum & Depot), um seltene High-Tech-Bauteile für deine Tech-Upgrades zu erhalten!
         </p>
 
@@ -629,8 +612,8 @@ export class MissionsProgressModal {
           grid-template-columns: repeat(2, 1fr);
           gap: 8px;
         ">
-          <div style="background: rgba(15, 23, 42, 0.7); border-radius: 10px; padding: 10px 12px;">
-            <span style="font-size: 11px; color: #94a3b8; display: flex; align-items: center; gap: 4px;">
+          <div style="background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 10px; padding: 10px 12px;">
+            <span style="font-size: 11px; color: #cbd5e1; font-weight: 700; display: flex; align-items: center; gap: 4px;">
               ${icon('arrow-down', '', 12)} Maximale Schachttiefe
             </span>
             <strong style="color: #38bdf8; font-size: 18px; font-weight: 800; display: block; margin-top: 2px;">
@@ -638,8 +621,8 @@ export class MissionsProgressModal {
             </strong>
           </div>
 
-          <div style="background: rgba(15, 23, 42, 0.7); border-radius: 10px; padding: 10px 12px;">
-            <span style="font-size: 11px; color: #94a3b8; display: flex; align-items: center; gap: 4px;">
+          <div style="background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 10px; padding: 10px 12px;">
+            <span style="font-size: 11px; color: #cbd5e1; font-weight: 700; display: flex; align-items: center; gap: 4px;">
               ${icon('pickaxe', '', 12)} Kacheln abgebaut
             </span>
             <strong style="color: #f8fafc; font-size: 18px; font-weight: 800; display: block; margin-top: 2px;">
@@ -647,8 +630,8 @@ export class MissionsProgressModal {
             </strong>
           </div>
 
-          <div style="background: rgba(15, 23, 42, 0.7); border-radius: 10px; padding: 10px 12px;">
-            <span style="font-size: 11px; color: #94a3b8; display: flex; align-items: center; gap: 4px;">
+          <div style="background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 10px; padding: 10px 12px;">
+            <span style="font-size: 11px; color: #cbd5e1; font-weight: 700; display: flex; align-items: center; gap: 4px;">
               ${icon('coins', '', 12)} Aktuelles Vermögen
             </span>
             <strong style="color: #fbbf24; font-size: 18px; font-weight: 800; display: block; margin-top: 2px;">
@@ -656,8 +639,8 @@ export class MissionsProgressModal {
             </strong>
           </div>
 
-          <div style="background: rgba(15, 23, 42, 0.7); border-radius: 10px; padding: 10px 12px;">
-            <span style="font-size: 11px; color: #94a3b8; display: flex; align-items: center; gap: 4px;">
+          <div style="background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 10px; padding: 10px 12px;">
+            <span style="font-size: 11px; color: #cbd5e1; font-weight: 700; display: flex; align-items: center; gap: 4px;">
               ${icon('building', '', 12)} Basis-Infrastruktur
             </span>
             <strong style="color: #10b981; font-size: 18px; font-weight: 800; display: block; margin-top: 2px;">
@@ -667,32 +650,32 @@ export class MissionsProgressModal {
         </div>
 
         <!-- Fahrzeug-Spezifikationen & Tech-Stufen -->
-        <div style="background: rgba(15, 23, 42, 0.65); border-radius: 10px; padding: 12px;">
-          <div style="font-size: 12px; font-weight: 700; color: #38bdf8; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+        <div style="background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 10px; padding: 12px;">
+          <div style="font-size: 12px; font-weight: 800; color: #38bdf8; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
             ${icon('wrench', '', 13)} Installierte Tech-Komponenten
           </div>
           <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; font-size: 11.5px;">
-            <span style="color: #94a3b8;">Treibstoff-Tank: <strong style="color: #f8fafc;">Stufe ${p.tankTier || 1} (${p.maxFuel}L)</strong></span>
-            <span style="color: #94a3b8;">Bohrkopf: <strong style="color: #f8fafc;">Stufe ${p.drillTier || 1} (${p.drillPower} DPS)</strong></span>
-            <span style="color: #94a3b8;">Frachtraum: <strong style="color: #f8fafc;">Stufe ${p.cargoTier || 1} (${p.maxCargo} Erze)</strong></span>
-            <span style="color: #94a3b8;">Rumpfpanzerung: <strong style="color: #f8fafc;">Stufe ${p.hullTier || 1} (${p.maxHull} HP)</strong></span>
-            <span style="color: #94a3b8;">Sensor-Radar: <strong style="color: #f8fafc;">Stufe ${p.sensorTier || 1} (${p.sensorRadius} Kacheln)</strong></span>
-            <span style="color: #94a3b8;">Missionsabgaben: <strong style="color: #f8fafc;">${stats.missionsCompleted || 0} erfüllt</strong></span>
+            <span style="color: #cbd5e1; font-weight: 600;">Treibstoff-Tank: <strong style="color: #f8fafc; font-weight: 800;">Stufe ${p.tankTier || 1} (${p.maxFuel}L)</strong></span>
+            <span style="color: #cbd5e1; font-weight: 600;">Bohrkopf: <strong style="color: #f8fafc; font-weight: 800;">Stufe ${p.drillTier || 1} (${p.drillPower} DPS)</strong></span>
+            <span style="color: #cbd5e1; font-weight: 600;">Frachtraum: <strong style="color: #f8fafc; font-weight: 800;">Stufe ${p.cargoTier || 1} (${p.maxCargo} Erze)</strong></span>
+            <span style="color: #cbd5e1; font-weight: 600;">Rumpfpanzerung: <strong style="color: #f8fafc; font-weight: 800;">Stufe ${p.hullTier || 1} (${p.maxHull} HP)</strong></span>
+            <span style="color: #cbd5e1; font-weight: 600;">Sensor-Radar: <strong style="color: #f8fafc; font-weight: 800;">Stufe ${p.sensorTier || 1} (${p.sensorRadius} Kacheln)</strong></span>
+            <span style="color: #cbd5e1; font-weight: 600;">Missionsabgaben: <strong style="color: #f8fafc; font-weight: 800;">${stats.missionsCompleted || 0} erfüllt</strong></span>
           </div>
         </div>
 
         <!-- Geförderte Erze Statistik (nur bisher entdeckte Steine) -->
-        <div style="background: rgba(15, 23, 42, 0.65); border-radius: 10px; padding: 12px;">
-          <div style="font-size: 12px; font-weight: 700; color: #fbbf24; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+        <div style="background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 10px; padding: 12px;">
+          <div style="font-size: 12px; font-weight: 800; color: #fbbf24; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
             ${icon('gem', '', 13)} Geförderte Bodenschätze (Bisher entdeckt)
           </div>
           <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; font-size: 11px;">
             ${Object.entries(ORE_DATA).filter(([key]) => p.isOreDiscovered(key)).map(([key, data]) => {
               const count = (stats.totalOresMined && stats.totalOresMined[key]) || 0;
               return `
-                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.25); padding: 4px 6px; border-radius: 4px;">
-                  <span style="color: #94a3b8; display: inline-flex; align-items: center; gap: 4px;">${oreIcon(key, 12)} ${data.name}:</span>
-                  <strong style="color: ${count > 0 ? '#38bdf8' : '#64748b'};">${count}</strong>
+                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); padding: 4px 6px; border-radius: 6px;">
+                  <span style="color: #cbd5e1; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">${oreIcon(key, 12)} ${data.name}:</span>
+                  <strong style="color: ${count > 0 ? '#38bdf8' : '#94a3b8'}; font-weight: 800;">${count}</strong>
                 </div>
               `;
             }).join('')}

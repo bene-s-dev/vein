@@ -38,6 +38,8 @@ export class InputHandler {
     this.keyF = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F, false);
     this.keyR = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R, false);
     this.keyE = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E, false);
+    this.keyZ = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z, false);
+    this.keySpace = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE, false);
 
     // Tastatur-Capture für Buchstaben und Ziffern freigeben, damit Texteingaben überall funktionieren
     if (scene.input.keyboard.removeCapture) {
@@ -55,7 +57,9 @@ export class InputHandler {
         Phaser.Input.Keyboard.KeyCodes.THREE,
         Phaser.Input.Keyboard.KeyCodes.F,
         Phaser.Input.Keyboard.KeyCodes.R,
-        Phaser.Input.Keyboard.KeyCodes.E
+        Phaser.Input.Keyboard.KeyCodes.E,
+        Phaser.Input.Keyboard.KeyCodes.Z,
+        Phaser.Input.Keyboard.KeyCodes.SPACE
       ]);
     }
 
@@ -112,6 +116,15 @@ export class InputHandler {
     this.key3.on('down', triggerRepair);
 
     this.keyE.on('down', triggerInteract);
+
+    const triggerDetonate = () => {
+      if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
+      if (isModalActive()) return;
+      this.scene.detonateAllTnt?.();
+    };
+
+    this.keyZ.on('down', triggerDetonate);
+    this.keySpace.on('down', triggerDetonate);
 
     this.setupControls();
   }

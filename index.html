@@ -92,10 +92,6 @@
 
     canvas {
       display: block;
-      image-rendering: -moz-crisp-edges;
-      image-rendering: -webkit-crisp-edges;
-      image-rendering: pixelated;
-      image-rendering: crisp-edges;
     }
 
     /* Clean Cockpit HUD Overlay - Completely Transparent Without Background */
@@ -254,7 +250,10 @@
       height: 5px;
       border-radius: 99px;
       margin-top: 2px;
-      overflow: visible !important;
+      overflow: hidden;
+      display: flex;
+      flex-direction: row;
+      position: relative;
     }
 
     .hud-cargo-slash {
@@ -503,12 +502,12 @@
     /* Action FAB & Speed Dial (Unten Rechts) */
     .hud-action-fab-container {
       position: absolute;
-      bottom: 20px;
-      right: 18px;
+      bottom: 14px;
+      right: 14px;
       display: flex;
       flex-direction: column;
       align-items: flex-end;
-      gap: 10px;
+      gap: 6px;
       z-index: 320;
       pointer-events: auto;
       transition: opacity 0.2s ease;
@@ -524,14 +523,14 @@
       display: flex;
       flex-direction: column;
       align-items: flex-end;
-      gap: 8px;
+      gap: 6px;
       opacity: 0;
       visibility: hidden;
-      transform: translateY(16px) scale(0.95);
+      transform: translateY(12px) scale(0.95);
       pointer-events: none;
-      transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1),
-                  transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
-                  visibility 0.22s;
+      transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                  visibility 0.2s;
     }
 
     .hud-action-fab-container.open .hud-action-dial {
@@ -545,20 +544,20 @@
     .fab-item-row {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
 
     .fab-label {
-      background: rgba(15, 23, 42, 0.90);
+      background: rgba(15, 23, 42, 0.92);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       border: 1px solid rgba(255, 255, 255, 0.14);
       color: #f8fafc;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
-      padding: 5px 10px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      padding: 3px 8px;
+      border-radius: 6px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
       white-space: nowrap;
       pointer-events: auto;
       cursor: pointer;
@@ -572,11 +571,11 @@
     }
 
     .btn-fab-item {
-      width: 42px;
-      height: 42px;
+      width: 34px;
+      height: 34px;
       background: rgba(15, 23, 42, 0.92);
       border: 1.2px solid rgba(255, 255, 255, 0.14);
-      border-radius: 12px;
+      border-radius: 9px;
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       cursor: pointer;
@@ -585,7 +584,7 @@
       justify-content: center;
       position: relative;
       transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
       padding: 0;
       color: #f8fafc;
     }
@@ -593,8 +592,8 @@
     .btn-fab-item:hover {
       background: rgba(30, 41, 59, 0.98);
       border-color: rgba(56, 189, 248, 0.6);
-      transform: translateY(-2px) scale(1.04);
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
+      transform: translateY(-1px) scale(1.04);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
     }
 
     .btn-fab-item:active {
@@ -602,26 +601,28 @@
     }
 
     .btn-fab-item .fab-icon {
-      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       line-height: 1;
     }
 
     .btn-fab-item .fab-badge {
       position: absolute;
-      top: -4px;
-      right: -4px;
+      top: -3px;
+      right: -3px;
       background: #38bdf8;
       color: #090d16;
-      font-size: 10px;
+      font-size: 9px;
       font-weight: 800;
-      min-width: 17px;
-      height: 17px;
+      min-width: 14px;
+      height: 14px;
       border-radius: 99px;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 0 4px;
-      border: 1.5px solid #090d16;
+      padding: 0 3px;
+      border: 1.2px solid #090d16;
     }
 
     .btn-fab-item.empty {
@@ -634,12 +635,12 @@
 
     /* Haupt-Button (unten rechts) */
     .btn-fab-main {
-      width: 48px;
-      height: 48px;
+      width: 38px;
+      height: 38px;
       background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
       border: 1.5px solid rgba(56, 189, 248, 0.6);
-      border-radius: 14px;
-      box-shadow: 0 6px 20px rgba(2, 132, 199, 0.4), 0 2px 8px rgba(0, 0, 0, 0.5);
+      border-radius: 11px;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4), 0 2px 6px rgba(0, 0, 0, 0.5);
       color: #ffffff;
       cursor: pointer;
       display: flex;
@@ -652,8 +653,8 @@
 
     .btn-fab-main:hover {
       background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-      transform: translateY(-2px) scale(1.05);
-      box-shadow: 0 8px 24px rgba(2, 132, 199, 0.55), 0 4px 12px rgba(0, 0, 0, 0.6);
+      transform: translateY(-1px) scale(1.05);
+      box-shadow: 0 6px 18px rgba(2, 132, 199, 0.55), 0 3px 8px rgba(0, 0, 0, 0.6);
     }
 
     .btn-fab-main:active {
@@ -663,7 +664,7 @@
     .hud-action-fab-container.open .btn-fab-main {
       background: rgba(30, 41, 59, 0.95);
       border-color: rgba(255, 255, 255, 0.25);
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
     }
 
     .hud-action-fab-container.open .btn-fab-main .icon-action {
@@ -672,6 +673,62 @@
 
     .hud-action-fab-container.open .btn-fab-main .icon-close {
       display: block !important;
+    }
+
+    /* Direkter Fernzündungs-Aktionsbutton (erscheint bei platziertem TNT) */
+    .btn-fab-detonate {
+      height: 38px;
+      padding: 0 12px 0 10px;
+      background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+      border: 1.5px solid rgba(248, 113, 113, 0.7);
+      border-radius: 11px;
+      box-shadow: 0 4px 14px rgba(220, 38, 38, 0.45), 0 2px 6px rgba(0, 0, 0, 0.5);
+      color: #ffffff;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      position: relative;
+      user-select: none;
+      font-size: 11.5px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      animation: pulse-detonate 1.6s infinite ease-in-out;
+    }
+
+    .btn-fab-detonate:hover {
+      background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+      transform: translateY(-1px) scale(1.04);
+      box-shadow: 0 6px 18px rgba(239, 68, 68, 0.6);
+    }
+
+    .btn-fab-detonate:active {
+      transform: translateY(1px) scale(0.96);
+    }
+
+    .btn-fab-detonate .detonate-badge {
+      background: #ffffff;
+      color: #991b1b;
+      font-size: 10px;
+      font-weight: 900;
+      min-width: 16px;
+      height: 16px;
+      border-radius: 99px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+      line-height: 1;
+    }
+
+    @keyframes pulse-detonate {
+      0%, 100% {
+        box-shadow: 0 4px 14px rgba(220, 38, 38, 0.45), 0 0 0 0 rgba(239, 68, 68, 0.5);
+      }
+      50% {
+        box-shadow: 0 4px 18px rgba(220, 38, 38, 0.7), 0 0 0 7px rgba(239, 68, 68, 0);
+      }
     }
 
     .mission-header {
@@ -704,11 +761,17 @@
 
     /* Tactile 3D Buttons - Strict 32px Default Height */
     button, .btn-buy, .btn-action, .btn-3d-secondary, .btn-3d-danger, .btn-3d-success, .tab-btn, .depot-tab-btn, .driller-tab-btn, .guide-tab-btn {
-      outline: none;
-      -webkit-tap-highlight-color: transparent;
+      outline: none !important;
+      -webkit-tap-highlight-color: transparent !important;
       pointer-events: auto !important;
       touch-action: manipulation !important;
       cursor: pointer;
+    }
+
+    button:focus, button:focus-visible, button:active,
+    .register-tab:focus, .register-tab:focus-visible,
+    #building-modal *:focus, #building-modal *:focus-visible {
+      outline: none !important;
     }
 
     button:disabled, .btn-buy:disabled, .btn-action:disabled, .btn-3d-secondary:disabled, .btn-3d-danger:disabled, .btn-3d-success:disabled {
@@ -950,7 +1013,8 @@
     }
 
     /* Tankalarm - Auf das transparente Cockpit-HUD abgestimmt (unter 20% oder Point of No Return) */
-    .fuel-warning #hud-fuel-bar {
+    .fuel-warning #hud-fuel-bar,
+    .fuel-warning #hud-fuel-reserve-bar {
       background: #ef4444 !important;
       animation: fuel-bar-flash 0.8s infinite alternate !important;
     }
@@ -978,20 +1042,34 @@
       animation: fuel-text-flash 0.8s infinite alternate !important;
     }
 
-    /* Roter Strich im Tankbalken zur garantierten Rückkehr (Point of No Return) */
-    .fuel-return-line {
+    /* Dynamische rote Rückkehr-Reserve im Tankbalken */
+    .fuel-return-track {
       position: absolute;
-      top: -3px;
-      bottom: -3px;
-      width: 2.5px;
-      background: #ff2222;
-      z-index: 10;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 0%;
+      background: rgba(239, 68, 68, 0.28);
       pointer-events: none;
-      transform: translateX(-50%);
-      display: none;
-      border-radius: 2px;
-      box-shadow: 0 0 5px rgba(255, 34, 34, 0.95), 0 0 1px #ffffff;
-      transition: left 0.12s ease-out;
+      z-index: 0;
+      transition: width 0.18s ease-out;
+    }
+
+    .bar-fuel-reserve {
+      height: 100%;
+      width: 0%;
+      background: #ef4444;
+      flex-shrink: 0;
+      z-index: 1;
+      border-radius: 0;
+      transition: width 0.18s ease-out;
+      box-shadow: 0 0 5px rgba(239, 68, 68, 0.45);
+    }
+
+    #hud-fuel-bar {
+      border-radius: 0;
+      flex-shrink: 0;
+      z-index: 1;
     }
 
     /* Warnungs-Badge oben rechts: UMKEHREN! */
@@ -1288,13 +1366,14 @@
       }
 
       /* Auf Mobilgeräten niemals verdecken, wenn kein Menü geöffnet ist */
-      body:not(.modal-open) .modal-backdrop,
+      body:not(.modal-open):not(.discovery-modal-open) .modal-backdrop,
       .modal-backdrop[style*="display: none"] {
         display: none !important;
         pointer-events: none !important;
       }
 
-      body.modal-open .modal-backdrop {
+      body.modal-open .modal-backdrop,
+      body.discovery-modal-open .modal-backdrop {
         display: flex !important;
         pointer-events: auto !important;
       }
@@ -1372,8 +1451,14 @@
       }
 
       /* Generelle Paddings & Gaps in Modal-Karten & Boxen */
-      .modal-content > div {
+      .modal-content > div:not(.register-tab-container) {
         gap: 6px !important;
+      }
+      .modal-content > .register-tab-container,
+      .modal-content > div:has(.register-tab-bar),
+      .register-tab-container {
+        gap: 0 !important;
+        row-gap: 0 !important;
       }
       .modal-content div[style*="padding: 12px"] {
         padding: 6px 8px !important;
@@ -1754,6 +1839,126 @@
       }
     }
 
+    /* =======================================================
+       AUTHENTISCHE REGISTER-TABS (FOLDER / REGISTERKARTEN)
+       ======================================================= */
+    .register-tab-container,
+    .modal-content > .register-tab-container,
+    .modal-content > div:has(.register-tab-bar),
+    div:has(> .register-tab-bar) {
+      gap: 0 !important;
+      row-gap: 0 !important;
+    }
+
+    .register-tab-bar {
+      display: flex;
+      flex-wrap: nowrap !important;
+      gap: 4px;
+      border: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      margin-bottom: -1px !important;
+      position: relative;
+      z-index: 5;
+      overflow-x: auto !important;
+      overflow-y: hidden !important;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      line-height: 1 !important;
+      min-height: 36px !important;
+      max-height: 36px !important;
+      height: 36px !important;
+    }
+    .register-tab-bar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .register-tab {
+      position: relative;
+      border-top-left-radius: 8px !important;
+      border-top-right-radius: 8px !important;
+      border-bottom-left-radius: 0 !important;
+      border-bottom-right-radius: 0 !important;
+      margin: 0 !important;
+      margin-bottom: 0 !important;
+      border: none !important;
+      background: rgba(15, 23, 42, 0.45) !important;
+      color: #94a3b8 !important;
+      font-size: 12px !important;
+      font-weight: 600 !important;
+      padding: 0 16px !important;
+      height: 36px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 7px !important;
+      cursor: pointer !important;
+      white-space: nowrap !important;
+      transition: background 0.15s ease, color 0.15s ease !important;
+      box-shadow: none !important;
+      user-select: none !important;
+      transform: none !important;
+      box-sizing: border-box !important;
+    }
+
+    .register-tab:hover:not(.active) {
+      background: rgba(30, 41, 59, 0.7) !important;
+      color: #cbd5e1 !important;
+      border: none !important;
+    }
+
+    .register-tab.active {
+      background: #111a2e !important;
+      color: #ffffff !important;
+      font-weight: 800 !important;
+      border: none !important;
+      outline: none !important;
+      z-index: 10 !important;
+      position: relative !important;
+      height: 36px !important;
+      margin-bottom: 0 !important;
+      box-shadow: none !important;
+    }
+
+    .register-tab:focus, .register-tab:focus-visible {
+      outline: none !important;
+      box-shadow: none !important;
+    }
+
+    .register-tab .tab-badge {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 1.5px 7px;
+      border-radius: 99px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #94a3b8;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.2;
+      border: none !important;
+    }
+
+    .register-tab.active .tab-badge {
+      background: rgba(56, 189, 248, 0.22);
+      color: #38bdf8;
+      border: none !important;
+    }
+
+    .register-tab-panel {
+      background: #111a2e !important;
+      border: none !important;
+      border-radius: 0 12px 12px 12px !important;
+      padding: 14px !important;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+      z-index: 4;
+      margin-top: 0 !important;
+      box-sizing: border-box;
+      width: 100%;
+      box-shadow: none !important;
+    }
+
     /* Pause-Button verwandelt sich im Menü in das Schließen-X */
     body.modal-open #btn-pause #icon-pause-state {
       display: none !important;
@@ -1955,18 +2160,37 @@
     }
 
     .tech-category-card {
-      background: rgba(15, 23, 42, 0.75);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: #090e1a !important;
+      border: 1px solid rgba(255, 255, 255, 0.14) !important;
       border-radius: 12px;
       padding: 12px 14px;
       display: flex;
       flex-direction: column;
       gap: 8px;
-      transition: border-color 0.2s;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+      -webkit-tap-highlight-color: transparent !important;
+      outline: none !important;
+      transform: none !important;
+    }
+    .tech-category-card:focus, .tech-category-card:focus-visible, .tech-category-card:active, .tech-category-card:hover {
+      outline: none !important;
+      transform: none !important;
     }
 
-    .tech-category-card:hover {
-      border-color: rgba(56, 189, 248, 0.3);
+    .depot-ore-card, .depot-goods-card {
+      -webkit-tap-highlight-color: transparent !important;
+      outline: none !important;
+      -webkit-touch-callout: none;
+      user-select: none;
+      transform: none !important;
+    }
+    .depot-ore-card:focus, .depot-goods-card:focus,
+    .depot-ore-card:focus-visible, .depot-goods-card:focus-visible,
+    .depot-ore-card:active, .depot-goods-card:active,
+    .depot-ore-card:hover, .depot-goods-card:hover {
+      outline: none !important;
+      transform: none !important;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
     }
 
     .cat-header-row {
@@ -2423,10 +2647,12 @@
             </span>
           </div>
           <div class="bar-container" id="hud-fuel-bar-container" style="position: relative;" title="Tank & garantierte Rückkehr">
-            <!-- Aktueller Tank-Füllstand -->
+            <!-- Geister-Spur für Rückkehrbedarf (sichtbar bei Unterschreitung) -->
+            <div id="hud-fuel-return-track" class="fuel-return-track"></div>
+            <!-- Roter Reserve-Bereich (zwingend benötigter Rückkehr-Treibstoff) -->
+            <div id="hud-fuel-reserve-bar" class="bar-fill bar-fuel-reserve"></div>
+            <!-- Verbleibender Nutztank (oberhalb der Rückkehrreserve) -->
             <div id="hud-fuel-bar" class="bar-fill bar-fuel"></div>
-            <!-- Roter Strich zur garantierten Rückkehr -->
-            <div id="hud-fuel-return-line" class="fuel-return-line"></div>
           </div>
         </div>
 
@@ -2547,7 +2773,7 @@
         <div class="fab-item-row" id="row-action-geothermal">
           <span class="fab-label" id="label-action-geothermal">Tankanlage</span>
           <button id="btn-action-geothermal" class="btn-fab-item" title="Untertage-Tankanlage hier im Fels zementieren">
-            <span class="fab-icon">⛽</span>
+            <span class="fab-icon" style="color: #f59e0b;"><i data-lucide="fuel" style="width: 17px; height: 17px;"></i></span>
             <span class="fab-badge" id="badge-action-geothermal">0</span>
           </button>
         </div>
@@ -2556,49 +2782,43 @@
         <div class="fab-item-row" id="row-action-pneumatic">
           <span class="fab-label" id="label-action-pneumatic">Erzförderung</span>
           <button id="btn-action-pneumatic" class="btn-fab-item" title="Förderstation hier im Fels zementieren oder Erze absaugen">
-            <span class="fab-icon">🚀</span>
+            <span class="fab-icon" style="color: #38bdf8;"><i data-lucide="conveyor-belt" style="width: 17px; height: 17px;"></i></span>
             <span class="fab-badge" id="badge-action-pneumatic">0</span>
           </button>
         </div>
 
-        <!-- 3. Reparatur-Kit -->
-        <div class="fab-item-row" id="row-action-repair">
-          <span class="fab-label">Reparatur (R)</span>
-          <button id="btn-gadget-repair" class="btn-fab-item" title="Reparatur-Kit nutzen (Taste R oder 3)">
-            <span class="fab-icon">🧰</span>
-            <span class="fab-badge" id="gadget-count-repair">0</span>
-          </button>
-        </div>
-
-        <!-- 4. Notfall-Treibstoff -->
-        <div class="fab-item-row" id="row-action-fuel">
-          <span class="fab-label">Treibstoff (F)</span>
-          <button id="btn-gadget-fuel" class="btn-fab-item" title="Notfall-Treibstoff nutzen (Taste F oder 2)">
-            <span class="fab-icon">⛽</span>
-            <span class="fab-badge" id="gadget-count-fuel">0</span>
-          </button>
-        </div>
-
-        <!-- 5. Dynamit / TNT -->
+        <!-- 3. Dynamit / TNT platzieren -->
         <div class="fab-item-row" id="row-action-dynamite">
           <span class="fab-label">Dynamit (B)</span>
-          <button id="btn-gadget-dynamite" class="btn-fab-item" title="Dynamit / TNT zünden (Taste B, T oder 1)">
-            <span class="fab-icon">🧨</span>
+          <button id="btn-gadget-dynamite" class="btn-fab-item" title="Dynamit im Fels platzieren (Taste B, T oder 1)">
+            <span class="fab-icon" style="color: #ef4444;"><i data-lucide="bomb" style="width: 17px; height: 17px;"></i></span>
             <span class="fab-badge" id="gadget-count-dynamite">0</span>
           </button>
         </div>
       </div>
 
-      <!-- Haupt-Aktionsbutton (unten rechts) -->
-      <button id="btn-action-main" class="btn-fab-main" title="Aktionen & Ausrüstung">
-        <svg class="fab-main-icon icon-action" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
-        </svg>
-        <svg class="fab-main-icon icon-close" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-      </button>
+      <!-- Aktionsleiste unten rechts -->
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <!-- Direkter Fernzündungs-Button: erscheint automatisch, sobald 1+ TNT im Schacht scharf liegt -->
+        <button id="btn-action-detonate" class="btn-fab-detonate" style="display: none;" title="Alle platzierten TNT-Ladungen zünden (Taste Z)">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>
+          </svg>
+          <span style="font-size: 11px; font-weight: 800; letter-spacing: 0.5px;">ZÜNDEN</span>
+          <span class="detonate-badge" id="badge-action-detonate">0</span>
+        </button>
+
+        <!-- Haupt-Aktionsbutton (unten rechts) -->
+        <button id="btn-action-main" class="btn-fab-main" title="Aktionen & Ausrüstung">
+          <svg class="fab-main-icon icon-action" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+          </svg>
+          <svg class="fab-main-icon icon-close" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
     </div>
 
     <!-- Clean Material Modal Dialog -->

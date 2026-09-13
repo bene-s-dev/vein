@@ -29,7 +29,12 @@ const ORE_DESCRIPTIONS = {
 
 export function launchConfetti() {
   let canvas = document.getElementById('confetti-canvas');
-  if (!canvas) {
+  if (canvas) {
+    if (canvas._animId) {
+      cancelAnimationFrame(canvas._animId);
+      canvas._animId = null;
+    }
+  } else {
     canvas = document.createElement('canvas');
     canvas.id = 'confetti-canvas';
     canvas.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 250;';
@@ -59,7 +64,6 @@ export function launchConfetti() {
     });
   }
 
-  let animFrameId;
   const startTime = Date.now();
 
   function render() {
@@ -86,14 +90,17 @@ export function launchConfetti() {
     });
 
     if (elapsed < 3200) {
-      animFrameId = requestAnimationFrame(render);
+      canvas._animId = requestAnimationFrame(render);
     } else {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      cancelAnimationFrame(animFrameId);
+      canvas._animId = null;
+      if (canvas && canvas.parentNode) {
+        canvas.parentNode.removeChild(canvas);
+      }
     }
   }
 
-  render();
+  canvas._animId = requestAnimationFrame(render);
 }
 
 export class HUD {
@@ -116,8 +123,9 @@ export class HUD {
     this.fuelNum = document.getElementById('hud-fuel-num');
     this.fuelMax = document.getElementById('hud-fuel-max');
     this.fuelBar = document.getElementById('hud-fuel-bar');
+    this.fuelReserveBar = document.getElementById('hud-fuel-reserve-bar');
+    this.fuelReturnTrack = document.getElementById('hud-fuel-return-track');
     this.fuelBarContainer = document.getElementById('hud-fuel-bar-container');
-    this.fuelReturnLine = document.getElementById('hud-fuel-return-line');
     this.hullText = document.getElementById('hud-hull-text');
     this.hullNum = document.getElementById('hud-hull-num');
     this.hullMax = document.getElementById('hud-hull-max');
@@ -205,6 +213,11 @@ export class HUD {
     bindActionBtn(this.btnRepair, () => this.player?.useRepairKit());
     bindActionBtn(this.btnActionPneumatic, () => this.scene.baseSystem?.buildPneumaticStationAtPlayer?.());
     bindActionBtn(this.btnActionGeothermal, () => this.scene.baseSystem?.buildGeothermalStationAtPlayer?.());
+
+    // Detonator-Aktionsbutton unten rechts (Fernzündung)
+    this.btnActionDetonate = document.getElementById('btn-action-detonate');
+    this.badgeActionDetonate = document.getElementById('badge-action-detonate');
+    bindActionBtn(this.btnActionDetonate, () => this.scene.detonateAllTnt?.());
 
     // Klick auf Text-Labels löst ebenfalls aus
     const rowDyn = document.getElementById('row-action-dynamite')?.querySelector('.fab-label');
@@ -297,9 +310,10 @@ export class HUD {
       this.showDiscoveryModal(oreType);
     });
 
-    // Neu entdecktes Spezialfeld (Felsbrocken, Kapsel, Fossil, Lava): Info-Popup anzeigen
-    this.scene.events.on('special_tile_discovered', (tileType) => {
-      showSpecialTileInfoModal(tileType, this.scene, true);
+    // Neu entdecktes Spezialfeld (Kapsel, Fossil, Lava, Felsbrocken):
+    // Entdeckungen werden im Bergmann-Buch ('Gesteine & Gefahren') erfasst – ohne Unterbrechung des Spielflusses
+    this.scene.events.on('special_tile_discovered', (_tileType) => {
+      // Keine Unterbrechung/kein Modal/kein Pause während des Bohrens
     });
   }
 
@@ -321,16 +335,28 @@ export class HUD {
     const data = ORE_DATA[oreType];
     if (!data) return;
 
-    soundFx.playPurchase();
-    launchConfetti();
-
-    const desc = ORE_DESCRIPTIONS[oreType] || 'Ein wertvolles Mineral aus den Tiefen des Schachts.';
     const modalEl = document.getElementById('building-modal');
     const titleEl = document.getElementById('modal-title');
     const bodyEl = document.getElementById('modal-body');
     if (!modalEl || !titleEl || !bodyEl) return;
 
-    modalEl.classList.add('discovery-modal-active');
+    soundFx.playPurchase();
+    try {
+      launchConfetti();
+    } catch (e) {}
+
+    const wasAlreadyPaused = Boolean(this.scene?.isPaused);
+    if (!wasAlreadyPaused && this.scene) {
+      this.scene.isPaused = true;
+      soundFx.stopDrive();
+      soundFx.stopDrilling();
+      soundFx.stopJetpack();
+    }
+
+    try {
+      const desc = ORE_DESCRIPTIONS[oreType] || 'Ein wertvolles Mineral aus den Tiefen des Schachts.';
+      modalEl.classList.add('discovery-modal-active');
+    document.body.classList.add('modal-open');
     document.body.classList.add('discovery-modal-open');
 
     titleEl.innerHTML = '';
@@ -383,11 +409,22 @@ export class HUD {
         }
         modalEl.classList.remove('discovery-modal-active');
         document.body.classList.remove('discovery-modal-open');
+        document.body.classList.remove('modal-open');
         modalEl.style.display = 'none';
+        if (!wasAlreadyPaused && this.scene) {
+          this.scene.isPaused = false;
+        }
         notifyModalClosed();
       };
     }
+  } catch (err) {
+    console.error('Error in showDiscoveryModal:', err);
+    if (!wasAlreadyPaused && this.scene) {
+      this.scene.isPaused = false;
+    }
+    modalEl.style.display = 'none';
   }
+}
 
   updateMissionWidget(info) {
     if (!info) return;
@@ -412,15 +449,40 @@ export class HUD {
     const isBelowGround = !isAtSurface && (this.player.gy >= 0 || currentY >= 8);
 
     // Treibstoff & dynamische Rückkehr-Schwelle
-    const fuelPercent = Math.max(0, (this.player.fuel / this.player.maxFuel) * 100);
+    const fuelPercent = Math.max(0, Math.min(100, (this.player.fuel / this.player.maxFuel) * 100));
     const returnPercent = this.player.getReturnFuelPercent ? this.player.getReturnFuelPercent() : 0;
 
-    if (this.fuelBar) {
-      if (this._lastFuelPercent === undefined || Math.abs(this._lastFuelPercent - fuelPercent) >= 0.15) {
-        this._lastFuelPercent = fuelPercent;
-        this.fuelBar.style.width = `${fuelPercent.toFixed(1)}%`;
+    // Rückkehr-Schwelle inkl. Sicherheitspuffer zur rechtzeitigen Umkehr (nur unter Tage aktiv)
+    const safetyBuffer = 3.0; // 3% Sicherheitspuffer
+    const effectiveReturnThreshold = isBelowGround ? Math.min(100, Math.max(0, returnPercent + safetyBuffer)) : 0;
+
+    const reserveWidth = Math.min(fuelPercent, effectiveReturnThreshold);
+    const usableWidth = Math.max(0, fuelPercent - effectiveReturnThreshold);
+
+    if (this.fuelReserveBar) {
+      const rwStr = `${reserveWidth.toFixed(1)}%`;
+      if (this._lastReserveWidth !== rwStr) {
+        this._lastReserveWidth = rwStr;
+        this.fuelReserveBar.style.width = rwStr;
       }
     }
+
+    if (this.fuelBar) {
+      const uwStr = `${usableWidth.toFixed(1)}%`;
+      if (this._lastUsableWidth !== uwStr) {
+        this._lastUsableWidth = uwStr;
+        this.fuelBar.style.width = uwStr;
+      }
+    }
+
+    if (this.fuelReturnTrack) {
+      const rtStr = `${effectiveReturnThreshold.toFixed(1)}%`;
+      if (this._lastReturnTrackWidth !== rtStr) {
+        this._lastReturnTrackWidth = rtStr;
+        this.fuelReturnTrack.style.width = rtStr;
+      }
+    }
+
     const roundedFuelPct = Math.round(fuelPercent);
     if (this.fuelNum) {
       if (this._lastFuel !== roundedFuelPct) {
@@ -434,22 +496,6 @@ export class HUD {
       }
     }
 
-    // Rückkehr-Schwelle inkl. Sicherheitspuffer zur rechtzeitigen Umkehr
-    const safetyBuffer = 3.0; // 3% Sicherheitspuffer
-    const effectiveReturnThreshold = returnPercent + safetyBuffer;
-
-    // Rückkehr-Nadel auf dem Tankbalken (stets sichtbar, dynamisch angepasst)
-    if (this.fuelReturnLine) {
-      const displayPct = Math.min(98, Math.max(2.5, effectiveReturnThreshold));
-      const pct = displayPct.toFixed(1);
-      if (!this._lastReturnLineVisible || this._lastReturnPercent !== pct) {
-        this.fuelReturnLine.style.display = 'block';
-        this.fuelReturnLine.style.left = `${pct}%`;
-        this._lastReturnLineVisible = true;
-        this._lastReturnPercent = pct;
-      }
-    }
-
     if (this.fuelBarContainer) {
       const curFuel = Math.round(this.player.fuel);
       const maxFuel = Math.round(this.player.maxFuel);
@@ -459,7 +505,9 @@ export class HUD {
       if (this._lastFuelTitleFuel !== curFuel || this._lastFuelTitleReturn !== roundedReturn) {
         this._lastFuelTitleFuel = curFuel;
         this._lastFuelTitleReturn = roundedReturn;
-        this.fuelBarContainer.title = `Tank: ${curFuel}/${maxFuel}L (${fuelPct}%) | Rückkehr-Bedarf: ${returnCost}L (${roundedReturn}%)`;
+        this.fuelBarContainer.title = isBelowGround
+          ? `Tank: ${curFuel}/${maxFuel}L (${fuelPct}%) | Rückkehr-Bedarf (rot): ${returnCost}L (${roundedReturn}%)`
+          : `Tank: ${curFuel}/${maxFuel}L (${fuelPct}%)`;
       }
     }
 
@@ -514,20 +562,20 @@ export class HUD {
           if (nearby && (nearby.type === 'pneumatic' || nearby.type === 'tube')) {
             const rawOresCount = (this.player.cargo || []).filter(item => !String(item).startsWith('bar_')).length;
             if (rawOresCount > 0) {
-              this.labelActionPneumatic.textContent = `Erze absaugen (${rawOresCount}x)`;
+              this.labelActionPneumatic.textContent = 'Erze absaugen';
               if (this.badgeActionPneumatic) {
                 this.badgeActionPneumatic.textContent = rawOresCount;
                 this.badgeActionPneumatic.style.display = 'flex';
               }
             } else {
-              this.labelActionPneumatic.textContent = 'Rohrpost bereit (leer)';
+              this.labelActionPneumatic.textContent = 'Rohrpost bereit';
               if (this.badgeActionPneumatic) {
                 this.badgeActionPneumatic.textContent = '0';
                 this.badgeActionPneumatic.style.display = 'flex';
               }
             }
           } else {
-            this.labelActionPneumatic.textContent = tubeCount > 0 ? `Erzförderung (${tubeCount}x)` : 'Erzförderung (Kein Modul)';
+            this.labelActionPneumatic.textContent = 'Erzförderung';
             if (this.badgeActionPneumatic) {
               this.badgeActionPneumatic.textContent = tubeCount;
               this.badgeActionPneumatic.style.display = 'flex';
@@ -543,13 +591,13 @@ export class HUD {
         if (this.labelActionGeothermal) {
           if (nearby && (nearby.type === 'fuel' || nearby.type === 'geothermal')) {
             const pct = Math.round((this.player.fuel / this.player.maxFuel) * 100);
-            this.labelActionGeothermal.textContent = `⛽ Tankanlage aktiv (${pct}%)`;
+            this.labelActionGeothermal.textContent = `Tankanlage (${pct}%)`;
             if (this.badgeActionGeothermal) {
               this.badgeActionGeothermal.textContent = pct + '%';
               this.badgeActionGeothermal.style.display = 'flex';
             }
           } else {
-            this.labelActionGeothermal.textContent = fuelCount > 0 ? `Tankanlage (${fuelCount}x)` : 'Tankanlage (Kein Modul)';
+            this.labelActionGeothermal.textContent = 'Tankanlage';
             if (this.badgeActionGeothermal) {
               this.badgeActionGeothermal.textContent = fuelCount;
               this.badgeActionGeothermal.style.display = 'flex';
@@ -561,6 +609,19 @@ export class HUD {
           }
         }
       }
+
+      // 3. Detonator-Aktionsbutton (erscheint sobald 1+ TNT im Schacht scharf liegt)
+      const placedTntCount = (this.scene.placedTnt || []).length;
+      if (this.btnActionDetonate) {
+        if (placedTntCount > 0 && isBelowGround) {
+          this.btnActionDetonate.style.display = 'inline-flex';
+          if (this.badgeActionDetonate) this.badgeActionDetonate.textContent = placedTntCount;
+        } else {
+          this.btnActionDetonate.style.display = 'none';
+        }
+      }
+    } else {
+      if (this.btnActionDetonate) this.btnActionDetonate.style.display = 'none';
     }
 
     // Rückkehr-Status (Kritisch: aktueller Tank erreicht die Rückkehr-Schwelle inkl. Puffer)
@@ -748,7 +809,7 @@ export class HUD {
           <span style="color: #38bdf8; display: inline-flex;">${icon('settings', '', 18)}</span>
           <div style="display: flex; flex-direction: column; text-align: left; line-height: 1.2;">
             <span style="color: #f8fafc; font-weight: 700;">Einstellungen</span>
-            <span style="color: #64748b; font-size: 10.5px; font-weight: 500;">Sound, Vollbild & Spielstand</span>
+            <span style="color: #cbd5e1; font-size: 10.5px; font-weight: 500;">Sound, Vollbild & Spielstand</span>
           </div>
         </button>
 
@@ -757,7 +818,7 @@ export class HUD {
           <span style="color: #fbbf24; display: inline-flex;">${icon('book-open', '', 18)}</span>
           <div style="display: flex; flex-direction: column; text-align: left; line-height: 1.2;">
             <span style="color: #f8fafc; font-weight: 700;">Bergmann-Buch</span>
-            <span style="color: #64748b; font-size: 10.5px; font-weight: 500;">Schacht-Logbuch, entdeckte Erze & Schichten</span>
+            <span style="color: #cbd5e1; font-size: 10.5px; font-weight: 500;">Schacht-Logbuch, entdeckte Erze & Schichten</span>
           </div>
         </button>
 
@@ -766,7 +827,7 @@ export class HUD {
           <span style="color: #10b981; display: inline-flex;">${icon('save', '', 18)}</span>
           <div style="display: flex; flex-direction: column; text-align: left; line-height: 1.2;">
             <span style="color: #f8fafc; font-weight: 700;">Spielstand speichern</span>
-            <span style="color: #64748b; font-size: 10.5px; font-weight: 500;">Fortschritt jetzt im Speicher sichern</span>
+            <span style="color: #cbd5e1; font-size: 10.5px; font-weight: 500;">Fortschritt jetzt im Speicher sichern</span>
           </div>
         </button>
       </div>
@@ -1239,22 +1300,7 @@ export class HUD {
     ];
 
     const tabButtonsHtml = tabs.map(t => `
-      <button class="guide-tab-btn ${activeTab === t.id ? 'active' : ''}" data-tab="${t.id}" style="
-        flex: 1;
-        height: 32px;
-        font-size: 11px;
-        font-weight: 700;
-        border-radius: 8px;
-        border: none;
-        background: ${activeTab === t.id ? 'linear-gradient(180deg, #0284c7 0%, #0369a1 100%)' : 'rgba(30, 41, 59, 0.5)'};
-        color: ${activeTab === t.id ? '#ffffff' : '#94a3b8'};
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 5px;
-        transition: all 0.15s ease;
-      ">
+      <button class="register-tab guide-tab-btn ${activeTab === t.id ? 'active' : ''}" data-tab="${t.id}">
         ${icon(t.icon, '', 13)}
         <span>${t.label}</span>
       </button>
@@ -1316,23 +1362,23 @@ export class HUD {
             <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">Auftragszentrale. Erfülle Missionen (z. B. Erze abbauen oder Ziel-Tiefen erreichen) für hohes Extra-Guthaben und Level-Aufstiege.</div>
           </div>
           <div style="background: rgba(15, 23, 42, 0.65); border: none; border-radius: 10px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">
-            <div style="font-size: 12px; font-weight: 700; color: #fbbf24; margin-bottom: 2px;">💰 Erzbörse</div>
+            <div style="font-size: 12px; font-weight: 700; color: #fbbf24; margin-bottom: 2px; display: flex; align-items: center; gap: 5px;">${icon('coins', '', 14)} Erzbörse</div>
             <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">Verkaufe geförderte Rohstoffe und Fabrik-Erzeugnisse. Bietet freie Mengenauswahl und Sofort-Verkauf aller Erze.</div>
           </div>
           <div style="background: rgba(15, 23, 42, 0.65); border: none; border-radius: 10px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">
-            <div style="font-size: 12px; font-weight: 700; color: #34d399; margin-bottom: 2px;">🔧 Hangar (Crawler-Werkstatt)</div>
+            <div style="font-size: 12px; font-weight: 700; color: #34d399; margin-bottom: 2px; display: flex; align-items: center; gap: 5px;">${icon('wrench', '', 14)} Hangar (Crawler-Werkstatt)</div>
             <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">Tuning deines Bohrers, Treibstoff-Tanks, Frachtraums, Antriebs und Gehäuseschutzes. Automatisches Auftanken per Tankkabel an der Plattform.</div>
           </div>
           <div style="background: rgba(15, 23, 42, 0.65); border: none; border-radius: 10px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">
-            <div style="font-size: 12px; font-weight: 700; color: #fb923c; margin-bottom: 2px;">🔥 Fabrik & Raffinerie</div>
+            <div style="font-size: 12px; font-weight: 700; color: #fb923c; margin-bottom: 2px; display: flex; align-items: center; gap: 5px;">${icon('factory', '', 14)} Fabrik & Raffinerie</div>
             <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">Schmelze Roherze zu Barren (+50% Erlös) oder kombiniere Erze zu High-Tech-Industriewaren wie Stahlträgern, Bronze und Platinen.</div>
           </div>
           <div style="background: rgba(15, 23, 42, 0.65); border: none; border-radius: 10px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">
-            <div style="font-size: 12px; font-weight: 700; color: #c084fc; margin-bottom: 2px;">🔬 Labor</div>
+            <div style="font-size: 12px; font-weight: 700; color: #c084fc; margin-bottom: 2px; display: flex; align-items: center; gap: 5px;">${icon('microscope', '', 14)} Labor</div>
             <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">High-Tech Forschung. Schalte modernste Bohrköpfe und Sensor-Upgrades frei, um Erze durch Gestein hindurch aufzuspüren.</div>
           </div>
           <div style="background: rgba(15, 23, 42, 0.65); border: none; border-radius: 10px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">
-            <div style="font-size: 12px; font-weight: 700; color: #e2e8f0; margin-bottom: 2px;">🏠 Schachteinstieg & Steineforscher</div>
+            <div style="font-size: 12px; font-weight: 700; color: #e2e8f0; margin-bottom: 2px; display: flex; align-items: center; gap: 5px;">${icon('home', '', 14)} Schachteinstieg & Steineforscher</div>
             <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">Die restliche Oberfläche ist unzerstörbar – der Schachteinstieg führt nach unten. Der Steineforscher am Hangar sucht seltene Gesteinsproben für wertvolle Bauteile.</div>
           </div>
         </div>
@@ -1364,15 +1410,15 @@ export class HUD {
       contentHtml = `
         <div style="display: flex; flex-direction: column; gap: 8px;">
           <div style="background: rgba(15, 23, 42, 0.65); border: none; border-radius: 10px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">
-            <div style="font-size: 12px; font-weight: 700; color: #10b981; margin-bottom: 2px;">⛽ Treibstoff & Betankung</div>
+            <div style="font-size: 12px; font-weight: 700; color: #10b981; margin-bottom: 2px; display: flex; align-items: center; gap: 5px;">${icon('fuel', '', 14)} Treibstoff & Betankung</div>
             <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">Fahren, Steigflug und insbesondere das Bohren durch Gestein verbrauchen Treibstoff. Parke an der Hangar-Plattform an der Oberfläche – das Tankkabel füllt deinen Tank kostenlos auf.</div>
           </div>
           <div style="background: rgba(15, 23, 42, 0.65); border: none; border-radius: 10px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">
-            <div style="font-size: 12px; font-weight: 700; color: #38bdf8; margin-bottom: 2px;">🚀 Jetpack-Nutzung</div>
+            <div style="font-size: 12px; font-weight: 700; color: #38bdf8; margin-bottom: 2px; display: flex; align-items: center; gap: 5px;">${icon('wind', '', 14)} Steigflug & Schubdüsen</div>
             <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">Halte <strong>W</strong> oder <strong>↑</strong> gedrückt, um mit dem Triebwerk aufzusteigen. Der Aufstieg verbraucht Treibstoff – plane deine Rückkehr rechtzeitig!</div>
           </div>
           <div style="background: rgba(15, 23, 42, 0.65); border: none; border-radius: 10px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">
-            <div style="font-size: 12px; font-weight: 700; color: #f87171; margin-bottom: 2px;">🚨 3 Kostenlose Notfall-Rettungen</div>
+            <div style="font-size: 12px; font-weight: 700; color: #f87171; margin-bottom: 2px; display: flex; align-items: center; gap: 5px;">${icon('shield-alert', '', 14)} 3 Kostenlose Notfall-Rettungen</div>
             <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">Wenn dein Tank tief unten leer wird oder du festsitzt, öffne das Spielmenü und nutze die Notfall-Rettung. Die ersten 3 Rettungen sind gratis!</div>
           </div>
         </div>
@@ -1386,12 +1432,13 @@ export class HUD {
           <span>Zurück zum Spielmenü</span>
         </button>
 
-        <div style="display: flex; gap: 6px;">
-          ${tabButtonsHtml}
-        </div>
-
-        <div>
-          ${contentHtml}
+        <div class="register-tab-container" style="display: flex; flex-direction: column; width: 100%; gap: 0 !important; row-gap: 0 !important;">
+          <div class="register-tab-bar" style="width: 100%;">
+            ${tabButtonsHtml}
+          </div>
+          <div class="register-tab-panel">
+            ${contentHtml}
+          </div>
         </div>
       </div>
     `;

@@ -246,7 +246,7 @@ export class Player {
     };
 
     // Im Labor erforschte Technologien für Ausrüstung & Infrastruktur
-    this.researchedTnt = 0; // Sprengtechnik & TNT (Stufe 0..1)
+    this.researchedTnt = 0; // Sprengtechnik & TNT (Stufe 0..7: 3x3 bis 9x9)
     this.researchedEmergency = 0; // Notfallausrüstung (Kanister & Rep.-Kit, Stufe 0..1)
     this.researchedStationFuel = 0; // Untertage-Tankanlagen (Stufe 0..3)
     this.researchedStationTube = 0; // Untertage-Förderschächte (Stufe 0..3)
@@ -629,8 +629,17 @@ export class Player {
     return true;
   }
 
+  getTntBlastSize() {
+    const tier = Math.max(1, Math.min(7, this.researchedTnt || 1));
+    return 2 + tier; // Tier 1 -> 3x3, Tier 2 -> 4x4, Tier 3 -> 5x5, Tier 4 -> 6x6, Tier 5 -> 7x7, Tier 6 -> 8x8, Tier 7 -> 9x9
+  }
+
   useDynamite() {
     return this.scene?.useDynamite?.();
+  }
+
+  detonateAllTnt() {
+    return this.scene?.detonateAllTnt?.();
   }
 
   useFuelCanister() {
@@ -1847,7 +1856,9 @@ export class Player {
     // Entdeckungs-Event beim allerersten Fund
     if (this.discoveredOres && !this.discoveredOres.has(oreType)) {
       this.discoveredOres.add(oreType);
-      this.scene.events.emit('ore_discovered', oreType);
+      if (!this.scene?.isRestoringState) {
+        this.scene.events.emit('ore_discovered', oreType);
+      }
     }
   }
 
@@ -1935,7 +1946,7 @@ export class Player {
     if (!this.discoveredProducts) this.discoveredProducts = new Set();
     if (!this.discoveredProducts.has(prodId)) {
       this.discoveredProducts.add(prodId);
-      if (this.scene && this.scene.events) {
+      if (!this.scene?.isRestoringState && this.scene && this.scene.events) {
         this.scene.events.emit('product_discovered', prodId);
       }
     }
@@ -1945,7 +1956,7 @@ export class Player {
     if (!this.discoveredSpecialTiles) this.discoveredSpecialTiles = new Set();
     if (this.discoveredSpecialTiles.has(type)) return false;
     this.discoveredSpecialTiles.add(type);
-    if (this.scene && this.scene.events) {
+    if (!this.scene?.isRestoringState && this.scene && this.scene.events) {
       this.scene.events.emit('special_tile_discovered', type);
     }
     return true;

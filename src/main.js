@@ -137,7 +137,14 @@ function initModalObserver() {
   }
 }
 
-function initGame() {
+async function initGame() {
+  if (typeof document !== 'undefined' && document.fonts && document.fonts.ready) {
+    try {
+      await document.fonts.ready;
+    } catch (e) {
+      console.warn('Font loading check error:', e);
+    }
+  }
   refreshIcons();
   shieldUiElements();
   initModalObserver();
@@ -145,7 +152,8 @@ function initGame() {
 }
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initGame);
+  document.addEventListener('DOMContentLoaded', () => { initGame(); });
 } else {
   initGame();
 }
+

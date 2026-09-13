@@ -6,11 +6,32 @@ import { createIcons, icons } from 'lucide';
  * Ersetzt alle Emojis durch gestochen scharfe, moderne SVG-Vektoricons.
  */
 
+// Zusätzliche branchenspezifische Industrie-Icons (Förderband für Erzförderung)
+const extendedIcons = {
+  ...icons,
+  ConveyorBelt: [
+    ['path', { d: 'M4 14h16a3 3 0 0 1 0 6H4a3 3 0 0 1 0-6Z' }],
+    ['circle', { cx: '5', cy: '17', r: '1.2' }],
+    ['circle', { cx: '12', cy: '17', r: '1.2' }],
+    ['circle', { cx: '19', cy: '17', r: '1.2' }],
+    ['rect', { x: '6', y: '6', width: '5', height: '8', rx: '1' }],
+    ['rect', { x: '13', y: '6', width: '5', height: '8', rx: '1' }]
+  ],
+  Conveyor: [
+    ['path', { d: 'M4 14h16a3 3 0 0 1 0 6H4a3 3 0 0 1 0-6Z' }],
+    ['circle', { cx: '5', cy: '17', r: '1.2' }],
+    ['circle', { cx: '12', cy: '17', r: '1.2' }],
+    ['circle', { cx: '19', cy: '17', r: '1.2' }],
+    ['rect', { x: '6', y: '6', width: '5', height: '8', rx: '1' }],
+    ['rect', { x: '13', y: '6', width: '5', height: '8', rx: '1' }]
+  ]
+};
+
 export function refreshIcons(root = document) {
   if (typeof document === 'undefined') return;
   try {
     createIcons({
-      icons,
+      icons: extendedIcons,
       nameAttr: 'data-lucide',
       attrs: {
         'stroke-width': '2.2',
