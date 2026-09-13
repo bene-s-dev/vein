@@ -746,7 +746,6 @@ export class GridSystem {
             fallingSprite.hasHitPlayer = true;
             player.takeDamage(25);
             this.scene.cameras.main.shake(200, 0.02);
-            this.scene.hud?.showToast('⚠️ Achtung! Geröllsturz trifft Driller! (-25 HP)', 'danger');
           }
         }
       },
@@ -823,7 +822,6 @@ export class GridSystem {
     }
     this.activeSprites.clear();
     this.neededKeys.clear();
-    if (this.destroyedTiles) this.destroyedTiles.clear();
     this.lastCamX = null;
     this.lastCamY = null;
     this.lastPlayerX = null;
@@ -837,29 +835,45 @@ export class GridSystem {
     const pX = player ? player.sprite.x : 0;
     const pY = player ? player.sprite.y : 0;
 
+    let viewX = camView.x;
+    let viewY = camView.y;
+    let viewW = camView.width;
+    let viewH = camView.height;
+
+    // Robuster Fallback, falls worldView noch nicht final berechnet wurde (z.B. erster Frame auf Mobile)
+    if (viewW <= 32 || viewH <= 32) {
+      const zoom = Math.max(0.5, camera.zoom || 1);
+      const screenW = Math.max(camera.width || 0, window.innerWidth || 0, 800);
+      const screenH = Math.max(camera.height || 0, window.innerHeight || 0, 600);
+      viewW = screenW / zoom;
+      viewH = screenH / zoom;
+      viewX = pX - viewW / 2;
+      viewY = pY - viewH / 2;
+    }
+
     const viewThresholdSq = 16 * 16; // 16px (halbe Kachel) Bewegungsschwelle
-    const camDistSq = this.lastCamX !== null ? ((camView.x - this.lastCamX) ** 2 + (camView.y - this.lastCamY) ** 2) : 99999;
+    const camDistSq = this.lastCamX !== null ? ((viewX - this.lastCamX) ** 2 + (viewY - this.lastCamY) ** 2) : 99999;
     const playerDistSq = this.lastPlayerX !== null ? ((pX - this.lastPlayerX) ** 2 + (pY - this.lastPlayerY) ** 2) : 99999;
-    const sizeChanged = camView.width !== this.lastCamW || camView.height !== this.lastCamH;
+    const sizeChanged = viewW !== this.lastCamW || viewH !== this.lastCamH;
 
     // Nur überspringen, wenn Schwellenwert nicht erreicht und Nebel sauber ist
     if (this.lastCamX !== null && !this.fogDirty && !sizeChanged && camDistSq < viewThresholdSq && playerDistSq < viewThresholdSq) {
       return;
     }
 
-    this.lastCamX = camView.x;
-    this.lastCamY = camView.y;
-    this.lastCamW = camView.width;
-    this.lastCamH = camView.height;
+    this.lastCamX = viewX;
+    this.lastCamY = viewY;
+    this.lastCamW = viewW;
+    this.lastCamH = viewH;
     this.lastPlayerX = pX;
     this.lastPlayerY = pY;
 
     const margin = 10;
-    const startCol = Math.floor(camView.x / TILE_SIZE) - margin;
-    const endCol = Math.ceil((camView.x + camView.width) / TILE_SIZE) + margin;
+    const startCol = Math.floor(viewX / TILE_SIZE) - margin;
+    const endCol = Math.ceil((viewX + viewW) / TILE_SIZE) + margin;
 
-    const startRow = Math.max(0, Math.floor(camView.y / TILE_SIZE) - margin);
-    const endRow = Math.ceil((camView.y + camView.height) / TILE_SIZE) + margin;
+    const startRow = Math.max(0, Math.floor(viewY / TILE_SIZE) - margin);
+    const endRow = Math.ceil((viewY + viewH) / TILE_SIZE) + margin;
 
     this.neededKeys.clear();
     const sensorRadTiles = player ? player.sensorRadius : 3.5;
@@ -989,7 +1003,7 @@ export class GridSystem {
     // Pufferung im World-Space: Canvas wird nur neu gezeichnet & zur GPU geladen,
     // wenn neue Kacheln aufgedeckt wurden oder die Kamera den Puffer verlässt!
     // ------------------------------------------------------------------
-    if (camView.y + camView.height <= 0) {
+    if (viewY + viewH <= 0) {
       // Komplett im Himmel: Nebel unsichtbar schalten
       if (this.fogImage.visible) this.fogImage.setVisible(false);
     } else {
@@ -997,10 +1011,10 @@ export class GridSystem {
       const PAD_Y = 256;
       const SAFETY = 96;
 
-      const viewLeft = camView.x;
-      const viewRight = camView.x + camView.width;
-      const viewTop = Math.max(0, camView.y);
-      const viewBottom = camView.y + camView.height;
+      const viewLeft = viewX;
+      const viewRight = viewX + viewW;
+      const viewTop = Math.max(0, viewY);
+      const viewBottom = viewY + viewH;
 
       const inBuffer = this.fogBufferReady &&
         this.fogBufferX <= (viewLeft - SAFETY) &&
@@ -1011,7 +1025,7 @@ export class GridSystem {
       if (!inBuffer || this.fogDirty || !this.fogImage.visible) {
         // Neu puffern & rendern
         const bufferX = Math.floor((viewLeft - PAD_X) / 64) * 64;
-        const bufferW = Math.ceil((camView.width + PAD_X * 2) / 128) * 128;
+        const bufferW = Math.ceil((viewW + PAD_X * 2) / 128) * 128;
         const bufferY = Math.max(0, Math.floor((viewTop - PAD_Y) / 64) * 64);
         const rawBottom = viewBottom + PAD_Y;
         const bufferH = Math.ceil(Math.max(128, rawBottom - bufferY) / 128) * 128;
@@ -1061,8 +1075,9 @@ export class GridSystem {
           for (let x = carveStartCol; x <= carveEndCol; x++) {
             const key = `${x},${y}`;
             const isExplored = this.exploredTiles && this.exploredTiles.has(key);
+            const isDestroyed = this.destroyedTiles && this.destroyedTiles.has(key);
             const tile = this.tiles.get(key);
-            if (isExplored || (tile && (tile.explored || tile.type === TILE_TYPES.EMPTY))) {
+            if (isExplored || isDestroyed || (tile && (tile.explored || tile.type === TILE_TYPES.EMPTY))) {
               const cx = x * TILE_SIZE - bufferX;
               const cy = y * TILE_SIZE - bufferY;
               ctx.fillRect(cx - 1, cy - 1, TILE_SIZE + 2, TILE_SIZE + 2);

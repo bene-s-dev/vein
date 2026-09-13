@@ -7,7 +7,7 @@
 import Phaser from 'phaser';
 import { TILE_SIZE, ORE_DATA } from './GridSystem.js';
 import { soundFx } from './SoundEffects.js';
-import { FACTORY_PRODUCTS, GEOLOGIST_QUESTS, getRefinedOreNetValue, isModalActive, HANGAR_TIERS } from './BaseSystem.js';
+import { FACTORY_PRODUCTS, GEOLOGIST_QUESTS, getRefinedOreNetValue, isModalActive, HANGAR_TIERS, DRILL_DPS, DRILL_TIERS } from './BaseSystem.js';
 
 export const PLAYER_STATES = {
   IDLE: 'idle',
@@ -108,9 +108,11 @@ export class Player {
     this.x = this.gx * TILE_SIZE + TILE_SIZE / 2;
     this.y = this.gy * TILE_SIZE + TILE_SIZE / 2;
 
-    // Sprite mit Start-Textur (nach rechts schauend)
+    // Bohrkopf-Stufe (Standard: 1 = Meißel) & Ausrichtung
+    this.drillTier = 1;
     this.currentDirection = 'RIGHT';
-    this.sprite = scene.add.image(this.x, this.y, 'player_drill_right')
+    this.lastHorizontalDirection = 'RIGHT';
+    this.sprite = scene.add.image(this.x, this.y, this.getDrillTextureKey())
       .setDepth(10)
       .setOrigin(0.5, 0.5)
       .setInteractive({
@@ -202,6 +204,7 @@ export class Player {
 
     this.maxHull = 50;
     this.hull = 50;
+    this._hullBrokenToastShown = false;
     this.hullTier = 1;
     this.researchedHullTier = 1; // Im Labor erforschter Bauplan (Montage im Hangar erforderlich)
 
@@ -429,6 +432,10 @@ export class Player {
   update(delta, inputDir) {
     this.lastInputDir = inputDir;
 
+    if (this.hull > 0) {
+      this._hullBrokenToastShown = false;
+    }
+
     this.syncAttachments();
 
     if (this.state === PLAYER_STATES.FLYING) {
@@ -584,6 +591,52 @@ export class Player {
   getCargoData() {
     const tier = Math.max(1, Math.min(CARGO_TIERS.length, this.cargoTier || 1));
     return CARGO_TIERS[tier - 1];
+  }
+
+  getDrillData() {
+    const tier = Math.max(1, Math.min(DRILL_TIERS.length, this.drillTier || 1));
+    return DRILL_TIERS[tier - 1];
+  }
+
+  getDrillTextureKey(frame = null, isTrackFrame = false) {
+    const tier = Math.max(1, Math.min(10, this.drillTier || 1));
+    const dir = (this.currentDirection || 'RIGHT').toLowerCase();
+    const hDir = (this.lastHorizontalDirection || 'RIGHT').toLowerCase();
+
+    if (isTrackFrame && frame !== null && frame !== undefined) {
+      if (dir === 'down' || dir === 'up') {
+        const hKey = `player_drill_t${tier}_${dir}_${hDir}_track_${frame}`;
+        if (this.scene?.textures?.exists(hKey)) return hKey;
+      }
+      const key = `player_drill_t${tier}_${dir}_track_${frame}`;
+      if (this.scene?.textures?.exists(key)) return key;
+      return `player_drill_${dir}_track_${frame}`;
+    }
+
+    if (dir === 'down' || dir === 'up') {
+      const hKey = (frame !== null && frame !== undefined)
+        ? `player_drill_t${tier}_${dir}_${hDir}_${frame}`
+        : `player_drill_t${tier}_${dir}_${hDir}`;
+      if (this.scene?.textures?.exists(hKey)) return hKey;
+    }
+
+    const key = (frame !== null && frame !== undefined)
+      ? `player_drill_t${tier}_${dir}_${frame}`
+      : `player_drill_t${tier}_${dir}`;
+    if (this.scene?.textures?.exists(key)) return key;
+    return `player_drill_${dir}${frame !== null && frame !== undefined ? `_${frame}` : ''}`;
+  }
+
+  updateDrillTexture(frame = null, isTrackFrame = false) {
+    if (!this.sprite) return;
+    const key = this.getDrillTextureKey(frame, isTrackFrame);
+    this.sprite.setTexture(key);
+  }
+
+  upgradeDrill(tier) {
+    this.drillTier = Math.max(1, Math.min(10, tier || 1));
+    this.drillPower = DRILL_DPS[this.drillTier - 1] || 38;
+    this.updateDrillTexture();
   }
 
   upgradeCargo(tier) {
@@ -744,8 +797,8 @@ export class Player {
         }
       }
 
-      // Betankung über Kabel am Hangar
-      const isFuelReady = isParkedAtHangar && this.fuelArmState && this.fuelArmState.activeWeight > 0.8;
+      // Betankung über Kabel am Hangar (erst wenn die Düse physisch am Fahrzeug eingerastet ist)
+      const isFuelReady = isParkedAtHangar && this.fuelArmState && this.fuelArmState.isDockedOnVehicle;
       const chargeSpeed = this.getChargeSpeed();
       const wasFuelFull = this.fuel >= this.maxFuel;
 
@@ -838,16 +891,50 @@ export class Player {
   updateFuelArm(shouldDeploy, delta, customPumpBase = null) {
     if (!this.refuelBeam) return;
 
-    // Tanksäulen-Sockel an der Hangar-Bucht links (x=444, y=-28) oder Untertage-Tankanlage
-    const pumpBaseX = customPumpBase ? customPumpBase.x : (15 * TILE_SIZE - 36);
-    const pumpBaseY = customPumpBase ? customPumpBase.y : -28;
+    // Oberflächen-Prüfung: Arme bleiben an der Oberfläche immer am Hangar sichtbar,
+    // solange die Oberfläche im Blickfeld der Kamera ist (cam.worldView.top <= 0) oder der Spieler an der Oberfläche ist.
+    const cam = this.scene?.cameras?.main;
+    const isSurfaceInView = (this.gy <= 6) || (cam && cam.worldView && cam.worldView.top <= 10);
+    if (!isSurfaceInView && !customPumpBase) {
+      if (this.fuelArmState) {
+        this.fuelArmState.activeWeight = 0;
+        this.fuelArmState.isParkedDrawn = true;
+      }
+      this.refuelBeam.clear();
+      return;
+    }
+
+    // Sockelkoordinaten exakt an die Hangar-Ausbaustufe anpassen:
+    // Hangar steht bei gx = 15 (x = 480, Origin 0.5, 1.0 bei y=0).
+    // Tier 1 (64x42):
+    //   -> Zapfsockel links bei x=460, y=-36 (auf Galgenhöhe, weit über dem Boden y=0)
+    //   -> Schweißarmsockel rechts bei x=498, y=-38
+    // Tier 2-4 (88x56):
+    //   -> Tanksäule links bei x=452, y=-46
+    //   -> Reparaturarm rechts bei x=508, y=-50
+    // Tier 5+ (112x72):
+    //   -> Tanksäule links bei x=444, y=-52
+    //   -> Kranausleger rechts bei x=512, y=-64
+    const hTier = this.scene?.baseSystem?.hangarTier || 1;
+    let defaultPumpBaseX = 15 * TILE_SIZE - 36;
+    let defaultPumpBaseY = -52;
+    if (hTier === 1) {
+      defaultPumpBaseX = 15 * TILE_SIZE - 20; // 460
+      defaultPumpBaseY = -36;
+    } else if (hTier <= 4) {
+      defaultPumpBaseX = 15 * TILE_SIZE - 28; // 452
+      defaultPumpBaseY = -46;
+    }
+
+    const pumpBaseX = customPumpBase ? customPumpBase.x : defaultPumpBaseX;
+    const pumpBaseY = customPumpBase ? customPumpBase.y : defaultPumpBaseY;
 
     if (!this.fuelArmState) {
       this.fuelArmState = {
-        curTipX: pumpBaseX + 6,
-        curTipY: pumpBaseY + 18,
-        curMidX: pumpBaseX + 14,
-        curMidY: pumpBaseY + 8,
+        curTipX: pumpBaseX + 4,
+        curTipY: pumpBaseY + 12,
+        curMidX: pumpBaseX + 8,
+        curMidY: pumpBaseY + 6,
         activeWeight: 0,
         isParkedDrawn: false,
         lastBaseX: pumpBaseX,
@@ -855,13 +942,13 @@ export class Player {
       };
     }
 
-    // Bei Wechsel der Station Sockelpositionen synchronisieren
+    // Bei Wechsel der Station oder Hangar-Upgrade Sockelpositionen synchronisieren
     const baseDist = Math.hypot((this.fuelArmState.lastBaseX != null ? this.fuelArmState.lastBaseX : pumpBaseX) - pumpBaseX, (this.fuelArmState.lastBaseY != null ? this.fuelArmState.lastBaseY : pumpBaseY) - pumpBaseY);
-    if (baseDist > 30) {
-      this.fuelArmState.curTipX = pumpBaseX + 6;
-      this.fuelArmState.curTipY = pumpBaseY + 18;
-      this.fuelArmState.curMidX = pumpBaseX + 14;
-      this.fuelArmState.curMidY = pumpBaseY + 8;
+    if (baseDist > 10) {
+      this.fuelArmState.curTipX = pumpBaseX + 4;
+      this.fuelArmState.curTipY = pumpBaseY + 12;
+      this.fuelArmState.curMidX = pumpBaseX + 8;
+      this.fuelArmState.curMidY = pumpBaseY + 6;
       this.fuelArmState.activeWeight = 0;
       this.fuelArmState.lastBaseX = pumpBaseX;
       this.fuelArmState.lastBaseY = pumpBaseY;
@@ -872,12 +959,6 @@ export class Player {
       if (soundFx && soundFx._refuelActive && soundFx.stopRefuel) {
         soundFx.stopRefuel();
       }
-      if (this.fuelArmState.isParkedDrawn && this.fuelArmState.activeWeight <= 0.02) {
-        if (customPumpBase == null && Math.hypot(this.sprite.x - pumpBaseX, this.sprite.y - pumpBaseY) > 80) {
-          this.refuelBeam.clear();
-        }
-        return;
-      }
     }
 
     this.refuelBeam.clear();
@@ -885,11 +966,11 @@ export class Player {
     const now = Date.now();
     const dt = Math.min(0.05, (delta || 16) / 1000);
 
-    // Park-Position an der Tanksäule (Arm sauber angeklappt)
-    const parkTipX = pumpBaseX + 6;
-    const parkTipY = pumpBaseY + 18;
-    const parkMidX = pumpBaseX + 14;
-    const parkMidY = pumpBaseY + 8;
+    // Park-Position an der Tanksäule (Arm sauber angeklappt, oberhalb des Bodens bei y <= -14)
+    const parkTipX = pumpBaseX + 4;
+    const parkTipY = pumpBaseY + 14;
+    const parkMidX = pumpBaseX + 10;
+    const parkMidY = pumpBaseY + 6;
 
     // Zielposition: Wenn aktiv am Fahrzeug
     let targetTipX, targetTipY, targetMidX, targetMidY;
@@ -914,9 +995,7 @@ export class Player {
       targetMidX = (pumpBaseX + portX) / 2 - 3;
       targetMidY = Math.min(pumpBaseY, portY) - 14;
 
-      const hTier = this.scene?.baseSystem?.hangarTier || 1;
       const deploySpeed = customPumpBase ? 4.5 : (3.5 + hTier * 0.7);
-
       this.fuelArmState.activeWeight = Phaser.Math.Linear(this.fuelArmState.activeWeight, 1.0, dt * deploySpeed);
     } else {
       // Wenn Tank voll oder Auto weiterfährt: Sofort zur Parkposition zurückfahren!
@@ -927,9 +1006,6 @@ export class Player {
 
       const deploySpeed = 4.5;
       this.fuelArmState.activeWeight = Phaser.Math.Linear(this.fuelArmState.activeWeight, 0.0, dt * (deploySpeed * 1.2));
-      if (this.fuelArmState.activeWeight <= 0.02) {
-        this.fuelArmState.isParkedDrawn = true;
-      }
     }
 
     // Sanftes Nachführen der Gelenke (kinematisches Nachziehen, kein Springen oder Strecken)
@@ -944,8 +1020,11 @@ export class Player {
     const curMidX = this.fuelArmState.curMidX;
     const curMidY = this.fuelArmState.curMidY;
 
-    const isConnected = this.fuelArmState.activeWeight > 0.8;
-    const isActivelyRefueling = isConnected && shouldDeploy && (this.fuel < this.maxFuel);
+    // Physische Verbindung erst prüfen: Abstand der Düse zum Fahrzeug-Einfüllstutzen unter 4 Pixel
+    const distToPort = Math.hypot(curTipX - targetTipX, curTipY - targetTipY);
+    const isPhysicallyConnected = shouldDeploy && distToPort < 4.0 && this.fuelArmState.activeWeight > 0.92;
+    this.fuelArmState.isDockedOnVehicle = isPhysicallyConnected;
+    const isActivelyRefueling = isPhysicallyConnected && (this.fuel < this.maxFuel);
 
     // 2. Sockel & Drehscheibe an der Tanksäule
     this.refuelBeam.fillStyle(0x1e293b, 1);
@@ -970,7 +1049,7 @@ export class Player {
     // 4. Knie-Gelenk
     this.refuelBeam.fillStyle(0x0f172a, 1);
     this.refuelBeam.fillCircle(curMidX, curMidY, 3.5);
-    this.refuelBeam.fillStyle(isConnected ? 0x0284c7 : 0x64748b, 1);
+    this.refuelBeam.fillStyle(isPhysicallyConnected ? 0x0284c7 : 0x64748b, 1);
     this.refuelBeam.fillCircle(curMidX, curMidY, 1.8);
 
     // 5. Ausleger-Segment 2 (vom Kniegelenk zum Düsenkopf)
@@ -1007,7 +1086,7 @@ export class Player {
     }
     this.refuelBeam.strokePath();
 
-    // Betankungskabel-Ader (konstante Industriefarbe, keine Farbänderung beim Tanken)
+    // Betankungskabel-Ader (konstante Industriefarbe)
     const hoseColor = 0x334155;
     this.refuelBeam.lineStyle(1.8, hoseColor, 0.95);
     this.refuelBeam.beginPath();
@@ -1032,7 +1111,7 @@ export class Player {
     this.refuelBeam.fillStyle(ledColor, ledAlpha);
     this.refuelBeam.fillCircle(curTipX, curTipY, 2.0);
 
-    if (!shouldDeploy && this.fuelArmState.activeWeight < 0.01 && Math.abs(curTipX - parkTipX) < 0.4 && Math.abs(curTipY - parkTipY) < 0.4) {
+    if (!shouldDeploy && this.fuelArmState.activeWeight < 0.02 && Math.abs(curTipX - parkTipX) < 1.0 && Math.abs(curTipY - parkTipY) < 1.0) {
       this.fuelArmState.isParkedDrawn = true;
     } else {
       this.fuelArmState.isParkedDrawn = false;
@@ -1042,7 +1121,10 @@ export class Player {
   updateRepairArm(shouldDeploy, delta) {
     if (!this.repairArm) return;
 
-    if (this.gy > -1) {
+    // Oberflächen-Prüfung: Arm bleibt am Hangar sichtbar, solange Oberfläche im Sichtfeld der Kamera ist
+    const cam = this.scene?.cameras?.main;
+    const isSurfaceInView = (this.gy <= 6) || (cam && cam.worldView && cam.worldView.top <= 10);
+    if (!isSurfaceInView) {
       if (this.repairArmState) {
         this.repairArmState.activeWeight = 0;
         this.repairArmState.isParkedDrawn = true;
@@ -1051,9 +1133,20 @@ export class Player {
       return;
     }
 
-    // Roboterarm-Sockel an der Hangar-Überdachung rechts (x=512, y=-30)
-    const armBaseX = 15 * TILE_SIZE + 32;
-    const armBaseY = -30;
+    // Roboterarm-Sockel exakt an die Hangar-Ausbaustufe anpassen:
+    // Tier 1: Schuppen (64x42), Sockel rechts auf Vordach bei x=498, y=-38
+    // Tier 2-4: Halle (88x56), Sockel rechts auf Dach bei x=508, y=-50
+    // Tier 5+: Industrie-Hangar (112x72), Kranausleger rechts bei x=512, y=-64
+    const hTier = this.scene?.baseSystem?.hangarTier || 1;
+    let armBaseX = 15 * TILE_SIZE + 32; // 512
+    let armBaseY = -64;
+    if (hTier === 1) {
+      armBaseX = 15 * TILE_SIZE + 18; // 498
+      armBaseY = -38;
+    } else if (hTier <= 4) {
+      armBaseX = 15 * TILE_SIZE + 28; // 508
+      armBaseY = -50;
+    }
 
     // 6 markante Schweißpunkte am Fahrzeug (statt kontinuierlichem Schleifen):
     const REPAIR_SPOTS = [
@@ -1067,22 +1160,36 @@ export class Player {
 
     if (!this.repairArmState) {
       this.repairArmState = {
-        curTipX: armBaseX - 8,
-        curTipY: armBaseY + 20,
-        curMidX: armBaseX - 16,
-        curMidY: armBaseY + 8,
+        curTipX: armBaseX - 6,
+        curTipY: armBaseY + 12,
+        curMidX: armBaseX - 12,
+        curMidY: armBaseY + 5,
         activeWeight: 0,
         spotIndex: 0,
         phase: 'traveling', // 'traveling' | 'welding'
         timer: 0,
         isWelding: false,
         lastSoundTime: 0,
-        isParkedDrawn: false
+        isParkedDrawn: false,
+        lastBaseX: armBaseX,
+        lastBaseY: armBaseY
       };
     }
 
-    if (!shouldDeploy && this.repairArmState.isParkedDrawn) {
-      return;
+    // Bei Hangar-Upgrade Sockelpositionen synchronisieren
+    const armBaseDist = Math.hypot((this.repairArmState.lastBaseX != null ? this.repairArmState.lastBaseX : armBaseX) - armBaseX, (this.repairArmState.lastBaseY != null ? this.repairArmState.lastBaseY : armBaseY) - armBaseY);
+    if (armBaseDist > 6) {
+      this.repairArmState.curTipX = armBaseX - 6;
+      this.repairArmState.curTipY = armBaseY + 12;
+      this.repairArmState.curMidX = armBaseX - 12;
+      this.repairArmState.curMidY = armBaseY + 5;
+      this.repairArmState.lastBaseX = armBaseX;
+      this.repairArmState.lastBaseY = armBaseY;
+      this.repairArmState.isParkedDrawn = false;
+    }
+
+    if (!shouldDeploy) {
+      this.repairArmState.isWelding = false;
     }
 
     this.repairArm.clear();
@@ -1106,11 +1213,11 @@ export class Player {
     const isConnected = this.repairArmState.activeWeight > 0.75;
     const isStationary = shouldDeploy && (this.hull < this.maxHull);
 
-    // Park-Position am Hangar-Dach (Arm sauber eingeklappt)
-    const parkTipX = armBaseX - 8;
-    const parkTipY = armBaseY + 20;
-    const parkMidX = armBaseX - 16;
-    const parkMidY = armBaseY + 8;
+    // Park-Position am Hangar-Dach (Arm sauber oberhalb des Bodens eingeklappt bei y <= -20)
+    const parkTipX = armBaseX - 6;
+    const parkTipY = armBaseY + 14;
+    const parkMidX = armBaseX - 12;
+    const parkMidY = armBaseY + 6;
 
     let targetTipX = parkTipX;
     let targetTipY = parkTipY;
@@ -1151,7 +1258,6 @@ export class Player {
         targetTipY = spotY + microJitterY;
 
         // Schweißintervall pro Punkt an Hangar-Stufe anpassen
-        const hTier = this.scene?.baseSystem?.hangarTier || 1;
         const spotDuration = Math.max(380, 1400 - (hTier - 1) * 110);
         if (this.repairArmState.timer >= spotDuration) {
           this.repairArmState.spotIndex = (this.repairArmState.spotIndex + 1) % REPAIR_SPOTS.length;
@@ -1165,7 +1271,6 @@ export class Player {
       targetMidX = (armBaseX + targetTipX) / 2 + 5;
       targetMidY = Math.min(armBaseY, targetTipY) - 15;
 
-      const hTier = this.scene?.baseSystem?.hangarTier || 1;
       const deploySpeed = 3.5 + hTier * 0.7;
       this.repairArmState.activeWeight = Phaser.Math.Linear(this.repairArmState.activeWeight, 1.0, dt * deploySpeed);
     } else {
@@ -1180,13 +1285,11 @@ export class Player {
       targetMidX = parkMidX;
       targetMidY = parkMidY;
 
-      const hTier = this.scene?.baseSystem?.hangarTier || 1;
       const deploySpeed = 3.5 + hTier * 0.7;
       this.repairArmState.activeWeight = Phaser.Math.Linear(this.repairArmState.activeWeight, 0.0, dt * (deploySpeed * 1.2));
     }
 
     // Kinematische Nachführung der Gelenke
-    const hTier = this.scene?.baseSystem?.hangarTier || 1;
     const moveSpeed = this.repairArmState.isWelding ? (14.0 + hTier * 1.5) : (7.0 + hTier * 1.0);
     this.repairArmState.curTipX = Phaser.Math.Linear(this.repairArmState.curTipX, targetTipX, dt * moveSpeed);
     this.repairArmState.curTipY = Phaser.Math.Linear(this.repairArmState.curTipY, targetTipY, dt * moveSpeed);
@@ -1343,9 +1446,12 @@ export class Player {
         return true;
       }
 
-      // Wenn frei: Flüssigen Flug starten
+      // Wenn frei: Flüssigen Flug starten (Ketten und Bohrer stehen still!)
       soundFx.stopDrive();
       this.state = PLAYER_STATES.FLYING;
+      this.trackFrame = 0;
+      this.trackAnimTimer = 0;
+      this.updateDrillTexture();
       this.flySoundTimer = 0;
       soundFx.startJetpack();
       return true;
@@ -1589,11 +1695,12 @@ export class Player {
 
   setVisualDirection(dir) {
     this.currentDirection = dir;
+    if (dir === 'LEFT' || dir === 'RIGHT') {
+      this.lastHorizontalDirection = dir;
+    }
     this.sprite.setAngle(0);
     this.sprite.setFlipX(false);
-
-    const dirLower = dir.toLowerCase();
-    this.sprite.setTexture(`player_drill_${dirLower}`);
+    this.updateDrillTexture();
   }
 
   moveTo(targetGx, targetGy, duration = null) {
@@ -1622,6 +1729,22 @@ export class Player {
   }
 
   processMoving(delta, inputDir) {
+    // Animierte Ketten nur bei Fahrt auf festem Untergrund (NICHT beim Schweben / in der Luft)
+    const onGround = !this.isHoveringInAir();
+    if (onGround) {
+      this.trackAnimTimer = (this.trackAnimTimer || 0) + delta;
+      if (this.trackAnimTimer >= 35) {
+        this.trackAnimTimer = 0;
+        this.trackFrame = ((this.trackFrame || 0) + 1) % 4;
+        this.updateDrillTexture(this.trackFrame, true);
+      }
+    } else {
+      if (this.trackFrame !== 0) {
+        this.trackFrame = 0;
+        this.updateDrillTexture();
+      }
+    }
+
     const dt = Math.min(delta, 100) / 1000;
     let step = (this.moveSpeed || 200) * dt;
 
@@ -1685,6 +1808,8 @@ export class Player {
         } else {
           // Keine Richtungstaste aktiv: sauber an Kachelmitte anhalten
           this.state = PLAYER_STATES.IDLE;
+          this.trackFrame = 0;
+          this.updateDrillTexture();
           soundFx.stopDrive();
           break;
         }
@@ -1694,6 +1819,13 @@ export class Player {
         this.sprite.y += (dy / dist) * step;
         this.syncAttachments();
         step = 0;
+      }
+    }
+
+    if (this.state !== PLAYER_STATES.MOVING && this.state !== PLAYER_STATES.DRILLING) {
+      if (this.trackFrame !== 0) {
+        this.trackFrame = 0;
+        this.updateDrillTexture();
       }
     }
   }
@@ -1727,7 +1859,10 @@ export class Player {
   startDrilling(targetGx, targetGy) {
     if (targetGy === 0) return;
     if (this.hull <= 0) {
-      this.scene.hud?.showToast('⚠️ Karosserie kritisch beschädigt (0 HP)! Bohrer blockiert – zur Basis zurückkehren oder Notfall-Reparatur (Taste R)!', 'danger');
+      if (!this._hullBrokenToastShown) {
+        this._hullBrokenToastShown = true;
+        this.scene.hud?.showToast('⚠️ Karosserie kritisch beschädigt (0 HP)! Bohrer blockiert – zur Basis zurückkehren oder Notfall-Reparatur (Taste R)!', 'danger');
+      }
       return;
     }
     const tile = this.gridSystem.getTile(targetGx, targetGy);
@@ -1777,8 +1912,7 @@ export class Player {
     if (this.drillAnimTimer >= 28) {
       this.drillAnimTimer = 0;
       this.drillFrame = ((this.drillFrame || 0) + 1) % 6;
-      const dirLower = (this.currentDirection || 'RIGHT').toLowerCase();
-      this.sprite.setTexture(`player_drill_${dirLower}_${this.drillFrame}`);
+      this.updateDrillTexture(this.drillFrame);
     }
 
     // Geräusch: kontinuierlicher Schleifer (startDrilling kümmert sich darum)
@@ -1797,8 +1931,7 @@ export class Player {
     if (result.destroyed) {
       this.drillParticles.stop();
       soundFx.stopDrilling();
-      const dirLower = (this.currentDirection || 'RIGHT').toLowerCase();
-      this.sprite.setTexture(`player_drill_${dirLower}`);
+      this.updateDrillTexture();
       this.sprite.x = this.x;
       this.sprite.y = this.y;
 
@@ -1826,8 +1959,7 @@ export class Player {
     this.drillTarget = null;
     this.drillParticles.stop();
     soundFx.stopDrilling();
-    const dirLower = (this.currentDirection || 'RIGHT').toLowerCase();
-    this.sprite.setTexture(`player_drill_${dirLower}`);
+    this.updateDrillTexture();
     this.sprite.x = this.x;
     this.sprite.y = this.y;
     this.syncAttachments();
@@ -2037,10 +2169,15 @@ export class Player {
   takeDamage(amount) {
     this.hull = Math.max(0, this.hull - amount);
     soundFx.playDamage();
+    if (this.hull <= 0 && !this._hullBrokenToastShown) {
+      this._hullBrokenToastShown = true;
+      this.scene.hud?.showToast('⚠️ Karosserie kritisch beschädigt (0 HP)! Bohrer blockiert – zur Basis zurückkehren oder Notfall-Reparatur (Taste R)!', 'danger');
+    }
   }
 
   repairHull() {
     this.hull = this.maxHull;
+    this._hullBrokenToastShown = false;
   }
 
   refuelTank() {

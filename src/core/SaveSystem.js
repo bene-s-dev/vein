@@ -122,18 +122,21 @@ export class SaveSystem {
     const bs = scene.baseSystem;
     const ms = scene.missionSystem;
 
-    // Abgebaute Kacheln ermitteln (blitzschnell aus Set ohne 20.000-Iteration-Scan)
-    let destroyedTiles;
-    if (gs.destroyedTiles && gs.destroyedTiles.size > 0) {
-      destroyedTiles = Array.from(gs.destroyedTiles);
-    } else {
-      destroyedTiles = [];
+    // Abgebaute Kacheln ermitteln: Kombination aus gs.destroyedTiles und allen leeren Kacheln in gs.tiles
+    const destroyedSet = new Set(gs.destroyedTiles || []);
+    if (gs.tiles) {
       gs.tiles.forEach((tile, key) => {
-        if (tile.type === TILE_TYPES.EMPTY) {
-          destroyedTiles.push(key);
+        if (tile && tile.type === TILE_TYPES.EMPTY) {
+          destroyedSet.add(key);
         }
       });
     }
+    const destroyedTiles = Array.from(destroyedSet);
+
+    // Aufgedeckte Kacheln ermitteln (alle abgebauten Kacheln sind automatisch auch aufgedeckt)
+    const exploredSet = new Set(gs.exploredTiles || []);
+    destroyedTiles.forEach((k) => exploredSet.add(k));
+    const exploredTiles = Array.from(exploredSet);
 
     // Gebäude-Stati speichern
     const buildingsData = [];
@@ -207,7 +210,7 @@ export class SaveSystem {
       },
       grid: {
         destroyedTiles,
-        exploredTiles: Array.from(gs.exploredTiles || []),
+        exploredTiles,
         exploredStamps: (gs.exploredStamps || []).slice(-8000)
       },
       buildings: buildingsData,
@@ -278,12 +281,17 @@ export class SaveSystem {
       const bs = scene.baseSystem;
       const ms = scene.missionSystem;
 
+      // Gespeicherte Spielerposition vorab erfassen
+      const targetGx = typeof data.player.gx === 'number' ? data.player.gx : 20;
+      const targetGy = typeof data.player.gy === 'number' ? data.player.gy : 0;
+
       // 1. Raster & Welt-Zustand komplett zurücksetzen und neu befüllen
       if (gs.clearAllSprites) {
         gs.clearAllSprites();
       }
       gs.tiles.clear();
       if (gs.exploredTiles) gs.exploredTiles.clear();
+      if (gs.destroyedTiles) gs.destroyedTiles.clear();
       gs.exploredStamps = [];
       gs.fogDirty = true;
       gs.fogBufferReady = false;
@@ -330,6 +338,8 @@ export class SaveSystem {
         });
       }
 
+
+
       // 2. Spieler-Progression & Attribute
       p.cash = typeof data.player.cash === 'number' ? data.player.cash : p.cash;
       p.level = data.player.level || 1;
@@ -354,7 +364,10 @@ export class SaveSystem {
       p.drillTier = data.player.drillTier || 1;
       p.researchedDrillTier = data.player.researchedDrillTier || p.drillTier;
       const parsedPower = parseFloat(data.player.drillPower);
-      p.drillPower = (!isNaN(parsedPower) && parsedPower > 0) ? parsedPower : (DRILL_DPS[(p.drillTier || 1) - 1] || 38);
+      p.drillPower = (!isNaN(parsedPower) && parsedPower > 0) ? parsedPower : (DRILL_TIERS[(p.drillTier || 1) - 1]?.stat || 38);
+      if (p.updateDrillTexture) {
+        p.updateDrillTexture();
+      }
 
       p.engineTier = data.player.engineTier || 1;
       p.researchedEngineTier = data.player.researchedEngineTier || p.engineTier;
@@ -417,8 +430,6 @@ export class SaveSystem {
       };
 
       // Spielerposition & Bewegungszustand absolut sauber synchronisieren
-      const targetGx = typeof data.player.gx === 'number' ? data.player.gx : 20;
-      const targetGy = typeof data.player.gy === 'number' ? data.player.gy : 0;
       p.gx = targetGx;
       p.gy = targetGy;
       p.x = p.gx * TILE_SIZE + TILE_SIZE / 2;
@@ -442,10 +453,12 @@ export class SaveSystem {
       if (p.scannerRing) p.scannerRing.setPosition(p.x, p.y);
 
       if (scene.cameras && scene.cameras.main && p.sprite) {
-        scene.cameras.main.centerOn(p.x, p.y);
-        scene.cameras.main.scrollX = p.x - scene.cameras.main.width / 2;
-        scene.cameras.main.scrollY = p.y - scene.cameras.main.height / 2;
-        scene.cameras.main.startFollow(p.sprite, true, 0.15, 0.15);
+        if (scene.setupCamera) {
+          scene.setupCamera();
+        } else {
+          scene.cameras.main.centerOn(p.x, p.y);
+          scene.cameras.main.startFollow(p.sprite, false, 1, 1);
+        }
       }
 
       // 3. Gebäude-Ausbau
@@ -529,6 +542,9 @@ export class SaveSystem {
       gs.fogDirty = true;
       gs.fogBufferReady = false;
       if (scene.cameras && scene.cameras.main) {
+        if (scene.setupCamera) {
+          scene.setupCamera();
+        }
         gs.updateViewport(scene.cameras.main, p);
       }
 
@@ -651,7 +667,6 @@ export class SaveSystem {
         grid: gridData,
         buildings: [
           { id: 'drone_hangar', isBuilt: true, storedOres: ['coal', 'copper'], accumulatedCash: 350 },
-          { id: 'teleporter', isBuilt: false },
           { id: 'powerplant', isBuilt: false }
         ],
         refinery: {
@@ -756,7 +771,6 @@ export class SaveSystem {
         grid: gridData,
         buildings: [
           { id: 'drone_hangar', isBuilt: true, storedOres: ['iron', 'silver'], accumulatedCash: 1450 },
-          { id: 'teleporter', isBuilt: true },
           { id: 'powerplant', isBuilt: false }
         ],
         refinery: {
@@ -875,7 +889,6 @@ export class SaveSystem {
         grid: gridData,
         buildings: [
           { id: 'drone_hangar', isBuilt: true, storedOres: ['gold', 'diamond', 'titanium'], accumulatedCash: 6800 },
-          { id: 'teleporter', isBuilt: true },
           { id: 'powerplant', isBuilt: true }
         ],
         refinery: {

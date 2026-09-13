@@ -699,108 +699,269 @@ export class AssetLoader {
     // - OBEN: Bohrkopf richtet sich nach oben auf, bohrt in die Decke bei y=0.
     // Einheitliche Canvas-Größe: 48x32 Pixel.
 
-    const drawCrawlerChassis = (ctx) => {
-      // 1. HORIZONTALES KETTENFAHRWERK AM BODEN (x=6..42, y=21..31 - fährt satt auf dem Boden!)
-      // Unteres Kettenband am Boden (y=29.5..31)
-      ctx.fillStyle = '#090d16';
-      ctx.fillRect(8, 29.5, 32, 1.5);
+    const drawCrawlerChassis = (ctx, facing = 'right', trackFrame = 0) => {
+      // 1. HORIZONTALES KETTENFAHRWERK (x=6.5..41.5, y=20.5..31 - solide, wuchtige Proportionen)
+      const leftCenterX = 11.5;
+      const rightCenterX = 36.5;
+      const wheelCenterY = 26.5;
 
-      // Kettenglieder / Boden-Stege (Cleats)
-      ctx.fillStyle = '#475569';
-      for (let tx = 7; tx <= 41; tx += 3) {
-        ctx.fillRect(tx, 30, 2, 1.5);
-      }
-
-      // Schräg ansteigende Antriebs- & Leiträder links & rechts
-      // Links (x=6..10)
+      // A) Dunkles Kettenbett / Fahrwerkskasten hinter den Rollen
       ctx.fillStyle = '#090d16';
       ctx.beginPath();
-      ctx.moveTo(6, 26);
-      ctx.lineTo(9, 22.5);
-      ctx.lineTo(11, 29.5);
-      ctx.lineTo(8, 31);
+      ctx.arc(rightCenterX, wheelCenterY, 3.1, -Math.PI * 0.5, Math.PI * 0.5);
+      ctx.lineTo(leftCenterX, wheelCenterY + 3.1);
+      ctx.arc(leftCenterX, wheelCenterY, 3.1, Math.PI * 0.5, Math.PI * 1.5);
+      ctx.lineTo(rightCenterX, wheelCenterY - 3.1);
       ctx.closePath();
       ctx.fill();
 
-      // Rechts (x=38..42)
-      ctx.beginPath();
-      ctx.moveTo(42, 26);
-      ctx.lineTo(39, 22.5);
-      ctx.lineTo(37, 29.5);
-      ctx.lineTo(40, 31);
-      ctx.closePath();
-      ctx.fill();
-
-      // Dunkles Kettenbett / Innenraum
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(8, 23, 32, 6.5);
-
-      // Oberes Rücklauf-Kettenband
-      ctx.fillStyle = '#1e293b';
-      ctx.fillRect(8, 22, 32, 1.5);
-
-      // 5 Stahllaufrollen in einer Reihe am Boden rollend
-      const roadWheelsX = [10, 17, 24, 31, 38];
+      // B) 5 solide Stahllaufrollen im Inneren der Kette (statisch)
+      const roadWheelsX = [11.5, 17.75, 24, 30.25, 36.5];
       roadWheelsX.forEach(wx => {
         // Äußerer Stahlfelgenring
         ctx.fillStyle = '#1e293b';
         ctx.beginPath();
-        ctx.arc(wx, 26.5, 3.2, 0, Math.PI * 2);
+        ctx.arc(wx, wheelCenterY, 2.9, 0, Math.PI * 2);
         ctx.fill();
 
         // Radscheibe
         ctx.fillStyle = '#334155';
         ctx.beginPath();
-        ctx.arc(wx, 26.5, 2.2, 0, Math.PI * 2);
+        ctx.arc(wx, wheelCenterY, 1.9, 0, Math.PI * 2);
         ctx.fill();
 
         // Achsnabe / Chrom-Zentralbolzen
         ctx.fillStyle = '#94a3b8';
         ctx.beginPath();
-        ctx.arc(wx, 26.5, 1.1, 0, Math.PI * 2);
+        ctx.arc(wx, wheelCenterY, 0.9, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(wx - 0.5, 26, 1, 1);
+        ctx.fillRect(Math.round(wx) - 0.5, 26, 1, 1);
       });
 
-      // Gepanzerte Kettenschürze / Kotflügel über dem Kettenband
-      ctx.fillStyle = '#1e2430';
-      ctx.fillRect(6, 21, 36, 2);
+      // C) Vollständig umlaufendes Kettenband (gleichmäßig schlank 1.5px)
+      const trackMidR = 3.6;
+
+      // 1. Dunkler Kettenkörper
+      ctx.strokeStyle = '#090d16';
+      ctx.lineWidth = 1.5;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.arc(rightCenterX, wheelCenterY, trackMidR, -Math.PI * 0.5, Math.PI * 0.5);
+      ctx.lineTo(leftCenterX, wheelCenterY + trackMidR);
+      ctx.arc(leftCenterX, wheelCenterY, trackMidR, Math.PI * 0.5, Math.PI * 1.5);
+      ctx.lineTo(rightCenterX, wheelCenterY - trackMidR);
+      ctx.closePath();
+      ctx.stroke();
+
+      // 2. Gehärteter Kettengliederstahl (feiner 0.9px Kern)
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 0.9;
+      ctx.beginPath();
+      ctx.arc(rightCenterX, wheelCenterY, trackMidR, -Math.PI * 0.5, Math.PI * 0.5);
+      ctx.lineTo(leftCenterX, wheelCenterY + trackMidR);
+      ctx.arc(leftCenterX, wheelCenterY, trackMidR, Math.PI * 0.5, Math.PI * 1.5);
+      ctx.lineTo(rightCenterX, wheelCenterY - trackMidR);
+      ctx.closePath();
+      ctx.stroke();
+
+      // D) Boden-Stege (bewegt sich wenn trackFrame sich ändert)
       ctx.fillStyle = '#475569';
-      ctx.fillRect(6, 21, 36, 0.8);
+      const dirMult = facing === 'left' ? -1 : 1;
+      const stepOffset = ((trackFrame % 4) * 0.75 * dirMult + 3) % 3;
+      for (let tx = 11 + stepOffset; tx <= 37; tx += 3) {
+        ctx.fillRect(tx, 30.2, 1.8, 0.8);
+      }
 
-      // 2. GEPANZERTE INDUSTRIE-KAROSSERIE (SITZT AUF DEM KETTENFAHRWERK, y=7..21)
-      ctx.fillStyle = '#92400e'; // Unterer Schatten
-      ctx.fillRect(10, 19, 28, 2.5);
+      // E) Gepanzerte Kettenschürze / Kotflügel (schließt exakt bündig mit der Kette ab, kein Überstand oben!)
+      const trackOuterLeft = leftCenterX - trackMidR - 0.75; // 7.15
+      const trackOuterRight = rightCenterX + trackMidR + 0.75; // 40.85
+      const fenderWidth = trackOuterRight - trackOuterLeft; // 33.7
+
+      ctx.fillStyle = '#1e2430';
+      ctx.fillRect(trackOuterLeft, 20.5, fenderWidth, 2.0);
+      ctx.fillStyle = '#475569';
+            // 2. GEPANZERTE INDUSTRIE-KAROSSERIE (OBEN AN BEIDEN KANTEN LEICHT ABGESCHRÄGT, y=7..20.5)
+      const drawBeveledBody = (inset = 0) => {
+        ctx.beginPath();
+        ctx.moveTo(10 + inset, 20.5);
+        ctx.lineTo(10 + inset, 9.5 + inset * 0.5);
+        ctx.lineTo(12.5 + inset * 0.5, 7 + inset);
+        ctx.lineTo(35.5 - inset * 0.5, 7 + inset);
+        ctx.lineTo(38 - inset, 9.5 + inset * 0.5);
+        ctx.lineTo(38 - inset, 20.5);
+        ctx.closePath();
+      };
+
       ctx.fillStyle = '#d97706'; // Karosserie-Hauptton
-      ctx.fillRect(10, 7, 28, 13);
+      drawBeveledBody(0);
+      ctx.fill();
+
       ctx.fillStyle = '#f59e0b'; // Helle Frontpanzerung
-      ctx.fillRect(11, 8, 26, 11);
-      ctx.fillStyle = '#fbbf24'; // Dachkante
-      ctx.fillRect(12, 7, 24, 1.5);
+      drawBeveledBody(0.8);
+      ctx.fill();
 
-      // Vertikale Panzerfugen & Nieten
-      ctx.fillStyle = '#78350f';
-      ctx.fillRect(17, 8, 1, 11);
-      ctx.fillRect(30, 8, 1, 11);
-      ctx.fillStyle = '#fef08a';
-      ctx.fillRect(12, 9, 1, 1);
-      ctx.fillRect(35, 9, 1, 1);
-      ctx.fillRect(12, 17, 1, 1);
-      ctx.fillRect(35, 17, 1, 1);
+      // Horizontale Dachkante
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillRect(13, 7, 22, 1.0);
 
-      // 3. Cockpit-Kanzel (Zentriert, getöntes Panzerglas mit Reflexionen)
-      ctx.fillStyle = '#0f172a'; // Rahmen
-      ctx.fillRect(18, 9, 12, 8);
-      ctx.fillStyle = '#0369a1'; // Glasbasis
-      ctx.fillRect(19, 10, 10, 6);
-      ctx.fillStyle = '#0284c7'; // Glas
-      ctx.fillRect(19.5, 10.5, 9, 5);
-      ctx.fillStyle = '#38bdf8'; // Inneninstrumente
-      ctx.fillRect(20.5, 11.5, 4, 3);
-      ctx.fillStyle = '#ffffff'; // Lichtspiegelung
-      ctx.fillRect(25, 10.5, 3, 2);
-      ctx.fillRect(23.5, 12.5, 1.5, 1);
+      // Unterer Karosserie-Schatten
+      ctx.fillStyle = '#92400e';
+      ctx.fillRect(10, 18.5, 28, 2.0);
+
+      // 3. EINZELNES COCKPIT-FRONTFENSTER (NUR AUF EINER SEITE - IMMER IN FAHRTRICHTUNG!)
+      if (facing === 'left') {
+        // --- FAHRTRICHTUNG LINKS ---
+        // A) Frontfenster vorn links (schließt exakt bündig an der Außenkante x=10 ab, ohne gelbe Pixel!)
+        ctx.fillStyle = '#0f172a'; // Rahmen
+        ctx.beginPath();
+        ctx.moveTo(10.0, 15.2);
+        ctx.lineTo(10.0, 9.5);
+        ctx.lineTo(12.5, 7.5);
+        ctx.lineTo(24.5, 7.5);
+        ctx.lineTo(24.5, 15.2);
+        ctx.closePath();
+        ctx.fill();
+
+        // Getöntes Panzerglas
+        ctx.fillStyle = '#0369a1';
+        ctx.beginPath();
+        ctx.moveTo(10.8, 14.5);
+        ctx.lineTo(10.8, 10.0);
+        ctx.lineTo(12.8, 8.3);
+        ctx.lineTo(23.7, 8.3);
+        ctx.lineTo(23.7, 14.5);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#0284c7';
+        ctx.beginPath();
+        ctx.moveTo(11.2, 14.0);
+        ctx.lineTo(11.2, 10.3);
+        ctx.lineTo(13.0, 8.8);
+        ctx.lineTo(23.2, 8.8);
+        ctx.lineTo(23.2, 14.0);
+        ctx.closePath();
+        ctx.fill();
+
+        // Bordinstrumente & Lichtreflexion vorn-links
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(15.5, 11.5, 3.5, 2.0);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(11.8, 10.2, 2.2, 1.2);
+        ctx.fillRect(14.5, 9.0, 2.0, 0.8);
+
+        // B) Heckbereich / Motorraum hinten rechts (x = 24.5..38)
+        ctx.fillStyle = '#78350f';
+        ctx.fillRect(24.5, 7.5, 0.8, 11.0); // Trennfuge zur Kabine
+
+        // Kühlergitter / Motorschlitze
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(26.5, 9.0, 9.5, 5.5);
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(27.0, 9.5, 8.5, 4.5);
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(27.5, 10.5, 7.5, 0.7);
+        ctx.fillRect(27.5, 12.0, 7.5, 0.7);
+        ctx.fillRect(27.5, 13.0, 7.5, 0.7);
+
+        // Nieten am Heck
+        ctx.fillStyle = '#fef08a';
+        ctx.fillRect(36.5, 17, 1, 1);
+        ctx.fillRect(26.0, 17, 1, 1);
+
+        // Rotes Heck-Positionslicht rechts
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(35.5, 15.0, 2.5, 2.5);
+        ctx.fillStyle = '#dc2626';
+        ctx.fillRect(35.8, 15.5, 1.8, 1.5);
+        ctx.fillStyle = '#f87171';
+        ctx.fillRect(36.0, 15.7, 0.8, 0.8);
+
+        // Xenon-Frontscheinwerfer vorn links
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(11.0, 15.0, 3.5, 2.5);
+        ctx.fillStyle = '#fef08a';
+        ctx.fillRect(11.5, 15.5, 2.5, 1.5);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(12.0, 16.0, 1.0, 0.8);
+      } else {
+        // --- FAHRTRICHTUNG RECHTS (Standard) ---
+        // A) Frontfenster vorn rechts (schließt exakt an der Außenkante x=38 ab, ohne gelbe Pixel!)
+        ctx.fillStyle = '#0f172a'; // Rahmen
+        ctx.beginPath();
+        ctx.moveTo(23.5, 15.2);
+        ctx.lineTo(23.5, 7.5);
+        ctx.lineTo(35.5, 7.5);
+        ctx.lineTo(38.0, 9.5);
+        ctx.lineTo(38.0, 15.2);
+        ctx.closePath();
+        ctx.fill();
+
+        // Getöntes Panzerglas rechts
+        ctx.fillStyle = '#0369a1';
+        ctx.beginPath();
+        ctx.moveTo(24.3, 14.5);
+        ctx.lineTo(24.3, 8.3);
+        ctx.lineTo(35.2, 8.3);
+        ctx.lineTo(37.2, 10.0);
+        ctx.lineTo(37.2, 14.5);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#0284c7';
+        ctx.beginPath();
+        ctx.moveTo(24.8, 14.0);
+        ctx.lineTo(24.8, 8.8);
+        ctx.lineTo(35.0, 8.8);
+        ctx.lineTo(36.8, 10.3);
+        ctx.lineTo(36.8, 14.0);
+        ctx.closePath();
+        ctx.fill();
+
+        // Bordinstrumente & Lichtreflexion vorn-rechts
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(29.0, 11.5, 3.5, 2.0);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(34.0, 10.2, 2.2, 1.2);
+        ctx.fillRect(31.5, 9.0, 2.0, 0.8);
+
+        // B) Heckbereich / Motorraum hinten links (x = 10..23.5)
+        ctx.fillStyle = '#78350f';
+        ctx.fillRect(23.5, 7.5, 0.8, 11.0); // Trennfuge zur Kabine
+
+        // Kühlergitter / Motorschlitze
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(12.0, 9.0, 9.5, 5.5);
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(12.5, 9.5, 8.5, 4.5);
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(13.0, 10.5, 7.5, 0.7);
+        ctx.fillRect(13.0, 12.0, 7.5, 0.7);
+        ctx.fillRect(13.0, 13.0, 7.5, 0.7);
+
+        // Nieten am Heck
+        ctx.fillStyle = '#fef08a';
+        ctx.fillRect(11.5, 17, 1, 1);
+        ctx.fillRect(22.0, 17, 1, 1);
+
+        // Rotes Heck-Positionslicht links
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(10.0, 15.0, 2.5, 2.5);
+        ctx.fillStyle = '#dc2626';
+        ctx.fillRect(10.2, 15.5, 1.8, 1.5);
+        ctx.fillStyle = '#f87171';
+        ctx.fillRect(10.5, 15.7, 0.8, 0.8);
+
+        // Xenon-Frontscheinwerfer vorn rechts
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(33.5, 15.0, 3.5, 2.5);
+        ctx.fillStyle = '#fef08a';
+        ctx.fillRect(34.0, 15.5, 2.5, 1.5);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(34.5, 16.0, 1.0, 0.8);
+      }
 
       // 4. Stoßstange mit Industrie-Warnstreifen
       ctx.fillStyle = '#0f172a';
@@ -809,17 +970,6 @@ export class AssetLoader {
         ctx.fillStyle = '#fbbf24';
         ctx.fillRect(hx, 18.5, 1.8, 2.5);
       }
-
-      // Xenon-Scheinwerfer links & rechts
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(12, 15, 3.5, 2.5);
-      ctx.fillRect(32.5, 15, 3.5, 2.5);
-      ctx.fillStyle = '#fef08a';
-      ctx.fillRect(12.5, 15.5, 2.5, 1.5);
-      ctx.fillRect(33, 15.5, 2.5, 1.5);
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(13, 16, 1, 1);
-      ctx.fillRect(33.5, 16, 1, 1);
 
       // 5. Zentraler Industrie-Drehkranz für den Bohrausleger
       ctx.fillStyle = '#0f172a';
@@ -834,9 +984,145 @@ export class AssetLoader {
       ctx.fillRect(23, 14.5, 2, 2);
     };
 
-    // A) BOHRER NACH RECHTS: Horizontale Bodenketten + nach rechts ausgefahrener Bohrkopf
-    const drawPlayerRight = (ctx, f = 0) => {
-      drawCrawlerChassis(ctx);
+    // =======================================================
+    // BOHRKOPF-STUFEN VISUALISIERUNG (10 TIERS MIT EIGENER FARBE, FORM & GRÖSSE)
+    // Tier 1: Reiner Meißel vorne
+    // Tier 2..10: Wachsende Bohrkegel, Spezialwerkstoffe, Diamanten, Plasma, Laser etc.
+    // =======================================================
+    const TIER_DRILL_CONFIGS = {
+      1: {
+        type: 'chisel',
+        name: 'Stahl-Meißel'
+      },
+      2: {
+        type: 'cone',
+        name: 'Wolframkarbid-Spitze',
+        bodyColor: '#334155',
+        highlightColor: '#64748b',
+        fluteColor: '#0f172a',
+        spiralColor: '#f59e0b',
+        edgeColor: '#fbbf24',
+        tipColor: '#f59e0b',
+        coneLength: 9.5,
+        coneHalfH: 4.2,
+        numFlutes: 2
+      },
+      3: {
+        type: 'cone',
+        name: 'Gehärteter Meißel Mk.III',
+        bodyColor: '#78350f',
+        highlightColor: '#b45309',
+        fluteColor: '#451a03',
+        spiralColor: '#fde68a',
+        edgeColor: '#f59e0b',
+        tipColor: '#fef08a',
+        coneLength: 10.5,
+        coneHalfH: 4.8,
+        numFlutes: 3
+      },
+      4: {
+        type: 'cone',
+        name: 'Titan-Diamant-Kopf Mk.IV',
+        bodyColor: '#0369a1',
+        highlightColor: '#38bdf8',
+        fluteColor: '#0c4a6e',
+        spiralColor: '#e0f2fe',
+        edgeColor: '#7dd3fc',
+        tipColor: '#ffffff',
+        coneLength: 11.5,
+        coneHalfH: 5.2,
+        numFlutes: 3,
+        isDiamond: true
+      },
+      5: {
+        type: 'cone',
+        name: 'Hochdruck-Fräse Mk.V',
+        bodyColor: '#b45309',
+        highlightColor: '#f59e0b',
+        fluteColor: '#1e293b',
+        spiralColor: '#fef08a',
+        edgeColor: '#fbbf24',
+        tipColor: '#ffffff',
+        coneLength: 11.5,
+        coneHalfH: 5.6,
+        numFlutes: 4
+      },
+      6: {
+        type: 'cone',
+        name: 'Plasma-Schneidbrenner Mk.VI',
+        bodyColor: '#9a3412',
+        highlightColor: '#ea580c',
+        fluteColor: '#7c2d12',
+        spiralColor: '#fde047',
+        edgeColor: '#f97316',
+        tipColor: '#fef08a',
+        coneLength: 11.5,
+        coneHalfH: 5.2,
+        numFlutes: 3,
+        isPlasma: true
+      },
+      7: {
+        type: 'cone',
+        name: 'Laser-Kavitationsmeißel Mk.VII',
+        bodyColor: '#881337',
+        highlightColor: '#e11d48',
+        fluteColor: '#4c0519',
+        spiralColor: '#fecdd3',
+        edgeColor: '#fb7185',
+        tipColor: '#ffffff',
+        coneLength: 11.5,
+        coneHalfH: 5.0,
+        numFlutes: 2,
+        isLaser: true
+      },
+      8: {
+        type: 'cone',
+        name: 'Antimaterie-Bohrer Mk.VIII',
+        bodyColor: '#4c1d95',
+        highlightColor: '#7c3aed',
+        fluteColor: '#2e1065',
+        spiralColor: '#e9d5ff',
+        edgeColor: '#a855f7',
+        tipColor: '#ffffff',
+        coneLength: 11.8,
+        coneHalfH: 5.6,
+        numFlutes: 3,
+        isAntimatter: true
+      },
+      9: {
+        type: 'cone',
+        name: 'Singularitäts-Fräse Mk.IX',
+        bodyColor: '#090d16',
+        highlightColor: '#0891b2',
+        fluteColor: '#020617',
+        spiralColor: '#67e8f9',
+        edgeColor: '#22d3ee',
+        tipColor: '#cffafe',
+        coneLength: 12.0,
+        coneHalfH: 5.8,
+        numFlutes: 3,
+        isSingularity: true
+      },
+      10: {
+        type: 'cone',
+        name: 'Tachyonen-Disruptor X',
+        bodyColor: '#064e3b',
+        highlightColor: '#059669',
+        fluteColor: '#022c22',
+        spiralColor: '#a7f3d0',
+        edgeColor: '#34d399',
+        tipColor: '#fde047',
+        coneLength: 12.0,
+        coneHalfH: 6.0,
+        numFlutes: 4,
+        isTachyon: true
+      }
+    };
+
+    // A) BOHRER NACH RECHTS
+    const drawPlayerRight = (ctx, drillF = 0, tier = 1, trackF = 0) => {
+      drawCrawlerChassis(ctx, 'right', trackF);
+      const f = drillF;
 
       // Auslegerarm von Drehachse nach rechts
       ctx.fillStyle = '#0f172a';
@@ -846,76 +1132,167 @@ export class AssetLoader {
       ctx.fillStyle = '#94a3b8';
       ctx.fillRect(27, 14.5, 7, 1.5);
 
+      if (tier === 1) {
+        // TIER 1: Reiner Meißel vorne
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(35, 12, 2.5, 7);
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(35.5, 13, 1.5, 5);
+
+        const hammer = f > 0 ? (f % 2 === 0 ? 1.5 : -0.5) : 0;
+        const chiselTipX = 44 + hammer;
+
+        // Schlanker Meißel-Schaft
+        ctx.fillStyle = '#475569';
+        ctx.beginPath();
+        ctx.moveTo(37, 13.8);
+        ctx.lineTo(chiselTipX - 1.5, 14.5);
+        ctx.lineTo(chiselTipX, 15.5);
+        ctx.lineTo(chiselTipX - 1.5, 16.5);
+        ctx.lineTo(37, 17.2);
+        ctx.closePath();
+        ctx.fill();
+
+        // Obere Glanzfase
+        ctx.fillStyle = '#94a3b8';
+        ctx.beginPath();
+        ctx.moveTo(37, 13.8);
+        ctx.lineTo(chiselTipX - 1.5, 14.5);
+        ctx.lineTo(chiselTipX, 15.5);
+        ctx.lineTo(37, 15.5);
+        ctx.closePath();
+        ctx.fill();
+
+        // Schliffkante
+        ctx.strokeStyle = '#f8fafc';
+        ctx.lineWidth = 1.0;
+        ctx.beginPath();
+        ctx.moveTo(chiselTipX - 2.5, 14.6);
+        ctx.lineTo(chiselTipX, 15.5);
+        ctx.stroke();
+
+        // Meißelspitze
+        ctx.fillStyle = '#f8fafc';
+        ctx.beginPath();
+        ctx.moveTo(chiselTipX - 1.5, 14.9);
+        ctx.lineTo(chiselTipX + 0.8, 15.5);
+        ctx.lineTo(chiselTipX - 1.5, 16.1);
+        ctx.closePath();
+        ctx.fill();
+        return;
+      }
+
+      // TIERS 2-10: Rotierender Bohrkegel
+      const cfg = TIER_DRILL_CONFIGS[tier] || TIER_DRILL_CONFIGS[2];
+      const halfH = cfg.coneHalfH;
+      const coneTipX = Math.min(48, 37 + cfg.coneLength);
+
       // Flansch / Manschette vor dem Bohrkegel
       ctx.fillStyle = '#1e293b';
-      ctx.fillRect(35, 11, 2.5, 9);
-      ctx.fillStyle = '#475569';
-      ctx.fillRect(35.5, 12, 1.5, 7);
+      ctx.fillRect(35, 15.5 - halfH - 0.5, 2.5, halfH * 2 + 1);
+      ctx.fillStyle = cfg.highlightColor;
+      ctx.fillRect(35.5, 15.5 - halfH + 0.5, 1.5, halfH * 2 - 1);
 
-      // Wolframcarbid-Bohrkegel nach rechts (x=37..48, y=10.5..20.5)
-      ctx.fillStyle = '#334155';
+      // Bohrkegel
+      ctx.fillStyle = cfg.bodyColor;
       ctx.beginPath();
-      ctx.moveTo(37, 10.5);
-      ctx.lineTo(48, 15.5);
-      ctx.lineTo(37, 20.5);
+      ctx.moveTo(37, 15.5 - halfH);
+      ctx.lineTo(coneTipX, 15.5);
+      ctx.lineTo(37, 15.5 + halfH);
       ctx.closePath();
       ctx.fill();
 
       // Oberer Glanzkegel
-      ctx.fillStyle = '#94a3b8';
+      ctx.fillStyle = cfg.highlightColor;
       ctx.beginPath();
-      ctx.moveTo(37, 10.5);
-      ctx.lineTo(48, 15.5);
+      ctx.moveTo(37, 15.5 - halfH);
+      ctx.lineTo(coneTipX, 15.5);
       ctx.lineTo(37, 15.5);
       ctx.closePath();
       ctx.fill();
 
       // Schneidkante
-      ctx.strokeStyle = '#f8fafc';
+      ctx.strokeStyle = cfg.edgeColor || '#f8fafc';
       ctx.lineWidth = 1.0;
       ctx.beginPath();
-      ctx.moveTo(37, 10.5);
-      ctx.lineTo(48, 15.5);
+      ctx.moveTo(37, 15.5 - halfH);
+      ctx.lineTo(coneTipX, 15.5);
       ctx.stroke();
 
-      // 6-Frame rotierende Spiral-Wendeln
-      const numFlutes = 3;
+      // Spiral-Wendeln
+      const numFlutes = cfg.numFlutes || 3;
+      const len = coneTipX - 37;
       for (let i = 0; i < numFlutes; i++) {
         const u = ((f / 6) + i / numFlutes) % 1.0;
-        const x = 37 + u * 9;
-        const halfH = 5.0 * (1 - (x - 37) / 11);
+        const x = 37 + u * (len - 2);
+        const fluteH = halfH * (1 - (x - 37) / len);
         const curvePhase = Math.sin((u * Math.PI * 2) + Math.PI / 4);
 
-        ctx.strokeStyle = '#090d16';
+        ctx.strokeStyle = cfg.fluteColor;
         ctx.lineWidth = 1.8;
         ctx.beginPath();
-        ctx.moveTo(x - 1.2, 15.5 - halfH);
-        ctx.quadraticCurveTo(x + curvePhase * 1.5, 15.5, x + 1.2, 15.5 + halfH);
+        ctx.moveTo(x - 1.2, 15.5 - fluteH);
+        ctx.quadraticCurveTo(x + curvePhase * 1.5, 15.5, x + 1.2, 15.5 + fluteH);
         ctx.stroke();
 
-        ctx.strokeStyle = '#f8fafc';
+        ctx.strokeStyle = cfg.spiralColor;
         ctx.lineWidth = 1.1;
         ctx.beginPath();
-        ctx.moveTo(x - 0.4, 15.5 - halfH);
-        ctx.quadraticCurveTo(x + curvePhase * 1.5 + 0.8, 15.5, x + 2.0, 15.5 + halfH);
+        ctx.moveTo(x - 0.4, 15.5 - fluteH);
+        ctx.quadraticCurveTo(x + curvePhase * 1.5 + 0.8, 15.5, x + 2.0, 15.5 + fluteH);
         ctx.stroke();
       }
 
-      // Meißelspitze rechts mit Vibration
+      // Spezialeffekt: Diamant-Facetten
+      if (cfg.isDiamond) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.beginPath();
+        ctx.moveTo(41, 14);
+        ctx.lineTo(43, 15.5);
+        ctx.lineTo(41, 17);
+        ctx.lineTo(39, 15.5);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Spezialeffekt: Laser-Spitze
+      if (cfg.isLaser) {
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(coneTipX - 2, 15.5);
+        ctx.lineTo(48, 15.5);
+        ctx.stroke();
+      }
+
+      // Spezialeffekt: Tachyon-Doppelzinken
+      if (cfg.isTachyon) {
+        ctx.strokeStyle = '#fde047';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(coneTipX - 3, 14);
+        ctx.lineTo(48, 13.5);
+        ctx.moveTo(coneTipX - 3, 17);
+        ctx.lineTo(48, 17.5);
+        ctx.stroke();
+      }
+
+      // Meißelspitze mit Vibration
       const tipAngle = (f / 6) * Math.PI * 2;
       const tipOffset = Math.sin(tipAngle) * 1.5;
-      ctx.fillStyle = '#f8fafc';
+      ctx.fillStyle = cfg.tipColor;
       ctx.beginPath();
-      ctx.moveTo(46, 15.5 - tipOffset);
-      ctx.lineTo(48, 15.5);
-      ctx.lineTo(46, 15.5 + tipOffset);
+      ctx.moveTo(coneTipX - 2, 15.5 - tipOffset);
+      ctx.lineTo(coneTipX, 15.5);
+      ctx.lineTo(coneTipX - 2, 15.5 + tipOffset);
       ctx.closePath();
       ctx.fill();
     };
 
-    // B) BOHRER NACH LINKS: Horizontale Bodenketten + nach links ausgefahrener Bohrkopf
-    const drawPlayerLeft = (ctx, f = 0) => {
-      drawCrawlerChassis(ctx);
+    // B) BOHRER NACH LINKS
+    const drawPlayerLeft = (ctx, drillF = 0, tier = 1, trackF = 0) => {
+      drawCrawlerChassis(ctx, 'left', trackF);
+      const f = drillF;
 
       // Auslegerarm von Drehachse nach links
       ctx.fillStyle = '#0f172a';
@@ -925,76 +1302,167 @@ export class AssetLoader {
       ctx.fillStyle = '#94a3b8';
       ctx.fillRect(14, 14.5, 7, 1.5);
 
+      if (tier === 1) {
+        // TIER 1: Reiner Meißel nach links
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(10.5, 12, 2.5, 7);
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(11, 13, 1.5, 5);
+
+        const hammer = f > 0 ? (f % 2 === 0 ? 1.5 : -0.5) : 0;
+        const chiselTipX = 4 - hammer;
+
+        // Schlanker Meißel-Schaft
+        ctx.fillStyle = '#475569';
+        ctx.beginPath();
+        ctx.moveTo(11, 13.8);
+        ctx.lineTo(chiselTipX + 1.5, 14.5);
+        ctx.lineTo(chiselTipX, 15.5);
+        ctx.lineTo(chiselTipX + 1.5, 16.5);
+        ctx.lineTo(11, 17.2);
+        ctx.closePath();
+        ctx.fill();
+
+        // Obere Glanzfase
+        ctx.fillStyle = '#94a3b8';
+        ctx.beginPath();
+        ctx.moveTo(11, 13.8);
+        ctx.lineTo(chiselTipX + 1.5, 14.5);
+        ctx.lineTo(chiselTipX, 15.5);
+        ctx.lineTo(11, 15.5);
+        ctx.closePath();
+        ctx.fill();
+
+        // Schliffkante
+        ctx.strokeStyle = '#f8fafc';
+        ctx.lineWidth = 1.0;
+        ctx.beginPath();
+        ctx.moveTo(chiselTipX + 2.5, 14.6);
+        ctx.lineTo(chiselTipX, 15.5);
+        ctx.stroke();
+
+        // Meißelspitze
+        ctx.fillStyle = '#f8fafc';
+        ctx.beginPath();
+        ctx.moveTo(chiselTipX + 1.5, 14.9);
+        ctx.lineTo(chiselTipX - 0.8, 15.5);
+        ctx.lineTo(chiselTipX + 1.5, 16.1);
+        ctx.closePath();
+        ctx.fill();
+        return;
+      }
+
+      // TIERS 2-10: Rotierender Bohrkegel nach links
+      const cfg = TIER_DRILL_CONFIGS[tier] || TIER_DRILL_CONFIGS[2];
+      const halfH = cfg.coneHalfH;
+      const coneTipX = Math.max(0, 11 - cfg.coneLength);
+
       // Flansch / Manschette vor dem Bohrkegel
       ctx.fillStyle = '#1e293b';
-      ctx.fillRect(10.5, 11, 2.5, 9);
-      ctx.fillStyle = '#475569';
-      ctx.fillRect(11, 12, 1.5, 7);
+      ctx.fillRect(10.5, 15.5 - halfH - 0.5, 2.5, halfH * 2 + 1);
+      ctx.fillStyle = cfg.highlightColor;
+      ctx.fillRect(11, 15.5 - halfH + 0.5, 1.5, halfH * 2 - 1);
 
-      // Wolframcarbid-Bohrkegel nach links (x=11..0, y=10.5..20.5)
-      ctx.fillStyle = '#334155';
+      // Bohrkegel nach links
+      ctx.fillStyle = cfg.bodyColor;
       ctx.beginPath();
-      ctx.moveTo(11, 10.5);
-      ctx.lineTo(0, 15.5);
-      ctx.lineTo(11, 20.5);
+      ctx.moveTo(11, 15.5 - halfH);
+      ctx.lineTo(coneTipX, 15.5);
+      ctx.lineTo(11, 15.5 + halfH);
       ctx.closePath();
       ctx.fill();
 
       // Oberer Glanzkegel
-      ctx.fillStyle = '#94a3b8';
+      ctx.fillStyle = cfg.highlightColor;
       ctx.beginPath();
-      ctx.moveTo(11, 10.5);
-      ctx.lineTo(0, 15.5);
+      ctx.moveTo(11, 15.5 - halfH);
+      ctx.lineTo(coneTipX, 15.5);
       ctx.lineTo(11, 15.5);
       ctx.closePath();
       ctx.fill();
 
       // Schneidkante
-      ctx.strokeStyle = '#f8fafc';
+      ctx.strokeStyle = cfg.edgeColor || '#f8fafc';
       ctx.lineWidth = 1.0;
       ctx.beginPath();
-      ctx.moveTo(11, 10.5);
-      ctx.lineTo(0, 15.5);
+      ctx.moveTo(11, 15.5 - halfH);
+      ctx.lineTo(coneTipX, 15.5);
       ctx.stroke();
 
-      // 6-Frame rotierende Spiral-Wendeln
-      const numFlutes = 3;
+      // Spiral-Wendeln nach links
+      const numFlutes = cfg.numFlutes || 3;
+      const len = 11 - coneTipX;
       for (let i = 0; i < numFlutes; i++) {
         const u = ((f / 6) + i / numFlutes) % 1.0;
-        const x = 11 - u * 9;
-        const halfH = 5.0 * (1 - (11 - x) / 11);
+        const x = 11 - u * (len - 2);
+        const fluteH = halfH * (1 - (11 - x) / len);
         const curvePhase = Math.sin((u * Math.PI * 2) + Math.PI / 4);
 
-        ctx.strokeStyle = '#090d16';
+        ctx.strokeStyle = cfg.fluteColor;
         ctx.lineWidth = 1.8;
         ctx.beginPath();
-        ctx.moveTo(x + 1.2, 15.5 - halfH);
-        ctx.quadraticCurveTo(x - curvePhase * 1.5, 15.5, x - 1.2, 15.5 + halfH);
+        ctx.moveTo(x + 1.2, 15.5 - fluteH);
+        ctx.quadraticCurveTo(x - curvePhase * 1.5, 15.5, x - 1.2, 15.5 + fluteH);
         ctx.stroke();
 
-        ctx.strokeStyle = '#f8fafc';
+        ctx.strokeStyle = cfg.spiralColor;
         ctx.lineWidth = 1.1;
         ctx.beginPath();
-        ctx.moveTo(x + 0.4, 15.5 - halfH);
-        ctx.quadraticCurveTo(x - curvePhase * 1.5 - 0.8, 15.5, x - 2.0, 15.5 + halfH);
+        ctx.moveTo(x + 0.4, 15.5 - fluteH);
+        ctx.quadraticCurveTo(x - curvePhase * 1.5 - 0.8, 15.5, x - 2.0, 15.5 + fluteH);
         ctx.stroke();
       }
 
-      // Meißelspitze links mit Vibration
+      // Spezialeffekt: Diamant-Facetten
+      if (cfg.isDiamond) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.beginPath();
+        ctx.moveTo(7, 14);
+        ctx.lineTo(5, 15.5);
+        ctx.lineTo(7, 17);
+        ctx.lineTo(9, 15.5);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Spezialeffekt: Laser-Spitze
+      if (cfg.isLaser) {
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(coneTipX + 2, 15.5);
+        ctx.lineTo(0, 15.5);
+        ctx.stroke();
+      }
+
+      // Spezialeffekt: Tachyon-Doppelzinken
+      if (cfg.isTachyon) {
+        ctx.strokeStyle = '#fde047';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(coneTipX + 3, 14);
+        ctx.lineTo(0, 13.5);
+        ctx.moveTo(coneTipX + 3, 17);
+        ctx.lineTo(0, 17.5);
+        ctx.stroke();
+      }
+
+      // Meißelspitze mit Vibration
       const tipAngle = (f / 6) * Math.PI * 2;
       const tipOffset = Math.sin(tipAngle) * 1.5;
-      ctx.fillStyle = '#f8fafc';
+      ctx.fillStyle = cfg.tipColor;
       ctx.beginPath();
-      ctx.moveTo(2, 15.5 - tipOffset);
-      ctx.lineTo(0, 15.5);
-      ctx.lineTo(2, 15.5 + tipOffset);
+      ctx.moveTo(coneTipX + 2, 15.5 - tipOffset);
+      ctx.lineTo(coneTipX, 15.5);
+      ctx.lineTo(coneTipX + 2, 15.5 + tipOffset);
       ctx.closePath();
       ctx.fill();
     };
 
-    // C) BOHRER NACH UNTEN: Bohrkegel schwenkt mittig nach unten, schließt bündig mit Ketten bei y=31 ab!
-    const drawPlayerDown = (ctx, f = 0) => {
-      drawCrawlerChassis(ctx);
+    // C) BOHRER NACH UNTEN
+    const drawPlayerDown = (ctx, drillF = 0, tier = 1, facing = 'right', trackF = 0) => {
+      drawCrawlerChassis(ctx, facing, trackF);
+      const f = drillF;
 
       // Vertikaler Führungssockel & Hydraulikzylinder
       ctx.fillStyle = '#0f172a';
@@ -1004,69 +1472,116 @@ export class AssetLoader {
       ctx.fillStyle = '#94a3b8';
       ctx.fillRect(21, 20.5, 6, 1.5);
 
-      // Bohrkegel nach unten (Spitze schließt EXAKT bündig bei y=31 mit Kettenunterkante ab!)
-      ctx.fillStyle = '#334155';
+      if (tier === 1) {
+        // TIER 1: Reiner Meißel nach unten
+        const hammer = f > 0 ? (f % 2 === 0 ? 1.5 : -0.5) : 0;
+        const chiselTipY = 28 + hammer;
+
+        ctx.fillStyle = '#475569';
+        ctx.beginPath();
+        ctx.moveTo(22.5, 22);
+        ctx.lineTo(23.5, chiselTipY - 1.5);
+        ctx.lineTo(24, chiselTipY);
+        ctx.lineTo(24.5, chiselTipY - 1.5);
+        ctx.lineTo(25.5, 22);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.beginPath();
+        ctx.moveTo(22.5, 22);
+        ctx.lineTo(23.5, chiselTipY - 1.5);
+        ctx.lineTo(24, chiselTipY);
+        ctx.lineTo(24, 22);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = '#f8fafc';
+        ctx.lineWidth = 1.0;
+        ctx.beginPath();
+        ctx.moveTo(23.5, chiselTipY - 2.0);
+        ctx.lineTo(24, chiselTipY);
+        ctx.stroke();
+
+        ctx.fillStyle = '#f8fafc';
+        ctx.beginPath();
+        ctx.moveTo(23.5, chiselTipY - 1.2);
+        ctx.lineTo(24, chiselTipY + 0.8);
+        ctx.lineTo(24.5, chiselTipY - 1.2);
+        ctx.closePath();
+        ctx.fill();
+        return;
+      }
+
+      // TIERS 2-10: Rotierender Bohrkegel nach unten
+      const cfg = TIER_DRILL_CONFIGS[tier] || TIER_DRILL_CONFIGS[2];
+      const halfW = cfg.coneHalfH;
+      const coneTipY = Math.min(31, 22 + Math.round(cfg.coneLength * 0.78));
+
+      ctx.fillStyle = cfg.bodyColor;
       ctx.beginPath();
-      ctx.moveTo(19, 22);
-      ctx.lineTo(29, 22);
-      ctx.lineTo(24, 31);
+      ctx.moveTo(24 - halfW, 22);
+      ctx.lineTo(24 + halfW, 22);
+      ctx.lineTo(24, coneTipY);
       ctx.closePath();
       ctx.fill();
 
       // Linke Glanzhälfte
-      ctx.fillStyle = '#94a3b8';
+      ctx.fillStyle = cfg.highlightColor;
       ctx.beginPath();
-      ctx.moveTo(19, 22);
+      ctx.moveTo(24 - halfW, 22);
       ctx.lineTo(24, 22);
-      ctx.lineTo(24, 31);
+      ctx.lineTo(24, coneTipY);
       ctx.closePath();
       ctx.fill();
 
-      ctx.strokeStyle = '#f8fafc';
+      ctx.strokeStyle = cfg.edgeColor || '#f8fafc';
       ctx.lineWidth = 1.0;
       ctx.beginPath();
-      ctx.moveTo(19, 22);
-      ctx.lineTo(24, 31);
+      ctx.moveTo(24 - halfW, 22);
+      ctx.lineTo(24, coneTipY);
       ctx.stroke();
 
-      // 6-Frame rotierende Spiral-Wendeln nach unten
-      const numFlutes = 3;
+      // Spiral-Wendeln nach unten
+      const numFlutes = cfg.numFlutes || 3;
+      const len = coneTipY - 22;
       for (let i = 0; i < numFlutes; i++) {
         const u = ((f / 6) + i / numFlutes) % 1.0;
-        const y = 22 + u * 7;
-        const halfW = 4.8 * (1 - (y - 22) / 9);
+        const y = 22 + u * (len - 2);
+        const fluteW = halfW * (1 - (y - 22) / len);
         const curvePhase = Math.sin((u * Math.PI * 2) + Math.PI / 4);
 
-        ctx.strokeStyle = '#090d16';
+        ctx.strokeStyle = cfg.fluteColor;
         ctx.lineWidth = 1.8;
         ctx.beginPath();
-        ctx.moveTo(24 - halfW, y - 1.0);
-        ctx.quadraticCurveTo(24, y + curvePhase * 1.5, 24 + halfW, y + 1.0);
+        ctx.moveTo(24 - fluteW, y - 1.0);
+        ctx.quadraticCurveTo(24, y + curvePhase * 1.5, 24 + fluteW, y + 1.0);
         ctx.stroke();
 
-        ctx.strokeStyle = '#f8fafc';
+        ctx.strokeStyle = cfg.spiralColor;
         ctx.lineWidth = 1.1;
         ctx.beginPath();
-        ctx.moveTo(24 - halfW, y - 0.3);
-        ctx.quadraticCurveTo(24, y + curvePhase * 1.5 + 0.8, 24 + halfW, y + 1.6);
+        ctx.moveTo(24 - fluteW, y - 0.3);
+        ctx.quadraticCurveTo(24, y + curvePhase * 1.5 + 0.8, 24 + fluteW, y + 1.6);
         ctx.stroke();
       }
 
-      // Meißelspitze unten (exakt bündig bei y=31)
+      // Meißelspitze unten
       const tipAngle = (f / 6) * Math.PI * 2;
       const tipOffset = Math.sin(tipAngle) * 1.5;
-      ctx.fillStyle = '#f8fafc';
+      ctx.fillStyle = cfg.tipColor;
       ctx.beginPath();
-      ctx.moveTo(24 - tipOffset, 29.5);
-      ctx.lineTo(24, 31);
-      ctx.lineTo(24 + tipOffset, 29.5);
+      ctx.moveTo(24 - tipOffset, coneTipY - 1.5);
+      ctx.lineTo(24, coneTipY);
+      ctx.lineTo(24 + tipOffset, coneTipY - 1.5);
       ctx.closePath();
       ctx.fill();
     };
 
-    // D) BOHRER NACH OBEN: Bohrkegel schwenkt über das Dach nach oben in die Decke (y=0..8)
-    const drawPlayerUp = (ctx, f = 0) => {
-      drawCrawlerChassis(ctx);
+    // D) BOHRER NACH OBEN
+    const drawPlayerUp = (ctx, drillF = 0, tier = 1, facing = 'right', trackF = 0) => {
+      drawCrawlerChassis(ctx, facing, trackF);
+      const f = drillF;
 
       // Dach-Führungssockel & Hubzylinder
       ctx.fillStyle = '#0f172a';
@@ -1076,77 +1591,173 @@ export class AssetLoader {
       ctx.fillStyle = '#94a3b8';
       ctx.fillRect(21, 6, 6, 1);
 
-      // Bohrkegel nach oben (Spitze bei y=0)
-      ctx.fillStyle = '#334155';
+      if (tier === 1) {
+        // TIER 1: Reiner Meißel nach oben
+        const hammer = f > 0 ? (f % 2 === 0 ? 1.5 : -0.5) : 0;
+        const chiselTipY = 3 - hammer;
+
+        ctx.fillStyle = '#475569';
+        ctx.beginPath();
+        ctx.moveTo(22.5, 7);
+        ctx.lineTo(23.5, chiselTipY + 1.5);
+        ctx.lineTo(24, chiselTipY);
+        ctx.lineTo(24.5, chiselTipY + 1.5);
+        ctx.lineTo(25.5, 7);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.beginPath();
+        ctx.moveTo(22.5, 7);
+        ctx.lineTo(23.5, chiselTipY + 1.5);
+        ctx.lineTo(24, chiselTipY);
+        ctx.lineTo(24, 7);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = '#f8fafc';
+        ctx.lineWidth = 1.0;
+        ctx.beginPath();
+        ctx.moveTo(23.5, chiselTipY + 2.0);
+        ctx.lineTo(24, chiselTipY);
+        ctx.stroke();
+
+        ctx.fillStyle = '#f8fafc';
+        ctx.beginPath();
+        ctx.moveTo(23.5, chiselTipY + 1.2);
+        ctx.lineTo(24, chiselTipY - 0.8);
+        ctx.lineTo(24.5, chiselTipY + 1.2);
+        ctx.closePath();
+        ctx.fill();
+        return;
+      }
+
+      // TIERS 2-10: Rotierender Bohrkegel nach oben
+      const cfg = TIER_DRILL_CONFIGS[tier] || TIER_DRILL_CONFIGS[2];
+      const halfW = cfg.coneHalfH;
+      const coneTipY = Math.max(0, 8 - Math.round(cfg.coneLength * 0.70));
+
+      ctx.fillStyle = cfg.bodyColor;
       ctx.beginPath();
-      ctx.moveTo(19, 8);
-      ctx.lineTo(29, 8);
-      ctx.lineTo(24, 0);
+      ctx.moveTo(24 - halfW, 8);
+      ctx.lineTo(24 + halfW, 8);
+      ctx.lineTo(24, coneTipY);
       ctx.closePath();
       ctx.fill();
 
       // Linke Glanzhälfte
-      ctx.fillStyle = '#94a3b8';
+      ctx.fillStyle = cfg.highlightColor;
       ctx.beginPath();
-      ctx.moveTo(19, 8);
+      ctx.moveTo(24 - halfW, 8);
       ctx.lineTo(24, 8);
-      ctx.lineTo(24, 0);
+      ctx.lineTo(24, coneTipY);
       ctx.closePath();
       ctx.fill();
 
-      ctx.strokeStyle = '#f8fafc';
+      ctx.strokeStyle = cfg.edgeColor || '#f8fafc';
       ctx.lineWidth = 1.0;
       ctx.beginPath();
-      ctx.moveTo(19, 8);
-      ctx.lineTo(24, 0);
+      ctx.moveTo(24 - halfW, 8);
+      ctx.lineTo(24, coneTipY);
       ctx.stroke();
 
-      // 6-Frame rotierende Spiral-Wendeln nach oben
-      const numFlutes = 3;
+      // Spiral-Wendeln nach oben
+      const numFlutes = cfg.numFlutes || 3;
+      const len = 8 - coneTipY;
       for (let i = 0; i < numFlutes; i++) {
         const u = ((f / 6) + i / numFlutes) % 1.0;
-        const y = 8 - u * 6.5;
-        const halfW = 4.8 * (1 - (8 - y) / 8);
+        const y = 8 - u * (len - 2);
+        const fluteW = halfW * (1 - (8 - y) / len);
         const curvePhase = Math.sin((u * Math.PI * 2) + Math.PI / 4);
 
-        ctx.strokeStyle = '#090d16';
+        ctx.strokeStyle = cfg.fluteColor;
         ctx.lineWidth = 1.8;
         ctx.beginPath();
-        ctx.moveTo(24 - halfW, y + 1.0);
-        ctx.quadraticCurveTo(24, y - curvePhase * 1.5, 24 + halfW, y - 1.0);
+        ctx.moveTo(24 - fluteW, y + 1.0);
+        ctx.quadraticCurveTo(24, y - curvePhase * 1.5, 24 + fluteW, y - 1.0);
         ctx.stroke();
 
-        ctx.strokeStyle = '#f8fafc';
+        ctx.strokeStyle = cfg.spiralColor;
         ctx.lineWidth = 1.1;
         ctx.beginPath();
-        ctx.moveTo(24 - halfW, y + 0.3);
-        ctx.quadraticCurveTo(24, y - curvePhase * 1.5 - 0.8, 24 + halfW, y - 1.6);
+        ctx.moveTo(24 - fluteW, y + 0.3);
+        ctx.quadraticCurveTo(24, y - curvePhase * 1.5 - 0.8, 24 + fluteW, y - 1.6);
         ctx.stroke();
       }
 
-      // Meißelspitze oben (y=0)
+      // Meißelspitze oben
       const tipAngle = (f / 6) * Math.PI * 2;
       const tipOffset = Math.sin(tipAngle) * 1.5;
-      ctx.fillStyle = '#f8fafc';
+      ctx.fillStyle = cfg.tipColor;
       ctx.beginPath();
-      ctx.moveTo(24 - tipOffset, 1.5);
-      ctx.lineTo(24, 0);
-      ctx.lineTo(24 + tipOffset, 1.5);
+      ctx.moveTo(24 - tipOffset, coneTipY + 1.5);
+      ctx.lineTo(24, coneTipY);
+      ctx.lineTo(24 + tipOffset, coneTipY + 1.5);
       ctx.closePath();
       ctx.fill();
     };
 
-    // Texturen mit einheitlich 48x32 Pixeln für alle 4 Richtungen & alle 6 Frames
-    createTexture('player_drill_right', 48, 32, (ctx) => drawPlayerRight(ctx, 0));
-    createTexture('player_drill_left', 48, 32, (ctx) => drawPlayerLeft(ctx, 0));
-    createTexture('player_drill_down', 48, 32, (ctx) => drawPlayerDown(ctx, 0));
-    createTexture('player_drill_up', 48, 32, (ctx) => drawPlayerUp(ctx, 0));
+    // Texturen für alle 10 Bohrkopf-Stufen in allen Richtungen generieren
+    for (let t = 1; t <= 10; t++) {
+      createTexture(`player_drill_t${t}_right`, 48, 32, (ctx) => drawPlayerRight(ctx, 0, t));
+      createTexture(`player_drill_t${t}_left`, 48, 32, (ctx) => drawPlayerLeft(ctx, 0, t));
+      createTexture(`player_drill_t${t}_down`, 48, 32, (ctx) => drawPlayerDown(ctx, 0, t, 'right'));
+      createTexture(`player_drill_t${t}_up`, 48, 32, (ctx) => drawPlayerUp(ctx, 0, t, 'right'));
+
+      createTexture(`player_drill_t${t}_down_right`, 48, 32, (ctx) => drawPlayerDown(ctx, 0, t, 'right'));
+      createTexture(`player_drill_t${t}_down_left`, 48, 32, (ctx) => drawPlayerDown(ctx, 0, t, 'left'));
+      createTexture(`player_drill_t${t}_up_right`, 48, 32, (ctx) => drawPlayerUp(ctx, 0, t, 'right'));
+      createTexture(`player_drill_t${t}_up_left`, 48, 32, (ctx) => drawPlayerUp(ctx, 0, t, 'left'));
+
+      for (let f = 0; f < 6; f++) {
+        // Bohrkopf dreht sich (f: 0..5), Kette bleibt stehen (trackF: 0)
+        createTexture(`player_drill_t${t}_right_${f}`, 48, 32, (ctx) => drawPlayerRight(ctx, f, t, 0));
+        createTexture(`player_drill_t${t}_left_${f}`, 48, 32, (ctx) => drawPlayerLeft(ctx, f, t, 0));
+        createTexture(`player_drill_t${t}_down_${f}`, 48, 32, (ctx) => drawPlayerDown(ctx, f, t, 'right', 0));
+        createTexture(`player_drill_t${t}_up_${f}`, 48, 32, (ctx) => drawPlayerUp(ctx, f, t, 'right', 0));
+
+        createTexture(`player_drill_t${t}_down_right_${f}`, 48, 32, (ctx) => drawPlayerDown(ctx, f, t, 'right', 0));
+        createTexture(`player_drill_t${t}_down_left_${f}`, 48, 32, (ctx) => drawPlayerDown(ctx, f, t, 'left', 0));
+        createTexture(`player_drill_t${t}_up_right_${f}`, 48, 32, (ctx) => drawPlayerUp(ctx, f, t, 'right', 0));
+        createTexture(`player_drill_t${t}_up_left_${f}`, 48, 32, (ctx) => drawPlayerUp(ctx, f, t, 'left', 0));
+      }
+
+      // 4 Ketten-Fahrt-Texturen: Kette läuft (track: 0..3), Bohrkopf steht still (drillF: 0)
+      for (let tr = 0; tr < 4; tr++) {
+        createTexture(`player_drill_t${t}_right_track_${tr}`, 48, 32, (ctx) => drawPlayerRight(ctx, 0, t, tr));
+        createTexture(`player_drill_t${t}_left_track_${tr}`, 48, 32, (ctx) => drawPlayerLeft(ctx, 0, t, tr));
+        createTexture(`player_drill_t${t}_down_track_${tr}`, 48, 32, (ctx) => drawPlayerDown(ctx, 0, t, 'right', tr));
+        createTexture(`player_drill_t${t}_up_track_${tr}`, 48, 32, (ctx) => drawPlayerUp(ctx, 0, t, 'right', tr));
+
+        createTexture(`player_drill_t${t}_down_right_track_${tr}`, 48, 32, (ctx) => drawPlayerDown(ctx, 0, t, 'right', tr));
+        createTexture(`player_drill_t${t}_down_left_track_${tr}`, 48, 32, (ctx) => drawPlayerDown(ctx, 0, t, 'left', tr));
+        createTexture(`player_drill_t${t}_up_right_track_${tr}`, 48, 32, (ctx) => drawPlayerUp(ctx, 0, t, 'right', tr));
+        createTexture(`player_drill_t${t}_up_left_track_${tr}`, 48, 32, (ctx) => drawPlayerUp(ctx, 0, t, 'left', tr));
+      }
+    }
+
+    // Abwärtskompatible Standard-Texturen (Tier 1 als Basis)
+    createTexture('player_drill_right', 48, 32, (ctx) => drawPlayerRight(ctx, 0, 1, 0));
+    createTexture('player_drill_left', 48, 32, (ctx) => drawPlayerLeft(ctx, 0, 1, 0));
+    createTexture('player_drill_down', 48, 32, (ctx) => drawPlayerDown(ctx, 0, 1, 'right', 0));
+    createTexture('player_drill_up', 48, 32, (ctx) => drawPlayerUp(ctx, 0, 1, 'right', 0));
+    createTexture('player_drill_down_right', 48, 32, (ctx) => drawPlayerDown(ctx, 0, 1, 'right', 0));
+    createTexture('player_drill_down_left', 48, 32, (ctx) => drawPlayerDown(ctx, 0, 1, 'left', 0));
+    createTexture('player_drill_up_right', 48, 32, (ctx) => drawPlayerUp(ctx, 0, 1, 'right', 0));
+    createTexture('player_drill_up_left', 48, 32, (ctx) => drawPlayerUp(ctx, 0, 1, 'left', 0));
 
     for (let f = 0; f < 6; f++) {
-      createTexture(`player_drill_right_${f}`, 48, 32, (ctx) => drawPlayerRight(ctx, f));
-      createTexture(`player_drill_left_${f}`, 48, 32, (ctx) => drawPlayerLeft(ctx, f));
-      createTexture(`player_drill_down_${f}`, 48, 32, (ctx) => drawPlayerDown(ctx, f));
-      createTexture(`player_drill_up_${f}`, 48, 32, (ctx) => drawPlayerUp(ctx, f));
+      createTexture(`player_drill_right_${f}`, 48, 32, (ctx) => drawPlayerRight(ctx, f, 1, 0));
+      createTexture(`player_drill_left_${f}`, 48, 32, (ctx) => drawPlayerLeft(ctx, f, 1, 0));
+      createTexture(`player_drill_down_${f}`, 48, 32, (ctx) => drawPlayerDown(ctx, f, 1, 'right', 0));
+      createTexture(`player_drill_up_${f}`, 48, 32, (ctx) => drawPlayerUp(ctx, f, 1, 'right', 0));
+    }
+
+    for (let tr = 0; tr < 4; tr++) {
+      createTexture(`player_drill_right_track_${tr}`, 48, 32, (ctx) => drawPlayerRight(ctx, 0, 1, tr));
+      createTexture(`player_drill_left_track_${tr}`, 48, 32, (ctx) => drawPlayerLeft(ctx, 0, 1, tr));
+      createTexture(`player_drill_down_track_${tr}`, 48, 32, (ctx) => drawPlayerDown(ctx, 0, 1, 'right', tr));
+      createTexture(`player_drill_up_track_${tr}`, 48, 32, (ctx) => drawPlayerUp(ctx, 0, 1, 'right', tr));
     }
 
     // Leere Dummy-Textur für Rückwärtskompatibilität
@@ -1411,17 +2022,31 @@ export class AssetLoader {
       ctx.fillStyle = '#fef08a';
       ctx.fillRect(27, 17, 2, 2);
 
-      // Gelbes 200L Treibstoff-Fass außen rechts
+      // Gelbes 200L Treibstoff-Fass außen links (x=6..16) als Treibstofflager
       ctx.fillStyle = '#d97706';
-      ctx.fillRect(44, 24, 10, 14);
+      ctx.fillRect(7, 24, 10, 14);
       ctx.fillStyle = '#f59e0b';
-      ctx.fillRect(45, 25, 8, 12);
+      ctx.fillRect(8, 25, 8, 12);
       ctx.fillStyle = '#78350f';
-      ctx.fillRect(44, 28, 10, 1.5);
-      ctx.fillRect(44, 33, 10, 1.5);
+      ctx.fillRect(7, 28, 10, 1.5);
+      ctx.fillRect(7, 33, 10, 1.5);
       ctx.fillStyle = '#334155';
-      ctx.fillRect(48, 20, 2, 4);
-      ctx.fillRect(46, 20, 6, 1.5);
+      ctx.fillRect(11, 20, 2, 4);
+      ctx.fillRect(9, 20, 6, 1.5);
+
+      // Tankgalgen-Stütze links am Schuppen (Sockel für Tankschlauch bei x=12, y=8)
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(10, 4, 4, 6);
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(11, 2, 2, 4);
+
+      // Schwenkbarer Schweißarm-Sockel rechts auf dem Vordach (x=50, y=7)
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(48, 5, 6, 4);
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillRect(49, 3, 4, 3);
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(50, 1, 2, 3);
 
       // Messingblende & Nieten über dem Tor
       ctx.fillStyle = '#1e293b';
@@ -1470,21 +2095,29 @@ export class AssetLoader {
         ctx.fillRect(22, ry, 32, 1);
       }
 
-      // Zapfsäule & Tankstand rechts
+      // Zapfsäule & Tankstand links (x=10..22, y=28..50)
       ctx.fillStyle = '#d97706';
-      ctx.fillRect(62, 28, 12, 22);
+      ctx.fillRect(10, 28, 12, 22);
       ctx.fillStyle = '#f59e0b';
-      ctx.fillRect(63, 29, 10, 20);
+      ctx.fillRect(11, 29, 10, 20);
       ctx.fillStyle = '#0f172a';
-      ctx.fillRect(65, 32, 6, 4);
+      ctx.fillRect(13, 32, 6, 4);
       ctx.fillStyle = '#10b981';
-      ctx.fillRect(66, 33, 4, 2);
+      ctx.fillRect(14, 33, 4, 2);
 
-      // Lüfterkasten auf dem Dach
+      // Schwenkbarer Reparaturarm-Sockel rechts auf dem Dach (x=72, y=6)
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(68, 5, 8, 4);
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillRect(70, 2, 4, 4);
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(71, 0, 2, 3);
+
+      // Lüfterkasten auf dem Dach (Mitte-Links)
       ctx.fillStyle = '#475569';
-      ctx.fillRect(14, 4, 12, 5);
+      ctx.fillRect(34, 4, 12, 5);
       ctx.fillStyle = '#1e293b';
-      ctx.fillRect(16, 5, 8, 3);
+      ctx.fillRect(36, 5, 8, 3);
     });
 
     // B) ERZ-BÖRSE & ROHSTOFF-LAGERHALLE (100x68) - Schweres Logistik- & Güterdepot
@@ -3160,95 +3793,7 @@ export class AssetLoader {
       ctx.stroke();
     });
 
-    // 2. Quanten-Teleporter & Tiefen-Rohr (gx: 39) - 84x76
-    createTexture('building_teleporter', 84, 76, (ctx) => {
-      // 1. Schweres Verankerungs-Fundament
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(2, 54, 80, 22);
-      ctx.fillStyle = '#1e293b';
-      ctx.fillRect(4, 52, 76, 4);
-      ctx.fillStyle = '#334155';
-      ctx.fillRect(6, 44, 72, 9);
-      // Fundament-Riffelung & Nieten
-      ctx.fillStyle = '#64748b';
-      for (let x = 8; x < 76; x += 6) {
-        ctx.fillRect(x, 47, 1.5, 3);
-      }
 
-      // 2. Vertikaler Pneumatik-Erzschacht (Dickes Vakuumrohr rechts: x=58..76)
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(57, 4, 18, 50);
-      ctx.fillStyle = '#334155';
-      ctx.fillRect(58, 5, 16, 48);
-      ctx.fillStyle = '#475569';
-      ctx.fillRect(61, 5, 10, 48);
-      // Glänzende Lichtkante
-      ctx.fillStyle = '#94a3b8';
-      ctx.fillRect(63, 5, 2.5, 48);
-
-      // Schauglas-Ringe (Lagerung mit sichtbarem blauem Partikelfluss)
-      const ringsY = [12, 26, 40];
-      ringsY.forEach(ry => {
-        ctx.fillStyle = '#1e293b';
-        ctx.fillRect(56, ry, 20, 5);
-        ctx.fillStyle = '#0284c7';
-        ctx.fillRect(59, ry + 1, 14, 3);
-        ctx.fillStyle = '#e0f2fe';
-        ctx.fillRect(61, ry + 1.5, 10, 1); // Plasmaglanz
-      });
-
-      // 3. Quanten-Teleportationsportal (Links: x=12..50, y=10..52)
-      ctx.fillStyle = '#090d16';
-      ctx.fillRect(12, 10, 40, 42);
-      ctx.fillStyle = '#1e293b';
-      ctx.fillRect(14, 12, 36, 38);
-      ctx.strokeStyle = '#0284c7';
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(14, 12, 36, 38);
-
-      // Supraleiter-Magnetringe & Energiefeld
-      ctx.fillStyle = '#0c4a6e';
-      ctx.beginPath();
-      ctx.arc(32, 31, 16, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#0284c7';
-      ctx.beginPath();
-      ctx.arc(32, 31, 12, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#38bdf8';
-      ctx.beginPath();
-      ctx.arc(32, 31, 8, 0, Math.PI * 2);
-      ctx.fill();
-      // Weißglühende Singularität im Zentrum
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.arc(32, 31, 3.5, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Elektrische Plasma-Entladungen (Cyan)
-      ctx.strokeStyle = '#e0f2fe';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(32, 23); ctx.lineTo(34, 27); ctx.lineTo(32, 31);
-      ctx.moveTo(25, 31); ctx.lineTo(28, 33); ctx.lineTo(32, 31);
-      ctx.moveTo(38, 33); ctx.lineTo(35, 30);
-      ctx.stroke();
-
-      // 4. Dach-Feldspitzen & Antennen-Array
-      ctx.fillStyle = '#475569';
-      ctx.fillRect(30, 0, 4, 12);
-      ctx.fillStyle = '#38bdf8';
-      ctx.fillRect(28, 0, 8, 2.5);
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(31, -1, 2, 2);
-
-      // Digitaler Telemetrie-Sockel
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(18, 55, 28, 8);
-      ctx.fillStyle = '#10b981';
-      ctx.fillRect(20, 58, 4, 2);
-      ctx.fillRect(26, 58, 4, 2);
-    });
 
     // 3. Geothermie-Kraftwerk & Energie-Reaktor (gx: 47) - 96x76
     createTexture('building_powerplant', 96, 76, (ctx) => {

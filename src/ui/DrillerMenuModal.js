@@ -304,11 +304,12 @@ export class DrillerMenuModal {
           </div>
 
           <!-- Stein Name -->
-          <span style="
+          <span class="driller-card-name" style="
             font-size: 11px;
             font-weight: 700;
             color: #f8fafc;
             text-align: center;
+            margin-top: 6px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;

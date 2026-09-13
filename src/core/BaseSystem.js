@@ -813,20 +813,7 @@ export class BaseSystem {
         timer: 0,
         action: () => this.openDroneModal()
       },
-      {
-        id: 'teleporter',
-        title: 'TELEPORTER',
-        label: 'TELEPORTER',
-        iconName: 'navigation',
-        desc: 'Ermöglicht Rohrpost-Verkauf aus der Tiefe und Sofort-Warp zur tiefsten Schachtebene.',
-        spriteKey: 'building_teleporter',
-        gx: 34,
-        height: 76,
-        costCash: 5800,
-        costComp: { bronze_gear: 1, silver_coil: 1 },
-        isBuilt: false,
-        action: () => this.openTeleporterModal()
-      },
+
       {
         id: 'powerplant',
         title: 'KRAFTWERK',
@@ -1737,7 +1724,7 @@ export class BaseSystem {
     const isTube = (station.type === 'pneumatic' || station.type === 'tube');
     const isFuel = (station.type === 'fuel' || station.type === 'geothermal');
 
-    const titleIcon = isTube ? icon('conveyor-belt', '', 20) : icon('fuel', '', 20);
+    const titleIcon = isTube ? icon('conveyor-belt', '', 18) : icon('fuel', '', 18);
     const titleColor = isTube ? '#38bdf8' : '#fb923c';
     const stationName = isTube ? 'Pneumatische Erzförderung' : 'Untertage-Tankanlage';
 
@@ -1761,76 +1748,58 @@ export class BaseSystem {
     const rawOreCount = rawOres.length;
     const maxCargo = this.player.maxCargo || 10;
 
-    let actionSectionHtml = '';
+    let actionCardHtml = '';
     if (isFuel) {
       const isAlreadyFull = curFuel >= maxFuel;
-      actionSectionHtml = `
-        <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(251, 146, 60, 0.25); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.3);">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; background: rgba(251, 146, 60, 0.15); border: 1px solid rgba(251, 146, 60, 0.3); color: #fb923c;">
-                ${icon('fuel', '', 18)}
-              </span>
-              <div>
-                <div style="font-size: 13px; font-weight: 800; color: #f8fafc;">Treibstofftank des Bohrers</div>
-                <div style="font-size: 11px; color: #94a3b8;">Füllt den Treibstofftank vollständig auf (100%)</div>
-              </div>
-            </div>
-            <div style="font-size: 13px; font-weight: 800; color: #fb923c; font-variant-numeric: tabular-nums;">
+      actionCardHtml = `
+        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 11.5px; font-weight: 700; color: #94a3b8; display: inline-flex; align-items: center; gap: 5px;">
+              ${icon('fuel', '', 14)} Treibstoff
+            </span>
+            <span style="font-size: 12.5px; font-weight: 800; color: #fb923c; font-variant-numeric: tabular-nums;">
               ${curFuel} / ${maxFuel} L (${fuelPct}%)
-            </div>
+            </span>
           </div>
-
-          <!-- Fuel Progress Bar -->
-          <div style="width: 100%; height: 8px; background: rgba(0, 0, 0, 0.5); border-radius: 999px; overflow: hidden; margin-bottom: 14px; border: 1px solid rgba(255, 255, 255, 0.08);">
-            <div style="width: ${fuelPct}%; height: 100%; background: linear-gradient(90deg, #f59e0b, #fb923c); border-radius: 999px; transition: width 0.3s ease;"></div>
+          <div style="width: 100%; height: 6px; background: rgba(0, 0, 0, 0.5); border-radius: 99px; overflow: hidden;">
+            <div style="width: ${fuelPct}%; height: 100%; background: #fb923c; border-radius: 99px; transition: width 0.2s ease;"></div>
           </div>
-
           ${!isNearby ? `
-            <div style="display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 8px; font-size: 11.5px; color: #fca5a5;">
-              ${icon('alert-circle', '', 14)} Bohrer ist zu weit entfernt (${dist.toFixed(1)}m). Fahre innerhalb von 3.5m an die Station heran, um aufzutanken.
-            </div>
+            <button class="btn-buy" disabled style="width: 100%; height: 36px; font-size: 12px; font-weight: 700; background: #334155; color: #94a3b8; border-radius: 8px; border: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; margin-top: 2px;">
+              ${icon('alert-circle', '', 14)} Zu weit entfernt (${dist.toFixed(1)}m)
+            </button>
           ` : isAlreadyFull ? `
-            <div style="display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; font-size: 11.5px; color: #6ee7b7;">
-              ${icon('check-circle', '', 14)} Tank ist bereits zu 100% gefüllt.
-            </div>
+            <button class="btn-buy" disabled style="width: 100%; height: 36px; font-size: 12px; font-weight: 700; background: #334155; color: #94a3b8; border-radius: 8px; border: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; margin-top: 2px;">
+              ${icon('check', '', 14)} Tank ist voll (100%)
+            </button>
           ` : `
-            <button id="btn-station-use-fuel" class="btn-buy" style="width: 100%; height: 38px; font-size: 12.5px; font-weight: 800; background: linear-gradient(135deg, #f59e0b, #d97706); color: #ffffff; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 10px rgba(245, 158, 11, 0.3); cursor: pointer;">
-              ${icon('zap', '', 15)} Jetzt vollständig auftanken (Kostenlos)
+            <button id="btn-station-use-fuel" class="btn-buy" style="width: 100%; height: 36px; font-size: 12.5px; font-weight: 800; background: linear-gradient(135deg, #f59e0b, #d97706); color: #ffffff; border-radius: 8px; border: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.35); cursor: pointer; margin-top: 2px;">
+              ${icon('zap', '', 15)} Vollständig auftanken
             </button>
           `}
         </div>
       `;
     } else {
-      // Pneumatic Tube / Förder-Schacht
-      const hasOres = rawOreCount > 0;
-      actionSectionHtml = `
-        <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.3);">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8;">
-                ${icon('conveyor-belt', '', 18)}
-              </span>
-              <div>
-                <div style="font-size: 13px; font-weight: 800; color: #f8fafc;">Erzförderung ins Oberflächen-Depot</div>
-                <div style="font-size: 11px; color: #94a3b8;">Saugt Roh-Erze aus dem Laderaum nach oben ab (+20 t Depot-Kapazität)</div>
-              </div>
-            </div>
-            <div style="font-size: 13px; font-weight: 800; color: #38bdf8; font-variant-numeric: tabular-nums;">
+      actionCardHtml = `
+        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 11.5px; font-weight: 700; color: #94a3b8; display: inline-flex; align-items: center; gap: 5px;">
+              ${icon('package', '', 14)} Laderaum
+            </span>
+            <span style="font-size: 12.5px; font-weight: 800; color: #38bdf8; font-variant-numeric: tabular-nums;">
               ${rawOreCount} Roh-Erze (${cargo.length} / ${maxCargo})
-            </div>
+            </span>
           </div>
-
           ${!isNearby ? `
-            <div style="display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 8px; font-size: 11.5px; color: #fca5a5;">
-              ${icon('alert-circle', '', 14)} Bohrer ist zu weit entfernt (${dist.toFixed(1)}m). Fahre innerhalb von 3.5m an die Station heran, um Erze abzusaugen.
-            </div>
-          ` : !hasOres ? `
-            <div style="display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: rgba(148, 163, 184, 0.12); border: 1px solid rgba(148, 163, 184, 0.25); border-radius: 8px; font-size: 11.5px; color: #94a3b8;">
-              ${icon('package-open', '', 14)} Laderaum enthält keine Roh-Erze zum Absaugen.
-            </div>
+            <button class="btn-buy" disabled style="width: 100%; height: 36px; font-size: 12px; font-weight: 700; background: #334155; color: #94a3b8; border-radius: 8px; border: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+              ${icon('alert-circle', '', 14)} Zu weit entfernt (${dist.toFixed(1)}m)
+            </button>
+          ` : rawOreCount === 0 ? `
+            <button class="btn-buy" disabled style="width: 100%; height: 36px; font-size: 12px; font-weight: 700; background: #334155; color: #94a3b8; border-radius: 8px; border: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+              ${icon('check', '', 14)} Laderaum enthält keine Erze
+            </button>
           ` : `
-            <button id="btn-station-use-tube" class="btn-buy" style="width: 100%; height: 38px; font-size: 12.5px; font-weight: 800; background: linear-gradient(135deg, #0284c7, #0369a1); color: #ffffff; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 10px rgba(2, 132, 199, 0.3); cursor: pointer;">
+            <button id="btn-station-use-tube" class="btn-buy" style="width: 100%; height: 36px; font-size: 12.5px; font-weight: 800; background: linear-gradient(135deg, #0284c7, #0369a1); color: #ffffff; border-radius: 8px; border: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35); cursor: pointer;">
               ${icon('upload-cloud', '', 15)} ${rawOreCount}x Erze nach oben befördern
             </button>
           `}
@@ -1838,60 +1807,33 @@ export class BaseSystem {
       `;
     }
 
-    const dismantleSectionHtml = `
-      <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 12px; padding: 14px 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.3);">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171;">
-              ${icon('wrench', '', 18)}
-            </span>
-            <div>
-              <div style="font-size: 13px; font-weight: 800; color: #f8fafc;">Rückbau & Verkauf</div>
-              <div style="font-size: 11px; color: #94a3b8;">
-                ${isTube ? 'Baut den Förderschacht ab (-20 t Depot-Kapazität) und erstattet den vollen Kaufpreis' : 'Baut die Tankanlage ab und erstattet den vollen Kaufpreis'}
-              </div>
-            </div>
-          </div>
-          <div style="font-size: 13px; font-weight: 800; color: #4ade80; font-variant-numeric: tabular-nums;">
-            +${refundPrice.toLocaleString('de-DE')} €
-          </div>
+    const contentHtml = `
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <!-- Status Bar -->
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 2px 2px;">
+          <span style="font-size: 11.5px; font-weight: 700; color: #94a3b8;">
+            Tiefe: <strong style="color: #f8fafc;">${Math.round(station.gy)}m</strong>
+          </span>
+          <span style="font-size: 11px; font-weight: 700; color: ${isNearby ? '#34d399' : '#f87171'}; display: inline-flex; align-items: center; gap: 4px;">
+            ${isNearby ? '● In Reichweite' : `● Zu weit entfernt (${dist.toFixed(1)}m)`}
+          </span>
         </div>
 
-        <button id="btn-station-dismantle" class="btn-buy" style="width: 100%; height: 38px; font-size: 12px; font-weight: 800; background: rgba(239, 68, 68, 0.12); border: 1.5px solid rgba(239, 68, 68, 0.4); color: #fca5a5; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; transition: all 0.2s ease;">
-          ${icon('trash-2', '', 14)} Station abbauen & verkaufen (+${refundPrice.toLocaleString('de-DE')} €)
+        <!-- Action Card -->
+        ${actionCardHtml}
+
+        <!-- Dismantle Button -->
+        <button id="btn-station-dismantle" class="btn-buy" style="width: 100%; height: 32px; font-size: 11.5px; font-weight: 700; background: rgba(239, 68, 68, 0.10); border: 1px solid rgba(239, 68, 68, 0.25); color: #fca5a5; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; cursor: pointer; transition: all 0.15s ease;">
+          ${icon('trash-2', '', 13)} Station abbauen (+${refundPrice.toLocaleString('de-DE')} €)
         </button>
       </div>
     `;
 
-    const contentHtml = `
-      <!-- Station Info Card -->
-      <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <div style="font-size: 12px; font-weight: 700; color: #94a3b8;">
-            Tiefe: <strong style="color: #f8fafc;">${Math.round(station.gy)}m</strong>
-          </div>
-          <span style="color: rgba(255,255,255,0.2);">|</span>
-          <div style="font-size: 12px; font-weight: 700; color: #94a3b8;">
-            Position: <strong style="color: #f8fafc;">X: ${station.gx} / Y: ${station.gy}</strong>
-          </div>
-        </div>
-        <div style="font-size: 11.5px; font-weight: 700; padding: 3px 8px; border-radius: 6px; background: ${isNearby ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)'}; border: 1px solid ${isNearby ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}; color: ${isNearby ? '#34d399' : '#f87171'};">
-          ${isNearby ? `● In Reichweite (${dist.toFixed(1)}m)` : `● Zu weit entfernt (${dist.toFixed(1)}m)`}
-        </div>
-      </div>
-
-      <!-- Action Section (Benutzen) -->
-      ${actionSectionHtml}
-
-      <!-- Dismantle Section (Abbauen / Verkaufen) -->
-      ${dismantleSectionHtml}
-    `;
-
     this.openModal(`
-      <span style="color: ${titleColor}; display: inline-flex; align-items: center; gap: 8px;">
+      <span style="color: ${titleColor}; display: inline-flex; align-items: center; gap: 8px; font-weight: 800; font-size: 15px;">
         ${titleIcon} ${stationName}
       </span>
-    `, contentHtml);
+    `, contentHtml, 420);
 
     // Event Listeners
     if (isFuel) {
@@ -1929,7 +1871,7 @@ export class BaseSystem {
           dismantleBtn.style.background = 'linear-gradient(135deg, #dc2626, #b91c1c)';
           dismantleBtn.style.borderColor = '#ef4444';
           dismantleBtn.style.color = '#ffffff';
-          dismantleBtn.innerHTML = `⚠️ Wirklich abbauen & für ${refundPrice.toLocaleString('de-DE')} € verkaufen? (Erneut klicken)`;
+          dismantleBtn.innerHTML = `⚠️ Wirklich für ${refundPrice.toLocaleString('de-DE')} € abbauen? (Erneut tippen)`;
           refreshIcons(dismantleBtn);
         } else {
           this.dismantleSubsurfaceStation(station, refundPrice);
@@ -2077,7 +2019,7 @@ export class BaseSystem {
     this.updateSurfaceVisuals();
   }
 
-  openModal(title, contentHtml) {
+  openModal(title, contentHtml, maxWidth = 760) {
     if (this.scene) {
       this.scene.isPaused = true;
     }
@@ -2085,7 +2027,7 @@ export class BaseSystem {
     this.clearFloatingAction();
     this.modalTitleEl.innerHTML = title;
     this.modalBodyEl.innerHTML = `
-      <div style="display: flex; flex-direction: column; max-width: 760px; margin: 0 auto; width: 100%; box-sizing: border-box; padding: 0 4px 36px 4px;">
+      <div style="display: flex; flex-direction: column; max-width: ${maxWidth}px; margin: 0 auto; width: 100%; box-sizing: border-box; padding: 0 4px 36px 4px;">
         ${contentHtml}
       </div>
     `;
@@ -2349,8 +2291,8 @@ export class BaseSystem {
     }
 
     const marketTabs = [
-      { id: 'ores', label: 'Roherze & Mineralien', icon: 'gem', count: totalOreCount, val: totalOreValue },
-      { id: 'products', label: 'Fabrikerzeugnisse & Barren', icon: 'factory', count: totalFpCount, val: totalFpValue }
+      { id: 'ores', label: 'Erze', icon: 'gem', count: totalOreCount, val: totalOreValue },
+      { id: 'products', label: 'Waren', icon: 'factory', count: totalFpCount, val: totalFpValue }
     ];
 
     const tabNavHtml = `
@@ -2374,7 +2316,7 @@ export class BaseSystem {
         <div class="register-tab-panel">
           <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 4px;">
             <strong style="color: #38bdf8; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
-              ${icon('gem', '', 15)} ROHERZE & MINERALIEN (${totalOreCount} Erze verfügbar)
+              ${icon('gem', '', 15)} ERZE (${totalOreCount} Erze verfügbar)
             </strong>
             <strong style="color: #fbbf24; font-size: 14px; font-weight: 800;">Gesamtwert: €${totalOreValue.toLocaleString()}</strong>
           </div>
@@ -2386,7 +2328,7 @@ export class BaseSystem {
         <div class="register-tab-panel">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
             <strong style="color: #38bdf8; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
-              ${icon('factory', '', 15)} FABRIK-ERZEUGNISSE & BARREN (${totalFpCount} Waren verfügbar)
+              ${icon('factory', '', 15)} WAREN (${totalFpCount} Waren verfügbar)
             </strong>
             <span style="color: #fbbf24; font-size: 14px; font-weight: 800;">Warenwert: €${totalFpValue.toLocaleString()}</span>
           </div>
@@ -2846,7 +2788,7 @@ export class BaseSystem {
       {
         id: 'hull',
         iconName: 'shield-cog',
-        title: 'GEHÄUSESCHUTZ / PANZERUNG',
+        title: 'PANZERUNG',
         curTier: this.player.hullTier || 1,
         resTier: this.player.researchedHullTier || (this.player.hullTier || 1),
         maxTier: HULL_TIERS.length,
@@ -2864,20 +2806,24 @@ export class BaseSystem {
       {
         id: 'drill',
         iconName: 'pickaxe',
-        title: 'BOHRKOPF-WERKSTATT',
+        title: 'BOHRKOPF',
         curTier: this.player.drillTier || 1,
         resTier: this.player.researchedDrillTier || (this.player.drillTier || 1),
         maxTier: DRILL_DATA.length,
         tiers: DRILL_DATA,
         onMount: (nextTier) => {
-          this.player.drillTier = nextTier.tier;
-          this.player.drillPower = DRILL_DPS[nextTier.tier - 1];
+          if (this.player?.upgradeDrill) {
+            this.player.upgradeDrill(nextTier.tier);
+          } else {
+            this.player.drillTier = nextTier.tier;
+            this.player.drillPower = DRILL_DPS[nextTier.tier - 1];
+          }
         }
       },
       {
         id: 'engine',
         iconName: 'zap',
-        title: 'ANTRIEB & STEIGFLUG',
+        title: 'ANTRIEB',
         curTier: this.player.engineTier || 1,
         resTier: this.player.researchedEngineTier || (this.player.engineTier || 1),
         maxTier: ENGINE_TIERS.length,
@@ -2893,7 +2839,7 @@ export class BaseSystem {
       {
         id: 'cargo',
         iconName: 'container',
-        title: 'FRACHTRAUM-KAPAZITÄT',
+        title: 'FRACHTRAUM',
         curTier: this.player.cargoTier || 1,
         resTier: this.player.researchedCargoTier || (this.player.cargoTier || 1),
         maxTier: CARGO_TIERS.length,
@@ -2910,7 +2856,7 @@ export class BaseSystem {
       {
         id: 'sensor',
         iconName: 'radio',
-        title: 'GEO-SENSOR & RADAR',
+        title: 'RADAR',
         curTier: this.player.sensorTier || 1,
         resTier: this.player.researchedSensorTier || (this.player.sensorTier || 1),
         maxTier: SENSOR_TIERS.length,
@@ -3270,12 +3216,13 @@ export class BaseSystem {
           </div>
 
           <!-- Name -->
-          <span style="
+          <span class="depot-card-name" style="
             font-size: 10px;
             font-weight: 700;
             color: #f8fafc;
             text-align: center;
             line-height: 1.15;
+            margin-top: 6px;
             max-width: 100%;
             white-space: normal;
             overflow: visible;
@@ -3361,12 +3308,13 @@ export class BaseSystem {
           </div>
 
           <!-- Name -->
-          <span style="
+          <span class="depot-card-name" style="
             font-size: 10px;
             font-weight: 700;
             color: #f8fafc;
             text-align: center;
             line-height: 1.15;
+            margin-top: 6px;
             max-width: 100%;
             white-space: normal;
             overflow: visible;
@@ -3427,12 +3375,13 @@ export class BaseSystem {
           </div>
 
           <!-- Name -->
-          <span style="
+          <span class="depot-card-name" style="
             font-size: 10px;
             font-weight: 700;
             color: #f8fafc;
             text-align: center;
             line-height: 1.15;
+            margin-top: 6px;
             max-width: 100%;
             white-space: normal;
             overflow: visible;
@@ -3493,12 +3442,13 @@ export class BaseSystem {
           </div>
 
           <!-- Name -->
-          <span style="
+          <span class="depot-card-name" style="
             font-size: 10px;
             font-weight: 700;
             color: #f8fafc;
             text-align: center;
             line-height: 1.15;
+            margin-top: 6px;
             max-width: 100%;
             white-space: normal;
             overflow: visible;
@@ -3535,7 +3485,7 @@ export class BaseSystem {
       <div style="display: flex; flex-direction: column; gap: 8px;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <span style="font-size: 11.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 5px;">
-            ${icon('stone', '', 12)} Erze & Mineralien (${totalStoredOresCount})
+            ${icon('stone', '', 12)} Erze (${totalStoredOresCount})
           </span>
           ${isFull ? `
             <span style="background: rgba(239, 68, 68, 0.2); color: #ef4444; font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 4px;">
@@ -3558,7 +3508,7 @@ export class BaseSystem {
       <div style="display: flex; flex-direction: column; gap: 8px;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <span style="font-size: 11.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 5px;">
-            ${icon('layers', '', 12)} Barren, Produkte & Bauteile (${totalStoredGoodsCount})
+            ${icon('layers', '', 12)} Waren (${totalStoredGoodsCount})
           </span>
         </div>
 
@@ -3580,8 +3530,8 @@ export class BaseSystem {
 
     const depotTabs = [
       { id: 'storage', label: 'Lager', icon: 'warehouse', badge: `${totalStored}/${capacity}` },
-      { id: 'upgrades', label: 'Ausbau', icon: 'arrow-up-circle', badge: `Stufe ${currentTier}` },
-      { id: 'shop', label: 'Shop', icon: 'shopping-bag', badge: 'Ausrüstung' }
+      { id: 'upgrades', label: 'Ausbau', icon: 'arrow-up-circle', badge: null },
+      { id: 'shop', label: 'Ausrüstung', icon: 'shopping-bag', badge: null }
     ];
 
     const tabNavHtml = `
@@ -3592,7 +3542,7 @@ export class BaseSystem {
             <button class="register-tab depot-tab-btn ${isActive ? 'active' : ''}" data-tab="${t.id}">
               ${icon(t.icon, '', 14)}
               <span>${t.label}</span>
-              <span class="tab-badge">${t.badge}</span>
+              ${t.badge ? `<span class="tab-badge">${t.badge}</span>` : ''}
             </button>
           `;
         }).join('')}
@@ -3683,7 +3633,7 @@ export class BaseSystem {
           <!-- Bohrer-Ausbau (Werkstatt) -->
           <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; margin-bottom: -2px;">
             <span style="font-size: 11px; font-weight: 800; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.6px; display: inline-flex; align-items: center; gap: 5px;">
-              ${drillerVehicleIcon(16)} Bohrer-Upgrades & Werkstatt
+              ${drillerVehicleIcon(16)} Bohrer-Upgrades
             </span>
             <span style="font-size: 10.5px; color: #94a3b8;">Montiere erforschte Bauteile</span>
           </div>
@@ -3762,7 +3712,7 @@ export class BaseSystem {
         <div style="display: flex; flex-direction: column; gap: 14px;">
           <div style="display: flex; flex-direction: column; gap: 8px;">
             <span style="font-size: 11.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 5px;">
-              ${icon('package', '', 12)} Expeditions- & Notfallausrüstung
+              ${icon('package', '', 12)} Ausrüstung
             </span>
             <div style="display: flex; flex-direction: column; gap: 6px;">
               ${gadgetsItems.map(renderShopItem).join('')}
@@ -3771,7 +3721,7 @@ export class BaseSystem {
 
           <div style="display: flex; flex-direction: column; gap: 8px;">
             <span style="font-size: 11.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 5px;">
-              ${icon('anchor', '', 12)} Untertage-Infrastruktur & Stationen
+              ${icon('anchor', '', 12)} Stationen
             </span>
             <div style="display: flex; flex-direction: column; gap: 6px;">
               ${stationItems.map(renderShopItem).join('')}
@@ -4438,7 +4388,7 @@ export class BaseSystem {
 
     const labTabs = [
       { id: 'vehicle', label: 'Bohrfahrzeug-Module', icon: 'wrench' },
-      { id: 'infrastructure', label: 'Infrastruktur & Expedition', icon: 'package' }
+      { id: 'infrastructure', label: 'Infrastruktur', icon: 'package' }
     ];
 
     const tabNavHtml = `
@@ -4470,7 +4420,7 @@ export class BaseSystem {
       },
       {
         id: 'hull',
-        title: 'GEHÄUSESCHUTZ / PANZERUNG',
+        title: 'PANZERUNG',
         iconName: 'shield-cog',
         currentTier: p.researchedHullTier || p.hullTier || 1,
         installedTier: p.hullTier || 1,
@@ -4482,7 +4432,7 @@ export class BaseSystem {
       },
       {
         id: 'drill',
-        title: 'BOHRKOPF-BAUPLÄNE',
+        title: 'BOHRKOPF',
         iconName: 'pickaxe',
         currentTier: p.researchedDrillTier || p.drillTier || 1,
         installedTier: p.drillTier || 1,
@@ -4494,7 +4444,7 @@ export class BaseSystem {
       },
       {
         id: 'engine',
-        title: 'ANTRIEB & STEIGFLUG',
+        title: 'ANTRIEB',
         iconName: 'zap',
         currentTier: p.researchedEngineTier || p.engineTier || 1,
         installedTier: p.engineTier || 1,
@@ -4506,7 +4456,7 @@ export class BaseSystem {
       },
       {
         id: 'cargo',
-        title: 'FRACHTRAUM-KAPAZITÄT',
+        title: 'FRACHTRAUM',
         iconName: 'container',
         currentTier: p.researchedCargoTier || p.cargoTier || 1,
         installedTier: p.cargoTier || 1,
@@ -4518,7 +4468,7 @@ export class BaseSystem {
       },
       {
         id: 'sensor',
-        title: 'GEO-SENSOR & RADAR',
+        title: 'RADAR',
         iconName: 'radio',
         currentTier: p.researchedSensorTier || p.sensorTier || 1,
         installedTier: p.sensorTier || 1,
@@ -4533,7 +4483,7 @@ export class BaseSystem {
     const infraTracks = [
       {
         id: 'tnt',
-        title: 'SPRENGTECHNIK & DYNAMIT (TNT)',
+        title: 'SPRENGTECHNIK',
         iconName: 'flame',
         currentTier: p.researchedTnt || 0,
         installedTier: p.researchedTnt || 0,
@@ -5028,77 +4978,7 @@ export class BaseSystem {
     }
   }
 
-  // 4b. Quanten-Teleporter Modal
-  openTeleporterModal() {
-    const p = this.player;
-    const maxDepth = p.highestDepthReached || 0;
 
-    let totalVal = 0;
-    p.cargo.forEach(ore => {
-      totalVal += ORE_DATA[ore]?.value || 0;
-    });
-
-    const content = `
-      <div style="display: flex; flex-direction: column; gap: 14px;">
-        <p style="font-size: 12px; color: #94a3b8;">
-          Quantentechnologie und Hochdruck-Rohrpost ermöglichen schnellen Frachttransport und Tiefen-Warp.
-        </p>
-        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
-          <div>
-            <strong style="color: #f8fafc; font-size: 13px; display: block;">Pneumatischer Erz-Transceiver</strong>
-            <span style="font-size: 11px; color: #94a3b8;">Fracht (${p.cargo.length} Erze) direkt zur Börse schicken</span>
-          </div>
-          <button id="btn-pipe-sell" class="btn-buy" ${p.cargo.length === 0 ? 'disabled' : ''} style="height: 32px; padding: 0 14px; font-size: 11.5px;">
-            SOFORT VERKAUFEN (+€${totalVal})
-          </button>
-        </div>
-
-        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
-          <div>
-            <strong style="color: #38bdf8; font-size: 13px; display: block;">Tiefen-Warp Generator</strong>
-            <span style="font-size: 11px; color: #94a3b8;">Bohrer direkt auf tiefste Rekord-Tiefe (${maxDepth}m) teleportieren</span>
-          </div>
-          <button id="btn-depth-warp" class="btn-buy" ${maxDepth < 5 ? 'disabled' : ''} style="height: 32px; padding: 0 14px; font-size: 11.5px;">
-            ${maxDepth >= 5 ? `WARPEN (${maxDepth}m)` : 'TIEFE ZU GERING'}
-          </button>
-        </div>
-      </div>
-    `;
-
-    this.openModal(`
-      <div style="display: flex; align-items: center; gap: 8px;">
-        ${icon('navigation', '', 18)}
-        <span>TELEPORTER</span>
-      </div>
-    `, content);
-
-
-
-    const btnPipe = document.getElementById('btn-pipe-sell');
-    if (btnPipe) {
-      btnPipe.onclick = () => {
-        const earned = p.sellCargo();
-        soundFx.playPurchase();
-        this.openTeleporterModal();
-        this.scene.events.emit('notify', `Rohrpost: Erze zur Börse gesendet für +€${earned}!`);
-      };
-    }
-
-    const btnWarp = document.getElementById('btn-depth-warp');
-    if (btnWarp) {
-      btnWarp.onclick = () => {
-        if (maxDepth >= 5) {
-          p.gy = maxDepth;
-          p.y = p.gy * TILE_SIZE + TILE_SIZE / 2;
-          p.sprite.setPosition(p.x, p.y);
-          p.headlight.setPosition(p.x, p.y);
-          soundFx.playJetpack();
-          this.closeModal();
-          this.scene.events.emit('notify', `Warp erfolgreich auf Tiefe ${maxDepth}m ausgeführt!`);
-        }
-      };
-    }
-  }
 
   // 4c. Geothermie-Kraftwerk Modal
   openPowerplantModal() {
@@ -5184,8 +5064,8 @@ export class BaseSystem {
 
     // Register-Tabs wie im Depot
     const dockTabs = [
-      { id: 'workshop', label: 'Werkstatt & Bohrer', icon: 'wrench', badge: `Stufe ${curHangarTier}` },
-      { id: 'gear', label: 'Ausrüstung', icon: 'shopping-bag', badge: 'Shop' }
+      { id: 'workshop', label: 'Werkstatt', icon: 'wrench', badge: null },
+      { id: 'gear', label: 'Ausrüstung', icon: 'shopping-bag', badge: null }
     ];
 
     const tabNavHtml = `
@@ -5196,7 +5076,7 @@ export class BaseSystem {
             <button class="register-tab dock-tab-btn ${isActive ? 'active' : ''}" data-tab="${t.id}">
               ${icon(t.icon, '', 14)}
               <span>${t.label}</span>
-              <span class="tab-badge">${t.badge}</span>
+              ${t.badge ? `<span class="tab-badge">${t.badge}</span>` : ''}
             </button>
           `;
         }).join('')}
@@ -5270,7 +5150,7 @@ export class BaseSystem {
           <!-- Bohrer-Upgrades -->
           <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; margin-bottom: -2px;">
             <span style="font-size: 11px; font-weight: 800; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.6px; display: inline-flex; align-items: center; gap: 5px;">
-              ${icon('wrench', '', 13)} Bohrer-Upgrades & Werkstatt
+              ${icon('wrench', '', 13)} Bohrer-Upgrades
             </span>
             <span style="font-size: 10.5px; color: #64748b;">Montiere erforschte Bauteile</span>
           </div>

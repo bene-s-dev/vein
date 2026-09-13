@@ -2193,6 +2193,10 @@
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
     }
 
+    .depot-card-name, .driller-card-name {
+      margin-top: 6px !important;
+    }
+
     .cat-header-row {
       display: flex;
       justify-content: space-between;
@@ -2716,14 +2720,6 @@
             </svg>
           </span>
           <span class="hud-value-badge" id="hud-level-right" style="color: #f8fafc; font-weight: 800;">1</span>
-        </div>
-        <!-- Adaptive return warning (shown when current fuel <= return cost) -->
-        <div id="hud-return-warn" class="hud-return-warn" title="Tankwarnung: Treibstoff reicht nur noch für den Rückweg!">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
-            <path d="M12 2 1 21h22L12 2z" fill="#ef4444" stroke="#475569" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M12 9v4M12 17h.01" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-          <span>UMKEHREN!</span>
         </div>
         <!-- Cash -->
         <div class="stat-row">
