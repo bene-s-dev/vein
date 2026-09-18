@@ -694,8 +694,8 @@ export class HUD {
       if (this.btnActionDetonate) this.btnActionDetonate.style.display = 'none';
     }
 
-    // Rückkehr-Status (Kritisch: aktueller Tank erreicht die Rückkehr-Schwelle inkl. Puffer)
-    const isReturnCritical = isBelowGround && returnPercent > 2 && fuelPercent <= effectiveReturnThreshold;
+    // Rückkehr-Status (Kritisch: aktueller Tank erreicht die Rückkehr-Schwelle inkl. Puffer - auch oberirdisch)
+    const isReturnCritical = returnPercent > 2 && fuelPercent <= effectiveReturnThreshold;
 
     // Tankwarnung: NUR wenn der Tank tatsächlich niedrig ist (<= 15%), NICHT bei Rückkehrschwelle!
     const isFuelLow = fuelPercent <= 15;
@@ -717,10 +717,20 @@ export class HUD {
       this.rescueFab.style.display = showRescueFab ? 'inline-flex' : 'none';
     }
 
-    // --- Einzige Warnung bei kritischem Rückweg: Sofort umkehren ---
+    // --- Warnung bei kritischem Rückweg: Sofort umkehren (sowohl unter- als auch oberirdisch) ---
     if (isAtSurface) {
-      this.warnedPointOfNoReturn = false;
       this.warnedLowFuelOnEntry = false;
+      if (isReturnCritical && !this.warnedPointOfNoReturn) {
+        this.warnedPointOfNoReturn = true;
+        toastManager.show({
+          id: 'tank-warning-return',
+          text: 'Tankwarnung: Sofort zum Hangar zurückkehren!',
+          duration: 5000,
+          sound: 'cockpit'
+        });
+      } else if (fuelPercent > effectiveReturnThreshold + 5) {
+        this.warnedPointOfNoReturn = false;
+      }
     } else if (isBelowGround) {
       // Warnung beim Einfahren in den Schacht mit zu wenig Treibstoff (< 50%)
       if (!this.warnedLowFuelOnEntry) {
