@@ -1118,7 +1118,7 @@ class SoundManager {
     if (this._refuelActive && this._refuelNodes) {
       const now = this.ctx.currentTime;
       this._refuelNodes.gain.gain.cancelScheduledValues(now);
-      this._refuelNodes.gain.gain.setTargetAtTime(0.065, now, 0.04);
+      this._refuelNodes.gain.gain.setTargetAtTime(0.19, now, 0.04);
       return;
     }
 
@@ -1128,26 +1128,26 @@ class SoundManager {
 
     const gain = this.ctx.createGain();
     gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.setTargetAtTime(0.065, now, 0.06);
+    gain.gain.setTargetAtTime(0.19, now, 0.06);
     gain.connect(this.sfxGain);
 
     // 1. Sanfter Niederfrequenz-Pumpen-Puls (48 Hz Dreieckswelle mit sanfter Amplitudenmodulation)
     const pumpOsc = this.ctx.createOscillator();
     pumpOsc.type = 'triangle';
-    pumpOsc.frequency.setValueAtTime(48, now);
+    pumpOsc.frequency.setValueAtTime(52, now);
 
     const pumpFlt = this.ctx.createBiquadFilter();
     pumpFlt.type = 'lowpass';
-    pumpFlt.frequency.setValueAtTime(95, now);
+    pumpFlt.frequency.setValueAtTime(140, now);
 
     const pumpGain = this.ctx.createGain();
-    pumpGain.gain.setValueAtTime(0.35, now);
+    pumpGain.gain.setValueAtTime(0.55, now);
 
     const lfo = this.ctx.createOscillator();
     lfo.type = 'sine';
-    lfo.frequency.setValueAtTime(4.5, now);
+    lfo.frequency.setValueAtTime(4.8, now);
     const lfoGain = this.ctx.createGain();
-    lfoGain.gain.setValueAtTime(0.08, now);
+    lfoGain.gain.setValueAtTime(0.15, now);
     lfo.connect(pumpGain.gain);
 
     pumpOsc.connect(pumpFlt);
@@ -1156,16 +1156,16 @@ class SoundManager {
     pumpOsc.start(now);
     lfo.start(now);
 
-    // 2. Flüssigkeits-Durchfluss im Schlauch (Rosa Rauschen durch resonanten Bandpass bei 440 Hz)
+    // 2. Flüssigkeits-Durchfluss im Schlauch (Rosa Rauschen durch resonanten Bandpass bei 480 Hz)
     const flowNoise = this.createNoiseBufferSource('pink');
     if (flowNoise) {
       const flowFlt = this.ctx.createBiquadFilter();
       flowFlt.type = 'bandpass';
-      flowFlt.frequency.setValueAtTime(440, now);
-      flowFlt.Q.setValueAtTime(1.8, now);
+      flowFlt.frequency.setValueAtTime(480, now);
+      flowFlt.Q.setValueAtTime(1.6, now);
 
       const flowGain = this.ctx.createGain();
-      flowGain.gain.setValueAtTime(0.24, now);
+      flowGain.gain.setValueAtTime(0.48, now);
 
       flowNoise.connect(flowFlt);
       flowFlt.connect(flowGain);
@@ -1178,7 +1178,7 @@ class SoundManager {
     humOsc.type = 'sine';
     humOsc.frequency.setValueAtTime(176, now);
     const humGain = this.ctx.createGain();
-    humGain.gain.setValueAtTime(0.08, now);
+    humGain.gain.setValueAtTime(0.18, now);
     humOsc.connect(humGain);
     humGain.connect(gain);
     humOsc.start(now);
@@ -1219,8 +1219,8 @@ class SoundManager {
     const now = this.ctx.currentTime;
     // Harmonischer Aufwärts-Doppelakkord (C6 1046.5 Hz -> E6 1318.5 Hz) als klares "Voll!"-Signal
     const tones = [
-      { freq: 1046.50, delay: 0.0, gain: 0.09, decay: 0.22 },
-      { freq: 1318.51, delay: 0.08, gain: 0.12, decay: 0.35 }
+      { freq: 1046.50, delay: 0.0, gain: 0.18, decay: 0.25 },
+      { freq: 1318.51, delay: 0.08, gain: 0.24, decay: 0.38 }
     ];
 
     tones.forEach(({ freq, delay, gain: vol, decay }) => {
