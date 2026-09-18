@@ -19,10 +19,7 @@ export class DrillerMenuModal {
 
   open(_initialTab = 'cargo') {
     // Laufende Motorsounds beim Öffnen des Menüs stoppen
-    soundFx.stopDrive();
-    soundFx.stopJetpack();
-    soundFx.stopDrilling();
-    if (soundFx.stopRefuel) soundFx.stopRefuel();
+    soundFx.stopAllLoops?.();
 
     if (this.scene) {
       this.scene.isPaused = true;

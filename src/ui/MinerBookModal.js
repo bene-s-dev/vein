@@ -365,6 +365,7 @@ export class MinerBookModal {
 
   open(tab = 'ores') {
     this.activeTab = tab;
+    soundFx.stopAllLoops?.();
     if (this.scene) this.scene.isPaused = true;
     soundFx.playClick();
     this.render();
@@ -979,11 +980,10 @@ export class MinerBookModal {
           </div>
           <div style="font-size: 11px; color: #94a3b8; line-height: 1.45;">
             • <strong>Depot:</strong> Sichere Lagerstätte für Erze, Barren & Bauteile. Schützt vor Frachtverlust.<br>
-            • <strong>Büro:</strong> Schacht-Aufträge für dicke Barprämien und Rang-Aufstiege.<br>
+            • <strong>Büro:</strong> Schacht-Aufträge, Bergmann-Ränge und Steinforscher für Erzproben-Abgaben gegen seltene Bauteile.<br>
             • <strong>Erzbörse:</strong> Verkaufe Roherze oder nutze den Sofort-Verkauf.<br>
             • <strong>Hangar:</strong> Montiere erforschte Module & rüste die Hangar-Infrastruktur auf, um Betankungs- und Reparaturzeiten drastisch zu verkürzen.<br>
             • <strong>Fabrik & Raffinerie:</strong> Schmelze Barren (+50% Erlös) und fertige Montage-Bauteile & Güter.<br>
-            • <strong>Steineforscher:</strong> Tausche geförderte Erze gegen seltene Mikroprozessoren und Spezialelektronik.<br>
             • <strong>Labor:</strong> High-Tech-Forschung für neue Stufen und Radar-Sensoren.
           </div>
         </div>

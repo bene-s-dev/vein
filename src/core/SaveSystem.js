@@ -191,6 +191,7 @@ export class SaveSystem {
         discoveredOres: Array.from(p.discoveredOres || []),
         discoveredProducts: Array.from(p.discoveredProducts || []),
         discoveredSpecialTiles: Array.from(p.discoveredSpecialTiles || []),
+        seenGeologistQuests: Array.from(p.seenGeologistQuests || []),
         maxCargo: p.maxCargo,
         cargoTier: p.cargoTier,
         researchedCargoTier: p.researchedCargoTier || p.cargoTier || 1,
@@ -402,6 +403,7 @@ export class SaveSystem {
       p.discoveredProducts = new Set(data.player.discoveredProducts && data.player.discoveredProducts.length ? data.player.discoveredProducts : []);
       p.discoveredSpecialTiles = new Set(Array.isArray(data.player.discoveredSpecialTiles) ? data.player.discoveredSpecialTiles : []);
       p.discoveredArtifacts = Array.isArray(data.player.discoveredArtifacts) ? [...data.player.discoveredArtifacts] : [];
+      p.seenGeologistQuests = new Set(Array.isArray(data.player.seenGeologistQuests) ? data.player.seenGeologistQuests : []);
 
       if (p.recalculateArtifactPerks) {
         p.recalculateArtifactPerks();
@@ -527,9 +529,7 @@ export class SaveSystem {
 
       // Eventuell aktive Sounds sofort stoppen
       if (typeof soundFx !== 'undefined' && soundFx) {
-        soundFx.stopDrive?.();
-        soundFx.stopDrill?.();
-        soundFx.stopRefuel?.();
+        soundFx.stopAllLoops?.();
       }
 
       // HUD synchronisieren

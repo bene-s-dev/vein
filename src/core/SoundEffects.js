@@ -16,9 +16,20 @@ class SoundManager {
   constructor() {
     this.ctx = null;
     this.masterGain = null;
+    this.sfxGain = null;
+    this.musicMasterGain = null;
     this.compressor = null;
     this.initialized = false;
-    this.muted = false;
+    this.soundMuted = false;
+    this.musicMuted = false;
+
+    // Gespeicherte Audio-Einstellungen laden
+    try {
+      if (typeof localStorage !== 'undefined') {
+        this.soundMuted = localStorage.getItem('vein_sound_muted') === '1';
+        this.musicMuted = localStorage.getItem('vein_music_muted') === '1';
+      }
+    } catch (_) {}
 
     // Buffer-Cache
     this._noiseBuffers = {
@@ -44,8 +55,16 @@ class SoundManager {
     this._refuelActive = false;
     this._refuelNodes = null;
 
+    // Subterranean Strings & Ambient Soundscape
+    this._soundtrackInitialized = false;
+    this._soundtrackDepth = 0;
+    this._ambientGain = null;
+    this._rumbleTimer = null;
+    this._voices = [];
+
     // Auto-Unlock Listener
     this._setupAutoUnlock();
+    this._setupMenuWatchers();
   }
 
   // Kompatibilitäts-Getter für Player.js
@@ -75,6 +94,102 @@ class SoundManager {
   }
   set _driveRunning(val) {
     this._driveActive = !!val;
+  }
+
+  /**
+   * Prüft zuverlässig, ob sich das Spiel in einem Menü, Dialog, Tutorial
+   * oder Pause-Zustand befindet.
+   */
+  isMenuOpen() {
+    if (typeof document === 'undefined') return false;
+    if (document.body) {
+      const cls = document.body.classList;
+      if (
+        cls.contains('modal-open') ||
+        cls.contains('tutorial-open') ||
+        cls.contains('discovery-modal-open') ||
+        cls.contains('menu-open') ||
+        cls.contains('in-menu')
+      ) {
+        return true;
+      }
+    }
+    const bModal = document.getElementById('building-modal');
+    if (bModal && bModal.style && bModal.style.display && bModal.style.display !== 'none') {
+      return true;
+    }
+    const oreBackdrop = document.getElementById('ore-info-backdrop');
+    if (oreBackdrop && oreBackdrop.style && oreBackdrop.style.display && oreBackdrop.style.display !== 'none') {
+      return true;
+    }
+    const startScreen = document.getElementById('start-screen');
+    if (startScreen && startScreen.style && startScreen.style.display !== 'none' && !startScreen.classList.contains('hidden')) {
+      return true;
+    }
+    if (typeof window !== 'undefined' && window.__game && window.__game.scene) {
+      try {
+        const scene = window.__game.scene.getScene('MiningScene');
+        if (scene && (scene.isPaused || scene.inStartScreen)) {
+          return true;
+        }
+      } catch (_) {}
+    }
+    return false;
+  }
+
+  /**
+   * Stoppt alle kontinuierlichen Soundeffekte (Fahren, Fliegen, Bohren, Betanken)
+   * sofort und ohne Knacken.
+   */
+  stopAllLoops() {
+    this.stopDrive();
+    this.stopJetpack();
+    this.stopDrill();
+    this.stopRefuel();
+  }
+
+  _setupMenuWatchers() {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return;
+
+    const checkAndStop = () => {
+      if (this.isMenuOpen()) {
+        this.stopAllLoops();
+      }
+    };
+
+    const attach = () => {
+      if (!document.body) return;
+      try {
+        const observer = new MutationObserver(() => {
+          checkAndStop();
+        });
+        observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+        const bModal = document.getElementById('building-modal');
+        if (bModal) {
+          observer.observe(bModal, { attributes: true, attributeFilter: ['style', 'class'] });
+        }
+        const oreBackdrop = document.getElementById('ore-info-backdrop');
+        if (oreBackdrop) {
+          observer.observe(oreBackdrop, { attributes: true, attributeFilter: ['style', 'class'] });
+        }
+      } catch (_) {}
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          this.stopAllLoops();
+        }
+      });
+      window.addEventListener('blur', () => {
+        this.stopAllLoops();
+      });
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', attach);
+    } else {
+      attach();
+    }
   }
 
   _setupAutoUnlock() {
@@ -109,10 +224,20 @@ class SoundManager {
       this.compressor.release.setValueAtTime(0.12, this.ctx.currentTime);
       this.compressor.connect(this.ctx.destination);
 
-      // Master Gain für blitzschnelles, fehlerfreies Stummschalten
+      // Master Gain für Gesamtlautstärke
       this.masterGain = this.ctx.createGain();
-      this.masterGain.gain.setValueAtTime(this.muted ? 0.0001 : 0.85, this.ctx.currentTime);
+      this.masterGain.gain.setValueAtTime(0.9, this.ctx.currentTime);
       this.masterGain.connect(this.compressor);
+
+      // SFX Gain Bus (Soundeffekte: Bohren, Triebwerk, UI, Abbau)
+      this.sfxGain = this.ctx.createGain();
+      this.sfxGain.gain.setValueAtTime(this.soundMuted ? 0.0001 : 1.0, this.ctx.currentTime);
+      this.sfxGain.connect(this.masterGain);
+
+      // Music Master Gain Bus (Streicher-Soundtrack & Höhlengrollen)
+      this.musicMasterGain = this.ctx.createGain();
+      this.musicMasterGain.gain.setValueAtTime(this.musicMuted ? 0.0001 : 1.0, this.ctx.currentTime);
+      this.musicMasterGain.connect(this.masterGain);
 
       // Statische Noise-Buffer vorbereiten (2 Sekunden)
       this._generateNoiseBuffers();
@@ -182,20 +307,53 @@ class SoundManager {
     return src;
   }
 
-  toggleMute() {
-    this.muted = !this.muted;
-    if (this.masterGain && this.ctx) {
+  get muted() {
+    return this.soundMuted;
+  }
+
+  set muted(val) {
+    this.soundMuted = !!val;
+  }
+
+  toggleSoundMute() {
+    this.soundMuted = !this.soundMuted;
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('vein_sound_muted', this.soundMuted ? '1' : '0');
+      }
+    } catch (_) {}
+    if (this.sfxGain && this.ctx) {
       const now = this.ctx.currentTime;
-      this.masterGain.gain.cancelScheduledValues(now);
-      this.masterGain.gain.setTargetAtTime(this.muted ? 0.0001 : 0.85, now, 0.04);
+      this.sfxGain.gain.cancelScheduledValues(now);
+      this.sfxGain.gain.setTargetAtTime(this.soundMuted ? 0.0001 : 1.0, now, 0.04);
     }
-    return this.muted;
+    return this.soundMuted;
+  }
+
+  toggleMusicMute() {
+    this.musicMuted = !this.musicMuted;
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('vein_music_muted', this.musicMuted ? '1' : '0');
+      }
+    } catch (_) {}
+    if (this.musicMasterGain && this.ctx) {
+      const now = this.ctx.currentTime;
+      this.musicMasterGain.gain.cancelScheduledValues(now);
+      this.musicMasterGain.gain.setTargetAtTime(this.musicMuted ? 0.0001 : 1.0, now, 0.1);
+    }
+    return this.musicMuted;
+  }
+
+  toggleMute() {
+    return this.toggleSoundMute();
   }
 
   // -----------------------------------------------------------------------
   // 1. FAHREN (Ruhiges, sattes Raupenfahrwerk mit Motor- & Schotter-Gleiten)
   // -----------------------------------------------------------------------
   startDrive() {
+    if (this.isMenuOpen()) return;
     this.ensureContext();
     if (!this.ctx) return;
 
@@ -214,7 +372,7 @@ class SoundManager {
     const gain = this.ctx.createGain();
     gain.gain.setValueAtTime(0.0001, now);
     gain.gain.setTargetAtTime(0.065, now, 0.06);
-    gain.connect(this.masterGain);
+    gain.connect(this.sfxGain);
 
     // 1. Sehr tiefer, dumpfer Diesel-Kolben Grundton (38 Hz, tiefpassgefiltert bei 85 Hz - kein UFO-Surren!)
     const osc1 = this.ctx.createOscillator();
@@ -269,7 +427,7 @@ class SoundManager {
   }
 
   stopDrive() {
-    if (!this._driveActive) return;
+    if (!this._driveActive && !this._driveNodes) return;
     this._driveActive = false;
     const currentGen = this._driveGen;
     const nodes = this._driveNodes;
@@ -277,7 +435,7 @@ class SoundManager {
 
     const now = this.ctx.currentTime;
     nodes.gain.gain.cancelScheduledValues(now);
-    nodes.gain.gain.setTargetAtTime(0.0001, now, 0.05);
+    nodes.gain.gain.setTargetAtTime(0.0001, now, 0.03);
 
     setTimeout(() => {
       if (this._driveGen === currentGen) {
@@ -285,17 +443,19 @@ class SoundManager {
           if (nodes.osc1) nodes.osc1.stop();
           if (nodes.osc2) nodes.osc2.stop();
           if (nodes.brownNoise) nodes.brownNoise.stop();
+          if (nodes.pinkNoise) nodes.pinkNoise.stop();
           nodes.gain.disconnect();
         } catch (_) {}
         this._driveNodes = null;
       }
-    }, 150);
+    }, 100);
   }
 
   // -----------------------------------------------------------------------
   // 2. JETPACK (Triebwerks-Schubdüsen)
   // -----------------------------------------------------------------------
   startJetpack() {
+    if (this.isMenuOpen()) return;
     this.ensureContext();
     if (!this.ctx) return;
 
@@ -313,7 +473,7 @@ class SoundManager {
     const gain = this.ctx.createGain();
     gain.gain.setValueAtTime(0.0001, now);
     gain.gain.setTargetAtTime(0.085, now, 0.05);
-    gain.connect(this.masterGain);
+    gain.connect(this.sfxGain);
 
     // Reines, sattes Jetpack-Schubrauschen (OHNE Oszillator-Surrtöne)
     // 1. Aerodynamisches Haupt-Rauschen (Pink Noise sanft bandbegrenzt)
@@ -353,7 +513,7 @@ class SoundManager {
   }
 
   stopJetpack() {
-    if (!this._jetpackActive) return;
+    if (!this._jetpackActive && !this._jetpackNodes) return;
     this._jetpackActive = false;
     const currentGen = this._jetpackGen;
     const nodes = this._jetpackNodes;
@@ -361,7 +521,7 @@ class SoundManager {
 
     const now = this.ctx.currentTime;
     nodes.gain.gain.cancelScheduledValues(now);
-    nodes.gain.gain.setTargetAtTime(0.0001, now, 0.06);
+    nodes.gain.gain.setTargetAtTime(0.0001, now, 0.03);
 
     setTimeout(() => {
       if (this._jetpackGen === currentGen) {
@@ -372,7 +532,7 @@ class SoundManager {
         } catch (_) {}
         this._jetpackNodes = null;
       }
-    }, 140);
+    }, 100);
   }
 
   playJetpack() {
@@ -383,6 +543,7 @@ class SoundManager {
   // 3. BOHREN (Gesteinsfräse / Diamantkopf)
   // -----------------------------------------------------------------------
   startDrilling() {
+    if (this.isMenuOpen()) return;
     this.ensureContext();
     if (!this.ctx) return;
 
@@ -400,7 +561,7 @@ class SoundManager {
     const gain = this.ctx.createGain();
     gain.gain.setValueAtTime(0.0001, now);
     gain.gain.setTargetAtTime(0.08, now, 0.04);
-    gain.connect(this.masterGain);
+    gain.connect(this.sfxGain);
 
     // 1. Tiefer Fräskopf-Motor (Dreieckswelle)
     const motor = this.ctx.createOscillator();
@@ -456,7 +617,7 @@ class SoundManager {
   }
 
   stopDrilling() {
-    if (!this._drillActive) return;
+    if (!this._drillActive && !this._drillNodes) return;
     this._drillActive = false;
     const currentGen = this._drillGen;
     const nodes = this._drillNodes;
@@ -464,20 +625,20 @@ class SoundManager {
 
     const now = this.ctx.currentTime;
     nodes.gain.gain.cancelScheduledValues(now);
-    nodes.gain.gain.setTargetAtTime(0.0001, now, 0.04);
+    nodes.gain.gain.setTargetAtTime(0.0001, now, 0.03);
 
     setTimeout(() => {
       if (this._drillGen === currentGen) {
         try {
-          nodes.motor.stop();
-          nodes.gear.stop();
-          nodes.lfo.stop();
+          if (nodes.motor) nodes.motor.stop();
+          if (nodes.gear) nodes.gear.stop();
+          if (nodes.lfo) nodes.lfo.stop();
           if (nodes.stoneNoise) nodes.stoneNoise.stop();
           nodes.gain.disconnect();
         } catch (_) {}
         this._drillNodes = null;
       }
-    }, 120);
+    }, 100);
   }
 
   stopDrill() {
@@ -509,7 +670,7 @@ class SoundManager {
     boomGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
 
     boom.connect(boomGain);
-    boomGain.connect(this.masterGain);
+    boomGain.connect(this.sfxGain);
     boom.start(now);
     boom.stop(now + 0.2);
 
@@ -527,7 +688,7 @@ class SoundManager {
 
       noise.connect(flt);
       flt.connect(noiseGain);
-      noiseGain.connect(this.masterGain);
+      noiseGain.connect(this.sfxGain);
       noise.start(now);
       noise.stop(now + 0.23);
     }
@@ -557,7 +718,7 @@ class SoundManager {
     gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.24);
 
     osc1.connect(gain1);
-    gain1.connect(this.masterGain);
+    gain1.connect(this.sfxGain);
     osc1.start(now);
     osc1.stop(now + 0.24);
 
@@ -570,7 +731,7 @@ class SoundManager {
     gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
 
     osc2.connect(gain2);
-    gain2.connect(this.masterGain);
+    gain2.connect(this.sfxGain);
     osc2.start(now + 0.03);
     osc2.stop(now + 0.28);
   }
@@ -600,7 +761,7 @@ class SoundManager {
       gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.035);
 
       osc.connect(gain);
-      gain.connect(this.masterGain);
+      gain.connect(this.sfxGain);
 
       osc.start(now);
       osc.stop(now + 0.035);
@@ -629,7 +790,7 @@ class SoundManager {
       gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.22);
 
       osc.connect(gain);
-      gain.connect(this.masterGain);
+      gain.connect(this.sfxGain);
       osc.start(startTime);
       osc.stop(startTime + 0.22);
     });
@@ -658,7 +819,7 @@ class SoundManager {
       gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.38);
 
       osc.connect(gain);
-      gain.connect(this.masterGain);
+      gain.connect(this.sfxGain);
       osc.start(startTime);
       osc.stop(startTime + 0.38);
     });
@@ -683,7 +844,7 @@ class SoundManager {
     tapGain.gain.setValueAtTime(0.08, now);
     tapGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.045);
     tap.connect(tapGain);
-    tapGain.connect(this.masterGain);
+    tapGain.connect(this.sfxGain);
     tap.start(now);
     tap.stop(now + 0.05);
 
@@ -706,7 +867,7 @@ class SoundManager {
       oscGain.gain.exponentialRampToValueAtTime(0.0001, startTime + decay);
 
       osc.connect(oscGain);
-      oscGain.connect(this.masterGain);
+      oscGain.connect(this.sfxGain);
       osc.start(startTime);
       osc.stop(startTime + decay + 0.02);
     });
@@ -734,7 +895,7 @@ class SoundManager {
 
       fire.connect(flt);
       flt.connect(gain);
-      gain.connect(this.masterGain);
+      gain.connect(this.sfxGain);
       fire.start(now);
       fire.stop(now + 0.26);
     }
@@ -760,7 +921,7 @@ class SoundManager {
     gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
 
     osc.connect(gain);
-    gain.connect(this.masterGain);
+    gain.connect(this.sfxGain);
     osc.start(now);
     osc.stop(now + 0.16);
   }
@@ -785,7 +946,7 @@ class SoundManager {
     clankGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
 
     clank.connect(clankGain);
-    clankGain.connect(this.masterGain);
+    clankGain.connect(this.sfxGain);
     clank.start(now);
     clank.stop(now + 0.14);
   }
@@ -820,7 +981,7 @@ class SoundManager {
 
       osc.connect(filter);
       filter.connect(gain);
-      gain.connect(this.masterGain);
+      gain.connect(this.sfxGain);
 
       osc.start(startTime);
       osc.stop(startTime + 0.16);
@@ -849,7 +1010,7 @@ class SoundManager {
 
       noise.connect(flt);
       flt.connect(gain);
-      gain.connect(this.masterGain);
+      gain.connect(this.sfxGain);
       noise.start(now);
       noise.stop(now + 0.09);
     }
@@ -859,6 +1020,7 @@ class SoundManager {
   // 15. BETANKUNG (Pumpe & Treibstoff-Durchfluss)
   // -----------------------------------------------------------------------
   startRefuel() {
+    if (this.isMenuOpen()) return;
     this.ensureContext();
     if (!this.ctx) return;
 
@@ -876,7 +1038,7 @@ class SoundManager {
     const gain = this.ctx.createGain();
     gain.gain.setValueAtTime(0.0001, now);
     gain.gain.setTargetAtTime(0.065, now, 0.06);
-    gain.connect(this.masterGain);
+    gain.connect(this.sfxGain);
 
     // 1. Sanfter Niederfrequenz-Pumpen-Puls (48 Hz Dreieckswelle mit sanfter Amplitudenmodulation)
     const pumpOsc = this.ctx.createOscillator();
@@ -934,7 +1096,7 @@ class SoundManager {
   }
 
   stopRefuel() {
-    if (!this._refuelActive) return;
+    if (!this._refuelActive && !this._refuelNodes) return;
     this._refuelActive = false;
     const currentGen = this._refuelGen;
     const nodes = this._refuelNodes;
@@ -942,7 +1104,7 @@ class SoundManager {
 
     const now = this.ctx.currentTime;
     nodes.gain.gain.cancelScheduledValues(now);
-    nodes.gain.gain.setTargetAtTime(0.0001, now, 0.04);
+    nodes.gain.gain.setTargetAtTime(0.0001, now, 0.03);
 
     setTimeout(() => {
       if (this._refuelGen === currentGen) {
@@ -955,7 +1117,7 @@ class SoundManager {
         } catch (_) {}
         this._refuelNodes = null;
       }
-    }, 120);
+    }, 100);
   }
 
   playRefuelComplete() {
@@ -982,7 +1144,7 @@ class SoundManager {
       oscGain.gain.exponentialRampToValueAtTime(0.0001, startTime + decay);
 
       osc.connect(oscGain);
-      oscGain.connect(this.masterGain);
+      oscGain.connect(this.sfxGain);
       osc.start(startTime);
       osc.stop(startTime + decay + 0.02);
     });
@@ -1005,7 +1167,7 @@ class SoundManager {
     oscGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.6);
 
     osc.connect(oscGain);
-    oscGain.connect(this.masterGain);
+    oscGain.connect(this.sfxGain);
     osc.start(now);
     osc.stop(now + 0.65);
 
@@ -1023,7 +1185,7 @@ class SoundManager {
 
       src.connect(filter);
       filter.connect(nGain);
-      nGain.connect(this.masterGain);
+      nGain.connect(this.sfxGain);
       src.start(now);
       src.stop(now + 0.65);
     }
@@ -1049,7 +1211,7 @@ class SoundManager {
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
 
     osc.connect(gain);
-    gain.connect(this.masterGain);
+    gain.connect(this.sfxGain);
     osc.start(now);
     osc.stop(now + 0.22);
   }
@@ -1072,7 +1234,7 @@ class SoundManager {
       gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.08 + 0.6);
 
       osc.connect(gain);
-      gain.connect(this.masterGain);
+      gain.connect(this.sfxGain);
       osc.start(now + idx * 0.08);
       osc.stop(now + idx * 0.08 + 0.65);
     });
@@ -1099,7 +1261,7 @@ class SoundManager {
 
       noise.connect(filter);
       filter.connect(nGain);
-      nGain.connect(this.masterGain);
+      nGain.connect(this.sfxGain);
       noise.start(now);
       noise.stop(now + 0.5);
     }
@@ -1115,7 +1277,7 @@ class SoundManager {
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15 + i * 0.1 + 0.3);
 
       osc.connect(gain);
-      gain.connect(this.masterGain);
+      gain.connect(this.sfxGain);
       osc.start(now + 0.15 + i * 0.1);
       osc.stop(now + 0.15 + i * 0.1 + 0.35);
     });
@@ -1138,9 +1300,356 @@ class SoundManager {
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
 
     osc.connect(gain);
-    gain.connect(this.masterGain);
+    gain.connect(this.sfxGain);
     osc.start(now);
     osc.stop(now + 0.48);
+  }
+  // -----------------------------------------------------------------------
+  // UNTERTAGE SOUNDTRACK: Echte musikalische Streicher (Celli, Bratschen, Bässe) & Melodielinien
+  // -----------------------------------------------------------------------
+  _initSoundtrack() {
+    if (this._soundtrackInitialized || !this.ctx || !this.masterGain) return;
+    this._soundtrackInitialized = true;
+
+    try {
+      // Übergeordneter Musik-Bus mit Fader
+      this._ambientGain = this.ctx.createGain();
+      this._ambientGain.gain.setValueAtTime(0.0001, this.ctx.currentTime);
+
+      // Warmer Streicher-Master-Filter mit leichter Resonanz (verhindert scharfe Höhen, simuliert Holzresonanzkörper)
+      const celloBodyFilter = this.ctx.createBiquadFilter();
+      celloBodyFilter.type = 'lowpass';
+      celloBodyFilter.frequency.setValueAtTime(1400, this.ctx.currentTime);
+      celloBodyFilter.Q.setValueAtTime(1.8, this.ctx.currentTime);
+
+      // Reverb-artiger sanfter Raumklang (Feedback Delay für weite Kathedralen-/Höhlen-Akustik)
+      const delayNode = this.ctx.createDelay(1.2);
+      delayNode.delayTime.setValueAtTime(0.48, this.ctx.currentTime);
+      const feedbackGain = this.ctx.createGain();
+      feedbackGain.gain.setValueAtTime(0.38, this.ctx.currentTime);
+      const delayFilter = this.ctx.createBiquadFilter();
+      delayFilter.type = 'lowpass';
+      delayFilter.frequency.setValueAtTime(800, this.ctx.currentTime);
+
+      delayNode.connect(delayFilter);
+      delayFilter.connect(feedbackGain);
+      feedbackGain.connect(delayNode);
+      delayFilter.connect(this._ambientGain);
+
+      this._ambientGain.connect(celloBodyFilter);
+      celloBodyFilter.connect(this.musicMasterGain);
+
+      this._musicDelayNode = delayNode;
+
+      // Startet die musikalische Partitur-Schleife (Orchestrierte Akkordfolgen & sanfte Cello-Soli)
+      this._startMusicSequencer();
+
+      // Kontinuierliches, unregelmäßiges Fels- und Höhlengrollen
+      this._scheduleNextRumble();
+    } catch (err) {
+      console.warn('Soundtrack-Initialisierung fehlgeschlagen:', err);
+    }
+  }
+
+  /**
+   * Erzeugt einen warmen, akustisch reichen Streicherklang (Bogenstrich-Attack, Vibrato, Holzresonanz).
+   */
+  _playStringNote(freq, startTime, duration, velocity = 0.5, isLead = false) {
+    if (!this.ctx || !this._ambientGain) return;
+    const now = startTime;
+
+    // 2 gegeneinander verstimmte Sägezahn- und Dreiecks-Oszillatoren (simuliert Ensemble & Bogenreibung)
+    const osc1 = this.ctx.createOscillator();
+    const osc2 = this.ctx.createOscillator();
+    const osc3 = this.ctx.createOscillator();
+
+    osc1.type = isLead ? 'sawtooth' : 'sawtooth';
+    osc2.type = 'sawtooth';
+    osc3.type = 'triangle'; // Warmer Bauch / Grundton
+
+    osc1.frequency.setValueAtTime(freq, now);
+    osc2.frequency.setValueAtTime(freq, now);
+    osc3.frequency.setValueAtTime(freq, now);
+
+    // Warmes Bogen-Chorus Detuning (Schwebung)
+    osc1.detune.setValueAtTime(-5, now);
+    osc2.detune.setValueAtTime(5, now);
+    osc3.detune.setValueAtTime(0, now);
+
+    // Bogenstrich-Formant-Filter (simuliert den hölzernen Korpus eines Cellos/Kontrabasses)
+    const formantFilter = this.ctx.createBiquadFilter();
+    formantFilter.type = 'lowpass';
+    const baseCutoff = isLead ? 950 : 650;
+    formantFilter.frequency.setValueAtTime(baseCutoff * 0.6, now);
+    // Bogenansatz: Filter öffnet sich mit dem Strich und schließt sanft
+    formantFilter.frequency.linearRampToValueAtTime(baseCutoff * 1.3, now + duration * 0.35);
+    formantFilter.frequency.linearRampToValueAtTime(baseCutoff * 0.7, now + duration);
+    formantFilter.Q.setValueAtTime(isLead ? 2.5 : 1.6, now);
+
+    // Vibrato-LFO (setzt nach 0.8s sanft ein, wie bei einem echten Cellisten)
+    const vibrato = this.ctx.createOscillator();
+    const vibratoGain = this.ctx.createGain();
+    vibrato.frequency.setValueAtTime(4.6, now); // 4.6 Hz natürliches Vibrato
+    vibratoGain.gain.setValueAtTime(0.0001, now);
+    vibratoGain.gain.setValueAtTime(0.0001, now + 0.6);
+    vibratoGain.gain.linearRampToValueAtTime(isLead ? 6.5 : 3.2, now + 1.6); // Detune-Stärke in Cents
+
+    vibrato.connect(vibratoGain);
+    vibratoGain.connect(osc1.detune);
+    vibratoGain.connect(osc2.detune);
+
+    // Musikalische Hüllkurve: Sanfter Bogenansatz (Attack), langes warmes Halten (Sustain) und weiches Ausklingen (Release)
+    const noteGain = this.ctx.createGain();
+    const attack = isLead ? 0.7 : 1.2;
+    const release = isLead ? 1.4 : 2.2;
+    const peakGain = velocity * (isLead ? 0.14 : 0.09);
+
+    noteGain.gain.setValueAtTime(0.0001, now);
+    noteGain.gain.linearRampToValueAtTime(peakGain, now + attack);
+    noteGain.gain.setValueAtTime(peakGain * 0.85, now + duration - release);
+    noteGain.gain.linearRampToValueAtTime(0.0001, now + duration);
+
+    // Signalfluss
+    osc1.connect(formantFilter);
+    osc2.connect(formantFilter);
+    osc3.connect(formantFilter);
+    formantFilter.connect(noteGain);
+
+    // Trockenes Signal zum Hauptbus
+    noteGain.connect(this._ambientGain);
+
+    // Feuchtes Signal in den Höhlen-Reverb
+    if (this._musicDelayNode) {
+      const sendGain = this.ctx.createGain();
+      sendGain.gain.setValueAtTime(0.4, now);
+      noteGain.connect(sendGain);
+      sendGain.connect(this._musicDelayNode);
+    }
+
+    const stopTime = now + duration + 0.1;
+    osc1.start(now);
+    osc2.start(now);
+    osc3.start(now);
+    vibrato.start(now);
+
+    osc1.stop(stopTime);
+    osc2.stop(stopTime);
+    osc3.stop(stopTime);
+    vibrato.stop(stopTime);
+  }
+
+  /**
+   * Endlos spielender, ruhiger Soundtrack-Sequenzer.
+   * Läuft vorausschauend (Web Audio scheduling) und spielt melancholische,
+   * wunderschöne Moll-Akkorde und langsame Cello-Melodien.
+   */
+  _startMusicSequencer() {
+    // Akkordprogression (Kammermusik für Höhlenforscher in D-Moll):
+    // 1. Dm9  (D - F - A - C - E)      - Ruhig, tief, geheimnisvoll
+    // 2. Bbmaj7 (Bb - D - F - A)       - Wehmütig, erhaben, warm
+    // 3. Gm9  (G - Bb - D - F - A)     - Gemütlich, getragen
+    // 4. Asus4 -> A7 (A - D - E -> C#) - Epische Höhlenmelancholie
+    // 5. Fmaj7 (F - A - C - E)         - Aufblühendes Licht im Fels
+    // 6. C/E -> Dm (C - E - G -> D - F)- Zurückkehrende Geborgenheit
+    const chords = [
+      {
+        bass: 73.42,  // D2 (Cello Bass)
+        sub: 36.71,   // D1 (Kontrabass)
+        pads: [110.0, 146.83, 174.61, 220.0], // A2, D3, F3, A3
+        leadMelody: [
+          { note: 220.0, offset: 0.5, dur: 3.5 },  // A3
+          { note: 261.63, offset: 4.0, dur: 3.0 }, // C4
+          { note: 246.94, offset: 7.2, dur: 2.8 }  // B3
+        ],
+        duration: 11
+      },
+      {
+        bass: 58.27,  // Bb1
+        sub: 29.14,   // Bb0
+        pads: [116.54, 146.83, 174.61, 220.0], // Bb2, D3, F3, A3
+        leadMelody: [
+          { note: 220.0, offset: 0.6, dur: 4.0 },  // A3
+          { note: 174.61, offset: 4.5, dur: 3.2 }, // F3
+          { note: 146.83, offset: 7.8, dur: 3.0 }  // D3
+        ],
+        duration: 11
+      },
+      {
+        bass: 98.00,  // G2
+        sub: 49.00,   // G1
+        pads: [116.54, 146.83, 174.61, 220.0], // Bb2, D3, F3, A3
+        leadMelody: [
+          { note: 196.0, offset: 0.4, dur: 3.2 },  // G3
+          { note: 220.0, offset: 3.8, dur: 2.8 },  // A3
+          { note: 261.63, offset: 6.8, dur: 4.0 }  // C4
+        ],
+        duration: 11
+      },
+      {
+        bass: 55.00,  // A1
+        sub: 27.50,   // A0
+        pads: [110.0, 146.83, 164.81, 220.0], // A2, D3, E3, A3
+        leadMelody: [
+          { note: 293.66, offset: 0.5, dur: 3.8 }, // D4
+          { note: 277.18, offset: 4.5, dur: 3.5 }, // C#4
+          { note: 220.0, offset: 8.0, dur: 2.8 }   // A3
+        ],
+        duration: 11
+      },
+      {
+        bass: 87.31,  // F2
+        sub: 43.65,   // F1
+        pads: [130.81, 164.81, 174.61, 220.0], // C3, E3, F3, A3
+        leadMelody: [
+          { note: 261.63, offset: 0.5, dur: 3.5 }, // C4
+          { note: 329.63, offset: 4.2, dur: 3.2 }, // E4
+          { note: 293.66, offset: 7.5, dur: 3.2 }  // D4
+        ],
+        duration: 11
+      },
+      {
+        bass: 73.42,  // D2
+        sub: 36.71,   // D1
+        pads: [110.0, 130.81, 146.83, 174.61], // A2, C3, D3, F3
+        leadMelody: [
+          { note: 220.0, offset: 0.5, dur: 4.0 },  // A3
+          { note: 174.61, offset: 4.8, dur: 3.5 }, // F3
+          { note: 146.83, offset: 8.2, dur: 3.5 }  // D3
+        ],
+        duration: 12
+      }
+    ];
+
+    let chordIndex = 0;
+    let nextChordTime = this.ctx.currentTime + 0.1;
+
+    const scheduleLoop = () => {
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+
+      // Solange vorausschauend für die nächsten 12 Sekunden vorplanen
+      while (nextChordTime < now + 14) {
+        const chord = chords[chordIndex % chords.length];
+        const t = nextChordTime;
+        const dur = chord.duration;
+
+        // 1. Tiefes Kontrabass-Fundament (Sub)
+        this._playStringNote(chord.sub, t, dur + 1.2, 0.45, false);
+
+        // 2. Cello-Grundton
+        this._playStringNote(chord.bass, t + 0.1, dur + 1.0, 0.55, false);
+
+        // 3. Schwebende Streicher-Harmonie (Bratschen & Celli)
+        chord.pads.forEach((padFreq, idx) => {
+          this._playStringNote(padFreq, t + 0.2 + idx * 0.15, dur + 0.8, 0.38, false);
+        });
+
+        // 4. Sanftes Cello-Melodiespiel im Vordergrund
+        if (chord.leadMelody) {
+          chord.leadMelody.forEach(m => {
+            this._playStringNote(m.note, t + m.offset, m.dur, 0.65, true);
+          });
+        }
+
+        nextChordTime += dur;
+        chordIndex++;
+      }
+
+      // Regelmäßige Prüfung alle 4 Sekunden
+      this._sequencerTimer = setTimeout(scheduleLoop, 4000);
+    };
+
+    scheduleLoop();
+  }
+
+  // Zufälliges tiefes, gruseliges Untertage-Grollen (Rumble)
+  _scheduleNextRumble() {
+    if (this._rumbleTimeout) clearTimeout(this._rumbleTimeout);
+    // Zufälliges Intervall zwischen 18 und 36 Sekunden
+    const delay = 18000 + Math.random() * 18000;
+    this._rumbleTimeout = setTimeout(() => {
+      this._playSubterraneanRumble();
+      this._scheduleNextRumble();
+    }, delay);
+  }
+
+  _playSubterraneanRumble() {
+    if (this.muted || !this.ctx || !this._ambientGain || this._soundtrackDepth <= 0.05) return;
+    try {
+      const now = this.ctx.currentTime;
+      const duration = 5.0 + Math.random() * 3.5;
+
+      // 1. Tiefes tektonisches Reiben (akustisches Grollen)
+      const noise = this.createNoiseBufferSource('brown');
+      if (noise) {
+        const noiseFilter = this.ctx.createBiquadFilter();
+        noiseFilter.type = 'lowpass';
+        const startFreq = 40 + Math.random() * 25;
+        noiseFilter.frequency.setValueAtTime(startFreq, now);
+        noiseFilter.frequency.exponentialRampToValueAtTime(startFreq + 40, now + duration * 0.4);
+        noiseFilter.frequency.exponentialRampToValueAtTime(28, now + duration);
+        noiseFilter.Q.setValueAtTime(3.8, now);
+
+        const noiseGain = this.ctx.createGain();
+        const maxGain = (0.12 + Math.random() * 0.08) * Math.min(1.0, this._soundtrackDepth);
+        noiseGain.gain.setValueAtTime(0.0001, now);
+        noiseGain.gain.linearRampToValueAtTime(maxGain, now + duration * 0.35);
+        noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+        noise.connect(noiseFilter);
+        noiseFilter.connect(noiseGain);
+        noiseGain.connect(this.musicMasterGain);
+
+        noise.start(now);
+        noise.stop(now + duration);
+      }
+
+      // 2. Gruseliger Erdschwingungs-Bauch (26Hz bis 50Hz)
+      const subOsc = this.ctx.createOscillator();
+      subOsc.type = 'sine';
+      subOsc.frequency.setValueAtTime(28, now);
+      subOsc.frequency.exponentialRampToValueAtTime(48, now + duration * 0.38);
+      subOsc.frequency.exponentialRampToValueAtTime(22, now + duration);
+
+      const subGain = this.ctx.createGain();
+      const maxSubGain = (0.15 + Math.random() * 0.08) * Math.min(1.0, this._soundtrackDepth);
+      subGain.gain.setValueAtTime(0.0001, now);
+      subGain.gain.linearRampToValueAtTime(maxSubGain, now + duration * 0.3);
+      subGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+      subOsc.connect(subGain);
+      subGain.connect(this.musicMasterGain);
+
+      subOsc.start(now);
+      subOsc.stop(now + duration);
+    } catch (e) {
+      console.warn('Rumble-Fehler:', e);
+    }
+  }
+
+  /**
+   * Wird im Spielzyklus aufgerufen.
+   * Regelt den Übergang zwischen Oberfläche (0% Soundtrack) und Untertage (sanft eingefadet).
+   * @param {number} depthMeters - Aktuelle Tiefe in Metern
+   */
+  updateSoundtrack(depthMeters = 0) {
+    if (!this.initialized) return;
+    if (!this._soundtrackInitialized) {
+      this._initSoundtrack();
+    }
+    if (!this._ambientGain || !this.ctx) return;
+
+    // Tiefe normalisieren: Bei Tiefe <= 1m (an der Oberfläche) = 0 (stumm).
+    // Ab 2m Tiefe setzt der Soundtrack sanft ein, ab 8m Tiefe ist er voll da (1.0).
+    const targetIntensity = depthMeters <= 1 ? 0 : Math.min(1.0, Math.max(0, (depthMeters - 1) / 7));
+    this._soundtrackDepth = targetIntensity;
+
+    // Angenehme Lautstärke für gemütliche Hintergrundmusik
+    const targetGain = this.musicMuted ? 0.0001 : targetIntensity * 0.42;
+    const now = this.ctx.currentTime;
+
+    // Sanfte zeitliche Zeitkonstante (~2.5s) für langsames, natürliches Ein- und Ausfaden
+    this._ambientGain.gain.setTargetAtTime(Math.max(0.0001, targetGain), now, 2.5);
   }
 }
 

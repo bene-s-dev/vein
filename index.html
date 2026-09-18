@@ -3,8 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>DEEP MINER - Bergbau & Expedition</title>
-  <meta name="description" content="2D vertikaler Mining-Crawler und Base-Builder mit prozeduralem Kachelraster, Rohstoff-Abbau und Upgrade-System.">
+  <title>VEIN</title>
+  <meta name="description" content="VEIN - Tiefen-Bergbau & Bergungs-Expedition in die Erdkruste.">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">
+  <link rel="icon" type="image/png" href="/icon.png?v=2">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -296,7 +300,18 @@
     }
 
     #hud-fuel-text,
-    #hud-hull-text,
+    #hud-hull-text {
+      width: 38px;
+      min-width: 38px;
+      display: inline-flex;
+      justify-content: flex-end;
+      align-items: center;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
     #hud-cargo-text {
       width: auto;
       min-width: 28px;
@@ -306,10 +321,19 @@
       text-align: right;
       font-variant-numeric: tabular-nums;
       white-space: nowrap;
+      flex-shrink: 0;
     }
 
     #hud-fuel-num,
-    #hud-hull-num,
+    #hud-hull-num {
+      width: 24px;
+      min-width: 24px;
+      display: inline-flex;
+      justify-content: flex-end;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
     #hud-cargo-num {
       min-width: 10px;
       display: inline-flex;
@@ -474,16 +498,15 @@
       flex-shrink: 0;
     }
 
-    /* HUD im Menü: Vollständig transparenter Hintergrund, damit die 3 Badges schwebend hervortreten */
+    /* HUD im Menü: Vollständig transparenter Hintergrund, keinerlei Verschiebung oder Größenänderung */
     body.modal-open #hud-overlay {
       background: transparent !important;
       backdrop-filter: none !important;
       -webkit-backdrop-filter: none !important;
       border: none !important;
       box-shadow: none !important;
-      align-items: center !important;
       pointer-events: none !important;
-      transition: none;
+      transition: none !important;
     }
 
     body.modal-open #hud-depth {
@@ -1204,15 +1227,7 @@
         transition: background 0.15s ease, backdrop-filter 0.15s ease, border-bottom 0.15s ease;
       }
 
-      /* Im Menü: Durchgehender solider dunkler Hintergrund über den ganzen Screen ohne Blur */
-      body.modal-open #hud-overlay {
-        background: #080c16 !important;
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
-        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6) !important;
-        transform: translateZ(0) !important;
-      }
+
 
       /* Tankanzeige & Gauges: Natürliche, transparente Position mit passenden Abständen */
       #card-gauges {
@@ -1301,11 +1316,11 @@
       }
 
       body.modal-open #btn-pause {
-        width: 36px !important;
-        height: 34px !important;
-        min-width: 36px !important;
-        min-height: 34px !important;
-        border-radius: 8px !important;
+        width: 32px !important;
+        height: 30px !important;
+        min-width: 32px !important;
+        min-height: 30px !important;
+        border-radius: 7px !important;
       }
 
       .stat-cluster {
@@ -1316,6 +1331,18 @@
       .stat-row {
         font-size: 11px;
         gap: 4px;
+      }
+
+      #hud-fuel-text,
+      #hud-hull-text {
+        width: 36px !important;
+        min-width: 36px !important;
+      }
+
+      #hud-fuel-num,
+      #hud-hull-num {
+        width: 22px !important;
+        min-width: 22px !important;
       }
 
       .bar-container {
@@ -1367,13 +1394,14 @@
 
       /* Auf Mobilgeräten niemals verdecken, wenn kein Menü geöffnet ist */
       body:not(.modal-open):not(.discovery-modal-open) .modal-backdrop,
-      .modal-backdrop[style*="display: none"] {
+      .modal-backdrop[style*="display: none"],
+      .modal-backdrop[style*="display:none"] {
         display: none !important;
         pointer-events: none !important;
       }
 
-      body.modal-open .modal-backdrop,
-      body.discovery-modal-open .modal-backdrop {
+      body.modal-open .modal-backdrop:not([style*="display: none"]):not([style*="display:none"]),
+      body.discovery-modal-open .modal-backdrop:not([style*="display: none"]):not([style*="display:none"]) {
         display: flex !important;
         pointer-events: auto !important;
       }
@@ -1974,10 +2002,10 @@
     }
 
     body.modal-open #btn-pause {
-      width: 36px !important;
-      height: 34px !important;
-      min-width: 36px !important;
-      min-height: 34px !important;
+      width: 34px !important;
+      height: 32px !important;
+      min-width: 34px !important;
+      min-height: 32px !important;
       border-radius: 8px !important;
       background: rgba(30, 41, 59, 0.95) !important;
       border: 1px solid rgba(255, 255, 255, 0.25) !important;
@@ -2633,8 +2661,8 @@
   <div id="game-container">
     <!-- Phaser Canvas fits full screen -->
 
-    <!-- Clean Cockpit HUD Overlay -->
-    <div id="hud-overlay">
+    <!-- Clean Cockpit HUD Overlay (wird erst beim Starten einer Expedition eingeblendet) -->
+    <div id="hud-overlay" style="display: none;">
       <!-- Left: Ein klick/tippbares Bohrer-Widget (Tank, Hülle, Fracht) ohne Hintergrund -->
       <div class="hud-card" id="card-gauges" title="Bohrer-Status (Klick / Tippen zum Öffnen)">
         <!-- Tank -->
@@ -2725,9 +2753,9 @@
         <div class="stat-row">
           <span id="hud-cash-icon" style="display: inline-flex; align-items: center;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-              <ellipse cx="9" cy="12" rx="6" ry="6" fill="#f59e0b" stroke="#475569" stroke-width="1.1"/>
-              <ellipse cx="15" cy="12" rx="6" ry="6" fill="#fbbf24" stroke="#475569" stroke-width="1.1"/>
-              <ellipse cx="15" cy="12" rx="3.5" ry="3.5" fill="none" stroke="#475569" stroke-width="1"/>
+              <ellipse cx="9" cy="10" rx="6" ry="6" fill="#f59e0b" stroke="#475569" stroke-width="1.1"/>
+              <ellipse cx="15" cy="13" rx="6" ry="6" fill="#fbbf24" stroke="#475569" stroke-width="1.1"/>
+              <ellipse cx="15" cy="13" rx="3.5" ry="3.5" fill="none" stroke="#475569" stroke-width="1"/>
             </svg>
           </span>
           <span class="hud-value-badge cash-badge" id="hud-cash">€150</span>
@@ -2817,6 +2845,9 @@
       </div>
     </div>
 
+    <!-- Startbildschirm Overlay (Welt & Bohrer statisch im Hintergrund sichtbar) -->
+    <div id="start-screen-overlay" class="start-screen-backdrop" style="display: none;"></div>
+
     <!-- Clean Material Modal Dialog -->
     <div class="modal-backdrop" id="building-modal" style="display: none;">
       <div class="modal-window">
@@ -2831,6 +2862,65 @@
       </div>
     </div>
   </div>
+
+  <style>
+    .start-screen-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: radial-gradient(circle at center, rgba(3, 7, 18, 0.15) 0%, rgba(2, 6, 23, 0.65) 100%);
+      backdrop-filter: blur(0.5px);
+      -webkit-backdrop-filter: blur(0.5px);
+      z-index: 450;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      padding: max(8px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+      box-sizing: border-box;
+      overflow: hidden;
+      transition: opacity 0.35s ease;
+    }
+
+    .start-screen-card {
+      width: 100%;
+      max-width: 100%;
+      height: 100%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-sizing: border-box;
+      z-index: 2;
+    }
+
+    /* Auf Smartphones im Querformat (iPhone Landscape etc.) */
+    @media (max-height: 520px) {
+      .start-screen-backdrop {
+        padding: max(4px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+      }
+      .start-screen-box {
+        padding: 8px 12px !important;
+      }
+      .start-screen-btn {
+        height: 34px !important;
+        font-size: 11.5px !important;
+        border-radius: 8px !important;
+      }
+    }
+
+    #start-name-modal, #start-slots-modal {
+      pointer-events: auto !important;
+    }
+    #start-name-modal input, #modal-player-name {
+      pointer-events: auto !important;
+      user-select: text !important;
+      -webkit-user-select: text !important;
+      cursor: text !important;
+    }
+  </style>
 
   <script type="module" src="/src/main.js"></script>
 </body>

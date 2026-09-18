@@ -130,15 +130,12 @@ export function showOreInfoModal(oreKey, scene) {
 
   // Sound abspielen
   soundFx.playClick();
+  soundFx.stopAllLoops?.();
 
   // Spiel pausieren, falls es lief (unter Tage)
   const wasAlreadyPaused = Boolean(scene.isPaused);
   if (!wasAlreadyPaused) {
     scene.isPaused = true;
-    soundFx.stopDrive();
-    soundFx.stopDrilling();
-    soundFx.stopJetpack();
-    if (soundFx.stopRefuel) soundFx.stopRefuel();
   }
 
   // Aktuellen Besitz ermitteln
@@ -395,14 +392,12 @@ export function showSpecialTileInfoModal(tileType, scene, isDiscovery = false) {
     soundFx.playClick();
   }
 
+  soundFx.stopAllLoops?.();
+
   // Spiel pausieren, falls es lief (unter Tage)
   const wasAlreadyPaused = Boolean(scene.isPaused);
   if (!wasAlreadyPaused) {
     scene.isPaused = true;
-    soundFx.stopDrive();
-    soundFx.stopDrilling();
-    soundFx.stopJetpack();
-    if (soundFx.stopRefuel) soundFx.stopRefuel();
   }
 
   try {

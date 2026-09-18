@@ -25,6 +25,8 @@ export class MissionsProgressModal {
   }
 
   open(initialTab = 'active') {
+    soundFx.stopAllLoops?.();
+    if (this.scene) this.scene.isPaused = true;
     if (!this.baseSystem && this.scene && this.scene.baseSystem) {
       this.baseSystem = this.scene.baseSystem;
     }
@@ -49,12 +51,42 @@ export class MissionsProgressModal {
       </div>
     `;
 
+    // Steinforscher Quests Status prüfen
+    const p = this.player;
+    if (!p.seenGeologistQuests) p.seenGeologistQuests = new Set();
+    const cargoCounts = {};
+    p.cargo?.forEach(ore => {
+      cargoCounts[ore] = (cargoCounts[ore] || 0) + 1;
+    });
+    const depotOres = (this.baseSystem?.depot?.ores) || (this.scene?.baseSystem?.depot?.ores) || {};
+    const visibleGeologistQuests = GEOLOGIST_QUESTS.filter(q =>
+      Object.keys(q.reqs).every(ore => p.isOreDiscovered(ore))
+    );
+    const readyGeologistCount = visibleGeologistQuests.filter(q => {
+      return Object.entries(q.reqs).every(([ore, needed]) => {
+        const total = (cargoCounts[ore] || 0) + (depotOres[ore] || 0);
+        return total >= needed;
+      });
+    }).length;
+    const hasUnseenGeologist = visibleGeologistQuests.some(q => !p.seenGeologistQuests?.has(q.id));
+
+    if (this.currentTab === 'geologist') {
+      visibleGeologistQuests.forEach(q => p.seenGeologistQuests.add(q.id));
+      if (this.baseSystem?.updateOfficeBubble) {
+        this.baseSystem.updateOfficeBubble();
+      }
+    }
+
+    const geologistBadge = readyGeologistCount > 0 
+      ? `<span class="tab-badge" style="background: rgba(16, 185, 129, 0.25); color: #10b981;">${readyGeologistCount}</span>`
+      : (hasUnseenGeologist ? `<span class="tab-badge" style="background: rgba(56, 189, 248, 0.25); color: #38bdf8;">Neu</span>` : '');
+
     // Tab Navigation Bar
     const tabs = [
-      { id: 'active', label: 'Aktiver Auftrag', icon: 'crosshair' },
+      { id: 'active', label: 'Aktiver Auftrag', icon: 'crosshair', badgeHtml: this.missionSystem.isCompleted ? '<span class="tab-badge" style="background: rgba(16, 185, 129, 0.25); color: #10b981;">Fertig</span>' : '' },
       { id: 'levels', label: 'Ränge', icon: 'award' },
       { id: 'pool', label: 'Aufträge', icon: 'clipboard-list' },
-      { id: 'geologist', label: 'Steinforscher', icon: 'microscope' },
+      { id: 'geologist', label: 'Steinforscher', icon: 'microscope', badgeHtml: geologistBadge },
       { id: 'stats', label: 'Statistik', icon: 'bar-chart-3' }
     ];
 
@@ -66,6 +98,7 @@ export class MissionsProgressModal {
             <button class="register-tab tab-btn ${isActive ? 'active' : ''}" data-tab="${t.id}">
               ${icon(t.icon, '', 14)}
               <span>${t.label}</span>
+              ${t.badgeHtml || ''}
             </button>
           `;
         }).join('')}
@@ -773,6 +806,7 @@ export class MissionsProgressModal {
         soundFx.playPurchase();
 
         this.render();
+        if (this.baseSystem?.updateOfficeBubble) this.baseSystem.updateOfficeBubble();
         if (this.scene && this.scene.hud) this.scene.hud.update();
         this.scene.events.emit('notify', `Auftrag erfüllt: +1 ${q.rewardComp.name}, +€${q.rewardCash}, +${q.rewardXp} XP erhalten!`);
       };

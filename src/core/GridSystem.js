@@ -832,8 +832,8 @@ export class GridSystem {
 
   updateViewport(camera, player) {
     const camView = camera.worldView;
-    const pX = player ? player.sprite.x : 0;
-    const pY = player ? player.sprite.y : 0;
+    const pX = player ? (player.sprite ? player.sprite.x : (player.x || 0)) : 0;
+    const pY = player ? (player.sprite ? player.sprite.y : (player.y || 0)) : 0;
 
     let viewX = camView.x;
     let viewY = camView.y;

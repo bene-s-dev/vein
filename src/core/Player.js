@@ -156,6 +156,8 @@ export class Player {
     this.discoveredProducts = new Set();
     // Set aller bisher entdeckten Spezialfelder (Felsbrocken, Kapseln, Fossilien, Lava)
     this.discoveredSpecialTiles = new Set();
+    // Set aller bisher im Büro eingesehenen Steinforscher-Aufträge
+    this.seenGeologistQuests = new Set();
 
     // Dynamischer Scheinwerfer (Über der Erde komplett unsichtbar)
     this.headlight = scene.add.circle(this.x, this.y, 64, 0xfffbeb, 0.08)
@@ -430,6 +432,14 @@ export class Player {
   }
 
   update(delta, inputDir) {
+    if (soundFx && soundFx.isMenuOpen?.()) {
+      soundFx.stopAllLoops?.();
+      if (this.state === PLAYER_STATES.DRILLING) {
+        this.cancelDrilling();
+      }
+      return;
+    }
+
     this.lastInputDir = inputDir;
 
     if (this.hull > 0) {
@@ -786,8 +796,8 @@ export class Player {
         this.isDocked = true;
       }
 
-      // Rumpfreparatur: Erhöht sich während des Schweißens bzw. angedocktem Reparaturarm
-      const isRepairWelding = isParkedAtHangar && this.repairArmState && (this.repairArmState.isWelding || this.repairArmState.activeWeight > 0.75);
+      // Rumpfreparatur: Nur wenn der Roboterarm den Bohrer optisch erreicht und aktiv schweißt
+      const isRepairWelding = isParkedAtHangar && this.repairArmState && this.repairArmState.isWelding;
       if (isRepairWelding && this.hull < this.maxHull) {
         const repairSpeed = this.getRepairSpeed();
         this.hull = Math.min(this.maxHull, this.hull + (delta / 1000) * repairSpeed);
@@ -974,6 +984,13 @@ export class Player {
 
     // Zielposition: Wenn aktiv am Fahrzeug
     let targetTipX, targetTipY, targetMidX, targetMidY;
+    let isWithinReach = false;
+
+    // Maximale optische Ausladung des 2-Segment-Tankarms berechnen:
+    // T1: 2 Segmente à ca. 24px -> max. Ausladung ~50px
+    // T2-4: max. Ausladung ~68px
+    // T5+: max. Ausladung ~85px
+    const maxFuelArmReach = customPumpBase ? 65 : (hTier === 1 ? 52 : (hTier <= 4 ? 70 : 88));
 
     if (shouldDeploy) {
       let portX, portY;
@@ -984,19 +1001,34 @@ export class Player {
         portX = vehX + sideOffset;
         portY = vehY - 4;
       } else {
-        const clampedVehX = Phaser.Math.Clamp(this.sprite.x, 15 * TILE_SIZE - 20, 15 * TILE_SIZE + 20);
-        const clampedVehY = Phaser.Math.Clamp(this.sprite.y, -32, -4);
-        portX = clampedVehX - 12;
-        portY = clampedVehY - 4;
+        const vehX = this.sprite ? this.sprite.x : (this.gx * TILE_SIZE + 16);
+        const vehY = this.sprite ? this.sprite.y : (this.gy * TILE_SIZE + 16);
+        portX = vehX - 12;
+        portY = vehY - 4;
       }
 
-      targetTipX = portX;
-      targetTipY = portY;
-      targetMidX = (pumpBaseX + portX) / 2 - 3;
-      targetMidY = Math.min(pumpBaseY, portY) - 14;
+      // Optische Distanz vom Sockel zum Tankanschluss am Bohrer
+      const distToPortFromBase = Math.hypot(portX - pumpBaseX, portY - pumpBaseY);
+      isWithinReach = distToPortFromBase <= maxFuelArmReach;
 
-      const deploySpeed = customPumpBase ? 4.5 : (3.5 + hTier * 0.7);
-      this.fuelArmState.activeWeight = Phaser.Math.Linear(this.fuelArmState.activeWeight, 1.0, dt * deploySpeed);
+      if (isWithinReach) {
+        targetTipX = portX;
+        targetTipY = portY;
+        targetMidX = (pumpBaseX + targetTipX) / 2 - 3;
+        targetMidY = Math.min(pumpBaseY, targetTipY) - 14;
+
+        const deploySpeed = customPumpBase ? 4.5 : (3.5 + hTier * 0.7);
+        this.fuelArmState.activeWeight = Phaser.Math.Linear(this.fuelArmState.activeWeight, 1.0, dt * deploySpeed);
+      } else {
+        // Zu weit weg: Arm bleibt eingeklappt an der Tanksäule geparkt!
+        targetTipX = parkTipX;
+        targetTipY = parkTipY;
+        targetMidX = parkMidX;
+        targetMidY = parkMidY;
+
+        const deploySpeed = 4.5;
+        this.fuelArmState.activeWeight = Phaser.Math.Linear(this.fuelArmState.activeWeight, 0.0, dt * (deploySpeed * 1.2));
+      }
     } else {
       // Wenn Tank voll oder Auto weiterfährt: Sofort zur Parkposition zurückfahren!
       targetTipX = parkTipX;
@@ -1020,9 +1052,9 @@ export class Player {
     const curMidX = this.fuelArmState.curMidX;
     const curMidY = this.fuelArmState.curMidY;
 
-    // Physische Verbindung erst prüfen: Abstand der Düse zum Fahrzeug-Einfüllstutzen unter 4 Pixel
-    const distToPort = Math.hypot(curTipX - targetTipX, curTipY - targetTipY);
-    const isPhysicallyConnected = shouldDeploy && distToPort < 4.0 && this.fuelArmState.activeWeight > 0.92;
+    // Physische Verbindung erst prüfen: Nur wenn der Stutzen in Reichweite ist und die Düse dort anliegt
+    const distToPort = Math.hypot(curTipX - (shouldDeploy ? (customPumpBase ? (this.sprite ? this.sprite.x : this.gx * TILE_SIZE + 16) + ((this.sprite ? this.sprite.x : this.gx * TILE_SIZE + 16) >= pumpBaseX ? -12 : 12) : (this.sprite ? this.sprite.x : this.gx * TILE_SIZE + 16) - 12) : parkTipX), curTipY - (shouldDeploy ? (this.sprite ? this.sprite.y : this.gy * TILE_SIZE + 16) - 4 : parkTipY));
+    const isPhysicallyConnected = shouldDeploy && isWithinReach && distToPort < 4.0 && this.fuelArmState.activeWeight > 0.92;
     this.fuelArmState.isDockedOnVehicle = isPhysicallyConnected;
     const isActivelyRefueling = isPhysicallyConnected && (this.fuel < this.maxFuel);
 
@@ -1224,55 +1256,78 @@ export class Player {
     let targetMidX = parkMidX;
     let targetMidY = parkMidY;
 
+    // Maximale optische Ausladung des Reparaturarms:
+    // T1: ~54px
+    // T2-4: ~72px
+    // T5+: ~92px
+    const maxRepairArmReach = (hTier === 1 ? 54 : (hTier <= 4 ? 72 : 92));
+
     if (isStationary) {
-      const clampedVehX = Phaser.Math.Clamp(this.sprite.x, 15 * TILE_SIZE - 20, 15 * TILE_SIZE + 20);
-      const clampedVehY = Phaser.Math.Clamp(this.sprite.y, -32, -4);
+      const vehX = this.sprite ? this.sprite.x : (this.gx * TILE_SIZE + 16);
+      const vehY = this.sprite ? this.sprite.y : (this.gy * TILE_SIZE + 16);
 
       const spotIdx = Math.abs(this.repairArmState.spotIndex || 0) % REPAIR_SPOTS.length;
       const spot = REPAIR_SPOTS[spotIdx] || REPAIR_SPOTS[0];
-      const spotX = clampedVehX + spot.dx;
-      const spotY = clampedVehY + spot.dy;
+      const spotX = vehX + spot.dx;
+      const spotY = vehY + spot.dy;
 
-      const distToSpot = Math.hypot(this.repairArmState.curTipX - spotX, this.repairArmState.curTipY - spotY);
+      const distToSpotFromBase = Math.hypot(spotX - armBaseX, spotY - armBaseY);
+      const isWithinReach = distToSpotFromBase <= maxRepairArmReach;
 
-      if (this.repairArmState.phase === 'traveling') {
-        this.repairArmState.isWelding = false;
-        targetTipX = spotX;
-        targetTipY = spotY;
+      if (isWithinReach) {
+        const distToSpot = Math.hypot(this.repairArmState.curTipX - spotX, this.repairArmState.curTipY - spotY);
 
-        // Wenn Arm ausgefahren ist und den aktuellen Schweißpunkt erreicht hat:
-        // Schweißvorgang für 1.5 Sekunden starten!
-        if (isConnected && distToSpot < 3.5) {
-          this.repairArmState.phase = 'welding';
-          this.repairArmState.timer = 0;
-          this.repairArmState.isWelding = true;
-        }
-      } else if (this.repairArmState.phase === 'welding') {
-        this.repairArmState.isWelding = true;
-        this.repairArmState.timer += delta;
-
-        // Am Punkt fixieren mit ganz feinem Schweiß-Mikrozittern (+/- 0.4px)
-        const microJitterX = (Math.random() - 0.5) * 0.8;
-        const microJitterY = (Math.random() - 0.5) * 0.8;
-        targetTipX = spotX + microJitterX;
-        targetTipY = spotY + microJitterY;
-
-        // Schweißintervall pro Punkt an Hangar-Stufe anpassen
-        const spotDuration = Math.max(380, 1400 - (hTier - 1) * 110);
-        if (this.repairArmState.timer >= spotDuration) {
-          this.repairArmState.spotIndex = (this.repairArmState.spotIndex + 1) % REPAIR_SPOTS.length;
-          this.repairArmState.phase = 'traveling';
-          this.repairArmState.timer = 0;
+        if (this.repairArmState.phase === 'traveling') {
           this.repairArmState.isWelding = false;
+          targetTipX = spotX;
+          targetTipY = spotY;
+
+          // Schweißen startet NUR, wenn der Arm den Punkt tatsächlich optisch erreichen kann!
+          if (isConnected && distToSpot < 3.5) {
+            this.repairArmState.phase = 'welding';
+            this.repairArmState.timer = 0;
+            this.repairArmState.isWelding = true;
+          }
+        } else if (this.repairArmState.phase === 'welding') {
+          this.repairArmState.isWelding = true;
+          this.repairArmState.timer += delta;
+
+          // Am Punkt fixieren mit ganz feinem Schweiß-Mikrozittern (+/- 0.4px)
+          const microJitterX = (Math.random() - 0.5) * 0.8;
+          const microJitterY = (Math.random() - 0.5) * 0.8;
+          targetTipX = spotX + microJitterX;
+          targetTipY = spotY + microJitterY;
+
+          // Schweißintervall pro Punkt an Hangar-Stufe anpassen
+          const spotDuration = Math.max(380, 1400 - (hTier - 1) * 110);
+          if (this.repairArmState.timer >= spotDuration) {
+            this.repairArmState.spotIndex = (this.repairArmState.spotIndex + 1) % REPAIR_SPOTS.length;
+            this.repairArmState.phase = 'traveling';
+            this.repairArmState.timer = 0;
+            this.repairArmState.isWelding = false;
+          }
         }
+
+        // Ellbogen-Gelenk kinematischer Zwischenpunkt
+        targetMidX = (armBaseX + targetTipX) / 2 + 5;
+        targetMidY = Math.min(armBaseY, targetTipY) - 15;
+
+        const deploySpeed = 3.5 + hTier * 0.7;
+        this.repairArmState.activeWeight = Phaser.Math.Linear(this.repairArmState.activeWeight, 1.0, dt * deploySpeed);
+      } else {
+        // Außer Reichweite: Arm bleibt in der Parkposition eingeklappt!
+        this.repairArmState.isWelding = false;
+        this.repairArmState.phase = 'traveling';
+        this.repairArmState.timer = 0;
+
+        targetTipX = parkTipX;
+        targetTipY = parkTipY;
+        targetMidX = parkMidX;
+        targetMidY = parkMidY;
+
+        const deploySpeed = 3.5 + hTier * 0.7;
+        this.repairArmState.activeWeight = Phaser.Math.Linear(this.repairArmState.activeWeight, 0.0, dt * (deploySpeed * 1.2));
       }
-
-      // Ellbogen-Gelenk kinematischer Zwischenpunkt
-      targetMidX = (armBaseX + targetTipX) / 2 + 5;
-      targetMidY = Math.min(armBaseY, targetTipY) - 15;
-
-      const deploySpeed = 3.5 + hTier * 0.7;
-      this.repairArmState.activeWeight = Phaser.Math.Linear(this.repairArmState.activeWeight, 1.0, dt * deploySpeed);
     } else {
       // Wenn Hülle repariert oder Auto weiterfährt: Sofort zur Parkposition zurückfahren!
       this.repairArmState.isWelding = false;

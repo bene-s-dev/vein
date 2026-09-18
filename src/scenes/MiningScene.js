@@ -7,6 +7,8 @@ import { MissionSystem } from '../core/MissionSystem.js';
 import { HUD } from '../ui/HUD.js';
 import { SaveSystem } from '../core/SaveSystem.js';
 import { soundFx } from '../core/SoundEffects.js';
+import { StartScreen } from '../ui/StartScreen.js';
+import { LeaderboardService } from '../core/LeaderboardService.js';
 
 export class MiningScene extends Phaser.Scene {
   constructor() {
@@ -74,6 +76,14 @@ export class MiningScene extends Phaser.Scene {
 
     // 12. Platzierte TNT-Sprengsätze (Fernzündung)
     this.placedTnt = [];
+
+    // 13. Start-Bildschirm initialisieren (Spiel im Pausenmodus, saubere unberührte Welt)
+    this.inStartScreen = true;
+    this.isPaused = true;
+    this.startScreen = new StartScreen(this);
+
+    // Bisher an Supabase übermittelte Rekordtiefe laden
+    this._lastSubmittedLeaderboardDepth = parseInt(localStorage.getItem('vein_last_submitted_depth') || '0', 10);
   }
 
   createSkyAndSurface() {
@@ -254,14 +264,26 @@ export class MiningScene extends Phaser.Scene {
   }
 
   update(time, delta) {
-    if (typeof document !== 'undefined' && document.hidden) return;
-    if (this.isPaused) return;
+    if (typeof document !== 'undefined' && document.hidden) {
+      soundFx.stopAllLoops?.();
+      return;
+    }
+    if (this.isPaused || this.inStartScreen) {
+      soundFx.stopAllLoops?.();
+      return;
+    }
 
-    const isModalOpen = typeof document !== 'undefined' && document.body.classList.contains('modal-open');
+    const isMovementBlocked = typeof document !== 'undefined' && (
+      document.body.classList.contains('modal-open') ||
+      document.body.classList.contains('tutorial-open') ||
+      document.body.classList.contains('discovery-modal-open')
+    );
 
-    if (!isModalOpen) {
+    if (!isMovementBlocked) {
       const inputDir = this.inputHandler.getDirection();
       this.player.update(delta, inputDir);
+    } else {
+      soundFx.stopAllLoops?.();
     }
 
     // Basis-System, NPC & Gebäude-Funktionen aktualisieren (Produktion läuft weiter)
@@ -275,11 +297,13 @@ export class MiningScene extends Phaser.Scene {
       this.autoSaveTimer = 0;
       if (!SaveSystem.isClearing) {
         SaveSystem.save(this);
+        this.checkAndSubmitLeaderboard();
       }
     }
 
-    // Viewport Culling & Sensor-Erz-Scanner (bei geöffnetem Modal pausiert)
-    if (!isModalOpen) {
+    // Viewport Culling & Sensor-Erz-Scanner (bei geöffnetem Vollbild-Modal pausiert, im Tutorial aktiv)
+    const isFullscreenModalOpen = typeof document !== 'undefined' && document.body.classList.contains('modal-open');
+    if (!isFullscreenModalOpen) {
       this.gridSystem.updateViewport(this.cameras.main, this.player);
     }
 
@@ -492,4 +516,33 @@ export class MiningScene extends Phaser.Scene {
       console.error('Dynamite explosion error:', err);
     }
   }
+
+  /**
+   * Sendet den aktuellen Tiefenrekord alle 30 Sekunden an Supabase,
+   * jedoch AUSSCHLIESSLICH dann, wenn ein neuer Tiefenrekord aufgestellt wurde.
+   */
+  checkAndSubmitLeaderboard() {
+    if (!this.player || this.inStartScreen) return;
+    const currentMax = Math.max(0, Math.round(this.player.highestDepthReached || 0));
+    const lastSubmitted = this._lastSubmittedLeaderboardDepth || 0;
+
+    if (currentMax > 0 && currentMax > lastSubmitted) {
+      this._lastSubmittedLeaderboardDepth = currentMax;
+      try {
+        localStorage.setItem('vein_last_submitted_depth', String(currentMax));
+      } catch (_) {}
+
+      const name = this.player.name || localStorage.getItem('vein_player_name') || 'Fahrer';
+      const level = this.player.level || 1;
+
+      LeaderboardService.submitScore(name, currentMax, level).then((ok) => {
+        if (ok) {
+          console.log(`[Leaderboard] Neuer Tiefenrekord an Supabase übermittelt: ${name} – ${currentMax}m (Lv.${level})`);
+        }
+      }).catch((err) => {
+        console.warn('[Leaderboard] Fehler beim Senden an Supabase:', err);
+      });
+    }
+  }
 }
+

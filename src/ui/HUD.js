@@ -45,7 +45,12 @@ export function launchConfetti() {
   canvas.height = window.innerHeight;
   const ctx = canvas.getContext('2d');
 
-  const colors = ['#38bdf8', '#fbbf24', '#10b981', '#c084fc', '#f43f5e', '#fb923c', '#e879f9'];
+  // Spielfarben: Orange, Blau & Braun (in harmonischen, leuchtenden Schattierungen)
+  const colors = [
+    '#f97316', '#fb923c', '#ea580c', // Orange (Leuchtend, Amber, Rost-Orange)
+    '#38bdf8', '#0ea5e9', '#60a5fa', // Blau (Himmelblau, Cyan, Tiefseeblau)
+    '#92400e', '#b45309', '#78350f', '#854d0e' // Braun (Satter Erdton, Bronze, Gesteinsbraun)
+  ];
   const particles = [];
   const numParticles = 65;
 
@@ -318,6 +323,7 @@ export class HUD {
   }
 
   openDrillerModal(tab = 'cargo') {
+    soundFx.stopAllLoops?.();
     if (this.scene && this.scene.baseSystem) {
       this.drillerModal.baseSystem = this.scene.baseSystem;
     }
@@ -341,6 +347,7 @@ export class HUD {
     if (!modalEl || !titleEl || !bodyEl) return;
 
     soundFx.playPurchase();
+    soundFx.stopAllLoops?.();
     try {
       launchConfetti();
     } catch (e) {}
@@ -348,9 +355,6 @@ export class HUD {
     const wasAlreadyPaused = Boolean(this.scene?.isPaused);
     if (!wasAlreadyPaused && this.scene) {
       this.scene.isPaused = true;
-      soundFx.stopDrive();
-      soundFx.stopDrilling();
-      soundFx.stopJetpack();
     }
 
     try {
@@ -443,6 +447,8 @@ export class HUD {
   }
 
   update() {
+    if (this.scene && (this.scene.inStartScreen || this.scene.isPaused)) return;
+
     // Position & Tiefenstatus
     const currentY = this.player.sprite ? this.player.sprite.y : (this.player.gy * 32 + 16);
     const isAtSurface = this.player.gy < 0 || currentY <= -8;
@@ -534,28 +540,20 @@ export class HUD {
       }
     }
 
-    // Action FAB & Speed Dial: Generell NUR unter Tage anzeigen!
-    if (this.actionFabContainer) {
-      if (!isBelowGround) {
-        if (this.actionFabContainer.style.display !== 'none') {
-          this.actionFabContainer.style.display = 'none';
-          this.actionFabContainer.classList.remove('open');
-        }
-      } else {
-        if (this.actionFabContainer.style.display !== 'flex') {
-          this.actionFabContainer.style.display = 'flex';
-        }
-      }
-    }
-
-    // Action Speed Dial: Inventar-Vorrat & Status nach Tiefe aktualisieren (nur unter Tage aktiv)
+    // Action Speed Dial & FAB: Generell NUR unter Tage anzeigen und NUR wenn Items/Aktionen vorhanden sind!
     if (isBelowGround) {
       const depthMeters = Math.max(0, Math.floor(this.player.depthMeters || this.player.gy || 0));
       const bs = this.scene.baseSystem;
+      let tubeCount = 0;
+      let fuelCount = 0;
+      let hasPneumaticAction = false;
+      let hasGeothermalAction = false;
+      let nearby = null;
+
       if (bs) {
-        const nearby = bs.getNearbyStation(this.player.gx, this.player.gy, 2.5);
-        const tubeCount = bs.getAvailableStationCount ? bs.getAvailableStationCount(this.player, 'tube', depthMeters) : 0;
-        const fuelCount = bs.getAvailableStationCount ? bs.getAvailableStationCount(this.player, 'fuel', depthMeters) : 0;
+        nearby = bs.getNearbyStation(this.player.gx, this.player.gy, 2.5);
+        tubeCount = bs.getAvailableStationCount ? bs.getAvailableStationCount(this.player, 'tube', depthMeters) : 0;
+        fuelCount = bs.getAvailableStationCount ? bs.getAvailableStationCount(this.player, 'fuel', depthMeters) : 0;
 
         // 1. Erzförderung / Rohrpost
         if (this.labelActionPneumatic) {
@@ -567,6 +565,7 @@ export class HUD {
                 this.badgeActionPneumatic.textContent = rawOresCount;
                 this.badgeActionPneumatic.style.display = 'flex';
               }
+              hasPneumaticAction = true;
             } else {
               this.labelActionPneumatic.textContent = 'Rohrpost bereit';
               if (this.badgeActionPneumatic) {
@@ -580,6 +579,7 @@ export class HUD {
               this.badgeActionPneumatic.textContent = tubeCount;
               this.badgeActionPneumatic.style.display = 'flex';
             }
+            if (tubeCount > 0) hasPneumaticAction = true;
           }
           if (this.btnActionPneumatic) {
             const isUsable = (nearby && (nearby.type === 'pneumatic' || nearby.type === 'tube')) || tubeCount > 0;
@@ -596,18 +596,37 @@ export class HUD {
               this.badgeActionGeothermal.textContent = pct + '%';
               this.badgeActionGeothermal.style.display = 'flex';
             }
+            if (this.player.fuel < this.player.maxFuel) {
+              hasGeothermalAction = true;
+            }
           } else {
             this.labelActionGeothermal.textContent = 'Tankanlage';
             if (this.badgeActionGeothermal) {
               this.badgeActionGeothermal.textContent = fuelCount;
               this.badgeActionGeothermal.style.display = 'flex';
             }
+            if (fuelCount > 0) hasGeothermalAction = true;
           }
           if (this.btnActionGeothermal) {
             const isUsable = (nearby && (nearby.type === 'fuel' || nearby.type === 'geothermal')) || fuelCount > 0;
             this.btnActionGeothermal.classList.toggle('empty', !isUsable);
           }
         }
+      }
+
+      // Alle Speed-Dial Zeilen dauerhaft im Menü verfügbar halten
+      const rowGeothermal = document.getElementById('row-action-geothermal');
+      if (rowGeothermal) {
+        rowGeothermal.style.display = 'flex';
+      }
+      const rowPneumatic = document.getElementById('row-action-pneumatic');
+      if (rowPneumatic) {
+        rowPneumatic.style.display = 'flex';
+      }
+      const rowDynamite = document.getElementById('row-action-dynamite');
+      const dCount = (this.player.gadgets && this.player.gadgets.dynamite) || 0;
+      if (rowDynamite) {
+        rowDynamite.style.display = 'flex';
       }
 
       // 3. Detonator-Aktionsbutton (erscheint sobald 1+ TNT im Schacht scharf liegt)
@@ -620,7 +639,27 @@ export class HUD {
           this.btnActionDetonate.style.display = 'none';
         }
       }
+
+      // Gesamten Action FAB nur anzeigen wenn mindestens 1 Item oder Aktion existiert!
+      const hasAnyAction = hasGeothermalAction || hasPneumaticAction || dCount > 0 || placedTntCount > 0;
+      if (this.actionFabContainer) {
+        if (hasAnyAction) {
+          if (this.actionFabContainer.style.display !== 'flex') {
+            this.actionFabContainer.style.display = 'flex';
+          }
+        } else {
+          if (this.actionFabContainer.style.display !== 'none') {
+            this.actionFabContainer.style.display = 'none';
+            this.actionFabContainer.classList.remove('open');
+          }
+        }
+      }
     } else {
+      // Nicht unter Tage -> FAB und Detonator ausblenden
+      if (this.actionFabContainer && this.actionFabContainer.style.display !== 'none') {
+        this.actionFabContainer.style.display = 'none';
+        this.actionFabContainer.classList.remove('open');
+      }
       if (this.btnActionDetonate) this.btnActionDetonate.style.display = 'none';
     }
 
@@ -757,6 +796,7 @@ export class HUD {
   }
 
   openPauseMenu() {
+    soundFx.stopAllLoops?.();
     if (this.scene) this.scene.isPaused = true;
     this.isPauseMenuOpen = true;
 
@@ -830,6 +870,15 @@ export class HUD {
             <span style="color: #cbd5e1; font-size: 10.5px; font-weight: 500;">Fortschritt jetzt im Speicher sichern</span>
           </div>
         </button>
+
+        <!-- 6. Über das Spiel (Ganz unten) -->
+        <button id="btn-menu-about" class="btn-action" style="height: 48px; width: 100%; font-size: 12.5px; font-weight: 700; justify-content: flex-start; padding: 0 16px; gap: 14px; border-radius: 12px; background: rgba(30, 41, 59, 0.65); border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
+          <span style="color: #a78bfa; display: inline-flex;">${icon('info', '', 18)}</span>
+          <div style="display: flex; flex-direction: column; text-align: left; line-height: 1.2;">
+            <span style="color: #f8fafc; font-weight: 700;">Über</span>
+            <span style="color: #cbd5e1; font-size: 10.5px; font-weight: 500;">Version, Lizenzen & Entwickler</span>
+          </div>
+        </button>
       </div>
     `;
 
@@ -860,6 +909,11 @@ export class HUD {
         SaveSystem.save(this.scene);
         this.scene.events.emit('notify', '💾 Spielstand erfolgreich gesichert!');
       };
+    }
+
+    const aboutBtn = document.getElementById('btn-menu-about');
+    if (aboutBtn) {
+      aboutBtn.onclick = () => this.openAboutView();
     }
 
     modalEl.style.display = 'flex';
@@ -910,6 +964,8 @@ export class HUD {
       </div>
     `).join('');
 
+    const isDevUnlocked = !!(this.devModeUnlocked || (typeof localStorage !== 'undefined' && localStorage.getItem('vein_dev_mode') === '1'));
+
     bodyEl.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 12px; max-width: 580px; margin: 0 auto; width: 100%; box-sizing: border-box; padding: 0 4px 36px 4px;">
         <button id="btn-back-to-menu" class="btn-action" style="height: 32px; padding: 0 14px; font-size: 11.5px; align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: 8px;">
@@ -917,17 +973,29 @@ export class HUD {
           <span>Zurück zum Spielmenü</span>
         </button>
 
-        <!-- Audio & Anzeige -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-          <!-- Audio -->
+        <!-- Audio (Soundeffekte & Musik getrennt) & Anzeige -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px;">
+          <!-- Soundeffekte -->
           <div style="background: rgba(15, 23, 42, 0.65); border-radius: 12px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 4px rgba(0,0,0,0.2);">
             <div>
               <strong style="color: #f8fafc; font-size: 12px; display: block;">Soundeffekte</strong>
-              <span style="color: #94a3b8; font-size: 10.5px;">Bohren & Triebwerk</span>
+              <span style="color: #94a3b8; font-size: 10.5px;">Bohren & Ketten</span>
             </div>
-            <button id="btn-toggle-sound" class="${soundFx.muted ? 'btn-3d-secondary' : 'btn-action'}" style="height: 30px; padding: 0 10px; font-size: 11px; display: inline-flex; align-items: center; gap: 5px; border: none; border-radius: 8px;">
-              ${icon(soundFx.muted ? 'volume-x' : 'volume-2', '', 13)}
-              <span>${soundFx.muted ? 'Aus' : 'An'}</span>
+            <button id="btn-toggle-sound" class="${soundFx.soundMuted ? 'btn-3d-secondary' : 'btn-action'}" style="height: 30px; padding: 0 10px; font-size: 11px; display: inline-flex; align-items: center; gap: 5px; border: none; border-radius: 8px;">
+              ${icon(soundFx.soundMuted ? 'volume-x' : 'volume-2', '', 13)}
+              <span>${soundFx.soundMuted ? 'Aus' : 'An'}</span>
+            </button>
+          </div>
+
+          <!-- Musik / Soundtrack -->
+          <div style="background: rgba(15, 23, 42, 0.65); border-radius: 12px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 4px rgba(0,0,0,0.2);">
+            <div>
+              <strong style="color: #f8fafc; font-size: 12px; display: block;">Musik</strong>
+              <span style="color: #94a3b8; font-size: 10.5px;">Untertage-Streicher</span>
+            </div>
+            <button id="btn-toggle-music" class="${soundFx.musicMuted ? 'btn-3d-secondary' : 'btn-action'}" style="height: 30px; padding: 0 10px; font-size: 11px; display: inline-flex; align-items: center; gap: 5px; border: none; border-radius: 8px;">
+              ${icon(soundFx.musicMuted ? 'volume-x' : 'music', '', 13)}
+              <span>${soundFx.musicMuted ? 'Aus' : 'An'}</span>
             </button>
           </div>
 
@@ -954,9 +1022,6 @@ export class HUD {
               </strong>
               <span style="color: #94a3b8; font-size: 11px; display: block; margin-top: 1px;">Speichere und lade unterschiedliche Spielstände im Browser</span>
             </div>
-            <span style="color: #10b981; font-weight: 700; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">
-              ${icon('check-circle', '', 12)} Auto-Save alle 10s
-            </span>
           </div>
 
           <!-- Slots Liste -->
@@ -968,14 +1033,15 @@ export class HUD {
           <div style="display: flex; gap: 8px; align-items: center; justify-content: flex-end; padding-top: 4px; border-top: 1px solid rgba(255,255,255,0.06);">
             <input type="file" id="input-import-file" accept=".json" style="display: none;" />
             <button id="btn-import-json" class="btn-action" style="height: 28px; padding: 0 10px; font-size: 10.5px; display: inline-flex; align-items: center; gap: 5px; border: none; border-radius: 6px;">
-              ${icon('upload', '', 12)} JSON Importieren
+              ${icon('upload', '', 12)} Spielstand importieren
             </button>
             <button id="btn-export-json" class="btn-action" style="height: 28px; padding: 0 10px; font-size: 10.5px; display: inline-flex; align-items: center; gap: 5px; border: none; border-radius: 6px;">
-              ${icon('download', '', 12)} JSON Exportieren
+              ${icon('download', '', 12)} Spielstand exportieren
             </button>
           </div>
         </div>
 
+        ${isDevUnlocked ? `
         <!-- 2. Entwicklermodus (Dev-Test-Presets) -->
         <div style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(16, 185, 129, 0.08)); border: 1.5px solid rgba(245, 158, 11, 0.4); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 0 16px rgba(245, 158, 11, 0.08);">
           <div>
@@ -1039,6 +1105,7 @@ export class HUD {
             </div>
           </div>
         </div>
+        ` : ''}
 
         <!-- 3. Spielstand zurücksetzen -->
         <div style="background: rgba(15, 23, 42, 0.65); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;">
@@ -1085,13 +1152,26 @@ export class HUD {
     const toggleSoundBtn = document.getElementById('btn-toggle-sound');
     if (toggleSoundBtn) {
       toggleSoundBtn.onclick = () => {
-        soundFx.toggleMute();
+        soundFx.toggleSoundMute();
         toggleSoundBtn.innerHTML = `
-          ${icon(soundFx.muted ? 'volume-x' : 'volume-2', '', 13)}
-          <span>${soundFx.muted ? 'Aus' : 'An'}</span>
+          ${icon(soundFx.soundMuted ? 'volume-x' : 'volume-2', '', 13)}
+          <span>${soundFx.soundMuted ? 'Aus' : 'An'}</span>
         `;
-        toggleSoundBtn.className = soundFx.muted ? 'btn-3d-secondary' : 'btn-action';
+        toggleSoundBtn.className = soundFx.soundMuted ? 'btn-3d-secondary' : 'btn-action';
         refreshIcons(toggleSoundBtn);
+      };
+    }
+
+    const toggleMusicBtn = document.getElementById('btn-toggle-music');
+    if (toggleMusicBtn) {
+      toggleMusicBtn.onclick = () => {
+        soundFx.toggleMusicMute();
+        toggleMusicBtn.innerHTML = `
+          ${icon(soundFx.musicMuted ? 'volume-x' : 'music', '', 13)}
+          <span>${soundFx.musicMuted ? 'Aus' : 'An'}</span>
+        `;
+        toggleMusicBtn.className = soundFx.musicMuted ? 'btn-3d-secondary' : 'btn-action';
+        refreshIcons(toggleMusicBtn);
       };
     }
 
@@ -1456,6 +1536,161 @@ export class HUD {
         this.openGuideView(tabId);
       };
     });
+  }
+
+  openAboutView() {
+    const modalEl = document.getElementById('building-modal');
+    const titleEl = document.getElementById('modal-title');
+    const bodyEl = document.getElementById('modal-body');
+    if (!modalEl || !titleEl || !bodyEl) return;
+
+    titleEl.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 8px;">
+        ${icon('info', '', 18)}
+        <span>ÜBER DAS SPIEL</span>
+      </div>
+    `;
+
+    const isDevUnlocked = !!(this.devModeUnlocked || (typeof localStorage !== 'undefined' && localStorage.getItem('vein_dev_mode') === '1'));
+
+    bodyEl.innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 12px; max-width: 540px; margin: 0 auto; width: 100%; box-sizing: border-box; padding: 0 4px 36px 4px;">
+        <button id="btn-back-to-menu" class="btn-action" style="height: 32px; padding: 0 14px; font-size: 11.5px; align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: 8px;">
+          ${icon('arrow-left', '', 14)}
+          <span>Zurück zum Spielmenü</span>
+        </button>
+
+        <!-- Spiel-Header / Logo Card -->
+        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 16px 18px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.25); display: flex; flex-direction: column; align-items: center; gap: 6px;">
+          <div style="width: 52px; height: 52px; border-radius: 14px; overflow: hidden; box-shadow: 0 0 20px rgba(249, 115, 22, 0.4); border: 1.5px solid rgba(249, 115, 22, 0.6);">
+            <img src="/icon.png" alt="VEIN Icon" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+          </div>
+          <div style="font-size: 20px; font-weight: 900; letter-spacing: 2px; color: #f8fafc; text-transform: uppercase;">
+            VEIN
+          </div>
+          <div id="about-version-entry" style="display: inline-block; padding: 3px 10px; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 99px; font-size: 11.5px; font-weight: 700; color: #38bdf8; cursor: pointer; user-select: none; transition: all 0.15s ease;" title="Tippe hier">
+            Version 1.0.0
+          </div>
+          <div id="about-dev-status" style="margin-top: 6px; font-size: 10.5px; color: #10b981; font-weight: 700; display: ${isDevUnlocked ? 'block' : 'none'};">
+            🛠️ Entwicklermodus freigeschaltet
+          </div>
+        </div>
+
+        <!-- Entwickler & Team -->
+        <div style="background: rgba(15, 23, 42, 0.65); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.2);">
+          <div style="display: flex; align-items: center; gap: 8px; color: #f8fafc; font-size: 12.5px; font-weight: 700;">
+            ${icon('user', '', 15)}
+            <span>ENTWICKLUNG</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.06);">
+            <span style="color: #94a3b8; font-size: 11.5px;">Entwickler & Gamedesign</span>
+            <strong style="color: #f8fafc; font-size: 12px;">Benedikt</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0;">
+            <span style="color: #94a3b8; font-size: 11.5px;">Projekt</span>
+            <span style="color: #e2e8f0; font-size: 11.5px; font-weight: 600;">Deep Miner · 2D Mining Crawler</span>
+          </div>
+        </div>
+
+        <!-- Lizenzen & Open-Source-Rechtshinweise -->
+        <div style="background: rgba(15, 23, 42, 0.65); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.2);">
+          <div style="display: flex; align-items: center; gap: 8px; color: #f8fafc; font-size: 12.5px; font-weight: 700;">
+            ${icon('file-text', '', 15)}
+            <span>OPEN-SOURCE-LIZENZEN & RECHTSHINWEISE</span>
+          </div>
+          <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">
+            Dieses Spiel verwendet quelloffene Komponenten gemäß den jeweiligen Lizenzbestimmungen:
+          </div>
+
+          <!-- Phaser Lizenz -->
+          <div style="background: rgba(10, 15, 29, 0.8); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 4px;">
+              <strong style="color: #38bdf8; font-size: 11.5px;">Phaser (v4.2.1)</strong>
+              <span style="color: #64748b; font-size: 10px; font-family: monospace;">MIT License</span>
+            </div>
+            <pre style="margin: 0; padding: 0; font-family: monospace; font-size: 9.5px; color: #94a3b8; white-space: pre-wrap; line-height: 1.4; max-height: 140px; overflow-y: auto; background: transparent; border: none;">The MIT License (MIT)
+
+Copyright (c) 2026 Richard Davey, Phaser Studio Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</pre>
+          </div>
+
+          <!-- Lucide Icons Lizenz -->
+          <div style="background: rgba(10, 15, 29, 0.8); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 4px;">
+              <strong style="color: #38bdf8; font-size: 11.5px;">Lucide Icons</strong>
+              <span style="color: #64748b; font-size: 10px; font-family: monospace;">ISC / MIT License</span>
+            </div>
+            <pre style="margin: 0; padding: 0; font-family: monospace; font-size: 9.5px; color: #94a3b8; white-space: pre-wrap; line-height: 1.4; max-height: 140px; overflow-y: auto; background: transparent; border: none;">ISC License
+
+Copyright (c) 2026 Lucide Icons and Contributors
+
+Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
+          </div>
+
+          <!-- Urheberrecht Deep Miner -->
+          <div style="padding-top: 4px; border-top: 1px solid rgba(255,255,255,0.06); font-size: 10.5px; color: #64748b; text-align: center;">
+            © 2026 Deep Miner. Entwickelt von Benedikt. Alle weiteren Rechte vorbehalten.
+          </div>
+        </div>
+      </div>
+    `;
+
+    refreshIcons(modalEl);
+
+    const backBtn = document.getElementById('btn-back-to-menu');
+    if (backBtn) {
+      backBtn.onclick = () => this.openPauseMenu();
+    }
+
+    // Geheimes 5-fach Tippen auf die Versionsanzeige
+    const versionEl = document.getElementById('about-version-entry');
+    const devStatusEl = document.getElementById('about-dev-status');
+    if (versionEl) {
+      let clickCount = 0;
+      let clickTimer = null;
+
+      versionEl.onclick = () => {
+        clickCount++;
+        if (clickTimer) clearTimeout(clickTimer);
+
+        // Feedback-Animation
+        versionEl.style.transform = 'scale(0.92)';
+        setTimeout(() => {
+          versionEl.style.transform = 'scale(1)';
+        }, 100);
+
+        if (clickCount >= 5) {
+          clickCount = 0;
+          this.devModeUnlocked = true;
+          try {
+            localStorage.setItem('vein_dev_mode', '1');
+          } catch (e) {
+            console.warn(e);
+          }
+          if (devStatusEl) {
+            devStatusEl.style.display = 'block';
+          }
+          if (soundFx.playLevelUp) {
+            soundFx.playLevelUp();
+          } else {
+            soundFx.playPurchase?.();
+          }
+          toastManager.show('🛠️ Entwicklermodus freigeschaltet!');
+          return;
+        }
+
+        clickTimer = setTimeout(() => {
+          clickCount = 0;
+        }, 1500);
+      };
+    }
   }
 
   openSettingsModal() {

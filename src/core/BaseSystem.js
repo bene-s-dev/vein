@@ -65,6 +65,10 @@ export function closeActiveModal(scene) {
   document.body.classList.remove('modal-open');
   document.body.classList.remove('discovery-modal-open');
 
+  try {
+    soundFx.stopAllLoops?.();
+  } catch (_) {}
+
   const sc = scene || (window.__game && window.__game.scene && window.__game.scene.getScene('MiningScene'));
   if (sc) {
     sc.isPaused = false;
@@ -88,7 +92,11 @@ export function closeActiveModal(scene) {
 
 export function isModalActive() {
   if (typeof document !== 'undefined') {
-    if (document.body && (document.body.classList.contains('modal-open') || document.body.classList.contains('discovery-modal-open'))) {
+    if (document.body && (
+      document.body.classList.contains('modal-open') ||
+      document.body.classList.contains('discovery-modal-open') ||
+      document.body.classList.contains('tutorial-open')
+    )) {
       return true;
     }
     const modal = document.getElementById('building-modal');
@@ -1029,7 +1037,46 @@ export class BaseSystem {
 
       b.sprite = sprite;
       b.textLabel = text;
+
+      // Sprechblase über dem Büro für den Steinforscher (wenn neuer Auftrag oder Abgabe bereit)
+      if (b.id === 'office') {
+        const bubbleX = px;
+        const bubbleY = -b.height - 30;
+        this.officeBubble = this.scene.add.image(bubbleX, bubbleY, 'speech_bubble')
+          .setDepth(22)
+          .setOrigin(0.5, 0.5)
+          .setVisible(false)
+          .setInteractive({ useHandCursor: true });
+
+        this.scene.tweens.add({
+          targets: this.officeBubble,
+          y: '-=4',
+          yoyo: true,
+          repeat: -1,
+          duration: 900,
+          ease: 'Sine.easeInOut'
+        });
+
+        const onTriggerOfficeBubble = (pointer) => {
+          if (isModalActive()) return;
+          const canvas = this.scene.game?.canvas;
+          if (pointer && pointer.event) {
+            const target = pointer.event.target;
+            if (target && canvas && target !== canvas) return;
+            if (target && target.closest && target.closest('#building-modal, .modal-backdrop, .modal-window, #ore-info-backdrop, #hud-overlay, #hud-action-fab, .hud-card, button, input, #toast-container')) {
+              return;
+            }
+          }
+          if (this.scene.hud && this.scene.hud.missionsModal) {
+            this.scene.hud.missionsModal.open('geologist');
+          }
+        };
+
+        this.officeBubble.on('pointerdown', onTriggerOfficeBubble);
+      }
     });
+
+    this.updateOfficeBubble();
 
     this.updateHangarBuildingLabel();
     this.updateBuildingVisuals();
@@ -1085,53 +1132,49 @@ export class BaseSystem {
   }
 
   initSteinsammler() {
-    // Steineforscher kommt nur manchmal und wartet dann am Hangar (gx: 17, direkt neben Hangar gx: 15)
-    this.sammlerWaitX = 17 * TILE_SIZE;
-    this.sammlerSpawnX = 42 * TILE_SIZE; // Kommt von rechts gelaufen
-    this.sammlerState = 'WAITING'; // Startet initial 40s am Hangar
-    this.sammlerTimer = 40; // Sekunden bis zum Aufbruch
-    this.sammlerAwayDuration = 60; // Sekunden bis zum nächsten Besuch
-    this.sammlerWaitDuration = 75; // Sekunden Wartezeit am Hangar
-    this.sammlerWalkSpeed = 24; // Ruhiges Laufen
+    // Steinforscher ist nun dauerhaft im Büro integriert (kein NPC-Sprite mehr auf der Oberfläche)
+  }
 
-    this.sammlerSprite = this.scene.add.image(this.sammlerWaitX, 0, 'npc_geologist')
-      .setDepth(5)
-      .setOrigin(0.5, 1.0)
-      .setInteractive({ useHandCursor: true });
+  updateOfficeBubble() {
+    if (!this.officeBubble) return;
+    const shouldShow = this.hasGeologistNotification();
+    this.officeBubble.setVisible(shouldShow);
+  }
 
-    // Keine Text-Beschriftung, nur die kleine Sprechblase zum Anklicken!
-    this.sammlerBubble = this.scene.add.image(this.sammlerWaitX, -28, 'speech_bubble')
-      .setDepth(21)
-      .setOrigin(0.5, 0.5)
-      .setInteractive({ useHandCursor: true });
+  hasGeologistNotification() {
+    if (!this.player) return false;
+    const p = this.player;
+    if (!p.seenGeologistQuests) {
+      p.seenGeologistQuests = new Set();
+    }
 
-    // Sanfte Schwebe-Animation der Sprechblase
-    this.scene.tweens.add({
-      targets: this.sammlerBubble,
-      y: '-=3',
-      yoyo: true,
-      repeat: -1,
-      duration: 900,
-      ease: 'Sine.easeInOut'
+    const visibleQuests = GEOLOGIST_QUESTS.filter(q =>
+      Object.keys(q.reqs).every(ore => p.isOreDiscovered(ore))
+    );
+
+    if (visibleQuests.length === 0) return false;
+
+    // 1. Gibt es einen neuen Auftrag, der im Büro noch nicht angesehen wurde?
+    const hasUnseen = visibleQuests.some(q => !p.seenGeologistQuests.has(q.id));
+    if (hasUnseen) return true;
+
+    // 2. Kann ein Auftrag aktuell abgegeben werden (Erze im Frachtraum oder Depot vorhanden)?
+    const cargoCounts = {};
+    if (Array.isArray(p.cargo)) {
+      p.cargo.forEach(ore => {
+        cargoCounts[ore] = (cargoCounts[ore] || 0) + 1;
+      });
+    }
+    const depotOres = this.depot?.ores || {};
+
+    const canFulfill = visibleQuests.some(q => {
+      return Object.entries(q.reqs).every(([ore, needed]) => {
+        const total = (cargoCounts[ore] || 0) + (depotOres[ore] || 0);
+        return total >= needed;
+      });
     });
 
-    const onOpenForscher = (pointer) => {
-      if (isModalActive()) return;
-      const canvas = this.scene.game?.canvas;
-      if (pointer && pointer.event) {
-        const target = pointer.event.target;
-        if (target && canvas && target !== canvas) {
-          return;
-        }
-        if (target && target.closest && target.closest('#building-modal, .modal-backdrop, .modal-window, #ore-info-backdrop, #hud-overlay, #hud-action-fab, .hud-card, button, input, #toast-container')) {
-          return;
-        }
-      }
-      this.openGeologistModal();
-    };
-
-    this.sammlerSprite.on('pointerdown', onOpenForscher);
-    this.sammlerBubble.on('pointerdown', onOpenForscher);
+    return canFulfill;
   }
 
   initSmokeParticles() {
@@ -1195,59 +1238,8 @@ export class BaseSystem {
     const dt = delta / 1000;
     this.updateWorldLabels();
 
-    // Steineforscher Zustand & Lauf-Verhalten
-    if (this.sammlerSprite && this.sammlerBubble) {
-      if (this.sammlerState === 'WAITING') {
-        // Wartet am Hangar
-        this.sammlerTimer -= dt;
-        this.sammlerSprite.setPosition(this.sammlerWaitX, 0);
-        this.sammlerSprite.setVisible(true);
-        this.sammlerBubble.setVisible(true);
-        this.sammlerBubble.x = this.sammlerWaitX;
-
-        if (this.sammlerTimer <= 0) {
-          // Geht wieder auf Expedition
-          this.sammlerState = 'WALKING_OUT';
-          this.sammlerSprite.setFlipX(false); // Schaut nach rechts beim Weggehen
-        }
-      } else if (this.sammlerState === 'WALKING_OUT') {
-        // Läuft nach rechts weg
-        this.sammlerSprite.x += this.sammlerWalkSpeed * dt;
-        this.sammlerBubble.x = this.sammlerSprite.x;
-        if (this.sammlerSprite.x >= this.sammlerSpawnX) {
-          // Außer Sicht: Ist unterwegs
-          this.sammlerState = 'AWAY';
-          this.sammlerTimer = this.sammlerAwayDuration;
-          this.sammlerSprite.setVisible(false);
-          this.sammlerBubble.setVisible(false);
-        }
-      } else if (this.sammlerState === 'AWAY') {
-        // Nicht da - Timer bis zur nächsten Ankunft läuft
-        this.sammlerTimer -= dt;
-        this.sammlerSprite.setVisible(false);
-        this.sammlerBubble.setVisible(false);
-        if (this.sammlerTimer <= 0) {
-          // Kommt angelaufen!
-          this.sammlerState = 'WALKING_IN';
-          this.sammlerSprite.setPosition(this.sammlerSpawnX, 0);
-          this.sammlerSprite.setVisible(true);
-          this.sammlerSprite.setFlipX(true); // Schaut nach links zum Hangar
-          this.sammlerBubble.setVisible(true);
-          this.sammlerBubble.x = this.sammlerSpawnX;
-          this.scene.events.emit('notify', 'Der Steineforscher ist am Hangar eingetroffen und sucht Gesteinsproben!');
-        }
-      } else if (this.sammlerState === 'WALKING_IN') {
-        // Läuft von rechts zum Hangar
-        this.sammlerSprite.x -= this.sammlerWalkSpeed * dt;
-        this.sammlerBubble.x = this.sammlerSprite.x;
-        if (this.sammlerSprite.x <= this.sammlerWaitX) {
-          this.sammlerSprite.x = this.sammlerWaitX;
-          this.sammlerBubble.x = this.sammlerWaitX;
-          this.sammlerState = 'WAITING';
-          this.sammlerTimer = this.sammlerWaitDuration;
-        }
-      }
-    }
+    // Steinforscher Sprechblase über dem Büro aktualisieren
+    this.updateOfficeBubble();
 
     // Kaufbare Gebäude Ticks
     this.purchasableBuildings.forEach((pb) => {
@@ -1409,16 +1401,8 @@ export class BaseSystem {
           height = 72;
         }
       } else if (b.id === 'lab') {
-        if (resTier === 1) {
-          key = 'building_lab_t1';
-          height = 40;
-        } else if (resTier <= 3) {
-          key = 'building_lab_t2';
-          height = 56;
-        } else {
-          key = 'building_lab';
-          height = 72;
-        }
+        key = 'building_lab';
+        height = 72;
       } else if (b.id === 'market') {
         // Nicht ausbaubar: von Anfang an wie ursprünglich
         key = 'building_market';
@@ -2020,6 +2004,9 @@ export class BaseSystem {
   }
 
   openModal(title, contentHtml, maxWidth = 760) {
+    try {
+      soundFx.stopAllLoops?.();
+    } catch (_) {}
     if (this.scene) {
       this.scene.isPaused = true;
     }
@@ -3775,6 +3762,9 @@ export class BaseSystem {
       this.clearFloatingAction();
     }
 
+    try {
+      soundFx.stopAllLoops?.();
+    } catch (_) {}
     document.body.classList.add('modal-open');
     this.modalEl.style.display = 'flex';
     refreshIcons(this.modalEl);
@@ -4230,149 +4220,12 @@ export class BaseSystem {
   }
 
   // =========================================================
-  // 2. STEINSAMMLER NPC (SPEZIELLE ERZE GEGEN UPGRADE-BAUTEILE)
+  // 2. STEINSAMMLER / STEINFORSCHER (IM BÜRO INTEGRIERT)
   // =========================================================
   openGeologistModal() {
-    const p = this.player;
-    const comps = p.components;
-
-    const quests = GEOLOGIST_QUESTS;
-
-    // Cargo & Depot nach Erzen zählen
-    const cargoCounts = {};
-    p.cargo.forEach((ore) => {
-      cargoCounts[ore] = (cargoCounts[ore] || 0) + 1;
-    });
-    const depotOres = this.depot?.ores || {};
-
-    let questsHtml = '<div style="display: flex; flex-direction: column; gap: 10px; margin: 12px 0;">';
-
-    const visibleQuests = quests.filter(q => Object.keys(q.reqs).every(ore => p.isOreDiscovered(ore)));
-
-    if (visibleQuests.length === 0) {
-      questsHtml += `
-        <div style="text-align: center; padding: 20px 16px; color: #94a3b8; font-size: 12px; background: rgba(15,23,42,0.5); border-radius: 10px; border: 1px dashed rgba(255,255,255,0.1);">
-          Erkunde tiefere Gesteinsschichten, um neue Proben-Aufträge freizuschalten.
-        </div>
-      `;
-    } else {
-      visibleQuests.forEach((q) => {
-        let canFulfill = true;
-        const reqBadges = Object.entries(q.reqs).map(([ore, needed]) => {
-          const haveCargo = cargoCounts[ore] || 0;
-          const haveDepot = depotOres[ore] || 0;
-          const totalHave = haveCargo + haveDepot;
-          const oreName = ORE_DATA[ore]?.name || ore;
-          if (totalHave < needed) canFulfill = false;
-          const isMet = totalHave >= needed;
-          return `
-            <span style="background: rgba(15, 23, 42, 0.8); border: 1px solid ${isMet ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}; color: ${isMet ? '#10b981' : '#f87171'}; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
-              ${oreIcon(ore, 12)} ${oreName} (${totalHave}/${needed})
-            </span>
-          `;
-        }).join('');
-
-        questsHtml += `
-          <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid ${canFulfill ? '#10b981' : 'rgba(255,255,255,0.08)'}; border-radius: 10px; padding: 10px 14px; display: flex; flex-direction: column; gap: 8px;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <strong style="color: #f8fafc; font-size: 13px;">${q.title}</strong>
-              <span style="font-size: 11px; color: #94a3b8;">${q.depthHint}</span>
-            </div>
-            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-              ${reqBadges}
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 2px;">
-              <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                <span style="background: rgba(192, 132, 252, 0.12); border: 1px solid rgba(192, 132, 252, 0.3); color: #c084fc; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
-                  ${icon(q.rewardComp.iconName, '', 11)} 1x ${q.rewardComp.name}
-                </span>
-                <span style="background: rgba(251, 191, 36, 0.12); border: 1px solid rgba(251, 191, 36, 0.3); color: #fbbf24; font-weight: 800; font-size: 11.5px; padding: 2px 8px; border-radius: 6px;">
-                  €${q.rewardCash}
-                </span>
-                <span style="background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.3); color: #a855f7; font-weight: 800; font-size: 11.5px; padding: 2px 8px; border-radius: 6px;">
-                  ${q.rewardXp} XP
-                </span>
-              </div>
-              <button class="btn-claim-geologist btn-buy" data-qid="${q.id}" ${canFulfill ? '' : 'disabled'} style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">
-                ${icon('check', '', 12)}
-                <span>Abgeben</span>
-              </button>
-            </div>
-          </div>
-        `;
-      });
+    if (this.scene?.hud?.missionsModal) {
+      this.scene.hud.missionsModal.open('geologist');
     }
-    questsHtml += '</div>';
-
-    // Komponenten-Inventar des Spielers (Forscher-Bauteile)
-    const activeCompKeys = [
-      { key: 'microprocessor', name: 'Mikroprozessor', icon: 'cpu', color: '#60a5fa' },
-      { key: 'capacitor', name: 'Druck-Kondensator', icon: 'battery-charging', color: '#fbbf24' },
-      { key: 'spectrometer', name: 'Sensor-Spektrometer', icon: 'activity', color: '#c084fc' },
-      { key: 'plasma_regulator', name: 'Plasma-Injektor', icon: 'flame', color: '#f87171' },
-      { key: 'graviton_core', name: 'Gravitations-Modulator', icon: 'compass', color: '#38bdf8' },
-      { key: 'quantum_processor', name: 'Quanten-Prozessor', icon: 'atom', color: '#a78bfa' }
-    ];
-
-    const compBadges = activeCompKeys.map(c => `
-      <span style="display: inline-flex; align-items: center; gap: 4px; background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
-        ${icon(c.icon, '', 13)} <span style="color: #cbd5e1;">${c.name}:</span> <strong style="color: ${c.color};">${comps[c.key] || 0}</strong>
-      </span>
-    `).join('');
-
-    const compHeader = `
-      <div style="background: rgba(15,23,42,0.85); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 12px; display: flex; justify-content: center; font-size: 11.5px; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
-        ${compBadges}
-      </div>
-    `;
-
-    const content = `
-      ${compHeader}
-      ${questsHtml}
-    `;
-
-    this.openModal(`
-      <div style="display: flex; align-items: center; gap: 8px;">
-        ${icon('microscope', '', 18)}
-        <span>STEINEFORSCHER</span>
-      </div>
-    `, content);
-
-    // Abgabe Event Listener
-    const claimBtns = document.querySelectorAll('.btn-claim-geologist');
-    claimBtns.forEach((btn) => {
-      btn.onclick = () => {
-        const qid = btn.getAttribute('data-qid');
-        const q = quests.find(item => item.id === qid);
-        if (!q) return;
-
-        // Erze aus Frachtraum und falls nötig aus Depot entnehmen
-        for (const [ore, needed] of Object.entries(q.reqs)) {
-          let consumed = 0;
-          if (p.consumeOre) {
-            consumed = p.consumeOre(ore, needed);
-          } else {
-            p.sellSpecificOre(ore, needed);
-            consumed = needed;
-          }
-          const fromDepot = needed - consumed;
-          if (fromDepot > 0 && this.depot?.ores?.[ore]) {
-            this.depot.ores[ore] = Math.max(0, this.depot.ores[ore] - fromDepot);
-          }
-        }
-
-        // Belohnung gewähren
-        comps[q.rewardComp.key] = (comps[q.rewardComp.key] || 0) + 1;
-        p.cash += q.rewardCash;
-        p.addXp(q.rewardXp);
-        p.stats.researchCompleted = (p.stats.researchCompleted || 0) + 1;
-        soundFx.playPurchase();
-
-        this.openGeologistModal();
-        if (this.scene.hud) this.scene.hud.update();
-        this.scene.events.emit('notify', `Auftrag erfüllt: +1 ${q.rewardComp.name}, +€${q.rewardCash}, +${q.rewardXp} XP`);
-      };
-    });
   }
 
   // =========================================================
