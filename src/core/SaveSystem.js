@@ -86,7 +86,7 @@ export class SaveSystem {
         key,
         exists: true,
         isCurrent,
-        label: `Slot ${slotId}${slotId === 1 ? ' (Hauptspielstand)' : ''}`,
+        label: `Slot ${slotId}${slotId === 1 ? ' (Hauptspiel)' : ''}`,
         level: p.level || 1,
         cash: typeof p.cash === 'number' ? p.cash : 0,
         highestDepth: p.highestDepthReached || 0,
@@ -617,8 +617,12 @@ export class SaveSystem {
         LeaderboardService.checkGameOver(p.name).then(isStillGameOver => {
           if (isStillGameOver === false) {
             p.isGameOver = false;
-            p.teleportToSurface('Vom Administrator in Supabase gerettet!');
             SaveSystem.save(scene);
+            if (scene.playRescueCutscene) {
+              scene.playRescueCutscene('Vom Entwickler gerettet! Willkommen zurück an der Oberfläche.');
+            } else {
+              p.teleportToSurface('Vom Entwickler gerettet!');
+            }
           } else if (scene.rescueModal) {
             scene.rescueModal.open();
           }

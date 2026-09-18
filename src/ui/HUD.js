@@ -492,12 +492,12 @@ export class HUD {
     const fuelPercent = Math.max(0, Math.min(100, (this.player.fuel / this.player.maxFuel) * 100));
     const returnPercent = this.player.getReturnFuelPercent ? this.player.getReturnFuelPercent() : 0;
 
-    // Rückkehr-Schwelle inkl. Sicherheitspuffer zur rechtzeitigen Umkehr (auch überirdisch aktiv)
-    const safetyBuffer = 3.0; // 3% Sicherheitspuffer
-    const effectiveReturnThreshold = Math.min(100, Math.max(0, returnPercent + safetyBuffer));
+    // Rückkehr-Schwelle inkl. Sicherheitspuffer zur rechtzeitigen Umkehr (nur wenn Rückweg erforderlich)
+    const safetyBuffer = returnPercent > 0 ? 3.0 : 0; // 3% Sicherheitspuffer
+    const effectiveReturnThreshold = returnPercent > 0 ? Math.min(100, Math.max(0, returnPercent + safetyBuffer)) : 0;
 
     const reserveWidth = Math.min(fuelPercent, effectiveReturnThreshold);
-    const usableWidth = Math.max(0, fuelPercent - effectiveReturnThreshold);
+    const usableWidth = effectiveReturnThreshold > 0 ? Math.max(0, fuelPercent - effectiveReturnThreshold) : fuelPercent;
 
     if (this.fuelReserveBar) {
       const rwStr = `${reserveWidth.toFixed(1)}%`;
@@ -901,7 +901,16 @@ export class HUD {
           </div>
         </button>
 
-        <!-- 2. Bergmann-Buch -->
+        <!-- 2. Neues Spiel -->
+        <button id="btn-menu-new-game" class="btn-action" style="height: 48px; width: 100%; font-size: 12.5px; font-weight: 700; justify-content: flex-start; padding: 0 16px; gap: 14px; border-radius: 12px; background: rgba(30, 41, 59, 0.65); border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
+          <span style="color: #22c55e; display: inline-flex;">${icon('plus-circle', '', 18)}</span>
+          <div style="display: flex; flex-direction: column; text-align: left; line-height: 1.2;">
+            <span style="color: #f8fafc; font-weight: 700;">Neues Spiel</span>
+            <span style="color: #cbd5e1; font-size: 10.5px; font-weight: 500;">Frische Expedition starten</span>
+          </div>
+        </button>
+
+        <!-- 3. Bergmann-Buch -->
         <button id="btn-menu-book" class="btn-action" style="height: 48px; width: 100%; font-size: 12.5px; font-weight: 700; justify-content: flex-start; padding: 0 16px; gap: 14px; border-radius: 12px; background: rgba(30, 41, 59, 0.65); border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
           <span style="color: #fbbf24; display: inline-flex;">${icon('book-open', '', 18)}</span>
           <div style="display: flex; flex-direction: column; text-align: left; line-height: 1.2;">
@@ -910,7 +919,7 @@ export class HUD {
           </div>
         </button>
 
-        <!-- 3. Über das Spiel -->
+        <!-- 4. Über das Spiel -->
         <button id="btn-menu-about" class="btn-action" style="height: 48px; width: 100%; font-size: 12.5px; font-weight: 700; justify-content: flex-start; padding: 0 16px; gap: 14px; border-radius: 12px; background: rgba(30, 41, 59, 0.65); border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
           <span style="color: #a78bfa; display: inline-flex;">${icon('info', '', 18)}</span>
           <div style="display: flex; flex-direction: column; text-align: left; line-height: 1.2;">
@@ -927,6 +936,21 @@ export class HUD {
     const settingsBtn = document.getElementById('btn-menu-settings');
     if (settingsBtn) {
       settingsBtn.onclick = () => this.openSettingsView();
+    }
+
+    const newGameBtn = document.getElementById('btn-menu-new-game');
+    if (newGameBtn) {
+      newGameBtn.onclick = () => {
+        if (confirm('Möchtest du wirklich ein neues Spiel starten? Der Fortschritt im aktuellen Spielstand wird zurückgesetzt.')) {
+          closeActiveModal(this.scene);
+          if (this.scene.startScreen) {
+            this.scene.startScreen.startSession(false);
+          } else {
+            SaveSystem.clear();
+            window.location.reload();
+          }
+        }
+      };
     }
 
     const bookBtn = document.getElementById('btn-menu-book') || document.getElementById('btn-menu-guide');
@@ -1032,15 +1056,14 @@ export class HUD {
           </div>
         </div>
 
-        <!-- 1. Speicherstände (Localhost) -->
+        <!-- 1. Spiele -->
         <div style="background: rgba(15, 23, 42, 0.65); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.2);">
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
             <div>
               <strong style="color: #f8fafc; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px;">
                 ${icon('database', '', 14)}
-                SPEICHERSTÄNDE (LOCALHOST)
+                SPIELE
               </strong>
-              <span style="color: #94a3b8; font-size: 11px; display: block; margin-top: 1px;">Wird laufend automatisch gesichert · Spielstände wechseln & laden</span>
             </div>
           </div>
 

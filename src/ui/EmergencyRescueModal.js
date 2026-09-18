@@ -83,8 +83,8 @@ export class EmergencyRescueModal {
       this.modalEl.innerHTML = `
         <div class="emergency-rescue-window" style="
           background: linear-gradient(180deg, #111827 0%, #0b0f19 100%);
-          border: 1px solid rgba(245, 158, 11, 0.4);
-          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 24px rgba(245, 158, 11, 0.15);
+          border: 1px solid rgba(239, 68, 68, 0.45);
+          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 24px rgba(239, 68, 68, 0.2);
           border-radius: 14px;
           max-width: 420px;
           width: 95%;
@@ -95,48 +95,48 @@ export class EmergencyRescueModal {
           color: #f8fafc;
           position: relative;
         ">
-          <!-- Header Tag -->
+          <!-- Funkspruch Header -->
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <span style="
               display: inline-flex;
               align-items: center;
-              gap: 5px;
-              background: rgba(239, 68, 68, 0.15);
-              border: 1px solid rgba(239, 68, 68, 0.35);
+              gap: 6px;
+              background: rgba(239, 68, 68, 0.16);
+              border: 1px solid rgba(239, 68, 68, 0.4);
               color: #f87171;
               padding: 2px 8px;
-              border-radius: 20px;
-              font-size: 10.5px;
+              border-radius: 6px;
+              font-size: 10px;
               font-weight: 800;
-              letter-spacing: 0.5px;
+              letter-spacing: 0.6px;
             ">
-              ${icon('alert-triangle', '', 12)}
-              TREIBSTOFF LEER
+              <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #ef4444; animation: warnPulse 0.9s infinite;"></span>
+              MINENRETTUNGSDIENST • NOTRUF
             </span>
             <span style="
-              background: rgba(16, 185, 129, 0.18);
-              border: 1px solid rgba(16, 185, 129, 0.4);
-              color: #34d399;
+              background: rgba(56, 189, 248, 0.14);
+              border: 1px solid rgba(56, 189, 248, 0.35);
+              color: #38bdf8;
               padding: 2px 8px;
-              border-radius: 20px;
-              font-size: 10.5px;
+              border-radius: 6px;
+              font-size: 10px;
               font-weight: 800;
             ">
-              1x KOSTENLOS
+              ERSTBERGUNG
             </span>
           </div>
 
-          <h2 style="margin: 0 0 4px 0; font-size: 17px; font-weight: 800; color: #ffffff; letter-spacing: -0.2px;">
-            Notfall-Bergung zur Basis
+          <h2 style="margin: 0 0 4px 0; font-size: 16.5px; font-weight: 800; color: #ffffff; letter-spacing: -0.2px;">
+            Crawler havariert: Rettungstrupp bereit
           </h2>
-          <div style="font-size: 11px; color: #94a3b8; margin-bottom: 12px;">
-            Dein Crawler sitzt bei <strong>${depth} m</strong> (${layer.name}) fest und die Tanks sind erschöpft.
+          <div style="font-size: 11px; color: #94a3b8; margin-bottom: 12px; line-height: 1.4;">
+            Ortung bestätigt: Position bei <strong>${depth} m</strong> (${layer.name}). Treibstoffreserven vollständig erschöpft.
           </div>
 
-          <!-- Infokasten -->
+          <!-- Funkspruch Box -->
           <div style="
-            background: rgba(30, 41, 59, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(15, 23, 42, 0.75);
+            border: 1px solid rgba(56, 189, 248, 0.2);
             border-radius: 10px;
             padding: 10px 12px;
             margin-bottom: 14px;
@@ -144,22 +144,24 @@ export class EmergencyRescueModal {
             line-height: 1.45;
             color: #cbd5e1;
           ">
-            <div style="display: flex; gap: 10px; align-items: flex-start;">
+            <div style="display: flex; gap: 9px; align-items: flex-start;">
               <div style="color: #38bdf8; flex-shrink: 0; margin-top: 1px;">
-                ${icon('shield', '', 18)}
+                ${icon('radio', '', 16)}
               </div>
               <div>
-                <strong style="color: #38bdf8; font-size: 12.5px;">1. Rettung ist kostenlos!</strong><br>
-                Die Basis schleppt deinen Crawler sofort zur Oberfläche und lädt den Tank auf 20% auf.<br><br>
+                <strong style="color: #f8fafc; font-size: 11.5px;">Einsatzprotokoll der Grubenwehr:</strong><br>
+                „Ein schweres Bergefahrzeug ist einsatzbereit. Unser Team schleppt deinen Crawler an die Erdoberfläche und betankt ihn mit 20% Notreserve.“
                 <div style="
-                  background: rgba(245, 158, 11, 0.12);
-                  border: 1px solid rgba(245, 158, 11, 0.35);
-                  border-radius: 8px;
-                  padding: 8px 10px;
-                  margin-top: 4px;
+                  background: rgba(245, 158, 11, 0.1);
+                  border: 1px solid rgba(245, 158, 11, 0.3);
+                  border-radius: 6px;
+                  padding: 7px 9px;
+                  margin-top: 7px;
+                  font-size: 10.5px;
+                  color: #e2e8f0;
                 ">
-                  <span style="color: #fbbf24; font-weight: 800; display: block; margin-bottom: 2px;">⚠️ Wichtiger Hinweis zu Versicherungen:</span>
-                  Dies ist deine <strong>einzige kostenlose Rettung</strong>! Für alle künftigen Schichten musst du im <strong>Büro (Tab „Versicherung“)</strong> eine Schicht-Versicherung abschließen. Ohne Versicherung führt der nächste Treibstoffmangel unweigerlich zum <strong>Game Over</strong>!
+                  <span style="color: #fbbf24; font-weight: 800; display: block; margin-bottom: 2px;">⚠️ Grubenordnung & Versicherungspflicht:</span>
+                  Dies ist deine <strong>einmalige Kulanz-Bergung</strong>. Für künftige Tiefenfahrten musst du im <strong>Büro (Tab „Versicherung“)</strong> eine Schicht-Police abschließen. Ohne Deckung endet jeder weitere Treibstoffausfall im <strong>Game Over</strong>!
                 </div>
               </div>
             </div>
@@ -168,9 +170,9 @@ export class EmergencyRescueModal {
           <!-- Buttons -->
           <div style="display: flex; flex-direction: column; gap: 8px;">
             <button id="btn-rescue-free" class="btn-3d-danger" style="
-              height: 46px;
+              height: 44px;
               width: 100%;
-              font-size: 13px;
+              font-size: 12.5px;
               font-weight: 800;
               justify-content: center;
               gap: 8px;
@@ -179,15 +181,15 @@ export class EmergencyRescueModal {
               background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
               box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
             ">
-              ${icon('rocket', '', 16)}
-              <span>KOSTENLOSE RETTUNG ANFORDERN</span>
+              ${icon('truck', '', 16)}
+              <span>RETTUNGSFAHRZEUG ANFORDERN</span>
             </button>
 
             ${canUseCanister ? `
               <button id="btn-rescue-use-fuel" class="btn-action" style="
-                height: 40px;
+                height: 38px;
                 width: 100%;
-                font-size: 12px;
+                font-size: 11.5px;
                 font-weight: 700;
                 justify-content: center;
                 gap: 6px;
@@ -212,9 +214,13 @@ export class EmergencyRescueModal {
           soundFx.playPurchase();
           p.firstRescueUsed = true;
           p.freeRescues = 0;
-          p.teleportToSurface('Kostenlose Erstbergung erfolgreich! Schließe im Büro eine Versicherung ab.');
           SaveSystem.save(this.scene);
           this.close();
+          if (this.scene && this.scene.playRescueCutscene) {
+            this.scene.playRescueCutscene('Erstbergung durch die Minenrettung erfolgreich! Schließe im Büro eine Versicherung ab.');
+          } else {
+            p.teleportToSurface('Erstbergung erfolgreich! Schließe im Büro eine Versicherung ab.');
+          }
         };
       }
 
@@ -357,9 +363,13 @@ export class EmergencyRescueModal {
         btnInsured.onclick = () => {
           soundFx.playPurchase();
           p.activeInsurance = null; // Versicherung wird verbraucht
-          p.teleportToSurface('Versicherte Bergung erfolgreich! Versicherung aufgebraucht.');
           SaveSystem.save(this.scene);
           this.close();
+          if (this.scene && this.scene.playRescueCutscene) {
+            this.scene.playRescueCutscene('Versicherte Bergung erfolgreich! Versicherung aufgebraucht.');
+          } else {
+            p.teleportToSurface('Versicherte Bergung erfolgreich! Versicherung aufgebraucht.');
+          }
         };
       }
 
@@ -407,60 +417,61 @@ export class EmergencyRescueModal {
         </div>
 
         <p style="font-size: 11px; color: #cbd5e1; line-height: 1.45; margin: 0 0 12px 0;">
-          Deine kostenlose Erstbergung wurde bereits aufgebraucht und du hattest <strong>keine gültige Versicherung</strong> für die Schicht <em>${layer.name}</em> abgeschlossen. Dein Crawler ist im Tiefengestein verschüttet.
+          Deine Erstbergung wurde bereits aufgebraucht und du hattest <strong>keine Versicherung</strong> für die Schicht <em>${layer.name}</em> abgeschlossen. Dein Crawler sitzt im Tiefengestein fest.
         </p>
 
-        <!-- Supabase Status Kasten -->
+        <!-- Entwickler-Rettung Kasten (nicht-technisch) -->
         <div style="
           background: rgba(15, 23, 42, 0.85);
-          border: 1px dashed rgba(239, 68, 68, 0.45);
+          border: 1px solid rgba(56, 189, 248, 0.3);
           border-radius: 10px;
-          padding: 10px 12px;
+          padding: 10px 14px;
           margin-bottom: 14px;
           text-align: left;
         ">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
-            <span style="font-size: 10.5px; font-weight: 800; color: #f87171; display: inline-flex; align-items: center; gap: 5px;">
-              ${icon('database', '', 12)}
-              SUPABASE DATENBANK-STATUS
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
+            <span style="font-size: 11px; font-weight: 800; color: #38bdf8; display: inline-flex; align-items: center; gap: 6px;">
+              ${icon('life-buoy', '', 14)}
+              Entwickler-Unterstützung
             </span>
             <span id="gameover-db-badge" style="
               background: rgba(239, 68, 68, 0.2);
-              color: #ef4444;
+              color: #f87171;
               font-size: 9.5px;
               font-weight: 800;
-              padding: 2px 6px;
+              padding: 2px 7px;
               border-radius: 4px;
             ">
-              is_game_over: TRUE
+              Wartet auf Freigabe
             </span>
           </div>
-          <div style="font-size: 10.5px; color: #94a3b8; line-height: 1.4;">
-            Spieler: <strong style="color: #f8fafc;">${p.name}</strong><br>
-            Der Administrator kann deinen Crawler in Supabase kostenlos retten, indem <code>is_game_over</code> in der Tabelle <code>leaderboard</code> auf <code>false</code> gesetzt wird.
+          <div style="font-size: 11px; color: #cbd5e1; line-height: 1.45;">
+            Fahrer: <strong style="color: #f8fafc;">${p.name}</strong><br>
+            Der Entwickler kann deinen Crawler aus der Ferne kostenlos freischalten und bergen. Klicke auf den Button, sobald er die Rettung für dich freigegeben hat.
           </div>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 8px;">
           <button id="btn-check-db-rescue" class="btn-action" style="
-            height: 40px;
+            height: 42px;
             width: 100%;
-            font-size: 11.5px;
+            font-size: 12px;
             font-weight: 800;
             justify-content: center;
             gap: 7px;
             border-radius: 10px;
-            background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
-            border: none;
+            background: linear-gradient(180deg, #0284c7 0%, #0369a1 100%);
+            border: 1px solid rgba(56, 189, 248, 0.5);
             color: #ffffff;
-            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+            cursor: pointer;
           ">
             ${icon('refresh-cw', '', 14)}
-            <span>STATUS PRÜFEN & CRAWLER RETTEN</span>
+            <span>FREIGABE PRÜFEN & RETTUNG STARTEN</span>
           </button>
 
           <div id="gameover-status-msg" style="font-size: 10.5px; color: #94a3b8; min-height: 14px;">
-            Prüft automatisch alle 5 Sekunden auf Admin-Rettung...
+            Klicke auf den Button, um den Status abzufragen.
           </div>
         </div>
       </div>
@@ -468,35 +479,41 @@ export class EmergencyRescueModal {
 
     refreshIcons(this.modalEl);
 
-    // DB-Check Handler
+    // DB-Check Handler: NUR bei Klick auf den Button (kein Auto-Poll)
     const btnCheck = this.modalEl.querySelector('#btn-check-db-rescue');
     const msgEl = this.modalEl.querySelector('#gameover-status-msg');
     const badgeEl = this.modalEl.querySelector('#gameover-db-badge');
 
     const runCheck = async () => {
-      if (msgEl) msgEl.textContent = 'Prüfe Supabase Datenbank...';
+      if (btnCheck) btnCheck.disabled = true;
+      if (msgEl) msgEl.textContent = 'Prüfe Freigabe...';
       const isStillGameOver = await LeaderboardService.checkGameOver(p.name);
+      if (btnCheck) btnCheck.disabled = false;
       
       if (isStillGameOver === false) {
         if (badgeEl) {
-          badgeEl.textContent = 'is_game_over: FALSE';
+          badgeEl.textContent = 'Freigegeben!';
           badgeEl.style.background = 'rgba(16, 185, 129, 0.2)';
           badgeEl.style.color = '#34d399';
         }
         if (msgEl) {
-          msgEl.innerHTML = '<span style="color: #34d399; font-weight: 800;">🎉 Rettung bestätigt! Crawler wird geborgen...</span>';
+          msgEl.innerHTML = '<span style="color: #34d399; font-weight: 800;">🎉 Rettung freigegeben! Rettungsfahrzeug rückt an...</span>';
         }
         soundFx.playUpgrade?.();
         p.isGameOver = false;
         SaveSystem.save(this.scene);
         
         setTimeout(() => {
-          p.teleportToSurface('Vom Administrator gerettet! Willkommen zurück an der Oberfläche.');
           this.close();
-        }, 1200);
+          if (this.scene && this.scene.playRescueCutscene) {
+            this.scene.playRescueCutscene('Vom Entwickler gerettet! Willkommen zurück an der Oberfläche.');
+          } else {
+            p.teleportToSurface('Vom Entwickler gerettet! Willkommen zurück an der Oberfläche.');
+          }
+        }, 600);
       } else {
         if (msgEl) {
-          msgEl.textContent = 'Noch nicht freigeschaltet (is_game_over ist noch TRUE).';
+          msgEl.textContent = 'Noch keine Freigabe vorhanden. Bitte Entwickler kontaktieren und erneut prüfen.';
         }
       }
     };
@@ -504,13 +521,5 @@ export class EmergencyRescueModal {
     if (btnCheck) {
       btnCheck.onclick = () => runCheck();
     }
-
-    // Auto-Poll alle 5 Sekunden
-    if (this.pollInterval) clearInterval(this.pollInterval);
-    this.pollInterval = setInterval(() => {
-      if (this.isOpen && p.isGameOver) {
-        runCheck();
-      }
-    }, 5000);
   }
 }

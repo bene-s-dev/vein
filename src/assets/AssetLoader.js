@@ -1612,6 +1612,155 @@ export class AssetLoader {
       createTexture(`player_drill_up_track_${tr}`, 48, 32, (ctx) => drawPlayerUp(ctx, 0, 1, 'right', tr));
     }
 
+    // ── NOTFALL-RETTUNGSFAHRZEUG (Rot lackierter Crawler ohne Bohrkopf mit Rettungsausrüstung & Blaulicht) ──
+    const drawRescueVehicle = (ctx, facing = 'left', trackFrame = 0) => {
+      // 1. KETTENFAHRWERK
+      const leftCenterX = 11.5;
+      const rightCenterX = 36.5;
+      const wheelCenterY = 26.5;
+
+      ctx.fillStyle = '#090d16';
+      ctx.beginPath();
+      ctx.arc(rightCenterX, wheelCenterY, 3.1, -Math.PI * 0.5, Math.PI * 0.5);
+      ctx.lineTo(leftCenterX, wheelCenterY + 3.1);
+      ctx.arc(leftCenterX, wheelCenterY, 3.1, Math.PI * 0.5, Math.PI * 1.5);
+      ctx.lineTo(rightCenterX, wheelCenterY - 3.1);
+      ctx.closePath();
+      ctx.fill();
+
+      [11.5, 17.75, 24, 30.25, 36.5].forEach(wx => {
+        ctx.fillStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.arc(wx, wheelCenterY, 2.9, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#334155';
+        ctx.beginPath();
+        ctx.arc(wx, wheelCenterY, 1.9, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#94a3b8';
+        ctx.beginPath();
+        ctx.arc(wx, wheelCenterY, 0.9, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      const trackMidR = 3.6;
+      ctx.strokeStyle = '#090d16';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(rightCenterX, wheelCenterY, trackMidR, -Math.PI * 0.5, Math.PI * 0.5);
+      ctx.lineTo(leftCenterX, wheelCenterY + trackMidR);
+      ctx.arc(leftCenterX, wheelCenterY, trackMidR, Math.PI * 0.5, Math.PI * 1.5);
+      ctx.lineTo(rightCenterX, wheelCenterY - trackMidR);
+      ctx.closePath();
+      ctx.stroke();
+
+      ctx.fillStyle = '#475569';
+      const dirMult = facing === 'left' ? -1 : 1;
+      const stepOffset = ((trackFrame % 4) * 0.75 * dirMult + 3) % 3;
+      for (let tx = 11 + stepOffset; tx <= 37; tx += 3) {
+        ctx.fillRect(tx, 30.2, 1.8, 0.8);
+      }
+
+      // Kettenschürze
+      ctx.fillStyle = '#1e2430';
+      ctx.fillRect(7.15, 20.5, 33.7, 2.0);
+
+      // 2. ROTE NOTFALL-KAROSSERIE (y=7..20.5)
+      const drawBeveledBody = (inset = 0) => {
+        ctx.beginPath();
+        ctx.moveTo(10 + inset, 20.5);
+        ctx.lineTo(10 + inset, 9.5 + inset * 0.5);
+        ctx.lineTo(12.5 + inset * 0.5, 7 + inset);
+        ctx.lineTo(35.5 - inset * 0.5, 7 + inset);
+        ctx.lineTo(38 - inset, 9.5 + inset * 0.5);
+        ctx.lineTo(38 - inset, 20.5);
+        ctx.closePath();
+      };
+
+      ctx.fillStyle = '#b91c1c'; // Sattes Rot
+      drawBeveledBody(0);
+      ctx.fill();
+
+      ctx.fillStyle = '#ef4444'; // Helles Notfallrot
+      drawBeveledBody(0.8);
+      ctx.fill();
+
+      // Horizontale Reflexkante Weiß
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(13, 14, 22, 1.2);
+
+      // 3. COCKPIT-VERGLASUNG
+      if (facing === 'left') {
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath();
+        ctx.moveTo(10.0, 15.2); ctx.lineTo(10.0, 9.5); ctx.lineTo(12.5, 7.5); ctx.lineTo(24.5, 7.5); ctx.lineTo(24.5, 15.2);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#0284c7';
+        ctx.beginPath();
+        ctx.moveTo(11.0, 14.2); ctx.lineTo(11.0, 10.0); ctx.lineTo(13.0, 8.5); ctx.lineTo(23.5, 8.5); ctx.lineTo(23.5, 14.2);
+        ctx.closePath();
+        ctx.fill();
+
+        // Weißes Notfallkreuz auf der Seite
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(29, 9, 7, 7);
+        ctx.fillStyle = '#dc2626';
+        ctx.fillRect(31.5, 9.5, 2, 6);
+        ctx.fillRect(29.5, 11.5, 6, 2);
+
+        // Frontscheinwerfer
+        ctx.fillStyle = '#fef08a';
+        ctx.fillRect(11.0, 15.5, 2.5, 1.5);
+      } else {
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath();
+        ctx.moveTo(23.5, 15.2); ctx.lineTo(23.5, 7.5); ctx.lineTo(35.5, 7.5); ctx.lineTo(38.0, 9.5); ctx.lineTo(38.0, 15.2);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#0284c7';
+        ctx.beginPath();
+        ctx.moveTo(24.5, 14.2); ctx.lineTo(24.5, 8.5); ctx.lineTo(35.0, 8.5); ctx.lineTo(37.0, 10.0); ctx.lineTo(37.0, 14.2);
+        ctx.closePath();
+        ctx.fill();
+
+        // Weißes Notfallkreuz auf der Seite
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(12, 9, 7, 7);
+        ctx.fillStyle = '#dc2626';
+        ctx.fillRect(14.5, 9.5, 2, 6);
+        ctx.fillRect(12.5, 11.5, 6, 2);
+
+        // Frontscheinwerfer
+        ctx.fillStyle = '#fef08a';
+        ctx.fillRect(34.5, 15.5, 2.5, 1.5);
+      }
+
+      // 4. DACH-BLAULICHT & BERGUNGS-SEILWINDE
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(21, 5, 6, 2.5);
+      // Blaulicht Sockel & Glashaube
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(22, 3.5, 4, 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(23, 4, 2, 1);
+
+      // Schlepphaken / Seilwinde vorn/hinten
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(facing === 'left' ? 7.5 : 38, 17, 3, 2);
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillRect(facing === 'left' ? 6.5 : 40, 16.5, 2, 3);
+    };
+
+    createTexture('rescue_crawler_left', 48, 32, (ctx) => drawRescueVehicle(ctx, 'left', 0));
+    createTexture('rescue_crawler_right', 48, 32, (ctx) => drawRescueVehicle(ctx, 'right', 0));
+    for (let tr = 0; tr < 4; tr++) {
+      createTexture(`rescue_crawler_left_track_${tr}`, 48, 32, (ctx) => drawRescueVehicle(ctx, 'left', tr));
+      createTexture(`rescue_crawler_right_track_${tr}`, 48, 32, (ctx) => drawRescueVehicle(ctx, 'right', tr));
+    }
+
     // Leere Dummy-Textur für Rückwärtskompatibilität
     createTexture('drill_rotary_cutter', 1, 1, () => {});
 

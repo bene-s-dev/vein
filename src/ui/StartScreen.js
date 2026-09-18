@@ -505,7 +505,10 @@ export class StartScreen {
         p.hull = 50;
         p.maxFuel = 40;
         p.fuel = 40;
-        p.freeRescues = 3;
+        p.freeRescues = 1;
+        p.firstRescueUsed = false;
+        p.activeInsurance = null;
+        p.isGameOver = false;
         p.hasPurchasedDynamite = false;
         p.researchedTnt = 0;
         p.researchedEmergency = 0;

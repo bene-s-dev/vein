@@ -2193,13 +2193,22 @@ export class Player {
     const efficiency = Math.max(0.1, this.fuelEfficiency || 1.0);
     const entranceGx = 19.5;
     const atSurface = this.gy <= -1 || (this.sprite && this.sprite.y <= -16);
-    const baseReserve = 1.6; // Solide Mindestreserve für Landung & Schachtmanöver
 
     if (atSurface) {
-      // Überirdisch: horizontaler Rückweg zur Einfahrt + Reserve
-      const tilesX = Math.abs(this.gx - entranceGx);
-      return (tilesX * (0.3 / efficiency) * 1.15) + baseReserve;
+      // Wenn der Spieler an der Oberfläche im Basis-Bereich (Hangar/Tanksäule gx 13..17) steht,
+      // ist er bereits sicher an der Basis -> 0 L Rückkehrbedarf!
+      const isNearHangar = this.gx >= 13 && this.gx <= 17;
+      if (isNearHangar) {
+        return 0;
+      }
+      // Wenn der Spieler weit entfernt an der Oberfläche steht (z.B. bei der Fabrik oder im Feld),
+      // benötigt er lediglich den horizontalen Rückweg zur Basis ohne künstlichen Sockel
+      const tilesX = Math.abs(this.gx - 15);
+      if (tilesX <= 2.5) return 0;
+      return (tilesX * (0.25 / efficiency));
     }
+
+    const baseReserve = 1.6; // Solide Mindestreserve für Landung & Schachtmanöver unter Tage
 
     // Unterirdisch: Steigflug + horizontaler Weg + 15% Sicherheitsmarge + Reserve
     const currentY = this.sprite ? this.sprite.y : (this.gy * TILE_SIZE + TILE_SIZE / 2);

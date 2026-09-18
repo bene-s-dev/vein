@@ -71,14 +71,17 @@ export class MissionsProgressModal {
     this.missionSystem = missionSystem;
     this.baseSystem = baseSystem;
 
-    this.currentTab = 'active'; // 'active' | 'levels' | 'pool' | 'geologist' | 'stats'
+    this.currentTab = 'missions'; // 'missions' | 'levels' | 'geologist' | 'insurance' | 'stats'
   }
 
-  open(initialTab = 'active') {
+  open(initialTab = 'missions') {
     soundFx.stopAllLoops?.();
     if (this.scene) this.scene.isPaused = true;
     if (!this.baseSystem && this.scene && this.scene.baseSystem) {
       this.baseSystem = this.scene.baseSystem;
+    }
+    if (initialTab === 'active' || initialTab === 'pool') {
+      initialTab = 'missions';
     }
     this.currentTab = initialTab;
     this.render();
@@ -137,9 +140,8 @@ export class MissionsProgressModal {
 
     // Tab Navigation Bar
     const tabs = [
-      { id: 'active', label: 'Aktiver Auftrag', icon: 'crosshair', badgeHtml: this.missionSystem.isCompleted ? '<span class="tab-badge" style="background: rgba(16, 185, 129, 0.25); color: #10b981;">Fertig</span>' : '' },
+      { id: 'missions', label: 'Aufträge', icon: 'clipboard-list', badgeHtml: this.missionSystem.isCompleted ? '<span class="tab-badge" style="background: rgba(16, 185, 129, 0.25); color: #10b981;">Fertig</span>' : '' },
       { id: 'levels', label: 'Ränge', icon: 'award' },
-      { id: 'pool', label: 'Aufträge', icon: 'clipboard-list' },
       { id: 'geologist', label: 'Geologe', icon: 'microscope', badgeHtml: geologistBadge },
       { id: 'insurance', label: 'Versicherung', icon: 'shield-check', badgeHtml: insuranceBadge },
       { id: 'stats', label: 'Statistik', icon: 'bar-chart-3' }
@@ -162,12 +164,10 @@ export class MissionsProgressModal {
 
     // Content je nach Tab
     let contentHtml = '';
-    if (this.currentTab === 'active') {
-      contentHtml = this.renderActiveTab();
+    if (this.currentTab === 'missions' || this.currentTab === 'active' || this.currentTab === 'pool') {
+      contentHtml = this.renderMissionsTab();
     } else if (this.currentTab === 'levels') {
       contentHtml = this.renderLevelsTab();
-    } else if (this.currentTab === 'pool') {
-      contentHtml = this.renderPoolTab();
     } else if (this.currentTab === 'geologist') {
       contentHtml = this.renderGeologistTab();
     } else if (this.currentTab === 'insurance') {
@@ -202,33 +202,36 @@ export class MissionsProgressModal {
   }
 
   // =========================================================================
-  // TAB 1: AKTIVER AUFTRAG
+  // TAB 1: AUFTRÄGE (AKTIVER AUFTRAG + AUFTRAGS-POOL)
   // =========================================================================
-  renderActiveTab() {
+  renderMissionsTab() {
     const mission = this.missionSystem.activeMission;
+    const isDone = this.missionSystem.isCompleted;
+    const curLevel = this.player.level || 1;
+    const activeId = mission ? mission.id : null;
+
+    let activeBannerHtml = '';
     if (!mission) {
-      return `
-        <div style="padding: 24px; text-align: center; color: #94a3b8;">
-          <p>Momentan ist kein Auftrag aktiv.</p>
-          <button id="btn-select-next-mission" class="btn-buy" style="margin-top: 12px;">Auftrag auswählen</button>
+      activeBannerHtml = `
+        <div style="background: rgba(15, 23, 42, 0.75); border: 1.5px dashed rgba(56, 189, 248, 0.35); border-radius: 12px; padding: 16px; text-align: center; color: #94a3b8;">
+          <div style="color: #38bdf8; margin-bottom: 6px;">${icon('compass', '', 24)}</div>
+          <div style="font-weight: 700; color: #f8fafc; font-size: 13.5px; margin-bottom: 4px;">Kein Auftrag aktiv</div>
+          <p style="font-size: 11.5px; margin: 0; color: #cbd5e1;">Wähle unten einen der verfügbaren Bergbau-Aufträge aus, um Prämien und XP zu verdienen.</p>
         </div>
       `;
-    }
+    } else {
+      const maxProg = mission.targetCount || mission.targetDepth || 1;
+      const curProg = Math.min(maxProg, this.missionSystem.progress);
+      const pct = Math.round((curProg / maxProg) * 100);
 
-    const isDone = this.missionSystem.isCompleted;
-    const maxProg = mission.targetCount || mission.targetDepth || 1;
-    const curProg = Math.min(maxProg, this.missionSystem.progress);
-    const pct = Math.round((curProg / maxProg) * 100);
-
-    return `
-      <div style="display: flex; flex-direction: column; gap: 14px;">
+      activeBannerHtml = `
         <!-- Card: Aktiver Auftrag Header -->
         <div style="
-          background: rgba(15, 23, 42, 0.75);
-          border: none;
-          border-left: 4px solid ${isDone ? '#10b981' : '#38bdf8'};
+          background: rgba(15, 23, 42, 0.85);
+          border: 1px solid ${isDone ? 'rgba(16, 185, 129, 0.5)' : 'rgba(56, 189, 248, 0.4)'};
+          border-left: 5px solid ${isDone ? '#10b981' : '#38bdf8'};
           border-radius: 12px;
-          padding: 16px;
+          padding: 14px 16px;
           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
         ">
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
@@ -239,30 +242,34 @@ export class MissionsProgressModal {
                 color: ${isDone ? '#10b981' : '#38bdf8'};
                 text-transform: uppercase;
                 letter-spacing: 0.8px;
-                background: rgba(255,255,255,0.06);
+                background: ${isDone ? 'rgba(16, 185, 129, 0.15)' : 'rgba(56, 189, 248, 0.15)'};
                 padding: 2px 8px;
                 border-radius: 4px;
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
               ">
-                ${isDone ? 'AUFTRAG ERFÜLLT' : 'LAUFENDER BERGBAU-VERTRAG'}
+                ${icon(isDone ? 'check-circle' : 'crosshair', '', 12)}
+                ${isDone ? 'AUFTRAG ERFÜLLT' : 'AKTUELL IN ARBEIT'}
               </span>
-              <h3 style="color: #f8fafc; font-size: 16px; font-weight: 700; margin-top: 6px;">${mission.title}</h3>
+              <h3 style="color: #f8fafc; font-size: 16px; font-weight: 700; margin: 6px 0 2px 0;">${mission.title}</h3>
             </div>
-            <div style="display: flex; gap: 8px; align-items: center;">
-              <span style="background: rgba(251, 191, 36, 0.15); color: #fbbf24; font-weight: 800; font-size: 12px; padding: 4px 10px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
-                ${icon('coins', '', 13)} €${mission.rewardCash}
+            <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+              <span style="background: rgba(251, 191, 36, 0.15); color: #fbbf24; font-weight: 800; font-size: 11.5px; padding: 4px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+                ${icon('coins', '', 12)} €${mission.rewardCash}
               </span>
-              <span style="background: rgba(168, 85, 247, 0.15); color: #c084fc; font-weight: 800; font-size: 12px; padding: 4px 10px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
-                ${icon('award', '', 13)} ${mission.rewardXp} XP
+              <span style="background: rgba(168, 85, 247, 0.15); color: #c084fc; font-weight: 800; font-size: 11.5px; padding: 4px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+                ${icon('award', '', 12)} ${mission.rewardXp} XP
               </span>
               ${mission.rewardComp ? `
-                <span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-weight: 800; font-size: 12px; padding: 4px 10px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
-                  ${icon('package', '', 13)} +${mission.rewardComp.count || 1}x ${mission.rewardComp.name || 'Bauteil'}
+                <span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-weight: 800; font-size: 11.5px; padding: 4px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+                  ${icon('package', '', 12)} +${mission.rewardComp.count || 1}x ${mission.rewardComp.name || 'Bauteil'}
                 </span>
               ` : ''}
             </div>
           </div>
 
-          <p style="font-size: 12.5px; line-height: 1.5; color: #cbd5e1; margin-bottom: 14px;">
+          <p style="font-size: 12px; line-height: 1.45; color: #cbd5e1; margin-bottom: 12px;">
             ${mission.desc}
           </p>
 
@@ -287,7 +294,7 @@ export class MissionsProgressModal {
           </div>
 
           <!-- Aktions-Buttons -->
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; gap: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
             <button id="btn-reroll-mission" class="btn-3d-secondary" style="height: 34px; box-sizing: border-box; font-size: 11.5px; padding: 0 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 8px;">
               ${icon('refresh-cw', '', 13)} Anderer Auftrag
             </button>
@@ -309,23 +316,93 @@ export class MissionsProgressModal {
             </button>
           </div>
         </div>
+      `;
+    }
 
-        <!-- Schnell-Info Schacht & Rohstoffe -->
-        <div style="
-          background: rgba(15, 23, 42, 0.65);
-          border: none;
-          border-radius: 12px;
-          padding: 14px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          font-size: 12px;
-        ">
-          <span style="color: #cbd5e1; font-weight: 600;">Aktuelle Schachttiefe: <strong style="color: #38bdf8; font-weight: 800; font-variant-numeric: tabular-nums;">${this.player.depthMeters > 0 ? `-${this.player.depthMeters}` : '0'}m</strong></span>
-          <span style="color: #cbd5e1; font-weight: 600;">Frachtraum: <strong style="color: #f8fafc; font-weight: 800;">${this.player.cargoCount}/${this.player.maxCargo}</strong></span>
-          <button id="btn-go-pool" class="btn-action" style="padding: 5px 10px; font-size: 11px;">
-            ${icon('list', '', 12)} Alle Aufträge ansehen
-          </button>
+    const visibleMissions = MISSION_POOL.filter(m => {
+      if (m.type === 'COLLECT_ORE' && !this.player.isOreDiscovered(m.targetOre)) {
+        return false;
+      }
+      return true;
+    });
+
+    return `
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        ${activeBannerHtml}
+
+        <!-- Überschrift Auftrags-Pool -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; padding: 0 2px;">
+          <div style="font-size: 12px; font-weight: 800; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.6px; display: flex; align-items: center; gap: 6px;">
+            ${icon('clipboard-list', '', 14)} Verfügbare Bergbau-Aufträge
+          </div>
+          <span style="font-size: 11px; color: #94a3b8;">
+            Schachttiefe: <strong style="color: #38bdf8;">${this.player.depthMeters > 0 ? `-${this.player.depthMeters}` : '0'}m</strong> · Fracht: <strong style="color: #f8fafc;">${this.player.cargoCount}/${this.player.maxCargo}</strong>
+          </span>
+        </div>
+
+        <!-- Auftrags-Karten Liste -->
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          ${visibleMissions.length === 0 ? `
+            <div style="text-align: center; padding: 24px 16px; color: #94a3b8; font-size: 12px; background: rgba(15,23,42,0.5); border-radius: 10px; border: 1px dashed rgba(255,255,255,0.1);">
+              Keine weiteren Aufträge verfügbar. Erkunde tiefere Schichten, um neue Erze und Aufträge freizuschalten!
+            </div>
+          ` : visibleMissions.map(m => {
+            const isCurrent = activeId === m.id;
+            const isLocked = curLevel < m.minLevel;
+
+            return `
+              <div style="
+                background: ${isCurrent ? 'rgba(56, 189, 248, 0.12)' : 'rgba(15, 23, 42, 0.65)'};
+                border: 1px solid ${isCurrent ? '#38bdf8' : isLocked ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.08)'};
+                border-radius: 10px;
+                padding: 10px 14px;
+                opacity: ${isLocked ? '0.6' : '1'};
+              ">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
+                  <div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <strong style="color: #f8fafc; font-size: 13px;">${m.title}</strong>
+                      ${isCurrent ? `<span style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; font-size: 9px; font-weight: 800; padding: 1px 6px; border-radius: 4px;">Aktiv</span>` : ''}
+                    </div>
+                    <div style="font-size: 11px; color: #cbd5e1; margin-top: 2px;">${m.desc}</div>
+                  </div>
+                  <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                    <span style="color: #fbbf24; font-weight: 700; font-size: 11.5px; display: inline-flex; align-items: center; gap: 3px;">
+                      ${icon('coins', '', 12)} €${m.rewardCash}
+                    </span>
+                    <span style="color: #c084fc; font-weight: 700; font-size: 11.5px; display: inline-flex; align-items: center; gap: 3px;">
+                      ${icon('award', '', 12)} ${m.rewardXp} XP
+                    </span>
+                    ${m.rewardComp ? `
+                      <span style="color: #38bdf8; font-weight: 700; font-size: 11.5px; display: inline-flex; align-items: center; gap: 3px;">
+                        ${icon('package', '', 12)} +${m.rewardComp.count || 1} ${m.rewardComp.name || 'Bauteil'}
+                      </span>
+                    ` : ''}
+                  </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.04);">
+                  <span style="font-size: 11px; color: #cbd5e1; font-weight: 600;">
+                    ${isLocked ? `<span style="color: #ef4444; font-weight: 700;">Benötigt Level ${m.minLevel}</span>` : `Ab Level ${m.minLevel}`}
+                  </span>
+                  <div>
+                    ${isCurrent ? `
+                      <span style="height: 30px; font-size: 11.5px; color: #38bdf8; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; padding: 0 8px;">
+                        ${icon('check', '', 14)} Ausgewählt
+                      </span>
+                    ` : isLocked ? `
+                      <button class="btn-3d-secondary" disabled style="height: 30px; box-sizing: border-box; padding: 0 12px; font-size: 11px;">Gesperrt</button>
+                    ` : `
+                      <button class="btn-select-mission btn-buy" data-mid="${m.id}" style="height: 30px; box-sizing: border-box; padding: 0 12px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">
+                        ${icon('check', '', 12)}
+                        <span>Annehmen</span>
+                      </button>
+                    `}
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')}
         </div>
       </div>
     `;
@@ -485,90 +562,7 @@ export class MissionsProgressModal {
   }
 
   // =========================================================================
-  // TAB 3: AUFTRÄGE-POOL
-  // =========================================================================
-  renderPoolTab() {
-    const curLevel = this.player.level || 1;
-    const activeId = this.missionSystem.activeMission ? this.missionSystem.activeMission.id : null;
-
-    const visibleMissions = MISSION_POOL.filter(m => {
-      if (m.type === 'COLLECT_ORE' && !this.player.isOreDiscovered(m.targetOre)) {
-        return false;
-      }
-      return true;
-    });
-
-    return `
-      <div style="display: flex; flex-direction: column; gap: 10px;">
-        <p style="font-size: 12px; color: #cbd5e1;">
-          Wähle einen Bergbau-Auftrag aus. Aufträge mit höherer Stufe erfordern tiefere Vorstöße, bieten aber massive Geld- und XP-Prämien.
-        </p>
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-          ${visibleMissions.length === 0 ? `
-            <div style="text-align: center; padding: 24px 16px; color: #94a3b8; font-size: 12px; background: rgba(15,23,42,0.5); border-radius: 10px; border: 1px dashed rgba(255,255,255,0.1);">
-              Keine weiteren Aufträge verfügbar. Erkunde tiefere Schichten, um neue Erze und Aufträge freizuschalten!
-            </div>
-          ` : visibleMissions.map(m => {
-            const isCurrent = activeId === m.id;
-            const isLocked = curLevel < m.minLevel;
-
-            return `
-              <div style="
-                background: ${isCurrent ? 'rgba(56, 189, 248, 0.12)' : 'rgba(15, 23, 42, 0.65)'};
-                border: 1px solid ${isCurrent ? '#38bdf8' : isLocked ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.08)'};
-                border-radius: 10px;
-                padding: 10px 14px;
-                opacity: ${isLocked ? '0.6' : '1'};
-              ">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
-                  <div>
-                    <strong style="color: #f8fafc; font-size: 13px;">${m.title}</strong>
-                    <div style="font-size: 11px; color: #cbd5e1; margin-top: 2px;">${m.desc}</div>
-                  </div>
-                  <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
-                    <span style="color: #fbbf24; font-weight: 700; font-size: 11.5px; display: inline-flex; align-items: center; gap: 3px;">
-                      ${icon('coins', '', 12)} €${m.rewardCash}
-                    </span>
-                    <span style="color: #c084fc; font-weight: 700; font-size: 11.5px; display: inline-flex; align-items: center; gap: 3px;">
-                      ${icon('award', '', 12)} ${m.rewardXp} XP
-                    </span>
-                    ${m.rewardComp ? `
-                      <span style="color: #38bdf8; font-weight: 700; font-size: 11.5px; display: inline-flex; align-items: center; gap: 3px;">
-                        ${icon('package', '', 12)} +${m.rewardComp.count || 1} ${m.rewardComp.name || 'Bauteil'}
-                      </span>
-                    ` : ''}
-                  </div>
-                </div>
-
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; padding-top: 6px;">
-                  <span style="font-size: 11px; color: #cbd5e1; font-weight: 600;">
-                    ${isLocked ? `<span style="color: #ef4444; font-weight: 700;">Benötigt Level ${m.minLevel}</span>` : `Ab Level ${m.minLevel}`}
-                  </span>
-                  <div>
-                    ${isCurrent ? `
-                      <span style="height: 32px; font-size: 11.5px; color: #38bdf8; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; padding: 0 8px;">
-                        ${icon('check', '', 14)} Aktiv
-                      </span>
-                    ` : isLocked ? `
-                      <button class="btn-3d-secondary" disabled style="height: 32px; box-sizing: border-box; padding: 0 12px; font-size: 11px;">Gesperrt</button>
-                    ` : `
-                      <button class="btn-select-mission btn-buy" data-mid="${m.id}" style="height: 30px; box-sizing: border-box; padding: 0 12px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">
-                        ${icon('check', '', 12)}
-                        <span>Annehmen</span>
-                      </button>
-                    `}
-                  </div>
-                </div>
-              </div>
-            `;
-          }).join('')}
-        </div>
-      </div>
-    `;
-  }
-
-  // =========================================================================
-  // TAB 4: STEINFORSCHER (GEOLOGE)
+  // TAB 3: STEINFORSCHER (GEOLOGE)
   // =========================================================================
   renderGeologistTab() {
     const p = this.player;
@@ -983,28 +977,7 @@ export class MissionsProgressModal {
       };
     }
 
-    // Button wenn kein Auftrag aktiv ist (Tab 1)
-    const btnSelectNext = bodyEl.querySelector('#btn-select-next-mission');
-    if (btnSelectNext) {
-      btnSelectNext.onclick = () => {
-        soundFx.playClick();
-        this.currentTab = 'pool';
-        this.render();
-      };
-    }
-
-    // Weiterleitung zu Auftrags-Pool (Tab 1)
-    const goPoolBtns = bodyEl.querySelectorAll('#btn-go-pool, .btn-go-pool');
-    goPoolBtns.forEach(btn => {
-      btn.onclick = () => {
-        soundFx.playClick();
-        this.currentTab = 'pool';
-        this.render();
-      };
-    });
-
-
-    // Auftrag aus Pool annehmen (Tab 3)
+    // Auftrag aus Pool annehmen
     const selectBtns = bodyEl.querySelectorAll('.btn-select-mission');
     selectBtns.forEach(btn => {
       btn.onclick = () => {
@@ -1014,7 +987,7 @@ export class MissionsProgressModal {
           this.missionSystem.setActiveMission(targetMission);
           soundFx.playPurchase();
           this.scene.events.emit('notify', `Neuer Auftrag aktiviert: ${targetMission.title}`);
-          this.currentTab = 'active';
+          this.currentTab = 'missions';
           this.render();
         }
       };

@@ -3675,15 +3675,121 @@ export class BaseSystem {
     } else if (currentTab === 'shop') {
       const currentGadgets = this.player.gadgets || {};
       const gadgetsItems = EXPEDITION_ITEMS.filter(i => i.category === 'gadget');
-      const stationItems = EXPEDITION_ITEMS.filter(i => i.category === 'station');
+      const tubeItems = EXPEDITION_ITEMS.filter(i => i.stationType === 'tube');
+      const fuelItems = EXPEDITION_ITEMS.filter(i => i.stationType === 'fuel');
 
-      const renderShopItem = (item) => {
+      const stationTracks = [
+        {
+          id: 'station_tube',
+          title: 'UNTERTAGE-ERZFÖRDERSCHÄCHTE',
+          iconName: 'conveyor-belt',
+          items: tubeItems,
+          resTier: this.player.researchedStationTube || 0
+        },
+        {
+          id: 'station_fuel',
+          title: 'UNTERTAGE-TANKANLAGEN',
+          iconName: 'fuel',
+          items: fuelItems,
+          resTier: this.player.researchedStationFuel || 0
+        }
+      ];
+
+      const tracksHtml = stationTracks.map(track => {
+        const totalTiers = track.items.length;
+        const curResTier = Math.min(totalTiers, track.resTier);
+        const curItem = curResTier > 0 ? track.items[curResTier - 1] : null;
+
+        let segmentsHtml = '<div class="segmented-progress-bar">';
+        for (let s = 1; s <= totalTiers; s++) {
+          if (s <= curResTier) {
+            segmentsHtml += `
+              <div class="seg-step completed${s === curResTier ? ' current' : ''}">
+                <span><span class="step-label">Stufe </span>${s}</span>
+              </div>
+            `;
+          } else if (s === curResTier + 1) {
+            segmentsHtml += `
+              <div class="seg-step active">
+                <span><span class="step-label">Stufe </span>${s}</span>
+              </div>
+            `;
+          } else {
+            segmentsHtml += `
+              <div class="seg-step locked">
+                <span><span class="step-label">Stufe </span>${s}</span>
+              </div>
+            `;
+          }
+        }
+        segmentsHtml += '</div>';
+
+        const unlockedItems = track.items.filter((_, idx) => (idx + 1) <= Math.max(1, curResTier));
+        const itemsRowsHtml = unlockedItems.map((item, idx) => {
+          const tierNum = idx + 1;
+          const isRes = curResTier >= tierNum;
+          const count = currentGadgets[item.key] || 0;
+          const canAfford = this.player.cash >= item.price;
+
+          return `
+            <div class="cat-action-row" style="margin-top: 6px; display: flex; align-items: center; justify-content: space-between; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.08); padding: 7px 12px; border-radius: 8px; gap: 10px; box-sizing: border-box; flex-wrap: nowrap; min-height: 44px; overflow-x: auto; scrollbar-width: none;">
+              <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0; flex-wrap: nowrap;">
+                <span style="font-size: 11px; font-weight: 800; color: #38bdf8; background: rgba(56,189,248,0.15); padding: 2px 6px; border-radius: 4px; white-space: nowrap;">Stufe ${tierNum}</span>
+                <strong style="color: #f8fafc; font-size: 12.5px; white-space: nowrap; flex-shrink: 0; width: 195px; min-width: 195px;">${item.name}</strong>
+                <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 6px; white-space: nowrap; flex-shrink: 0; font-variant-numeric: tabular-nums; width: 68px; min-width: 68px; text-align: center; justify-content: center; display: inline-flex;">
+                  ${item.badge}
+                </span>
+                ${!isRes ? `
+                  <span style="color: #ef4444; font-size: 10.5px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); padding: 2px 6px; border-radius: 6px; white-space: nowrap; flex-shrink: 0;">
+                    ${icon('lock', '', 12)} Im Labor erforschen
+                  </span>
+                ` : ''}
+              </div>
+              <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-shrink: 0; margin-left: auto; flex-wrap: nowrap;">
+                ${isRes ? `
+                  <span style="font-size: 11px; background: rgba(56,189,248,0.15); color: #38bdf8; font-weight: 700; padding: 2px 7px; border-radius: 6px; white-space: nowrap; font-variant-numeric: tabular-nums; flex-shrink: 0; min-width: 68px; text-align: center; justify-content: center; display: inline-flex;">Vorrat: ${count}</span>
+                  <div style="width: 115px; min-width: 115px; flex-shrink: 0;">
+                    <button class="btn-buy-gadget btn-buy" data-gadget="${item.key}" data-price="${item.price}" style="width: 100%; height: 30px; padding: 0 4px; font-size: 11px; font-weight: 800; background: ${canAfford ? 'linear-gradient(135deg, #10b981, #059669)' : '#334155'}; color: ${canAfford ? '#ffffff' : '#94a3b8'}; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap;" ${canAfford ? '' : 'disabled'}>
+                      + Kaufen (€${item.price.toLocaleString()})
+                    </button>
+                  </div>
+                ` : `
+                  <div style="width: 115px; min-width: 115px; flex-shrink: 0;">
+                    <button class="btn-buy" disabled style="width: 100%; height: 30px; padding: 0 6px; font-size: 10.5px; font-weight: 700; background: #1e293b; border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; display: inline-flex; align-items: center; justify-content: center; gap: 4px; opacity: 0.85; white-space: nowrap; box-sizing: border-box;">
+                      ${icon('lock', '', 12)}
+                      <span>Labor</span>
+                    </button>
+                  </div>
+                `}
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <div class="tech-category-card" style="margin-bottom: 8px;">
+            <div class="cat-header-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <div class="cat-title-wrap" style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; color: #f8fafc;">
+                ${icon(track.iconName, '', 16)}
+                <span>${track.title}</span>
+              </div>
+              <div class="cat-status-pill" style="font-size: 11px; color: #94a3b8; background: rgba(255, 255, 255, 0.06); padding: 3px 8px; border-radius: 6px;">
+                Stufe ${curResTier}/${totalTiers} • <strong style="color: ${curResTier > 0 ? '#10b981' : '#94a3b8'};">${curItem ? curItem.badge : 'Nicht erforscht'}</strong>
+              </div>
+            </div>
+
+            ${segmentsHtml}
+            <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px;">
+              ${itemsRowsHtml}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const renderShopGadget = (item) => {
         const count = currentGadgets[item.key] || 0;
         const canAfford = this.player.cash >= item.price;
         const isResearched = isExpeditionItemResearched(this.player, item);
-        const isStation = item.category === 'station';
-        const badgeColor = isStation ? (item.stationType === 'tube' ? '#38bdf8' : '#f59e0b') : '#a855f7';
-        const badgeBg = isStation ? (item.stationType === 'tube' ? 'rgba(56,189,248,0.15)' : 'rgba(245,158,11,0.15)') : 'rgba(168,85,247,0.15)';
 
         return `
           <div style="
@@ -3707,7 +3813,7 @@ export class BaseSystem {
               <div style="min-width: 0; flex: 1 1 auto;">
                 <div style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;">
                   <span style="font-size: 12.5px; font-weight: 700; color: #f8fafc; white-space: nowrap; width: 220px; min-width: 220px; max-width: 220px; overflow: hidden; text-overflow: ellipsis;">${item.name}</span>
-                  <span style="font-size: 9.5px; font-weight: 800; padding: 2px 6px; border-radius: 5px; background: ${badgeBg}; color: ${badgeColor}; white-space: nowrap; flex-shrink: 0; width: 76px; min-width: 76px; text-align: center; display: inline-flex; align-items: center; justify-content: center;">${item.badge}</span>
+                  <span style="font-size: 9.5px; font-weight: 800; padding: 2px 6px; border-radius: 5px; background: rgba(168,85,247,0.15); color: #a855f7; white-space: nowrap; flex-shrink: 0; width: 76px; min-width: 76px; text-align: center; display: inline-flex; align-items: center; justify-content: center;">${item.badge}</span>
                   ${!isResearched ? `<span style="font-size: 9.5px; font-weight: 800; padding: 2px 6px; border-radius: 5px; background: rgba(239, 68, 68, 0.18); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); white-space: nowrap; flex-shrink: 0; display: inline-flex; align-items: center; gap: 3px;">${icon('lock', '', 11)} Im Labor erforschen</span>` : ''}
                 </div>
                 <div style="font-size: 10.5px; color: #94a3b8; line-height: 1.35; margin-top: 2px;">
@@ -3742,19 +3848,19 @@ export class BaseSystem {
         <div style="display: flex; flex-direction: column; gap: 14px;">
           <div style="display: flex; flex-direction: column; gap: 8px;">
             <span style="font-size: 11.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 5px;">
-              ${icon('package', '', 12)} Ausrüstung
+              ${icon('anchor', '', 12)} Stationen-Ausbau
             </span>
-            <div style="display: flex; flex-direction: column; gap: 6px;">
-              ${gadgetsItems.map(renderShopItem).join('')}
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              ${tracksHtml}
             </div>
           </div>
 
           <div style="display: flex; flex-direction: column; gap: 8px;">
             <span style="font-size: 11.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 5px;">
-              ${icon('anchor', '', 12)} Stationen
+              ${icon('package', '', 12)} Verbrauchsgüter & Gadgets
             </span>
             <div style="display: flex; flex-direction: column; gap: 6px;">
-              ${stationItems.map(renderShopItem).join('')}
+              ${gadgetsItems.map(renderShopGadget).join('')}
             </div>
           </div>
         </div>
@@ -5068,13 +5174,125 @@ export class BaseSystem {
     } else {
       // Ausrüstung / Shop Tab
       const currentGadgets = this.player.gadgets || { dynamite: 0, fuel_canister: 0, repair_kit: 0 };
-      const gadgetsCardsHtml = EXPEDITION_ITEMS.map(g => {
+      const tubeItems = EXPEDITION_ITEMS.filter(i => i.stationType === 'tube');
+      const fuelItems = EXPEDITION_ITEMS.filter(i => i.stationType === 'fuel');
+      const gadgetItems = EXPEDITION_ITEMS.filter(i => i.category === 'gadget');
+
+      const stationTracks = [
+        {
+          id: 'station_tube',
+          title: 'UNTERTAGE-ERZFÖRDERSCHÄCHTE',
+          iconName: 'conveyor-belt',
+          items: tubeItems,
+          resTier: this.player.researchedStationTube || 0
+        },
+        {
+          id: 'station_fuel',
+          title: 'UNTERTAGE-TANKANLAGEN',
+          iconName: 'fuel',
+          items: fuelItems,
+          resTier: this.player.researchedStationFuel || 0
+        }
+      ];
+
+      const tracksHtml = stationTracks.map(track => {
+        const totalTiers = track.items.length;
+        const curResTier = Math.min(totalTiers, track.resTier);
+        const curItem = curResTier > 0 ? track.items[curResTier - 1] : null;
+
+        // Segmented Progress Bar (wie im Hangar)
+        let segmentsHtml = '<div class="segmented-progress-bar">';
+        for (let s = 1; s <= totalTiers; s++) {
+          if (s <= curResTier) {
+            segmentsHtml += `
+              <div class="seg-step completed${s === curResTier ? ' current' : ''}">
+                <span><span class="step-label">Stufe </span>${s}</span>
+              </div>
+            `;
+          } else if (s === curResTier + 1) {
+            segmentsHtml += `
+              <div class="seg-step active">
+                <span><span class="step-label">Stufe </span>${s}</span>
+              </div>
+            `;
+          } else {
+            segmentsHtml += `
+              <div class="seg-step locked">
+                <span><span class="step-label">Stufe </span>${s}</span>
+              </div>
+            `;
+          }
+        }
+        segmentsHtml += '</div>';
+
+        // Action-Reihe für die freigeschalteten Module (Vorrat & Kaufen)
+        const unlockedItems = track.items.filter((_, idx) => (idx + 1) <= Math.max(1, curResTier));
+        const itemsRowsHtml = unlockedItems.map((item, idx) => {
+          const tierNum = idx + 1;
+          const isRes = curResTier >= tierNum;
+          const count = currentGadgets[item.key] || 0;
+          const canAfford = this.player.cash >= item.price;
+
+          return `
+            <div class="cat-action-row" style="margin-top: 6px; display: flex; align-items: center; justify-content: space-between; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.08); padding: 7px 12px; border-radius: 8px; gap: 10px; box-sizing: border-box; flex-wrap: nowrap; min-height: 44px; overflow-x: auto; scrollbar-width: none;">
+              <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0; flex-wrap: nowrap;">
+                <span style="font-size: 11px; font-weight: 800; color: #38bdf8; background: rgba(56,189,248,0.15); padding: 2px 6px; border-radius: 4px; white-space: nowrap;">Stufe ${tierNum}</span>
+                <strong style="color: #f8fafc; font-size: 12.5px; white-space: nowrap; flex-shrink: 0; width: 195px; min-width: 195px;">${item.name}</strong>
+                <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 6px; white-space: nowrap; flex-shrink: 0; font-variant-numeric: tabular-nums; width: 68px; min-width: 68px; text-align: center; justify-content: center; display: inline-flex;">
+                  ${item.badge}
+                </span>
+                ${!isRes ? `
+                  <span style="color: #ef4444; font-size: 10.5px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); padding: 2px 6px; border-radius: 6px; white-space: nowrap; flex-shrink: 0;">
+                    ${icon('lock', '', 12)} Im Labor erforschen
+                  </span>
+                ` : ''}
+              </div>
+              <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-shrink: 0; margin-left: auto; flex-wrap: nowrap;">
+                ${isRes ? `
+                  <span style="font-size: 11px; background: rgba(56,189,248,0.15); color: #38bdf8; font-weight: 700; padding: 2px 7px; border-radius: 6px; white-space: nowrap; font-variant-numeric: tabular-nums; flex-shrink: 0; min-width: 68px; text-align: center; justify-content: center; display: inline-flex;">Vorrat: ${count}</span>
+                  <div style="width: 115px; min-width: 115px; flex-shrink: 0;">
+                    <button class="btn-buy-gadget btn-buy" data-gadget="${item.key}" data-price="${item.price}" style="width: 100%; height: 30px; padding: 0 4px; font-size: 11px; font-weight: 800; background: ${canAfford ? 'linear-gradient(135deg, #10b981, #059669)' : '#334155'}; color: ${canAfford ? '#ffffff' : '#94a3b8'}; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap;" ${canAfford ? '' : 'disabled'}>
+                      + Kaufen (€${item.price.toLocaleString()})
+                    </button>
+                  </div>
+                ` : `
+                  <div style="width: 115px; min-width: 115px; flex-shrink: 0;">
+                    <button class="btn-buy" disabled style="width: 100%; height: 30px; padding: 0 6px; font-size: 10.5px; font-weight: 700; background: #1e293b; border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; display: inline-flex; align-items: center; justify-content: center; gap: 4px; opacity: 0.85; white-space: nowrap; box-sizing: border-box;">
+                      ${icon('lock', '', 12)}
+                      <span>Labor</span>
+                    </button>
+                  </div>
+                `}
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <div class="tech-category-card" style="margin-bottom: 8px;">
+            <div class="cat-header-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <div class="cat-title-wrap" style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; color: #f8fafc;">
+                ${icon(track.iconName, '', 16)}
+                <span>${track.title}</span>
+              </div>
+              <div class="cat-status-pill" style="font-size: 11px; color: #94a3b8; background: rgba(255, 255, 255, 0.06); padding: 3px 8px; border-radius: 6px;">
+                Stufe ${curResTier}/${totalTiers} • <strong style="color: ${curResTier > 0 ? '#10b981' : '#94a3b8'};">${curItem ? curItem.badge : 'Nicht erforscht'}</strong>
+              </div>
+            </div>
+
+            ${segmentsHtml}
+            <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px;">
+              ${itemsRowsHtml}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Verbrauchsgüter (Dynamit, Treibstoffkanister, Reparatur-Kit)
+      const gadgetsCardsHtml = gadgetItems.map(g => {
         const count = currentGadgets[g.key] || 0;
         const canAfford = this.player.cash >= g.price;
         const isResearched = isExpeditionItemResearched(this.player, g);
-        const isStation = g.category === 'station';
-        const badgeColor = isStation ? (g.stationType === 'tube' ? '#38bdf8' : '#f59e0b') : '#a855f7';
-        const badgeBg = isStation ? (g.stationType === 'tube' ? 'rgba(56,189,248,0.15)' : 'rgba(245,158,11,0.15)') : 'rgba(168,85,247,0.15)';
 
         return `
           <div style="
@@ -5092,13 +5310,13 @@ export class BaseSystem {
             opacity: ${isResearched ? '1' : '0.85'};
           ">
             <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1 1 auto;">
-              <div style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; flex-shrink: 0; color: #38bdf8;">
+              <div style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; flex-shrink: 0; color: #a855f7;">
                 ${icon(g.icon || 'package', '', 20)}
               </div>
               <div style="min-width: 0; flex: 1 1 auto;">
                 <div style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;">
                   <span style="font-size: 12.5px; font-weight: 700; color: #f8fafc; white-space: nowrap; width: 220px; min-width: 220px; max-width: 220px; overflow: hidden; text-overflow: ellipsis;">${g.name}</span>
-                  <span style="font-size: 9.5px; font-weight: 800; padding: 2px 6px; border-radius: 5px; background: ${badgeBg}; color: ${badgeColor}; white-space: nowrap; flex-shrink: 0; width: 76px; min-width: 76px; text-align: center; display: inline-flex; align-items: center; justify-content: center;">${g.badge}</span>
+                  <span style="font-size: 9.5px; font-weight: 800; padding: 2px 6px; border-radius: 5px; background: rgba(168,85,247,0.15); color: #a855f7; white-space: nowrap; flex-shrink: 0; width: 76px; min-width: 76px; text-align: center; display: inline-flex; align-items: center; justify-content: center;">${g.badge}</span>
                   ${!isResearched ? `<span style="font-size: 9.5px; font-weight: 800; padding: 2px 6px; border-radius: 5px; background: rgba(239, 68, 68, 0.18); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); white-space: nowrap; flex-shrink: 0; display: inline-flex; align-items: center; gap: 3px;">${icon('lock', '', 11)} Im Labor erforschen</span>` : ''}
                 </div>
                 <div style="font-size: 10.5px; color: #94a3b8; line-height: 1.35; margin-top: 2px;">
@@ -5129,11 +5347,21 @@ export class BaseSystem {
 
       tabContentHtml = `
         <div style="display: flex; flex-direction: column; gap: 10px;">
+          <!-- Stationen als levelbare Strecken mit Segmented Progress Bar -->
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: -2px;">
-            <span style="font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.6px; display: inline-flex; align-items: center; gap: 5px;">
-              ${icon('package', '', 13)} Expeditions-Ausrüstung & Verbrauchsgüter
+            <span style="font-size: 11px; font-weight: 800; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.6px; display: inline-flex; align-items: center; gap: 5px;">
+              ${icon('anchor', '', 13)} Untertage-Stationen (Ausbaustufen)
             </span>
-            <span style="font-size: 10.5px; color: #64748b;">Für lange Tiefenbohrungen</span>
+            <span style="font-size: 10.5px; color: #64748b;">Stationen für Tiefenbohrungen</span>
+          </div>
+          ${tracksHtml}
+
+          <!-- Verbrauchsgüter -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; margin-bottom: -2px;">
+            <span style="font-size: 11px; font-weight: 800; color: #a855f7; text-transform: uppercase; letter-spacing: 0.6px; display: inline-flex; align-items: center; gap: 5px;">
+              ${icon('package', '', 13)} Verbrauchsgüter & Notfall-Ausrüstung
+            </span>
+            <span style="font-size: 10.5px; color: #64748b;">Direkt im Cockpit einsetzbar</span>
           </div>
           <div style="display: flex; flex-direction: column; gap: 6px;">
             ${gadgetsCardsHtml}
