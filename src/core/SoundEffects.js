@@ -233,6 +233,9 @@ class SoundManager {
       if (btn.disabled || btn.classList.contains('disabled') || btn.getAttribute('aria-disabled') === 'true') {
         return;
       }
+      const now = performance.now();
+      if (btn._lastSoundMs && (now - btn._lastSoundMs) < 280) return;
+      btn._lastSoundMs = now;
       this.playClick();
     };
 
@@ -781,8 +784,8 @@ class SoundManager {
   playClick() {
     if (this.muted) return;
     const nowMs = performance.now();
-    // 55ms Debounce verhindert doppeltes Klicken bei manuellem Aufruf + globalem Listener
-    if (this._lastClickMs && (nowMs - this._lastClickMs) < 55) return;
+    // 160ms Debounce verhindert doppeltes oder dreifaches Klicken bei manuellem Aufruf + globalem Listener + Touch-Events
+    if (this._lastClickMs && (nowMs - this._lastClickMs) < 160) return;
     this._lastClickMs = nowMs;
 
     this.ensureContext();

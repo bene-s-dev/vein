@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS public.leaderboard (
     name TEXT NOT NULL UNIQUE,
     depth INTEGER NOT NULL DEFAULT 0,
     level INTEGER NOT NULL DEFAULT 1,
+    is_game_over BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );

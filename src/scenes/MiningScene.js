@@ -9,6 +9,7 @@ import { SaveSystem } from '../core/SaveSystem.js';
 import { soundFx } from '../core/SoundEffects.js';
 import { StartScreen } from '../ui/StartScreen.js';
 import { LeaderboardService } from '../core/LeaderboardService.js';
+import { EmergencyRescueModal } from '../ui/EmergencyRescueModal.js';
 
 export class MiningScene extends Phaser.Scene {
   constructor() {
@@ -36,7 +37,12 @@ export class MiningScene extends Phaser.Scene {
 
     // 7. HUD
     this.hud = new HUD(this, this.player, this.missionSystem);
+    this.rescueModal = new EmergencyRescueModal(this, this.player);
     window.__activeMiningScene = this;
+
+    this.events.on('fuel_empty', () => {
+      this.checkFuelStatusAndShowRescue();
+    });
 
     // 8. Kamera vorab initialisieren (korrekte Screen-Dimensionen & Zoom)
     this.setupCamera();
@@ -284,7 +290,12 @@ export class MiningScene extends Phaser.Scene {
       document.body.classList.contains('discovery-modal-open')
     );
 
-    if (!isMovementBlocked) {
+    // Notfall-Bergung / Game Over prüfen
+    if (this.player) {
+      this.checkFuelStatusAndShowRescue();
+    }
+
+    if (!isMovementBlocked && !this.player?.isGameOver) {
       const inputDir = this.inputHandler.getDirection();
       this.player.update(delta, inputDir);
     } else {
@@ -550,6 +561,22 @@ export class MiningScene extends Phaser.Scene {
       }).catch((err) => {
         console.warn('[Leaderboard] Fehler beim Senden an Supabase:', err);
       });
+    }
+  }
+
+  /**
+   * Prüft ob der Treibstoff unter Tage leer ist oder Game Over vorliegt,
+   * und öffnet das Rettungs-/Game-Over-Modal.
+   */
+  checkFuelStatusAndShowRescue() {
+    if (!this.player || this.inStartScreen) return;
+    const currentY = this.player.sprite ? this.player.sprite.y : (this.player.gy * 32 + 16);
+    const isBelowGround = (this.player.gy >= 0 || currentY >= 8);
+
+    if (this.player.isGameOver || (this.player.fuel <= 0 && isBelowGround)) {
+      if (this.rescueModal && !this.rescueModal.isOpen) {
+        this.rescueModal.open();
+      }
     }
   }
 }

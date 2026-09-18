@@ -3,6 +3,55 @@ import { ORE_DATA } from '../core/GridSystem.js';
 import { soundFx } from '../core/SoundEffects.js';
 import { icon, refreshIcons, oreIcon } from './IconHelper.js';
 import { closeActiveModal, GEOLOGIST_QUESTS, COMPONENT_DATA } from '../core/BaseSystem.js';
+import { SaveSystem } from '../core/SaveSystem.js';
+
+export const INSURANCE_PLANS = [
+  {
+    id: 'humus',
+    layerName: 'Humus',
+    depthRange: '0 – 50 m',
+    maxDepth: 50,
+    price: 150,
+    color: '#d97706',
+    desc: 'Basis-Schutz für die oberste Schicht (0–50 m). Bergungsdrohnen schleppen deinen Crawler bei Treibstoffmangel sicher an die Oberfläche.'
+  },
+  {
+    id: 'schist',
+    layerName: 'Schiefer',
+    depthRange: '0 – 180 m',
+    maxDepth: 180,
+    price: 450,
+    color: '#64748b',
+    desc: 'Erweiterte Bergung bis 180 m Tiefe. Deckt Humus und Schiefergestein zuverlässig ab.'
+  },
+  {
+    id: 'granite',
+    layerName: 'Granit',
+    depthRange: '0 – 480 m',
+    maxDepth: 480,
+    price: 1500,
+    color: '#38bdf8',
+    desc: 'Schwerer Drohnen-Schutz bis 480 m Tiefe für Expeditionen in zähen Tiefengranit.'
+  },
+  {
+    id: 'obsidian',
+    layerName: 'Obsidian',
+    depthRange: '0 – 950 m',
+    maxDepth: 950,
+    price: 5000,
+    color: '#a855f7',
+    desc: 'Hitzebeständige Tiefen-Bergungsdrohnen für vulkanische Schichten bis 950 m.'
+  },
+  {
+    id: 'core',
+    layerName: 'Urgestein',
+    depthRange: 'Alle Schichten (> 950 m)',
+    maxDepth: 99999,
+    price: 15000,
+    color: '#ef4444',
+    desc: 'Ultimative Subraum-Bergungsmatrix. Schützt deinen Crawler bis in tiefste Kernzonen.'
+  }
+];
 
 /**
  * MissionsProgressModal.js
@@ -81,12 +130,17 @@ export class MissionsProgressModal {
       ? `<span class="tab-badge" style="background: rgba(16, 185, 129, 0.25); color: #10b981;">${readyGeologistCount}</span>`
       : (hasUnseenGeologist ? `<span class="tab-badge" style="background: rgba(56, 189, 248, 0.25); color: #38bdf8;">Neu</span>` : '');
 
+    const insuranceBadge = this.player.activeInsurance 
+      ? `<span class="tab-badge" style="background: rgba(16, 185, 129, 0.25); color: #10b981;">Aktiv</span>` 
+      : (!this.player.firstRescueUsed ? `<span class="tab-badge" style="background: rgba(245, 158, 11, 0.25); color: #fbbf24;">1x Frei</span>` : `<span class="tab-badge" style="background: rgba(239, 68, 68, 0.25); color: #f87171;">Keine</span>`);
+
     // Tab Navigation Bar
     const tabs = [
       { id: 'active', label: 'Aktiver Auftrag', icon: 'crosshair', badgeHtml: this.missionSystem.isCompleted ? '<span class="tab-badge" style="background: rgba(16, 185, 129, 0.25); color: #10b981;">Fertig</span>' : '' },
       { id: 'levels', label: 'Ränge', icon: 'award' },
       { id: 'pool', label: 'Aufträge', icon: 'clipboard-list' },
-      { id: 'geologist', label: 'Steinforscher', icon: 'microscope', badgeHtml: geologistBadge },
+      { id: 'geologist', label: 'Geologe', icon: 'microscope', badgeHtml: geologistBadge },
+      { id: 'insurance', label: 'Versicherung', icon: 'shield-check', badgeHtml: insuranceBadge },
       { id: 'stats', label: 'Statistik', icon: 'bar-chart-3' }
     ];
 
@@ -115,6 +169,8 @@ export class MissionsProgressModal {
       contentHtml = this.renderPoolTab();
     } else if (this.currentTab === 'geologist') {
       contentHtml = this.renderGeologistTab();
+    } else if (this.currentTab === 'insurance') {
+      contentHtml = this.renderInsuranceTab();
     } else if (this.currentTab === 'stats') {
       contentHtml = this.renderStatsTab();
     }
@@ -550,7 +606,7 @@ export class MissionsProgressModal {
     return `
       <div style="display: flex; flex-direction: column; gap: 10px;">
         <p style="font-size: 12px; color: #cbd5e1;">
-          Der Steineforscher analysiert Erzproben für geologische Studien. Gib gesuchte Erze ab (aus Frachtraum & Depot), um seltene High-Tech-Bauteile für deine Tech-Upgrades zu erhalten!
+          Der Geologe analysiert Erzproben für geologische Studien. Gib gesuchte Erze ab (aus Frachtraum & Depot), um seltene High-Tech-Bauteile für deine Tech-Upgrades zu erhalten!
         </p>
 
         ${compInventoryHtml}
@@ -620,7 +676,142 @@ export class MissionsProgressModal {
   }
 
   // =========================================================================
-  // TAB 5: STATISTIK ÜBER GAMEFORTSCHRITT
+  // TAB 5: VERSICHERUNG (BERGUNGSSCHUTZ)
+  // =========================================================================
+  renderInsuranceTab() {
+    const p = this.player;
+    const active = p.activeInsurance;
+    const isFirstFree = !p.firstRescueUsed;
+
+    return `
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <!-- Status-Banner -->
+        <div style="
+          background: rgba(15, 23, 42, 0.75);
+          border: 1px solid ${active ? 'rgba(16, 185, 129, 0.35)' : (isFirstFree ? 'rgba(245, 158, 11, 0.35)' : 'rgba(239, 68, 68, 0.35)')};
+          border-radius: 12px;
+          padding: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+        ">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="
+              width: 42px;
+              height: 42px;
+              border-radius: 10px;
+              background: ${active ? 'rgba(16, 185, 129, 0.15)' : (isFirstFree ? 'rgba(245, 158, 11, 0.15)' : 'rgba(239, 68, 68, 0.15)')};
+              color: ${active ? '#34d399' : (isFirstFree ? '#fbbf24' : '#f87171')};
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 20px;
+              flex-shrink: 0;
+            ">
+              ${icon(active ? 'shield-check' : (isFirstFree ? 'shield-alert' : 'shield-x'), '', 22)}
+            </div>
+            <div>
+              <div style="font-size: 14px; font-weight: 800; color: #f8fafc;">
+                ${active ? `Aktiver Schutz: ${active.layerName}` : (isFirstFree ? '1x Kostenlose Erstbergung verfügbar' : 'Kein Bergungsschutz aktiv!')}
+              </div>
+              <div style="font-size: 11.5px; color: #94a3b8; line-height: 1.4;">
+                ${active 
+                  ? `Dein Crawler ist bis <strong>${active.maxDepth} m</strong> Tiefe gegen Treibstoffmangel versichert. (Wird bei Rettung eingelöst)` 
+                  : (isFirstFree 
+                    ? 'Deine allererste Rettung ist kostenlos. Für spätere Notfälle muss hier eine Versicherung gekauft werden.' 
+                    : 'Achtung: Treibstoffmangel ohne gültige Versicherung führt zum sofortigen <strong style="color: #f87171;">GAME OVER</strong>!')}
+              </div>
+            </div>
+          </div>
+
+          <div style="text-align: right; flex-shrink: 0;">
+            <div style="font-size: 10.5px; color: #64748b; font-weight: 700; text-transform: uppercase;">Guthaben</div>
+            <div style="font-size: 15px; font-weight: 800; color: #34d399;">€${p.cash.toLocaleString('de-DE')}</div>
+          </div>
+        </div>
+
+        <!-- Übersicht der Gesteinsschicht-Versicherungen -->
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          ${INSURANCE_PLANS.map(plan => {
+            const isCurrentlyActive = active?.layerId === plan.id;
+            const isCoveredByHigher = active && active.maxDepth >= plan.maxDepth && !isCurrentlyActive;
+            const canAfford = p.cash >= plan.price;
+
+            let badgeHtml = '';
+            if (isCurrentlyActive) {
+              badgeHtml = `<span style="background: rgba(16, 185, 129, 0.2); color: #34d399; font-size: 10.5px; font-weight: 800; padding: 3px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">${icon('check', '', 12)} AKTIV</span>`;
+            } else if (isCoveredByHigher) {
+              badgeHtml = `<span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: 6px;">ABGEDECKT</span>`;
+            }
+
+            return `
+              <div style="
+                background: rgba(15, 23, 42, 0.6);
+                border: 1px solid ${isCurrentlyActive ? 'rgba(16, 185, 129, 0.4)' : 'rgba(255, 255, 255, 0.08)'};
+                border-radius: 12px;
+                padding: 12px 14px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+              ">
+                <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+                  <div style="
+                    width: 10px;
+                    height: 38px;
+                    border-radius: 5px;
+                    background: ${plan.color};
+                    flex-shrink: 0;
+                  "></div>
+                  <div style="display: flex; flex-direction: column; gap: 2px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <span style="font-size: 13.5px; font-weight: 800; color: #f8fafc;">${plan.layerName}</span>
+                      <span style="font-size: 11px; color: ${plan.color}; font-weight: 700;">${plan.depthRange}</span>
+                      ${badgeHtml}
+                    </div>
+                    <div style="font-size: 11px; color: #94a3b8; line-height: 1.35;">
+                      ${plan.desc}
+                    </div>
+                  </div>
+                </div>
+
+                <div style="flex-shrink: 0; display: flex; align-items: center; gap: 8px;">
+                  ${isCurrentlyActive ? `
+                    <button class="btn-action" disabled style="opacity: 0.6; cursor: default; height: 36px; padding: 0 14px; font-size: 11.5px; font-weight: 700; border-radius: 8px; background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">
+                      Bereits aktiv
+                    </button>
+                  ` : isCoveredByHigher ? `
+                    <button class="btn-action" disabled style="opacity: 0.5; cursor: default; height: 36px; padding: 0 12px; font-size: 11px; font-weight: 700; border-radius: 8px; background: rgba(30, 41, 59, 0.5); color: #94a3b8; border: 1px solid rgba(255, 255, 255, 0.06);">
+                      Höher gedeckt
+                    </button>
+                  ` : `
+                    <button class="btn-buy-insurance btn-3d" data-plan-id="${plan.id}" ${!canAfford ? 'disabled' : ''} style="
+                      height: 36px;
+                      padding: 0 16px;
+                      font-size: 11.5px;
+                      font-weight: 800;
+                      border-radius: 8px;
+                      border: none;
+                      background: ${canAfford ? 'linear-gradient(180deg, #10b981 0%, #059669 100%)' : 'rgba(51, 65, 85, 0.6)'};
+                      color: ${canAfford ? '#ffffff' : '#64748b'};
+                      box-shadow: ${canAfford ? '0 2px 8px rgba(16, 185, 129, 0.3)' : 'none'};
+                      cursor: ${canAfford ? 'pointer' : 'not-allowed'};
+                    ">
+                      Versichern (€${plan.price.toLocaleString('de-DE')})
+                    </button>
+                  `}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  // =========================================================================
+  // TAB 6: STATISTIK ÜBER GAMEFORTSCHRITT
   // =========================================================================
   renderStatsTab() {
     const p = this.player;
@@ -809,6 +1000,36 @@ export class MissionsProgressModal {
         if (this.baseSystem?.updateOfficeBubble) this.baseSystem.updateOfficeBubble();
         if (this.scene && this.scene.hud) this.scene.hud.update();
         this.scene.events.emit('notify', `Auftrag erfüllt: +1 ${q.rewardComp.name}, +€${q.rewardCash}, +${q.rewardXp} XP erhalten!`);
+      };
+    });
+
+    // Versicherung kaufen (Tab 5)
+    const buyInsuranceBtns = bodyEl.querySelectorAll('.btn-buy-insurance');
+    buyInsuranceBtns.forEach(btn => {
+      btn.onclick = () => {
+        const planId = btn.getAttribute('data-plan-id');
+        const plan = INSURANCE_PLANS.find(p => p.id === planId);
+        if (!plan) return;
+
+        if (this.player.cash < plan.price) {
+          soundFx.playError?.();
+          this.scene.events.emit('notify', 'Nicht genug Bargeld für diese Versicherung!');
+          return;
+        }
+
+        this.player.cash -= plan.price;
+        this.player.activeInsurance = {
+          layerId: plan.id,
+          layerName: plan.layerName,
+          maxDepth: plan.maxDepth,
+          price: plan.price
+        };
+
+        soundFx.playPurchase?.();
+        this.scene.events.emit('notify', `Bergungs-Versicherung für ${plan.layerName} aktiviert!`);
+        SaveSystem.save(this.scene);
+        this.render();
+        if (this.scene && this.scene.hud) this.scene.hud.update();
       };
     });
   }

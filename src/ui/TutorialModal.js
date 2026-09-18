@@ -77,7 +77,7 @@ export class TutorialModal {
         color: '#38bdf8',
         badge: 'EXPEDITIONEN',
         title: 'Büro',
-        text: 'Nimm lohnende <strong>Aufträge</strong> an, schalte neue Bergmann-Ränge frei und gib Proben beim Steinforscher ab.'
+        text: 'Nimm lohnende <strong>Aufträge</strong> an, schalte neue Bergmann-Ränge frei und gib Proben beim Geologen ab.'
       },
       {
         id: 'lab',

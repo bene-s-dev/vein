@@ -2714,6 +2714,12 @@
 
     <!-- Clean Cockpit HUD Overlay (wird erst beim Starten einer Expedition eingeblendet) -->
     <div id="hud-overlay" style="display: none;">
+      <!-- Notfall-Rettung Button (erscheint bei leerem Tank unter Tage) -->
+      <button id="hud-rescue-fab" style="display: none; position: fixed; top: 18px; left: 50%; transform: translateX(-50%); z-index: 11000; height: 38px; padding: 0 16px; border-radius: 20px; background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%); color: #ffffff; font-size: 11.5px; font-weight: 800; border: none; box-shadow: 0 4px 16px rgba(239, 68, 68, 0.55); cursor: pointer; align-items: center; gap: 7px; animation: warnPulse 1s infinite ease-in-out;">
+        <span>🚨</span>
+        <span>NOTFALL-RETTUNG</span>
+      </button>
+
       <!-- Left: Ein klick/tippbares Bohrer-Widget (Tank, Hülle, Fracht) ohne Hintergrund -->
       <div class="hud-card" id="card-gauges" title="Bohrer-Status (Klick / Tippen zum Öffnen)">
         <!-- Tank -->

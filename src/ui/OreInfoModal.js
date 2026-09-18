@@ -55,21 +55,6 @@ export const SPECIAL_TILE_DATA = {
     desc: 'Eine verschollene Bergungskapsel früherer Minen-Expeditionen. Beim Anbohren bergen deine Scanner wertvolle Notfall-Gelder sowie nützliche Gadgets wie Dynamit, Treibstoffkanister oder Reparatur-Kits.',
     hint: '💡 Tipp: Jede Kapsel füllt dein Konto auf und stockt deine Gadgets auf – halte nach diesen Kisten Ausschau!'
   },
-  tile_fossil: {
-    id: 'tile_fossil',
-    name: 'Prähistorisches Fossil',
-    badge: 'SELTENES RELIKT',
-    badgeColor: '#a855f7',
-    icon: 'sparkles',
-    sprite: 'tile_fossil',
-    stats: [
-      { label: 'Kategorie', val: 'Museums-Artefakt', color: '#a855f7' },
-      { label: 'Härte', val: '90 HP', color: '#38bdf8' },
-      { label: 'Effekt', val: 'Dauerhafte Perks', color: '#fbbf24' }
-    ],
-    desc: 'Eine uralte Versteinerung prähistorischer Urzeit- und Tiefseewesen. Das Freilegen dieser Schichten birgt einzigartige Relikte (wie Ammoniten, Trilobiten oder Dino-Zähne), die dauerhafte Fahrzeug-Boni verleihen.',
-    hint: '💡 Tipp: Gefundene Fossilien werden im Bergmannbuch archiviert und verbessern deine Bohrer-Attribute.'
-  },
   tile_lava: {
     id: 'tile_lava',
     name: 'Glühende Lava-Ader',
@@ -80,7 +65,7 @@ export const SPECIAL_TILE_DATA = {
     stats: [
       { label: 'Gefahr', val: 'Hitzeschaden (-16 HP)', color: '#ef4444' },
       { label: 'Zone', val: 'Tiefengestein (> 160m)', color: '#fbbf24' },
-      { label: 'Schutz', val: 'Meteoriten-Relikt', color: '#38bdf8' }
+      { label: 'Schutz', val: 'Panzerungs-Upgrades', color: '#38bdf8' }
     ],
     desc: 'Unterirdische Adern aus flüssigem Magma unter gewaltigem Druck. Das Anbohren von Lava führt zu plötzlichen Hitzewallungen und beschädigt die Panzerung deines Bohrers!',
     hint: '💡 Tipp: Umgehe Lava-Adern großräumig oder rüste hitzeresistente Panzerungs-Upgrades aus.'
@@ -380,7 +365,7 @@ export function showGoodsInfoModal(itemKey, scene) {
     categoryIcon = 'factory';
     categoryColor = '#10b981';
   } else if (bookItem?.category === 'component' || factoryItem?.isComponent || compItem) {
-    categoryLabel = bookItem?.category === 'research' ? 'FORSCHER · ELEKTRONIK' : 'FABRIK · BAUTEIL';
+    categoryLabel = bookItem?.category === 'research' ? 'GEOLOGE · ELEKTRONIK' : 'FABRIK · BAUTEIL';
     categoryIcon = bookItem?.category === 'research' ? 'cpu' : 'wrench';
     categoryColor = bookItem?.category === 'research' ? '#60a5fa' : '#a855f7';
   } else if (expItem) {
@@ -526,37 +511,18 @@ export function showGoodsInfoModal(itemKey, scene) {
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 0;">
-          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #f8fafc; letter-spacing: 0.5px;">
-              ${name.toUpperCase()}
-            </h2>
-            <span style="font-size: 10px; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase; color: ${categoryColor}; background: ${categoryColor}18; padding: 2px 9px; border-radius: 9999px; border: 1px solid ${categoryColor}35; display: inline-flex; align-items: center; gap: 4px;">
-              ${icon(categoryIcon, '', 11)} ${categoryLabel}
-            </span>
-          </div>
+          <h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #f8fafc; letter-spacing: 0.5px;">
+            ${name.toUpperCase()}
+          </h2>
 
-          <!-- Wichtige Kennzahlen Badges horizontal -->
-          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-            ${value > 0 ? `
-              <span style="background: rgba(251, 191, 36, 0.14); border: 1px solid rgba(251, 191, 36, 0.3); color: #fbbf24; font-weight: 800; font-size: 11.5px; padding: 2px 9px; border-radius: 6px; font-variant-numeric: tabular-nums;">
+          <!-- Nur Verkaufspreis Badge oben -->
+          ${value > 0 ? `
+            <div>
+              <span style="background: rgba(251, 191, 36, 0.14); border: 1px solid rgba(251, 191, 36, 0.3); color: #fbbf24; font-weight: 800; font-size: 11.5px; padding: 2px 9px; border-radius: 6px; font-variant-numeric: tabular-nums; display: inline-block;">
                 €${value.toLocaleString('de-DE')}
               </span>
-            ` : `
-              <span style="background: rgba(168, 85, 247, 0.14); border: 1px solid rgba(168, 85, 247, 0.3); color: #c084fc; font-weight: 800; font-size: 11.5px; padding: 2px 9px; border-radius: 6px;">
-                Werkstatt-Bauteil
-              </span>
-            `}
-            ${recipeText ? `
-              <span style="background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.25); color: #38bdf8; font-weight: 700; font-size: 11.5px; padding: 2px 9px; border-radius: 6px;">
-                ${recipeText}
-              </span>
-            ` : ''}
-            ${usageText ? `
-              <span style="background: rgba(148, 163, 184, 0.12); border: 1px solid rgba(148, 163, 184, 0.25); color: #cbd5e1; font-weight: 700; font-size: 11.5px; padding: 2px 9px; border-radius: 6px;">
-                ${usageText}
-              </span>
-            ` : ''}
-          </div>
+            </div>
+          ` : ''}
         </div>
       </div>
 
@@ -684,7 +650,7 @@ export function showGoodsInfoModal(itemKey, scene) {
 }
 
 /**
- * Zeigt das Informations-Popup für Spezialfelder (Felsbrocken, Kapseln, Fossilien, Lava).
+ * Zeigt das Informations-Popup für Spezialfelder (Felsbrocken, Kapseln, Lava).
  */
 export function showSpecialTileInfoModal(tileType, scene, isDiscovery = false) {
   if (!tileType || !scene) return;

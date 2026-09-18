@@ -323,7 +323,7 @@ export class InputHandler {
               if (tile.ore) {
                 showOreInfoModal(tile.ore, this.scene);
                 return;
-              } else if (['tile_boulder', 'tile_cache', 'tile_fossil', 'tile_lava'].includes(tile.type)) {
+              } else if (['tile_boulder', 'tile_cache', 'tile_lava'].includes(tile.type)) {
                 showSpecialTileInfoModal(tile.type, this.scene, false);
                 return;
               }

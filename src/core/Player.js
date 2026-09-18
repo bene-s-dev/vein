@@ -33,66 +33,66 @@ export const RANK_NAMES = [
 export const TANK_TIERS = [
   { tier: 1, name: 'Standard-Tank', maxFuel: 40, stat: '40 L', cost: 0, comp: null, mountComps: null, level: 1, desc: 'Kompakter Basis-Treibstofftank für kurze Schacht-Expeditionen.' },
   { tier: 2, name: 'Kerosin-Tank Mk.II', maxFuel: 70, stat: '70 L', cost: 250, comp: null, mountComps: [{ key: 'iron_tube', name: 'Stahl-Rohr', count: 2, source: 'Fabrik' }], level: 1, desc: 'Erhöht Treibstoff auf 70 Liter und senkt Verbrauch um 12%.' },
-  { tier: 3, name: 'Spartriebwerk Mk.III', maxFuel: 110, stat: '110 L', cost: 1500, comp: null, mountComps: [{ key: 'microprocessor', name: 'Mikroprozessor', count: 1, source: 'Forscher' }], level: 1, desc: 'Erhöht Treibstoff auf 110 Liter und spart 20% Kerosin.' },
-  { tier: 4, name: 'Dual-Injektor Mk.IV', maxFuel: 165, stat: '165 L', cost: 4200, comp: null, mountComps: [{ key: 'silver_coil', name: 'Silber-Spule', count: 1, source: 'Fabrik' }, { key: 'capacitor', name: 'Druck-Kondensator', count: 1, source: 'Forscher' }], level: 2, desc: 'Verbessert Steigflug-Effizienz mit Hochdruck-Injektoren (165 L).' },
-  { tier: 5, name: 'Kompressions-Tank Mk.V', maxFuel: 235, stat: '235 L', cost: 11000, comp: null, mountComps: [{ key: 'iron_tube', name: 'Stahl-Rohr', count: 2, source: 'Fabrik' }, { key: 'capacitor', name: 'Druck-Kondensator', count: 1, source: 'Forscher' }], level: 3, desc: 'Hochfeste Legierung erlaubt 235 Liter Treibstoffkapazität.' },
-  { tier: 6, name: 'Turbo-Booster Mk.VI', maxFuel: 330, stat: '330 L', cost: 25000, comp: null, mountComps: [{ key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Forscher' }], level: 4, desc: 'Großer 330L Tank für tiefe Expeditionen.' },
-  { tier: 7, name: 'Fusions-Zelle Mk.VII', maxFuel: 460, stat: '460 L', cost: 55000, comp: null, mountComps: [{ key: 'crystal_lens', name: 'Kristall-Linse', count: 1, source: 'Fabrik' }, { key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Forscher' }], level: 5, desc: 'Hocheffizienter Fusions-Antrieb mit 460 Litern Kapazität.' },
-  { tier: 8, name: 'Plasma-Injektor Mk.VIII', maxFuel: 630, stat: '630 L', cost: 115000, comp: null, mountComps: [{ key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Forscher' }, { key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Forscher' }], level: 6, desc: 'Plasmagespeister 630L Tank mit geringstem Kerosinverbrauch.' },
+  { tier: 3, name: 'Spartriebwerk Mk.III', maxFuel: 110, stat: '110 L', cost: 1500, comp: null, mountComps: [{ key: 'microprocessor', name: 'Mikroprozessor', count: 1, source: 'Geologe' }], level: 1, desc: 'Erhöht Treibstoff auf 110 Liter und spart 20% Kerosin.' },
+  { tier: 4, name: 'Dual-Injektor Mk.IV', maxFuel: 165, stat: '165 L', cost: 4200, comp: null, mountComps: [{ key: 'silver_coil', name: 'Silber-Spule', count: 1, source: 'Fabrik' }, { key: 'capacitor', name: 'Druck-Kondensator', count: 1, source: 'Geologe' }], level: 2, desc: 'Verbessert Steigflug-Effizienz mit Hochdruck-Injektoren (165 L).' },
+  { tier: 5, name: 'Kompressions-Tank Mk.V', maxFuel: 235, stat: '235 L', cost: 11000, comp: null, mountComps: [{ key: 'iron_tube', name: 'Stahl-Rohr', count: 2, source: 'Fabrik' }, { key: 'capacitor', name: 'Druck-Kondensator', count: 1, source: 'Geologe' }], level: 3, desc: 'Hochfeste Legierung erlaubt 235 Liter Treibstoffkapazität.' },
+  { tier: 6, name: 'Turbo-Booster Mk.VI', maxFuel: 330, stat: '330 L', cost: 25000, comp: null, mountComps: [{ key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Geologe' }], level: 4, desc: 'Großer 330L Tank für tiefe Expeditionen.' },
+  { tier: 7, name: 'Fusions-Zelle Mk.VII', maxFuel: 460, stat: '460 L', cost: 55000, comp: null, mountComps: [{ key: 'crystal_lens', name: 'Kristall-Linse', count: 1, source: 'Fabrik' }, { key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Geologe' }], level: 5, desc: 'Hocheffizienter Fusions-Antrieb mit 460 Litern Kapazität.' },
+  { tier: 8, name: 'Plasma-Injektor Mk.VIII', maxFuel: 630, stat: '630 L', cost: 115000, comp: null, mountComps: [{ key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Geologe' }, { key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Geologe' }], level: 6, desc: 'Plasmagespeister 630L Tank mit geringstem Kerosinverbrauch.' },
   { tier: 9, name: 'Dunkelfeld-Speicher Mk.IX', maxFuel: 850, stat: '850 L', cost: 225000, comp: null, mountComps: [{ key: 'titan_bolt', name: 'Titan-Bolzen', count: 2, source: 'Fabrik' }], level: 8, desc: 'Hochenergie-Tank für ausgedehnte Tiefen-Expeditionen.' },
-  { tier: 10, name: 'Quanten-Ionen-Matrix X', maxFuel: 1200, stat: '1200 L', cost: 450000, comp: null, mountComps: [{ key: 'quantum_core', name: 'Quanten-Kern', count: 1, source: 'Fabrik' }, { key: 'quantum_processor', name: 'Quanten-Prozessor', count: 1, source: 'Forscher' }], level: 10, desc: 'Ultimative 1200L Quantenmatrix mit nahezu unschöpflichem Schub.' }
+  { tier: 10, name: 'Quanten-Ionen-Matrix X', maxFuel: 1200, stat: '1200 L', cost: 450000, comp: null, mountComps: [{ key: 'quantum_core', name: 'Quanten-Kern', count: 1, source: 'Fabrik' }, { key: 'quantum_processor', name: 'Quanten-Prozessor', count: 1, source: 'Geologe' }], level: 10, desc: 'Ultimative 1200L Quantenmatrix mit nahezu unschöpflichem Schub.' }
 ];
 
 export const HULL_TIERS = [
   { tier: 1, name: 'Leichtmetall-Gehäuse', shortName: 'Leichtmetall', maxHull: 50, stat: '50 HP', cost: 0, comp: null, mountComps: null, level: 1, desc: 'Dünnes Basis-Chassis für oberflächennahe Schürfungen. Vorsicht vor Reibung und Erschütterungen!' },
   { tier: 2, name: 'Kevlar-Verbundschutz Mk.II', shortName: 'Kevlar Mk.II', maxHull: 90, stat: '90 HP', cost: 240, comp: null, mountComps: [{ key: 'iron_tube', name: 'Stahl-Rohr', count: 1, source: 'Fabrik' }], level: 1, desc: 'Verstärkte Verbundstruktur gegen Stoß- und Reibungsverschleiß beim Bohren.' },
   { tier: 3, name: 'Gehärtetes Stahl-Chassis Mk.III', shortName: 'Stahl Mk.III', maxHull: 150, stat: '150 HP', cost: 1400, comp: null, mountComps: [{ key: 'iron_tube', name: 'Stahl-Rohr', count: 1, source: 'Fabrik' }, { key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1, source: 'Fabrik' }], level: 1, desc: 'Widerstandsfähiger Gehäuseschutz für tiefere Schiefer- und Granitschichten.' },
-  { tier: 4, name: 'Titan-Panzergehäuse Mk.IV', shortName: 'Titan Mk.IV', maxHull: 240, stat: '240 HP', cost: 3900, comp: null, mountComps: [{ key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1, source: 'Fabrik' }, { key: 'capacitor', name: 'Druck-Kondensator', count: 1, source: 'Forscher' }], level: 2, desc: 'Widersteht hohem Gesteinsdruck und Reibungshitze.' },
+  { tier: 4, name: 'Titan-Panzergehäuse Mk.IV', shortName: 'Titan Mk.IV', maxHull: 240, stat: '240 HP', cost: 3900, comp: null, mountComps: [{ key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1, source: 'Fabrik' }, { key: 'capacitor', name: 'Druck-Kondensator', count: 1, source: 'Geologe' }], level: 2, desc: 'Widersteht hohem Gesteinsdruck und Reibungshitze.' },
   { tier: 5, name: 'Magma-Hitzeschild Mk.V', shortName: 'Hitzeschild Mk.V', maxHull: 350, stat: '350 HP', cost: 10500, comp: null, mountComps: [{ key: 'silver_coil', name: 'Silber-Spule', count: 2, source: 'Fabrik' }], level: 3, desc: 'Schützt das Gehäuse vor extremen Tiefentemperaturen und Erschütterungen.' },
-  { tier: 6, name: 'Schwere Verbundpanzerung Mk.VI', shortName: 'Verbund Mk.VI', maxHull: 500, stat: '500 HP', cost: 24000, comp: null, mountComps: [{ key: 'crystal_lens', name: 'Kristall-Linse', count: 1, source: 'Fabrik' }, { key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Forscher' }], level: 4, desc: 'Extrem schlagfester Case-Schutz für härtestes Basaltgestein.' },
-  { tier: 7, name: 'Kraftfeld-Deflektor Mk.VII', shortName: 'Deflektor Mk.VII', maxHull: 700, stat: '700 HP', cost: 52000, comp: null, mountComps: [{ key: 'plasma_regulator', name: 'Plasma-Injektor', count: 2, source: 'Forscher' }], level: 5, desc: 'Aktives Energieschild fängt Reibungsenergie ab und stärkt das Gehäuse.' },
-  { tier: 8, name: 'Nanit-Matrix-Chassis Mk.VIII', shortName: 'Nanit Mk.VIII', maxHull: 950, stat: '950 HP', cost: 110000, comp: null, mountComps: [{ key: 'titan_bolt', name: 'Titan-Bolzen', count: 1, source: 'Fabrik' }, { key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Forscher' }], level: 6, desc: 'Selbstreparierendes Naniten-Gehäuse für maximale Tiefen-Integrität.' },
+  { tier: 6, name: 'Schwere Verbundpanzerung Mk.VI', shortName: 'Verbund Mk.VI', maxHull: 500, stat: '500 HP', cost: 24000, comp: null, mountComps: [{ key: 'crystal_lens', name: 'Kristall-Linse', count: 1, source: 'Fabrik' }, { key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Geologe' }], level: 4, desc: 'Extrem schlagfester Case-Schutz für härtestes Basaltgestein.' },
+  { tier: 7, name: 'Kraftfeld-Deflektor Mk.VII', shortName: 'Deflektor Mk.VII', maxHull: 700, stat: '700 HP', cost: 52000, comp: null, mountComps: [{ key: 'plasma_regulator', name: 'Plasma-Injektor', count: 2, source: 'Geologe' }], level: 5, desc: 'Aktives Energieschild fängt Reibungsenergie ab und stärkt das Gehäuse.' },
+  { tier: 8, name: 'Nanit-Matrix-Chassis Mk.VIII', shortName: 'Nanit Mk.VIII', maxHull: 950, stat: '950 HP', cost: 110000, comp: null, mountComps: [{ key: 'titan_bolt', name: 'Titan-Bolzen', count: 1, source: 'Fabrik' }, { key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Geologe' }], level: 6, desc: 'Selbstreparierendes Naniten-Gehäuse für maximale Tiefen-Integrität.' },
   { tier: 9, name: 'Adamantit-Panzer Mk.IX', shortName: 'Adamantit Mk.IX', maxHull: 1250, stat: '1250 HP', cost: 220000, comp: null, mountComps: [{ key: 'titan_bolt', name: 'Titan-Bolzen', count: 2, source: 'Fabrik' }, { key: 'crystal_lens', name: 'Kristall-Linse', count: 1, source: 'Fabrik' }], level: 8, desc: 'Unerreichte Dichte schützt zuverlässig gegen Einstürze im Urgestein.' },
-  { tier: 10, name: 'Quanten-Aura-Chassis X', shortName: 'Quanten-Aura X', maxHull: 1600, stat: '1600 HP', cost: 440000, comp: null, mountComps: [{ key: 'quantum_core', name: 'Quanten-Kern', count: 1, source: 'Fabrik' }, { key: 'quantum_processor', name: 'Quanten-Prozessor', count: 1, source: 'Forscher' }], level: 10, desc: 'Permanentes quantenmechanisches Schutzfeld für tiefste Kernzonen.' }
+  { tier: 10, name: 'Quanten-Aura-Chassis X', shortName: 'Quanten-Aura X', maxHull: 1600, stat: '1600 HP', cost: 440000, comp: null, mountComps: [{ key: 'quantum_core', name: 'Quanten-Kern', count: 1, source: 'Fabrik' }, { key: 'quantum_processor', name: 'Quanten-Prozessor', count: 1, source: 'Geologe' }], level: 10, desc: 'Permanentes quantenmechanisches Schutzfeld für tiefste Kernzonen.' }
 ];
 
 export const ENGINE_TIERS = [
   { tier: 1, name: 'Standard-Raupenfahrwerk', stat: '20 km/h', moveDuration: 160, flightSpeed: 175, cost: 0, comp: null, mountComps: null, level: 1, desc: 'Sicheres Basis-Fahrwerk für solide Schachtmanöver.' },
   { tier: 2, name: 'Verstärkte Getriebe Mk.II', stat: '22 km/h', moveDuration: 145, flightSpeed: 195, cost: 260, comp: null, mountComps: [{ key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1, source: 'Fabrik' }], level: 1, desc: 'Kürzere Schaltzeiten beschleunigen Kriechgang und Steigflug.' },
-  { tier: 3, name: 'Hydraulik-Raupen Mk.III', stat: '25 km/h', moveDuration: 130, flightSpeed: 220, cost: 1600, comp: null, mountComps: [{ key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1, source: 'Fabrik' }, { key: 'capacitor', name: 'Druck-Kondensator', count: 1, source: 'Forscher' }], level: 1, desc: 'Flüssigere Kettenbewegungen und mehr Schubdüsengeschwindigkeit.' },
+  { tier: 3, name: 'Hydraulik-Raupen Mk.III', stat: '25 km/h', moveDuration: 130, flightSpeed: 220, cost: 1600, comp: null, mountComps: [{ key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1, source: 'Fabrik' }, { key: 'capacitor', name: 'Druck-Kondensator', count: 1, source: 'Geologe' }], level: 1, desc: 'Flüssigere Kettenbewegungen und mehr Schubdüsengeschwindigkeit.' },
   { tier: 4, name: 'Hochdruck-Turbine Mk.IV', stat: '28 km/h', moveDuration: 115, flightSpeed: 250, cost: 4400, comp: null, mountComps: [{ key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1, source: 'Fabrik' }, { key: 'silver_coil', name: 'Silber-Spule', count: 1, source: 'Fabrik' }], level: 2, desc: 'Kraftvoller Vortrieb im Schacht und schnellerer Aufstieg.' },
-  { tier: 5, name: 'Titan-Kettenantrieb Mk.V', stat: '32 km/h', moveDuration: 100, flightSpeed: 285, cost: 11500, comp: null, mountComps: [{ key: 'silver_coil', name: 'Silber-Spule', count: 1, source: 'Fabrik' }, { key: 'spectrometer', name: 'Sensor-Spektrometer', count: 1, source: 'Forscher' }], level: 3, desc: 'Geringerer Rollwiderstand und kräftige Schwebetriebwerke.' },
-  { tier: 6, name: 'Vektor-Booster Mk.VI', stat: '37 km/h', moveDuration: 88, flightSpeed: 325, cost: 26000, comp: null, mountComps: [{ key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Forscher' }], level: 4, desc: 'Schnelle Manövrierfähigkeit im Gestein und hoher Schwebespeed.' },
+  { tier: 5, name: 'Titan-Kettenantrieb Mk.V', stat: '32 km/h', moveDuration: 100, flightSpeed: 285, cost: 11500, comp: null, mountComps: [{ key: 'silver_coil', name: 'Silber-Spule', count: 1, source: 'Fabrik' }, { key: 'spectrometer', name: 'Sensor-Spektrometer', count: 1, source: 'Geologe' }], level: 3, desc: 'Geringerer Rollwiderstand und kräftige Schwebetriebwerke.' },
+  { tier: 6, name: 'Vektor-Booster Mk.VI', stat: '37 km/h', moveDuration: 88, flightSpeed: 325, cost: 26000, comp: null, mountComps: [{ key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Geologe' }], level: 4, desc: 'Schnelle Manövrierfähigkeit im Gestein und hoher Schwebespeed.' },
   { tier: 7, name: 'Magnet-Levitation Mk.VII', stat: '42 km/h', moveDuration: 76, flightSpeed: 370, cost: 56000, comp: null, mountComps: [{ key: 'silver_coil', name: 'Silber-Spule', count: 2, source: 'Fabrik' }, { key: 'crystal_lens', name: 'Kristall-Linse', count: 1, source: 'Fabrik' }], level: 5, desc: 'Magnetschwebende Fahrwerkssegmente für rasantes Gleiten.' },
-  { tier: 8, name: 'Quanten-Gravitationsantrieb Mk.VIII', stat: '47 km/h', moveDuration: 65, flightSpeed: 420, cost: 120000, comp: null, mountComps: [{ key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Forscher' }], level: 6, desc: 'Krümmt das Schwerefeld für blitzschnelle Fortbewegung.' },
-  { tier: 9, name: 'Impuls-Vortex-Schub Mk.IX', stat: '53 km/h', moveDuration: 55, flightSpeed: 475, cost: 235000, comp: null, mountComps: [{ key: 'titan_bolt', name: 'Titan-Bolzen', count: 1, source: 'Fabrik' }, { key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Forscher' }], level: 8, desc: 'Subatomare Schubdüsen für unvergleichliche Wendigkeit.' },
-  { tier: 10, name: 'Chrono-Tachyonen-Antrieb X', stat: '60 km/h', moveDuration: 45, flightSpeed: 540, cost: 460000, comp: null, mountComps: [{ key: 'quantum_core', name: 'Quanten-Kern', count: 1, source: 'Fabrik' }, { key: 'quantum_processor', name: 'Quanten-Prozessor', count: 1, source: 'Forscher' }], level: 10, desc: 'Höchstgeschwindigkeit im Erdreich und schwebende Schwerelosigkeit.' }
+  { tier: 8, name: 'Quanten-Gravitationsantrieb Mk.VIII', stat: '47 km/h', moveDuration: 65, flightSpeed: 420, cost: 120000, comp: null, mountComps: [{ key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Geologe' }], level: 6, desc: 'Krümmt das Schwerefeld für blitzschnelle Fortbewegung.' },
+  { tier: 9, name: 'Impuls-Vortex-Schub Mk.IX', stat: '53 km/h', moveDuration: 55, flightSpeed: 475, cost: 235000, comp: null, mountComps: [{ key: 'titan_bolt', name: 'Titan-Bolzen', count: 1, source: 'Fabrik' }, { key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Geologe' }], level: 8, desc: 'Subatomare Schubdüsen für unvergleichliche Wendigkeit.' },
+  { tier: 10, name: 'Chrono-Tachyonen-Antrieb X', stat: '60 km/h', moveDuration: 45, flightSpeed: 540, cost: 460000, comp: null, mountComps: [{ key: 'quantum_core', name: 'Quanten-Kern', count: 1, source: 'Fabrik' }, { key: 'quantum_processor', name: 'Quanten-Prozessor', count: 1, source: 'Geologe' }], level: 10, desc: 'Höchstgeschwindigkeit im Erdreich und schwebende Schwerelosigkeit.' }
 ];
 
 export const CARGO_TIERS = [
   { tier: 1, name: 'Standard-Ladebucht', maxCargo: 12, stat: '12 Plätze', cost: 0, comp: null, mountComps: null, level: 1, desc: 'Kompakter Laderaum für die ersten Bergbau-Expeditionen.' },
   { tier: 2, name: 'Erweiterte Frachtbucht Mk.II', maxCargo: 18, stat: '18 Plätze', cost: 250, comp: null, mountComps: [{ key: 'iron_tube', name: 'Stahl-Rohr', count: 1, source: 'Fabrik' }], level: 1, desc: 'Erweitert Ladeplätze auf 18 Erze für lukrativere Tauchgänge.' },
   { tier: 3, name: 'Titan-Containermodul Mk.III', maxCargo: 26, stat: '26 Plätze', cost: 1500, comp: null, mountComps: [{ key: 'iron_tube', name: 'Stahl-Rohr', count: 1, source: 'Fabrik' }, { key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1, source: 'Fabrik' }], level: 1, desc: 'Großzügiger Frachtraum für 26 Erze.' },
-  { tier: 4, name: 'Struktur-Laderaum Mk.IV', maxCargo: 28, stat: '28 Plätze', cost: 4100, comp: null, mountComps: [{ key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1, source: 'Fabrik' }, { key: 'microprocessor', name: 'Mikroprozessor', count: 1, source: 'Forscher' }], level: 2, desc: 'Hydraulische Ladeklappen bieten Platz für 28 Erze.' },
-  { tier: 5, name: 'Molekular-Kompressor Mk.V', maxCargo: 38, stat: '38 Plätze', cost: 10800, comp: null, mountComps: [{ key: 'spectrometer', name: 'Sensor-Spektrometer', count: 1, source: 'Forscher' }], level: 3, desc: 'Hohe Packdichte erlaubt den Transport von 38 Erzen.' },
-  { tier: 6, name: 'Subraum-Boxen Mk.VI', maxCargo: 50, stat: '50 Plätze', cost: 24500, comp: null, mountComps: [{ key: 'crystal_lens', name: 'Kristall-Linse', count: 1, source: 'Fabrik' }, { key: 'capacitor', name: 'Druck-Kondensator', count: 1, source: 'Forscher' }], level: 4, desc: 'Transportiert bis zu 50 Erze auf einen Schlag.' },
+  { tier: 4, name: 'Struktur-Laderaum Mk.IV', maxCargo: 28, stat: '28 Plätze', cost: 4100, comp: null, mountComps: [{ key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1, source: 'Fabrik' }, { key: 'microprocessor', name: 'Mikroprozessor', count: 1, source: 'Geologe' }], level: 2, desc: 'Hydraulische Ladeklappen bieten Platz für 28 Erze.' },
+  { tier: 5, name: 'Molekular-Kompressor Mk.V', maxCargo: 38, stat: '38 Plätze', cost: 10800, comp: null, mountComps: [{ key: 'spectrometer', name: 'Sensor-Spektrometer', count: 1, source: 'Geologe' }], level: 3, desc: 'Hohe Packdichte erlaubt den Transport von 38 Erzen.' },
+  { tier: 6, name: 'Subraum-Boxen Mk.VI', maxCargo: 50, stat: '50 Plätze', cost: 24500, comp: null, mountComps: [{ key: 'crystal_lens', name: 'Kristall-Linse', count: 1, source: 'Fabrik' }, { key: 'capacitor', name: 'Druck-Kondensator', count: 1, source: 'Geologe' }], level: 4, desc: 'Transportiert bis zu 50 Erze auf einen Schlag.' },
   { tier: 7, name: 'Tiefsee-Depot Mk.VII', maxCargo: 65, stat: '65 Plätze', cost: 54000, comp: null, mountComps: [{ key: 'crystal_lens', name: 'Kristall-Linse', count: 2, source: 'Fabrik' }], level: 5, desc: 'Riesige Kapazität von 65 Plätzen für Edelsteine.' },
-  { tier: 8, name: 'Quanten-Frachtdepot Mk.VIII', maxCargo: 85, stat: '85 Plätze', cost: 115000, comp: null, mountComps: [{ key: 'titan_bolt', name: 'Titan-Bolzen', count: 1, source: 'Fabrik' }, { key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Forscher' }], level: 6, desc: 'Gigantischer 85-Plätze-Frachtraum für maximale Gewinne.' },
-  { tier: 9, name: 'Dimensions-Kompaktor Mk.IX', maxCargo: 110, stat: '110 Plätze', cost: 230000, comp: null, mountComps: [{ key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Forscher' }, { key: 'spectrometer', name: 'Sensor-Spektrometer', count: 1, source: 'Forscher' }], level: 8, desc: 'Räumliche Kompression fasst 110 Erze im Frachtbereich.' },
-  { tier: 10, name: 'Unendlicher Subraum-Bunker X', maxCargo: 150, stat: '150 Plätze', cost: 450000, comp: null, mountComps: [{ key: 'quantum_core', name: 'Quanten-Kern', count: 1, source: 'Fabrik' }, { key: 'quantum_processor', name: 'Quanten-Prozessor', count: 1, source: 'Forscher' }], level: 10, desc: 'Absolutes Maximum: 150 Plätze für unendliche Bergbauexpeditionen.' }
+  { tier: 8, name: 'Quanten-Frachtdepot Mk.VIII', maxCargo: 85, stat: '85 Plätze', cost: 115000, comp: null, mountComps: [{ key: 'titan_bolt', name: 'Titan-Bolzen', count: 1, source: 'Fabrik' }, { key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Geologe' }], level: 6, desc: 'Gigantischer 85-Plätze-Frachtraum für maximale Gewinne.' },
+  { tier: 9, name: 'Dimensions-Kompaktor Mk.IX', maxCargo: 110, stat: '110 Plätze', cost: 230000, comp: null, mountComps: [{ key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Geologe' }, { key: 'spectrometer', name: 'Sensor-Spektrometer', count: 1, source: 'Geologe' }], level: 8, desc: 'Räumliche Kompression fasst 110 Erze im Frachtbereich.' },
+  { tier: 10, name: 'Unendlicher Subraum-Bunker X', maxCargo: 150, stat: '150 Plätze', cost: 450000, comp: null, mountComps: [{ key: 'quantum_core', name: 'Quanten-Kern', count: 1, source: 'Fabrik' }, { key: 'quantum_processor', name: 'Quanten-Prozessor', count: 1, source: 'Geologe' }], level: 10, desc: 'Absolutes Maximum: 150 Plätze für unendliche Bergbauexpeditionen.' }
 ];
 
 export const SENSOR_TIERS = [
   { tier: 1, name: 'Basis-Sonar', radius: 1.8, stat: '1.8 Kacheln', cost: 0, comp: null, mountComps: null, level: 1, desc: 'Kompakter Sensor zur Erkennung naher Erzadern.' },
-  { tier: 2, name: 'Geo-Scanner Mk.II', radius: 2.4, stat: '2.4 Kacheln', cost: 220, comp: null, mountComps: [{ key: 'microprocessor', name: 'Mikroprozessor', count: 1, source: 'Forscher' }], level: 1, desc: 'Vergrößert den kreisrunden Scan-Umkreis spürbar.' },
-  { tier: 3, name: 'Puls-Sonar Mk.III', radius: 3.0, stat: '3.0 Kacheln', cost: 1300, comp: null, mountComps: [{ key: 'microprocessor', name: 'Mikroprozessor', count: 1, source: 'Forscher' }, { key: 'capacitor', name: 'Druck-Kondensator', count: 1, source: 'Forscher' }], level: 1, desc: 'Erweitert den Erfassungsbereich auf 3.0 Kacheln.' },
-  { tier: 4, name: 'Spektral-Radar Mk.IV', radius: 3.7, stat: '3.7 Kacheln', cost: 3700, comp: null, mountComps: [{ key: 'silver_coil', name: 'Silber-Spule', count: 1, source: 'Fabrik' }, { key: 'spectrometer', name: 'Sensor-Spektrometer', count: 1, source: 'Forscher' }], level: 2, desc: 'Schwenkbarer Pylon deckt Erze in 3.7 Kacheln Umkreis auf.' },
-  { tier: 5, name: 'Tiefen-Sensor Mk.V', radius: 4.5, stat: '4.5 Kacheln', cost: 9800, comp: null, mountComps: [{ key: 'spectrometer', name: 'Sensor-Spektrometer', count: 2, source: 'Forscher' }], level: 3, desc: 'Optische Linse durchdringt dicke Gesteinsschichten bis 4.5 Kacheln.' },
-  { tier: 6, name: 'Sub-Terra-Scan Mk.VI', radius: 5.4, stat: '5.4 Kacheln', cost: 22000, comp: null, mountComps: [{ key: 'crystal_lens', name: 'Kristall-Linse', count: 1, source: 'Fabrik' }, { key: 'spectrometer', name: 'Sensor-Spektrometer', count: 1, source: 'Forscher' }], level: 4, desc: 'Großer Scanradius von 5.4 Kacheln für seltene Adern.' },
-  { tier: 7, name: 'Graviton-Array Mk.VII', radius: 6.4, stat: '6.4 Kacheln', cost: 49000, comp: null, mountComps: [{ key: 'crystal_lens', name: 'Kristall-Linse', count: 1, source: 'Fabrik' }, { key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Forscher' }], level: 5, desc: 'Erfasst 6.4 Kacheln im Umkreis auf einen Blick.' },
-  { tier: 8, name: 'Quanten-Resonator Mk.VIII', radius: 7.5, stat: '7.5 Kacheln', cost: 105000, comp: null, mountComps: [{ key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Forscher' }, { key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Forscher' }], level: 6, desc: 'Elite-Scanbereich von 7.5 Kacheln erhellt riesige Höhlen.' },
-  { tier: 9, name: 'Tachyonen-Echo Mk.IX', radius: 9.0, stat: '9.0 Kacheln', cost: 215000, comp: null, mountComps: [{ key: 'titan_bolt', name: 'Titan-Bolzen', count: 1, source: 'Fabrik' }, { key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Forscher' }], level: 8, desc: 'Subatomare Echos enthüllen Erze bis zu 9 Kacheln tief.' },
-  { tier: 10, name: 'Allwissendes Omnispektrum X', radius: 11.0, stat: '11.0 Kacheln', cost: 430000, comp: null, mountComps: [{ key: 'quantum_core', name: 'Quanten-Kern', count: 1, source: 'Fabrik' }, { key: 'quantum_processor', name: 'Quanten-Prozessor', count: 1, source: 'Forscher' }], level: 10, desc: 'Erleuchtet ganze Abschnitte mit einem gewaltigen 11-Kachel-Radius.' }
+  { tier: 2, name: 'Geo-Scanner Mk.II', radius: 2.4, stat: '2.4 Kacheln', cost: 220, comp: null, mountComps: [{ key: 'microprocessor', name: 'Mikroprozessor', count: 1, source: 'Geologe' }], level: 1, desc: 'Vergrößert den kreisrunden Scan-Umkreis spürbar.' },
+  { tier: 3, name: 'Puls-Sonar Mk.III', radius: 3.0, stat: '3.0 Kacheln', cost: 1300, comp: null, mountComps: [{ key: 'microprocessor', name: 'Mikroprozessor', count: 1, source: 'Geologe' }, { key: 'capacitor', name: 'Druck-Kondensator', count: 1, source: 'Geologe' }], level: 1, desc: 'Erweitert den Erfassungsbereich auf 3.0 Kacheln.' },
+  { tier: 4, name: 'Spektral-Radar Mk.IV', radius: 3.7, stat: '3.7 Kacheln', cost: 3700, comp: null, mountComps: [{ key: 'silver_coil', name: 'Silber-Spule', count: 1, source: 'Fabrik' }, { key: 'spectrometer', name: 'Sensor-Spektrometer', count: 1, source: 'Geologe' }], level: 2, desc: 'Schwenkbarer Pylon deckt Erze in 3.7 Kacheln Umkreis auf.' },
+  { tier: 5, name: 'Tiefen-Sensor Mk.V', radius: 4.5, stat: '4.5 Kacheln', cost: 9800, comp: null, mountComps: [{ key: 'spectrometer', name: 'Sensor-Spektrometer', count: 2, source: 'Geologe' }], level: 3, desc: 'Optische Linse durchdringt dicke Gesteinsschichten bis 4.5 Kacheln.' },
+  { tier: 6, name: 'Sub-Terra-Scan Mk.VI', radius: 5.4, stat: '5.4 Kacheln', cost: 22000, comp: null, mountComps: [{ key: 'crystal_lens', name: 'Kristall-Linse', count: 1, source: 'Fabrik' }, { key: 'spectrometer', name: 'Sensor-Spektrometer', count: 1, source: 'Geologe' }], level: 4, desc: 'Großer Scanradius von 5.4 Kacheln für seltene Adern.' },
+  { tier: 7, name: 'Graviton-Array Mk.VII', radius: 6.4, stat: '6.4 Kacheln', cost: 49000, comp: null, mountComps: [{ key: 'crystal_lens', name: 'Kristall-Linse', count: 1, source: 'Fabrik' }, { key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Geologe' }], level: 5, desc: 'Erfasst 6.4 Kacheln im Umkreis auf einen Blick.' },
+  { tier: 8, name: 'Quanten-Resonator Mk.VIII', radius: 7.5, stat: '7.5 Kacheln', cost: 105000, comp: null, mountComps: [{ key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Geologe' }, { key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Geologe' }], level: 6, desc: 'Elite-Scanbereich von 7.5 Kacheln erhellt riesige Höhlen.' },
+  { tier: 9, name: 'Tachyonen-Echo Mk.IX', radius: 9.0, stat: '9.0 Kacheln', cost: 215000, comp: null, mountComps: [{ key: 'titan_bolt', name: 'Titan-Bolzen', count: 1, source: 'Fabrik' }, { key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Geologe' }], level: 8, desc: 'Subatomare Echos enthüllen Erze bis zu 9 Kacheln tief.' },
+  { tier: 10, name: 'Allwissendes Omnispektrum X', radius: 11.0, stat: '11.0 Kacheln', cost: 430000, comp: null, mountComps: [{ key: 'quantum_core', name: 'Quanten-Kern', count: 1, source: 'Fabrik' }, { key: 'quantum_processor', name: 'Quanten-Prozessor', count: 1, source: 'Geologe' }], level: 10, desc: 'Erleuchtet ganze Abschnitte mit einem gewaltigen 11-Kachel-Radius.' }
 ];
 
 export class Player {
@@ -154,7 +154,7 @@ export class Player {
     this.discoveredOres = new Set();
     // Set aller bisher hergestellten/entdeckten Fabrikprodukte und Barren
     this.discoveredProducts = new Set();
-    // Set aller bisher entdeckten Spezialfelder (Felsbrocken, Kapseln, Fossilien, Lava)
+    // Set aller bisher entdeckten Spezialfelder (Felsbrocken, Kapseln, Lava)
     this.discoveredSpecialTiles = new Set();
     // Set aller bisher im Büro eingesehenen Steinforscher-Aufträge
     this.seenGeologistQuests = new Set();
@@ -210,8 +210,12 @@ export class Player {
     this.hullTier = 1;
     this.researchedHullTier = 1; // Im Labor erforschter Bauplan (Montage im Hangar erforderlich)
 
-    // Rettungen (3 kostenlos, danach Bergungsgebühr)
-    this.freeRescues = 3;
+    // Rettung & Versicherung
+    this.name = (typeof localStorage !== 'undefined' && localStorage.getItem('vein_player_name')) || 'Fahrer';
+    this.firstRescueUsed = false;
+    this.activeInsurance = null;
+    this.isGameOver = false;
+    this.freeRescues = 1;
 
     this.cash = 0; // Startet mit 0 Geld
 
@@ -255,9 +259,6 @@ export class Player {
     this.researchedEmergency = 0; // Notfallausrüstung (Kanister & Rep.-Kit, Stufe 0..1)
     this.researchedStationFuel = 0; // Untertage-Tankanlagen (Stufe 0..3)
     this.researchedStationTube = 0; // Untertage-Förderschächte (Stufe 0..3)
-
-    // Gefundene Relikte & Fossilien (Museum / Bergmann-Buch)
-    this.discoveredArtifacts = [];
 
     // Sensor-Modul (Erze im Umkreis sichtbar machen)
     this.sensorTier = 1;
@@ -589,7 +590,7 @@ export class Player {
     this.hullTier = tier;
     const data = HULL_TIERS[tier - 1] || HULL_TIERS[0];
     const prevMax = this.maxHull || 100;
-    this.recalculateArtifactPerks();
+    this.maxHull = data.maxHull;
     this.hull = Math.min(this.maxHull, this.hull + (this.maxHull - prevMax));
   }
 
@@ -651,45 +652,16 @@ export class Player {
 
   upgradeCargo(tier) {
     this.cargoTier = tier;
-    this.recalculateArtifactPerks();
-  }
-
-  recalculateArtifactPerks() {
-    // 1. Hull Perk: Trilobit (+15 Max HP)
-    const hullData = HULL_TIERS[(this.hullTier || 1) - 1] || HULL_TIERS[0];
-    let newMaxHull = hullData.maxHull;
-    if (this.hasArtifact('artifact_trilobite')) {
-      newMaxHull += 15;
-    }
-    this.maxHull = newMaxHull;
-    this.hull = Math.min(this.maxHull, this.hull);
-
-    // 2. Cargo Perk: Precursor Mech-Kern (+20% Frachtraum)
     const cargoData = CARGO_TIERS[(this.cargoTier || 1) - 1] || CARGO_TIERS[0];
-    let newMaxCargo = cargoData.maxCargo;
-    if (this.hasArtifact('artifact_mech_core')) {
-      newMaxCargo = Math.round(newMaxCargo * 1.20);
-    }
-    this.maxCargo = newMaxCargo;
-
-    // 3. Fuel Perk: Spiral-Ammonit (+10% Effizienz)
-    let eff = 1.0;
-    if (this.hasArtifact('artifact_ammonite')) {
-      eff *= 1.10;
-    }
-    this.fuelEfficiency = eff;
+    this.maxCargo = cargoData.maxCargo;
   }
 
   hasArtifact(id) {
-    return Array.isArray(this.discoveredArtifacts) && this.discoveredArtifacts.includes(id);
+    return false;
   }
 
   addArtifact(id) {
-    if (!Array.isArray(this.discoveredArtifacts)) this.discoveredArtifacts = [];
-    if (this.discoveredArtifacts.includes(id)) return false;
-    this.discoveredArtifacts.push(id);
-    this.recalculateArtifactPerks();
-    return true;
+    return false;
   }
 
   getTntBlastSize() {
@@ -767,8 +739,7 @@ export class Player {
     }
 
     if (nearLava) {
-      const res = this.hasArtifact('artifact_meteorite') ? 0.5 : 1.0;
-      const heatDmg = Math.round(7 * res);
+      const heatDmg = 7;
       this.takeDamage(heatDmg);
       this.scene.hud?.showToast(`🔥 Gluthitze nahe Magma-Ader! -${heatDmg} HP`, 'danger');
     }
@@ -1925,7 +1896,7 @@ export class Player {
     // Sicherheit: nicht bohren wenn der Block schon leer ist (bereits abgebaut)!
     if (!this.gridSystem.isSolid(targetGx, targetGy)) return;
 
-    if (tile.type && ['tile_boulder', 'tile_cache', 'tile_fossil', 'tile_lava'].includes(tile.type)) {
+    if (tile.type && ['tile_boulder', 'tile_cache', 'tile_lava'].includes(tile.type)) {
       this.discoverSpecialTile(tile.type);
     }
 
@@ -1973,9 +1944,7 @@ export class Player {
     // Geräusch: kontinuierlicher Schleifer (startDrilling kümmert sich darum)
     // Kein per-frame playDrillTick() nötig
 
-    // Artefakt Dino-Zahn: +10% Bohr-DPS
-    const drillMultiplier = this.hasArtifact?.('artifact_dino_tooth') ? 1.10 : 1.0;
-    const damage = this.drillPower * drillMultiplier * (delta / 1000);
+    const damage = this.drillPower * (delta / 1000);
     const result = this.gridSystem.damageTile(this.drillTarget.gx, this.drillTarget.gy, damage);
 
     if (!result) {
@@ -2193,7 +2162,13 @@ export class Player {
 
   consumeFuel(amount) {
     const actualAmount = amount / this.fuelEfficiency;
+    const oldFuel = this.fuel;
     this.fuel = Math.max(0, this.fuel - actualAmount);
+    if (oldFuel > 0 && this.fuel <= 0) {
+      if (this.scene && this.scene.events) {
+        this.scene.events.emit('fuel_empty');
+      }
+    }
     return this.fuel > 0;
   }
 
@@ -2249,11 +2224,6 @@ export class Player {
 
   getOreSellMultiplier(oreKey) {
     let mult = 1.0;
-    // Geode-Artefakt: +15% auf alle Edelsteine
-    const gems = ['emerald', 'sapphire', 'ruby', 'diamond', 'obsidian_gem'];
-    if (gems.includes(oreKey) && this.hasArtifact?.('artifact_geode')) {
-      mult += 0.15;
-    }
     // Börsen-Boom: 2.0x auf boomendes Erz
     if (this.scene?.baseSystem?.activeBoom?.oreKey === oreKey) {
       mult *= 2.0;
@@ -2353,18 +2323,8 @@ export class Player {
     this.components[key] = (this.components[key] || 0) + amt;
   }
 
-  teleportToSurface() {
-    let fee = 0;
-    let message = '';
-    if (this.freeRescues > 0) {
-      this.freeRescues--;
-      const rest = this.freeRescues;
-      message = `Rettung zur Basis erfolgreich! (Noch ${rest} kostenlose Rettung${rest === 1 ? '' : 'en'})`;
-    } else {
-      fee = Math.min(this.cash, 150);
-      this.cash -= fee;
-      message = `Rettung zur Basis erfolgreich! (-€${fee} Bergungsgebühr)`;
-    }
+  teleportToSurface(message = 'Rettung zur Basis erfolgreich!') {
+    this.isGameOver = false;
 
     // 1. Alle laufenden Tweens auf dem Sprite abbrechen
     if (this.scene && this.scene.tweens) {
@@ -2396,9 +2356,10 @@ export class Player {
     this.setVisualDirection('RIGHT');
     this.state = PLAYER_STATES.IDLE;
 
-    // 4. Notfall-Auftankung bei komplett leerem Tank
-    if (this.fuel < 15) {
-      this.fuel = Math.min(15, this.maxFuel);
+    // 4. Notfall-Auftankung bei komplett leerem Tank (mind. 20% oder 15L)
+    const minReserve = Math.max(15, Math.round(this.maxFuel * 0.2));
+    if (this.fuel < minReserve) {
+      this.fuel = Math.min(minReserve, this.maxFuel);
     }
 
     // 5. Kamera und Viewport sofort an die Basis binden

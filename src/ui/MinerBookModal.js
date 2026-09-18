@@ -1,4 +1,4 @@
-import { ORE_DATA, ARTIFACT_CATALOG } from '../core/GridSystem.js';
+import { ORE_DATA } from '../core/GridSystem.js';
 import { soundFx } from '../core/SoundEffects.js';
 import { icon, refreshIcons, oreIcon, itemDisplayIcon } from './IconHelper.js';
 import { closeActiveModal } from '../core/BaseSystem.js';
@@ -291,65 +291,65 @@ export const BOOK_PRODUCTS = [
     desc: 'Subatomarer Magnetfeld-Kern für ultimative Tiefseebohrungen.'
   },
 
-  // ── 4. Steineforscher-Spezialelektronik (Aufträge beim Forscher) ──
+  // ── 4. Geologen-Spezialelektronik (Aufträge beim Geologen) ──
   {
     id: 'microprocessor',
     name: 'Mikroprozessor',
     category: 'research',
-    categoryLabel: 'Forscher · Elektronik',
+    categoryLabel: 'Geologe · Elektronik',
     value: 0,
     usage: 'Tier-2-Fahrzeugmodule (Hangar)',
-    req: 'Forscher-Auftrag: 3x Kohle + 2x Eisen',
+    req: 'Geologen-Auftrag: 3x Kohle + 2x Eisen',
     desc: 'Hochintegrierter Silizium-Rechenchip für verbesserte Motor- und Tanksteuerung.'
   },
   {
     id: 'capacitor',
     name: 'Druck-Kondensator',
     category: 'research',
-    categoryLabel: 'Forscher · Elektronik',
+    categoryLabel: 'Geologe · Elektronik',
     value: 0,
     usage: 'Tier-3-Fahrzeugmodule (Hangar)',
-    req: 'Forscher-Auftrag: 3x Kupfer + 3x Zinn',
+    req: 'Geologen-Auftrag: 3x Kupfer + 3x Zinn',
     desc: 'Kompakter Puffer-Energiespeicher für Spitzenlasten der Schubeinheit.'
   },
   {
     id: 'spectrometer',
     name: 'Sensor-Spektrometer',
     category: 'research',
-    categoryLabel: 'Forscher · Elektronik',
+    categoryLabel: 'Geologe · Elektronik',
     value: 0,
     usage: 'Tier-4-5-Fahrzeugmodule (Hangar)',
-    req: 'Forscher-Auftrag: 3x Silber + 2x Gold',
+    req: 'Geologen-Auftrag: 3x Silber + 2x Gold',
     desc: 'Präzisions-Sensoreinheit zur Echtzeit-Analyse von Erzadern und Gestein.'
   },
   {
     id: 'plasma_regulator',
     name: 'Plasma-Injektor',
     category: 'research',
-    categoryLabel: 'Forscher · Elektronik',
+    categoryLabel: 'Geologe · Elektronik',
     value: 0,
     usage: 'Tier-6-7-Fahrzeugmodule (Hangar)',
-    req: 'Forscher-Auftrag: 2x Smaragd + 2x Saphir',
+    req: 'Geologen-Auftrag: 2x Smaragd + 2x Saphir',
     desc: 'Thermodynamischer Injektor zur Erhitzung von Tiefen-Schneidköpfen.'
   },
   {
     id: 'graviton_core',
     name: 'Gravitations-Modulator',
     category: 'research',
-    categoryLabel: 'Forscher · Elektronik',
+    categoryLabel: 'Geologe · Elektronik',
     value: 0,
     usage: 'Tier-8-9-Fahrzeugmodule (Hangar)',
-    req: 'Forscher-Auftrag: 2x Titan + 1x Diamant',
+    req: 'Geologen-Auftrag: 2x Titan + 1x Diamant',
     desc: 'Feldmodulator zur Reduktion des Eigengewichts bei massiven Bohrerpanzern.'
   },
   {
     id: 'quantum_processor',
     name: 'Quanten-Prozessor',
     category: 'research',
-    categoryLabel: 'Forscher · Elektronik',
+    categoryLabel: 'Geologe · Elektronik',
     value: 0,
     usage: 'Tier-10-Fahrzeugmodule (Hangar)',
-    req: 'Forscher-Auftrag: 2x Uran + 1x Platin',
+    req: 'Geologen-Auftrag: 2x Uran + 1x Platin',
     desc: 'Subatomarer Quanten-Rechner zur Koordination der Kernantriebs-Systeme.'
   }
 ];
@@ -384,18 +384,13 @@ export class MinerBookModal {
 
     const discoveredProductsCount = BOOK_PRODUCTS.filter(p => this.player.isProductDiscovered(p.id)).length;
 
-    const allArtifacts = Object.keys(ARTIFACT_CATALOG);
-    const discoveredArtifactsCount = (this.player.discoveredArtifacts || []).length;
-
-    const totalDiscoverables = allOres.length + GEOLOGICAL_LAYERS.length + BOOK_PRODUCTS.length + allArtifacts.length;
-    const totalDiscovered = discoveredOresCount + unlockedLayersCount + discoveredProductsCount + discoveredArtifactsCount;
+    const totalDiscoverables = allOres.length + GEOLOGICAL_LAYERS.length + BOOK_PRODUCTS.length;
+    const totalDiscovered = discoveredOresCount + unlockedLayersCount + discoveredProductsCount;
     const progressPercent = Math.min(100, Math.round((totalDiscovered / totalDiscoverables) * 100));
 
     return {
       allOresCount: allOres.length,
       discoveredOresCount,
-      allArtifactsCount: allArtifacts.length,
-      discoveredArtifactsCount,
       totalLayersCount: GEOLOGICAL_LAYERS.length,
       unlockedLayersCount,
       totalProductsCount: BOOK_PRODUCTS.length,
@@ -425,7 +420,6 @@ export class MinerBookModal {
     // Tabs (ohne (Y/X)-Zähler in den Reitern, um Überlappungen zu verhindern)
     const tabs = [
       { id: 'ores', label: 'Erze', icon: 'gem' },
-      { id: 'relics', label: 'Relikte', icon: 'award' },
       { id: 'layers', label: 'Schichten', icon: 'mountain' },
       { id: 'products', label: 'Waren', icon: 'factory' },
       { id: 'codex', label: 'Kodex', icon: 'shield-check' }
@@ -444,8 +438,6 @@ export class MinerBookModal {
     let contentHtml = '';
     if (this.activeTab === 'ores') {
       contentHtml = this.renderOresTab();
-    } else if (this.activeTab === 'relics') {
-      contentHtml = this.renderRelicsTab();
     } else if (this.activeTab === 'layers') {
       contentHtml = this.renderLayersTab();
     } else if (this.activeTab === 'products') {
@@ -465,7 +457,7 @@ export class MinerBookModal {
 
           <!-- Gesamt-Fortschrittsbalken -->
           <div style="display: flex; align-items: center; gap: 8px; font-size: 11.5px; font-weight: 700; color: #94a3b8;">
-            <span>Kartiert: <strong style="color: #fbbf24;">${stats.totalDiscovered} / ${stats.totalDiscoverables}</strong> (${stats.progressPercent}%)</span>
+            <span>Entdeckt: <strong style="color: #fbbf24;">${stats.totalDiscovered} / ${stats.totalDiscoverables}</strong> (${stats.progressPercent}%)</span>
             <div style="width: 80px; height: 6px; background: rgba(0,0,0,0.6); border-radius: 99px; overflow: hidden;">
               <div style="width: ${stats.progressPercent}%; height: 100%; background: linear-gradient(90deg, #f59e0b, #10b981); border-radius: 99px; transition: width 0.3s ease;"></div>
             </div>
@@ -486,25 +478,6 @@ export class MinerBookModal {
 
     modalEl.style.display = 'flex';
     refreshIcons(modalEl);
-
-    // Relikte Canvases zeichnen
-    if (this.activeTab === 'relics') {
-      const list = Object.values(ARTIFACT_CATALOG);
-      const known = this.player.discoveredArtifacts || [];
-      list.forEach(art => {
-        if (known.includes(art.id)) {
-          const can = document.getElementById(`canvas-${art.id}`);
-          if (can && this.scene && this.scene.textures && this.scene.textures.exists(art.sprite)) {
-            const img = this.scene.textures.get(art.sprite).getSourceImage();
-            if (img) {
-              const ctx = can.getContext('2d');
-              ctx.clearRect(0, 0, 32, 32);
-              ctx.drawImage(img, 0, 0, 32, 32);
-            }
-          }
-        }
-      });
-    }
 
     // Spezialformationen & Gefahren Canvases zeichnen
     if (this.activeTab === 'layers' && this.layerSubTab === 'hazards') {
@@ -596,19 +569,19 @@ export class MinerBookModal {
 
       if (isDiscovered) {
         html += `
-          <div style="background: rgba(15, 23, 42, 0.75); border: none; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
+          <div style="background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
               <div style="display: flex; align-items: center; gap: 8px;">
                 ${oreIcon(key, 22)}
-                <strong style="color: #f8fafc; font-size: 13.5px; letter-spacing: 0.3px;">${data.name.toUpperCase()}</strong>
+                <strong style="color: #ffffff; font-size: 14px; font-weight: 800; letter-spacing: 0.3px;">${data.name.toUpperCase()}</strong>
               </div>
               <div style="display: flex; gap: 6px; font-size: 11px;">
-                <span style="background: rgba(251, 191, 36, 0.12); color: #fbbf24; font-weight: 800; padding: 2px 8px; border-radius: 6px;">+€${data.value}</span>
-                <span style="background: rgba(56, 189, 248, 0.12); color: #38bdf8; font-weight: 700; padding: 2px 8px; border-radius: 6px;">ab ${data.minDepth}m</span>
-                <span style="background: rgba(148, 163, 184, 0.12); color: #cbd5e1; font-weight: 700; padding: 2px 8px; border-radius: 6px;">${data.hardness}x Härte</span>
+                <span style="background: rgba(251, 191, 36, 0.16); border: 1px solid rgba(251, 191, 36, 0.35); color: #fbbf24; font-weight: 800; padding: 2px 8px; border-radius: 6px;">+€${data.value}</span>
+                <span style="background: rgba(56, 189, 248, 0.16); border: 1px solid rgba(56, 189, 248, 0.35); color: #38bdf8; font-weight: 800; padding: 2px 8px; border-radius: 6px;">ab ${data.minDepth}m</span>
+                <span style="background: rgba(255, 255, 255, 0.10); border: 1px solid rgba(255, 255, 255, 0.16); color: #f8fafc; font-weight: 700; padding: 2px 8px; border-radius: 6px;">${data.hardness}x Härte</span>
               </div>
             </div>
-            <p style="margin: 0; font-size: 11.5px; line-height: 1.45; color: #94a3b8;">
+            <p style="margin: 0; font-size: 12px; line-height: 1.5; color: #e2e8f0;">
               ${desc}
             </p>
           </div>
@@ -675,32 +648,32 @@ export class MinerBookModal {
       const specials = Object.entries(SPECIAL_TILE_DATA);
       const cardsHtml = specials.map(([key, data]) => {
         return `
-          <div style="background: rgba(15, 23, 42, 0.75); border: none; border-left: 4px solid ${data.badgeColor}; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
               <div style="display: flex; align-items: center; gap: 10px;">
-                <div style="width: 38px; height: 38px; background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                <div style="width: 40px; height: 40px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.35);">
                   <canvas id="canvas-spec-${key}" width="32" height="32" style="width: 32px; height: 32px; image-rendering: pixelated;"></canvas>
                 </div>
                 <div>
                   <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                    <strong style="color: #f8fafc; font-size: 13.5px;">${data.name.toUpperCase()}</strong>
-                    <span style="background: ${data.badgeColor}22; color: ${data.badgeColor}; font-size: 9.5px; font-weight: 800; padding: 2px 6px; border-radius: 4px; border: 1px solid ${data.badgeColor}44;">${data.badge}</span>
+                    <strong style="color: #ffffff; font-size: 14px; font-weight: 800; letter-spacing: 0.3px;">${data.name.toUpperCase()}</strong>
+                    <span style="background: ${data.badgeColor}22; color: ${data.badgeColor}; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 5px; border: 1px solid ${data.badgeColor}44;">${data.badge}</span>
                   </div>
                   <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">Fundort: ${data.depth || 'Unter Tage'}</div>
                 </div>
               </div>
               <div style="display: flex; gap: 6px; font-size: 11px; flex-wrap: wrap;">
                 ${data.stats.map(s => `
-                  <span style="background: rgba(255, 255, 255, 0.06); color: ${s.color}; font-weight: 700; padding: 2px 8px; border-radius: 6px;">
+                  <span style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.1); color: ${s.color}; font-weight: 800; padding: 2px 8px; border-radius: 6px;">
                     ${s.label}: ${s.val}
                   </span>
                 `).join('')}
               </div>
             </div>
-            <p style="margin: 0; font-size: 11.5px; line-height: 1.45; color: #cbd5e1;">
+            <p style="margin: 0; font-size: 12px; line-height: 1.5; color: #e2e8f0;">
               ${data.desc}
             </p>
-            <div style="font-size: 11px; color: #fbbf24; background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.18); padding: 7px 10px; border-radius: 6px; line-height: 1.4;">
+            <div style="font-size: 11.5px; color: #fef08a; background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.25); padding: 8px 12px; border-radius: 8px; line-height: 1.45;">
               ${data.hint}
             </div>
           </div>
@@ -725,7 +698,7 @@ export class MinerBookModal {
           const found = this.player.isOreDiscovered(o);
           const name = ORE_DATA[o]?.name || o;
           return `
-            <span style="background: ${found ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.25)'}; color: ${found ? '#f8fafc' : '#64748b'}; padding: 2px 7px; border-radius: 5px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">
+            <span style="background: ${found ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.35)'}; color: ${found ? '#ffffff' : '#94a3b8'}; padding: 3px 8px; border-radius: 6px; font-size: 11.5px; border: 1px solid ${found ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)'}; display: inline-flex; align-items: center; gap: 5px;">
               ${found ? oreIcon(o, 13) : icon('lock', '', 11)}
               <span>${found ? name : '?'}</span>
             </span>
@@ -733,33 +706,33 @@ export class MinerBookModal {
         }).join(' ');
 
         layersHtml += `
-          <div style="background: rgba(15, 23, 42, 0.75); border: none; border-left: 4px solid ${layer.color}; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
+          <div style="background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
-              <strong style="color: #f8fafc; font-size: 13.5px; display: inline-flex; align-items: center; gap: 6px;">
-                ${icon('layers', '', 15)}
+              <strong style="color: #ffffff; font-size: 14px; font-weight: 800; display: inline-flex; align-items: center; gap: 8px; letter-spacing: 0.4px;">
+                ${icon('layers', '', 16)}
                 <span>${layer.name.toUpperCase()}</span>
               </strong>
               <div style="display: flex; gap: 6px; font-size: 11px;">
-                <span style="background: rgba(56, 189, 248, 0.12); color: #38bdf8; font-weight: 700; padding: 2px 8px; border-radius: 6px;">${layer.depthRange}</span>
-                <span style="background: rgba(148, 163, 184, 0.12); color: #cbd5e1; font-weight: 700; padding: 2px 8px; border-radius: 6px;">${layer.hardnessMultiplier}</span>
+                <span style="background: rgba(56, 189, 248, 0.16); border: 1px solid rgba(56, 189, 248, 0.35); color: #38bdf8; font-weight: 800; padding: 2px 9px; border-radius: 6px;">${layer.depthRange}</span>
+                <span style="background: rgba(255, 255, 255, 0.10); border: 1px solid rgba(255, 255, 255, 0.16); color: #f8fafc; font-weight: 700; padding: 2px 9px; border-radius: 6px;">${layer.hardnessMultiplier}</span>
               </div>
             </div>
-            <p style="margin: 0; font-size: 11.5px; line-height: 1.45; color: #cbd5e1;">
+            <p style="margin: 0; font-size: 12px; line-height: 1.5; color: #e2e8f0;">
               ${layer.report}
             </p>
             <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px; flex-wrap: wrap;">
-              <span style="font-size: 10.5px; font-weight: 700; color: #cbd5e1; text-transform: uppercase;">Erze der Schicht:</span>
+              <span style="font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Erze der Schicht:</span>
               ${orePills}
             </div>
           </div>
         `;
       } else {
         layersHtml += `
-          <div style="background: rgba(15, 23, 42, 0.35); border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; gap: 8px; opacity: 0.6;">
-            <span style="display: inline-flex; align-items: center; justify-content: center; color: #94a3b8;">
+          <div style="background: rgba(30, 41, 59, 0.45); border: 1px dashed rgba(255, 255, 255, 0.12); border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 10px;">
+            <span style="display: inline-flex; align-items: center; justify-content: center; color: #64748b;">
               ${icon('lock', '', 15)}
             </span>
-            <span style="color: #94a3b8; font-size: 13px; font-weight: 700;">?</span>
+            <span style="color: #64748b; font-size: 12.5px; font-weight: 700; letter-spacing: 0.5px;">Unentdeckte Schicht (Tiefe erreichen)</span>
           </div>
         `;
       }
@@ -791,7 +764,7 @@ export class MinerBookModal {
       },
       {
         id: 'research',
-        label: 'Forscher',
+        label: 'Geologe',
         icon: 'atom',
         color: '#c084fc',
         filter: p => p.category === 'research'
@@ -868,29 +841,26 @@ export class MinerBookModal {
       // Zuerst ALLE entdeckten Produkte detailliert rendern!
       for (const prod of discoveredItems) {
         const valueBadge = prod.value > 0
-          ? `<span style="background: rgba(251, 191, 36, 0.12); color: #fbbf24; font-weight: 800; padding: 2px 8px; border-radius: 6px;">Wert: +€${prod.value.toLocaleString()}</span>`
-          : `<span style="background: rgba(168, 85, 247, 0.15); color: #c084fc; font-weight: 800; padding: 2px 8px; border-radius: 6px;">${prod.usage || 'Upgrade-Bauteil'}</span>`;
+          ? `<span style="background: rgba(251, 191, 36, 0.16); border: 1px solid rgba(251, 191, 36, 0.35); color: #fbbf24; font-weight: 800; padding: 2px 8px; border-radius: 6px; font-variant-numeric: tabular-nums;">€${prod.value.toLocaleString('de-DE')}</span>`
+          : `<span style="background: rgba(168, 85, 247, 0.16); border: 1px solid rgba(168, 85, 247, 0.35); color: #c084fc; font-weight: 800; padding: 2px 8px; border-radius: 6px;">${prod.usage || 'Bauteil'}</span>`;
 
         const categoryBadge = prod.categoryLabel
-          ? `<span style="background: rgba(56, 189, 248, 0.12); color: #38bdf8; font-weight: 700; padding: 2px 8px; border-radius: 6px;">${prod.categoryLabel}</span>`
+          ? `<span style="background: rgba(56, 189, 248, 0.14); border: 1px solid rgba(56, 189, 248, 0.28); color: #38bdf8; font-weight: 700; padding: 2px 8px; border-radius: 6px;">${prod.categoryLabel}</span>`
           : '';
 
         itemsHtml += `
-          <div class="book-product-card" data-key="${prod.id}" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; cursor: pointer; transition: transform 0.1s, border-color 0.15s;" title="${prod.name} anklicken für Detail-Ansicht">
+          <div class="book-product-card" data-key="${prod.id}" style="background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; cursor: pointer; transition: transform 0.1s, border-color 0.15s; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);" title="${prod.name} anklicken für Detail-Ansicht">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
               <div style="display: flex; align-items: center; gap: 8px;">
                 ${itemDisplayIcon(prod.id, 20)}
-                <strong style="color: #f8fafc; font-size: 13px;">${prod.name}</strong>
+                <strong style="color: #ffffff; font-size: 14px; font-weight: 800; letter-spacing: 0.3px;">${prod.name}</strong>
               </div>
               <div style="display: flex; gap: 6px; font-size: 11px; flex-wrap: wrap;">
                 ${categoryBadge}
                 ${valueBadge}
               </div>
             </div>
-            <div style="font-size: 11px; color: #38bdf8;">
-              <strong>Rezept / Erhalt:</strong> ${prod.req}
-            </div>
-            <p style="margin: 0; font-size: 11.5px; line-height: 1.45; color: #94a3b8;">
+            <p style="margin: 0; font-size: 12px; line-height: 1.5; color: #e2e8f0;">
               ${prod.desc}
             </p>
           </div>
@@ -906,7 +876,7 @@ export class MinerBookModal {
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); gap: 6px;">
               ${lockedItems.map(() => `
-                <div style="background: rgba(15, 23, 42, 0.35); border: 1px dashed rgba(255,255,255,0.07); border-radius: 8px; padding: 6px; display: flex; align-items: center; justify-content: center; gap: 4px; color: #64748b; font-size: 11px;">
+                <div style="background: rgba(30, 41, 59, 0.45); border: 1px dashed rgba(255,255,255,0.12); border-radius: 8px; padding: 6px; display: flex; align-items: center; justify-content: center; gap: 4px; color: #64748b; font-size: 11px;">
                   <span style="font-weight: 700;">?</span>
                 </div>
               `).join('')}
@@ -917,7 +887,7 @@ export class MinerBookModal {
 
       sectionsHtml += `
         <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 2px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 2px;">
             <span style="font-size: 12px; font-weight: 800; color: ${cat.color}; display: inline-flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
               ${icon(cat.icon, '', 13)}
               ${cat.label}
@@ -991,7 +961,7 @@ export class MinerBookModal {
           </div>
           <div style="font-size: 11px; color: #94a3b8; line-height: 1.45;">
             • <strong>Depot:</strong> Sichere Lagerstätte für Erze, Barren & Bauteile. Schützt vor Frachtverlust.<br>
-            • <strong>Büro:</strong> Schacht-Aufträge, Bergmann-Ränge und Steinforscher für Erzproben-Abgaben gegen seltene Bauteile.<br>
+            • <strong>Büro:</strong> Schacht-Aufträge, Bergmann-Ränge und Geologe für Erzproben-Abgaben gegen seltene Bauteile.<br>
             • <strong>Erzbörse:</strong> Verkaufe Roherze oder nutze den Sofort-Verkauf.<br>
             • <strong>Hangar:</strong> Montiere erforschte Module & rüste die Hangar-Infrastruktur auf, um Betankungs- und Reparaturzeiten drastisch zu verkürzen.<br>
             • <strong>Fabrik & Raffinerie:</strong> Schmelze Barren (+50% Erlös) und fertige Montage-Bauteile & Güter.<br>
@@ -1008,69 +978,6 @@ export class MinerBookModal {
             Achte beim Bohren auf instabile <strong>Felsbrocken</strong>: Werden sie untergraben, stürzen sie ungebremst herab und beschädigen deinen Driller. Baue sie von oben/seitlich ab oder sprenge sie mit Dynamit (+€25, +8 XP). Verlassene <strong>Expeditions-Kapseln</strong> schenken Notfall-Bargeld und Gadgets. <strong>Lava-Adern</strong> erfordern Hitzeschilde. Alle Kennwerte findest du unter <em>Schichten → Gesteine & Gefahren</em>.
           </div>
         </div>
-      </div>
-    `;
-  }
-
-  renderRelicsTab() {
-    const list = Object.values(ARTIFACT_CATALOG);
-    const known = this.player.discoveredArtifacts || [];
-
-    const cardsHtml = list.map(art => {
-      const isFound = known.includes(art.id);
-      if (isFound) {
-        return `
-          <div style="background: rgba(15,23,42,0.7); border: 1.5px solid rgba(56,189,248,0.3); border-radius: 12px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <div style="width: 44px; height: 44px; background: rgba(30,41,59,0.8); border: 1px solid rgba(56,189,248,0.4); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 0 12px rgba(56,189,248,0.15);">
-                <canvas id="canvas-${art.id}" width="32" height="32" style="width: 32px; height: 32px; image-rendering: pixelated;"></canvas>
-              </div>
-              <div>
-                <div style="display: flex; align-items: center; gap: 6px;">
-                  <strong style="color: #f8fafc; font-size: 13.5px;">${art.name}</strong>
-                  <span style="background: rgba(16,185,129,0.15); color: #10b981; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(16,185,129,0.3);">MUSEUM</span>
-                </div>
-                <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">${art.description}</div>
-                <div style="font-size: 11.5px; color: #38bdf8; font-weight: 700; margin-top: 4px; display: inline-flex; align-items: center; gap: 4px;">
-                  ${icon('zap', '', 12)} <span>Aktiv: ${art.perk}</span>
-                </div>
-              </div>
-            </div>
-            <div style="text-align: right; flex-shrink: 0;">
-              <span style="color: #cbd5e1; font-size: 10.5px;">Ab ${art.minDepth}m</span>
-            </div>
-          </div>
-        `;
-      } else {
-        return `
-          <div style="background: rgba(15,23,42,0.4); border: 1px dashed rgba(148,163,184,0.2); border-radius: 12px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; opacity: 0.65;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <div style="width: 44px; height: 44px; background: rgba(15,23,42,0.6); border: 1px solid rgba(148,163,184,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                <span style="font-size: 20px; color: #94a3b8;">❓</span>
-              </div>
-              <div>
-                <strong style="color: #cbd5e1; font-size: 13px;">Unentdecktes Relikt</strong>
-                <div style="font-size: 11px; color: #cbd5e1; margin-top: 2px;">Grabe in Schichten ab ${art.minDepth}m Tiefe, um dieses Fossil zu bergen.</div>
-                <div style="font-size: 11px; color: #f59e0b; font-weight: 600; margin-top: 4px;">Perk: ${art.perk}</div>
-              </div>
-            </div>
-            <div style="text-align: right; flex-shrink: 0;">
-              <span style="background: rgba(100,116,139,0.15); color: #94a3b8; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px;">UNBEKANNT</span>
-            </div>
-          </div>
-        `;
-      }
-    }).join('');
-
-    return `
-      <div style="display: flex; flex-direction: column; gap: 8px;">
-        <div style="background: rgba(30,41,59,0.5); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); margin-bottom: 4px;">
-          <span style="font-size: 11.5px; color: #94a3b8; display: inline-flex; align-items: center; gap: 6px;">
-            ${icon('info', '', 14)}
-            <span><strong>Fossilien & Relikte:</strong> Schalte permanente passive Boni frei, indem du vergrabene Fossil-Gesteine im Erdreich abbaust.</span>
-          </span>
-        </div>
-        ${cardsHtml}
       </div>
     `;
   }

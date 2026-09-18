@@ -149,6 +149,14 @@ export class HUD {
     this.rankName = document.getElementById('hud-rank-name');
     this.levelRight = document.getElementById('hud-level-right');
     this.returnWarn = document.getElementById('hud-return-warn');
+    this.rescueFab = document.getElementById('hud-rescue-fab');
+    if (this.rescueFab) {
+      this.rescueFab.onclick = () => {
+        if (this.scene.rescueModal) {
+          this.scene.rescueModal.open();
+        }
+      };
+    }
 
     // Action FAB & Speed Dial (Ausrüstung & Untertage-Stationen)
     this.actionFabContainer = document.getElementById('hud-action-fab');
@@ -317,7 +325,7 @@ export class HUD {
       this.showDiscoveryModal(oreType);
     });
 
-    // Neu entdecktes Spezialfeld (Kapsel, Fossil, Lava, Felsbrocken):
+    // Neu entdecktes Spezialfeld (Kapsel, Lava, Felsbrocken):
     // Entdeckungen werden im Bergmann-Buch ('Gesteine & Gefahren') erfasst – ohne Unterbrechung des Spielflusses
     this.scene.events.on('special_tile_discovered', (_tileType) => {
       // Keine Unterbrechung/kein Modal/kein Pause während des Bohrens
@@ -703,6 +711,12 @@ export class HUD {
       this.returnWarn.style.display = isReturnCritical ? 'inline-flex' : 'none';
     }
 
+    // Notfall-Rettung Button (bei leerem Tank unter Tage)
+    if (this.rescueFab) {
+      const showRescueFab = (this.player.fuel <= 0 && isBelowGround) || !!this.player.isGameOver;
+      this.rescueFab.style.display = showRescueFab ? 'inline-flex' : 'none';
+    }
+
     // --- Einzige Warnung bei kritischem Rückweg: Sofort umkehren ---
     if (isAtSurface) {
       this.warnedPointOfNoReturn = false;
@@ -859,35 +873,7 @@ export class HUD {
 
     bodyEl.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 10px; max-width: 440px; margin: 0 auto; width: 100%; box-sizing: border-box; padding: 0 4px 36px 4px;">
-        <!-- 2. Rettungsknopf (3 kostenlos) -->
-        <div style="background: rgba(239, 68, 68, 0.07); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 12px; font-weight: 700; color: #f87171; display: inline-flex; align-items: center; gap: 6px;">
-              ${icon('shield-alert', '', 15)}
-              NOTFALL-RETTUNG ZUR BASIS
-            </span>
-            ${freeCount > 0 ? `
-              <span style="background: rgba(16, 185, 129, 0.18); color: #34d399; font-size: 10.5px; font-weight: 800; padding: 2px 8px; border-radius: 6px;">
-                ${freeCount}/3 KOSTENLOS
-              </span>
-            ` : `
-              <span style="background: rgba(239, 68, 68, 0.18); color: #f87171; font-size: 10.5px; font-weight: 800; padding: 2px 8px; border-radius: 6px;">
-                €150 GEBÜHR
-              </span>
-            `}
-          </div>
-          <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">
-            ${freeCount > 0
-              ? `Teleportiert deinen Crawler sofort zur Oberfläche (noch <strong>${freeCount} kostenlose Rettung${freeCount === 1 ? '' : 'en'}</strong> übrig). Der Tank wird auf mindestens 20% aufgeladen.`
-              : `Alle 3 kostenlosen Bergungen aufgebraucht. Kosten: <strong>€150</strong> (wird vom Guthaben abgebucht). Tank wird auf 20% aufgeladen.`}
-          </div>
-          <button id="btn-menu-rescue" class="btn-3d-danger" style="height: 38px; width: 100%; font-size: 11.5px; font-weight: 800; justify-content: center; gap: 6px; border-radius: 8px; border: none;">
-            ${icon('rocket', '', 14)}
-            <span>${freeCount > 0 ? 'RETTUNG ZUR BASIS STARTEN' : 'RETTUNG ANFORDERN (€150)'}</span>
-          </button>
-        </div>
-
-        <!-- 3. Einstellungen -->
+        <!-- 1. Einstellungen -->
         <button id="btn-menu-settings" class="btn-action" style="height: 48px; width: 100%; font-size: 12.5px; font-weight: 700; justify-content: flex-start; padding: 0 16px; gap: 14px; border-radius: 12px; background: rgba(30, 41, 59, 0.65); border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
           <span style="color: #38bdf8; display: inline-flex;">${icon('settings', '', 18)}</span>
           <div style="display: flex; flex-direction: column; text-align: left; line-height: 1.2;">
@@ -896,7 +882,7 @@ export class HUD {
           </div>
         </button>
 
-        <!-- 4. Bergmann-Buch -->
+        <!-- 2. Bergmann-Buch -->
         <button id="btn-menu-book" class="btn-action" style="height: 48px; width: 100%; font-size: 12.5px; font-weight: 700; justify-content: flex-start; padding: 0 16px; gap: 14px; border-radius: 12px; background: rgba(30, 41, 59, 0.65); border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
           <span style="color: #fbbf24; display: inline-flex;">${icon('book-open', '', 18)}</span>
           <div style="display: flex; flex-direction: column; text-align: left; line-height: 1.2;">
@@ -905,16 +891,7 @@ export class HUD {
           </div>
         </button>
 
-        <!-- 5. Spielstand sichern -->
-        <button id="btn-menu-save" class="btn-action" style="height: 48px; width: 100%; font-size: 12.5px; font-weight: 700; justify-content: flex-start; padding: 0 16px; gap: 14px; border-radius: 12px; background: rgba(30, 41, 59, 0.65); border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
-          <span style="color: #10b981; display: inline-flex;">${icon('save', '', 18)}</span>
-          <div style="display: flex; flex-direction: column; text-align: left; line-height: 1.2;">
-            <span style="color: #f8fafc; font-weight: 700;">Spielstand speichern</span>
-            <span style="color: #cbd5e1; font-size: 10.5px; font-weight: 500;">Fortschritt jetzt im Speicher sichern</span>
-          </div>
-        </button>
-
-        <!-- 6. Über das Spiel (Ganz unten) -->
+        <!-- 3. Über das Spiel -->
         <button id="btn-menu-about" class="btn-action" style="height: 48px; width: 100%; font-size: 12.5px; font-weight: 700; justify-content: flex-start; padding: 0 16px; gap: 14px; border-radius: 12px; background: rgba(30, 41, 59, 0.65); border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
           <span style="color: #a78bfa; display: inline-flex;">${icon('info', '', 18)}</span>
           <div style="display: flex; flex-direction: column; text-align: left; line-height: 1.2;">
@@ -928,14 +905,6 @@ export class HUD {
     refreshIcons(modalEl);
 
     // Event-Listener
-    const rescueBtn = document.getElementById('btn-menu-rescue');
-    if (rescueBtn) {
-      rescueBtn.onclick = () => {
-        this.player.teleportToSurface();
-        this.closePauseMenu();
-      };
-    }
-
     const settingsBtn = document.getElementById('btn-menu-settings');
     if (settingsBtn) {
       settingsBtn.onclick = () => this.openSettingsView();
@@ -944,14 +913,6 @@ export class HUD {
     const bookBtn = document.getElementById('btn-menu-book') || document.getElementById('btn-menu-guide');
     if (bookBtn) {
       bookBtn.onclick = () => this.minerBookModal.open('ores');
-    }
-
-    const saveBtn = document.getElementById('btn-menu-save');
-    if (saveBtn) {
-      saveBtn.onclick = () => {
-        SaveSystem.save(this.scene);
-        this.scene.events.emit('notify', '💾 Spielstand erfolgreich gesichert!');
-      };
     }
 
     const aboutBtn = document.getElementById('btn-menu-about');
@@ -1498,8 +1459,8 @@ export class HUD {
             <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">High-Tech Forschung. Schalte modernste Bohrköpfe und Sensor-Upgrades frei, um Erze durch Gestein hindurch aufzuspüren.</div>
           </div>
           <div style="background: rgba(15, 23, 42, 0.65); border: none; border-radius: 10px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">
-            <div style="font-size: 12px; font-weight: 700; color: #e2e8f0; margin-bottom: 2px; display: flex; align-items: center; gap: 5px;">${icon('home', '', 14)} Schachteinstieg & Steineforscher</div>
-            <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">Die restliche Oberfläche ist unzerstörbar – der Schachteinstieg führt nach unten. Der Steineforscher am Hangar sucht seltene Gesteinsproben für wertvolle Bauteile.</div>
+            <div style="font-size: 12px; font-weight: 700; color: #e2e8f0; margin-bottom: 2px; display: flex; align-items: center; gap: 5px;">${icon('home', '', 14)} Schachteinstieg & Geologe</div>
+            <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">Die restliche Oberfläche ist unzerstörbar – der Schachteinstieg führt nach unten. Der Geologe im Büro sucht seltene Gesteinsproben für wertvolle Bauteile.</div>
           </div>
         </div>
       `;

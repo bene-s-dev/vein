@@ -8,10 +8,11 @@
  *   inklusive passender Schachtsysteme, abgebauten Erzen, Upgrades, Basisbauten & Finanzen.
  */
 
-import { TILE_TYPES, TILE_SIZE, MINE_ENTRANCE_GX_START, MINE_ENTRANCE_GX_END, ORE_DATA, ARTIFACT_CATALOG } from './GridSystem.js';
+import { TILE_TYPES, TILE_SIZE, MINE_ENTRANCE_GX_START, MINE_ENTRANCE_GX_END, ORE_DATA } from './GridSystem.js';
 import { MISSION_POOL } from './MissionSystem.js';
 import { DRILL_TIERS, DEPOT_TIERS, FACTORY_PRODUCTS, GEOLOGIST_QUESTS } from './BaseSystem.js';
 import { TANK_TIERS, HULL_TIERS, ENGINE_TIERS, CARGO_TIERS, SENSOR_TIERS } from './Player.js';
+import { LeaderboardService } from './LeaderboardService.js';
 
 const DEFAULT_SAVE_KEY = 'deep_miner_save_v1';
 const ACTIVE_SLOT_KEY = 'deep_miner_active_slot_id';
@@ -205,10 +206,13 @@ export class SaveSystem {
         researchedStationFuel: p.researchedStationFuel || 0,
         researchedStationTube: p.researchedStationTube || 0,
         sensorRadius: p.sensorRadius,
-        freeRescues: typeof p.freeRescues === 'number' ? p.freeRescues : 3,
+        name: p.name || (typeof localStorage !== 'undefined' && localStorage.getItem('vein_player_name')) || 'Fahrer',
+        freeRescues: typeof p.freeRescues === 'number' ? p.freeRescues : 1,
+        firstRescueUsed: !!p.firstRescueUsed,
+        activeInsurance: p.activeInsurance ? { ...p.activeInsurance } : null,
+        isGameOver: !!p.isGameOver,
         hasPurchasedDynamite: !!p.hasPurchasedDynamite,
-        gadgets: { ...(p.gadgets || { dynamite: 0, fuel_canister: 0, repair_kit: 0 }) },
-        discoveredArtifacts: [...(p.discoveredArtifacts || [])]
+        gadgets: { ...(p.gadgets || { dynamite: 0, fuel_canister: 0, repair_kit: 0 }) }
       },
       grid: {
         destroyedTiles,
@@ -408,19 +412,20 @@ export class SaveSystem {
       }
       p.discoveredProducts = new Set(data.player.discoveredProducts && data.player.discoveredProducts.length ? data.player.discoveredProducts : []);
       p.discoveredSpecialTiles = new Set(Array.isArray(data.player.discoveredSpecialTiles) ? data.player.discoveredSpecialTiles : []);
-      p.discoveredArtifacts = Array.isArray(data.player.discoveredArtifacts) ? [...data.player.discoveredArtifacts] : [];
       p.seenGeologistQuests = new Set(Array.isArray(data.player.seenGeologistQuests) ? data.player.seenGeologistQuests : []);
 
-      if (p.recalculateArtifactPerks) {
-        p.recalculateArtifactPerks();
-      }
-
       p.hull = Math.min(p.maxHull, typeof data.player.hull === 'number' ? data.player.hull : p.maxHull);
-      p.freeRescues = typeof data.player.freeRescues === 'number' ? data.player.freeRescues : 3;
+      p.name = data.player.name || (typeof localStorage !== 'undefined' && localStorage.getItem('vein_player_name')) || 'Fahrer';
+      p.firstRescueUsed = typeof data.player.firstRescueUsed === 'boolean'
+        ? data.player.firstRescueUsed
+        : (typeof data.player.freeRescues === 'number' ? data.player.freeRescues < 3 : false);
+      p.freeRescues = p.firstRescueUsed ? 0 : 1;
+      p.activeInsurance = data.player.activeInsurance || null;
+      p.isGameOver = !!data.player.isGameOver;
 
       p.components = { ...(data.player.components || {}) };
       // Schutz vor Altlasten: Wenn ein frisches Spiel auf Stufe 1 bei 0m geladen wird, keine Spezialbauteile vergeben
-      if ((p.highestDepthReached || 0) <= 0 && (p.level || 1) <= 1 && (!data.player.discoveredArtifacts || data.player.discoveredArtifacts.length === 0)) {
+      if ((p.highestDepthReached || 0) <= 0 && (p.level || 1) <= 1) {
         if (p.components && p.components.hydraulic_part) {
           p.components.hydraulic_part = 0;
         }
@@ -587,6 +592,22 @@ export class SaveSystem {
       }
 
       scene.events.emit('notify', `💾 ${sourceLabel} erfolgreich geladen!`);
+
+      // Falls beim Speichern ein Game-Over aktiv war, prüfen ob der Admin in Supabase freigeschaltet hat
+      if (p.isGameOver) {
+        LeaderboardService.checkGameOver(p.name).then(isStillGameOver => {
+          if (isStillGameOver === false) {
+            p.isGameOver = false;
+            p.teleportToSurface('Vom Administrator in Supabase gerettet!');
+            SaveSystem.save(scene);
+          } else if (scene.rescueModal) {
+            scene.rescueModal.open();
+          }
+        }).catch(() => {
+          if (scene.rescueModal) scene.rescueModal.open();
+        });
+      }
+
       return true;
     } catch (err) {
       console.warn('Fehler beim Einspielen von Daten:', err);
@@ -699,8 +720,7 @@ export class SaveSystem {
           freeRescues: 3,
           researchedTnt: 1,
           gadgets: { dynamite: 5, fuel_canister: 3, repair_kit: 3 },
-          discoveredArtifacts: ['artifact_ammonite'],
-          discoveredSpecialTiles: ['tile_boulder', 'tile_cache', 'tile_fossil', 'tile_lava']
+          discoveredSpecialTiles: ['tile_boulder', 'tile_cache', 'tile_lava']
         },
         grid: gridData,
         buildings: [
@@ -803,8 +823,7 @@ export class SaveSystem {
           freeRescues: 2,
           researchedTnt: 3,
           gadgets: { dynamite: 12, fuel_canister: 6, repair_kit: 6 },
-          discoveredArtifacts: ['artifact_ammonite', 'artifact_trilobite', 'artifact_dino_tooth', 'artifact_geode'],
-          discoveredSpecialTiles: ['tile_boulder', 'tile_cache', 'tile_fossil', 'tile_lava']
+          discoveredSpecialTiles: ['tile_boulder', 'tile_cache', 'tile_lava']
         },
         grid: gridData,
         buildings: [
@@ -836,7 +855,7 @@ export class SaveSystem {
         }
       };
     } else {
-      // 🟣 Late-Game: Tiefe ~1.150m, Tiefenkern & Titan, Tier-9-Quantenfräse, alle Erze & Relikte
+      // 🟣 Late-Game: Tiefe ~1.150m, Tiefenkern & Titan, Tier-9-Quantenfräse, alle Erze
       const maxDepth = 1150;
       const branches = [
         { startGy: 15, endGy: 17, minGx: 10, maxGx: 28 },
@@ -921,8 +940,7 @@ export class SaveSystem {
           freeRescues: 3,
           researchedTnt: 7,
           gadgets: { dynamite: 25, fuel_canister: 10, repair_kit: 10 },
-          discoveredArtifacts: Object.keys(ARTIFACT_CATALOG),
-          discoveredSpecialTiles: ['tile_boulder', 'tile_cache', 'tile_fossil', 'tile_lava']
+          discoveredSpecialTiles: ['tile_boulder', 'tile_cache', 'tile_lava']
         },
         grid: gridData,
         buildings: [

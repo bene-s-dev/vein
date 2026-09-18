@@ -20,219 +20,157 @@ export const TILE_TYPES = {
   OBSIDIAN: 'tile_obsidian',
   BOULDER: 'tile_boulder',
   LAVA: 'tile_lava',
-  CACHE: 'tile_cache',
-  FOSSIL: 'tile_fossil'
+  CACHE: 'tile_cache'
 };
 
 export const MINE_ENTRANCE_GX_START = 19;
 export const MINE_ENTRANCE_GX_END = 20;
 
 // Deterministischer Hash für unendliche, konsistente Geländegenerierung
-function hashCoord(x, y, seed = 1337) {
-  let h = (x * 374761393 + y * 668265263 + seed) ^ 0x5bf03635;
+function hashCoord(gx, gy, seed = 1337) {
+  let h = (gx * 374761393 + gy * 668265263 + seed * 999983) ^ 0x5bf03635;
   h = Math.imul(h ^ (h >>> 13), 1274126177);
   return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
 }
 
-// 15 differenzierte Erze mit kumulativen Tiefenstufen (ausgelegt auf 0 bis 1600m+)
+// ---------------------------------------------------------
+// ORE DATA (Erz-Eigenschaften)
+// ---------------------------------------------------------
 export const ORE_DATA = {
   coal: {
+    id: 'coal',
     name: 'Kohle',
-    value: 22,
-    weight: 1,
-    sprite: 'ore_coal',
-    hardness: 1.1,
-    minDepth: 1,
-    rarityWeight: 100
+    color: '#222222',
+    value: 5,
+    hardness: 1.0,
+    minDepth: 0,
+    rarityWeight: 18.0
   },
   copper: {
+    id: 'copper',
     name: 'Kupfer',
-    value: 40,
-    weight: 1,
-    sprite: 'ore_copper',
-    hardness: 1.2,
-    minDepth: 1,
-    rarityWeight: 80
+    color: '#b87333',
+    value: 12,
+    hardness: 1.3,
+    minDepth: 5,
+    rarityWeight: 14.0
   },
   iron: {
+    id: 'iron',
     name: 'Eisen',
-    value: 65,
-    weight: 2,
-    sprite: 'ore_iron',
-    hardness: 1.35,
+    color: '#8b9bb4',
+    value: 28,
+    hardness: 1.7,
     minDepth: 18,
-    rarityWeight: 65
+    rarityWeight: 10.0
   },
   tin: {
+    id: 'tin',
     name: 'Zinn',
-    value: 90,
-    weight: 2,
-    sprite: 'ore_tin',
-    hardness: 1.40,
+    color: '#cbd5e1',
+    value: 45,
+    hardness: 2.0,
     minDepth: 65,
-    rarityWeight: 55
+    rarityWeight: 7.5
   },
   silver: {
+    id: 'silver',
     name: 'Silber',
-    value: 150,
-    weight: 2,
-    sprite: 'ore_silver',
-    hardness: 1.75,
+    color: '#e2e8f0',
+    value: 75,
+    hardness: 2.3,
     minDepth: 130,
-    rarityWeight: 45
+    rarityWeight: 5.5
   },
   gold: {
+    id: 'gold',
     name: 'Gold',
-    value: 260,
-    weight: 2,
-    sprite: 'ore_gold',
-    hardness: 2.05,
+    color: '#fbbf24',
+    value: 120,
+    hardness: 2.6,
     minDepth: 220,
-    rarityWeight: 35
+    rarityWeight: 4.2
   },
   emerald: {
+    id: 'emerald',
     name: 'Smaragd',
-    value: 450,
-    weight: 1,
-    sprite: 'ore_emerald',
-    hardness: 2.35,
+    color: '#10b981',
+    value: 200,
+    hardness: 3.0,
     minDepth: 340,
-    rarityWeight: 26
+    rarityWeight: 3.0
   },
   sapphire: {
+    id: 'sapphire',
     name: 'Saphir',
-    value: 680,
-    weight: 1,
-    sprite: 'ore_sapphire',
-    hardness: 2.65,
-    minDepth: 480,
-    rarityWeight: 20
+    color: '#3b82f6',
+    value: 320,
+    hardness: 3.3,
+    minDepth: 490,
+    rarityWeight: 2.4
   },
   ruby: {
+    id: 'ruby',
     name: 'Rubin',
-    value: 980,
-    weight: 1,
-    sprite: 'ore_ruby',
-    hardness: 3.0,
-    minDepth: 650,
-    rarityWeight: 15
+    color: '#ef4444',
+    value: 500,
+    hardness: 3.6,
+    minDepth: 680,
+    rarityWeight: 1.9
   },
   diamond: {
+    id: 'diamond',
     name: 'Diamant',
-    value: 1550,
-    weight: 1,
-    sprite: 'ore_diamond',
-    hardness: 3.4,
-    minDepth: 850,
-    rarityWeight: 10
+    color: '#38bdf8',
+    value: 800,
+    hardness: 4.0,
+    minDepth: 890,
+    rarityWeight: 1.5
   },
   titanium: {
+    id: 'titanium',
     name: 'Titan',
-    value: 2400,
-    weight: 2,
-    sprite: 'ore_titanium',
-    hardness: 3.8,
-    minDepth: 1050,
-    rarityWeight: 7
+    color: '#94a3b8',
+    value: 1250,
+    hardness: 4.3,
+    minDepth: 1100,
+    rarityWeight: 1.3
   },
   platinum: {
+    id: 'platinum',
     name: 'Platin',
-    value: 3800,
-    weight: 2,
-    sprite: 'ore_platinum',
-    hardness: 4.2,
-    minDepth: 1250,
-    rarityWeight: 5
+    color: '#f1f5f9',
+    value: 1800,
+    hardness: 4.6,
+    minDepth: 1300,
+    rarityWeight: 1.2
   },
   uranium: {
+    id: 'uranium',
     name: 'Uran',
-    value: 5900,
-    weight: 3,
-    sprite: 'ore_uranium',
-    hardness: 4.6,
-    minDepth: 1400,
-    rarityWeight: 3.5
+    color: '#4ade80',
+    value: 2600,
+    hardness: 4.9,
+    minDepth: 1450,
+    rarityWeight: 1.1
   },
   obsidian_gem: {
+    id: 'obsidian_gem',
     name: 'Obsidian-Kern',
-    value: 9500,
-    weight: 2,
-    sprite: 'ore_obsidian_gem',
-    hardness: 5.0,
-    minDepth: 1550,
-    rarityWeight: 2.2
+    color: '#818cf8',
+    value: 3800,
+    hardness: 5.2,
+    minDepth: 1600,
+    rarityWeight: 1.0
   },
   dark_matter: {
-    name: 'Dunkelmaterie',
-    value: 18000,
-    weight: 1,
-    sprite: 'ore_dark_matter',
+    id: 'dark_matter',
+    name: 'Dunkle Materie',
+    color: '#c084fc',
+    value: 6000,
     hardness: 5.5,
     minDepth: 1700,
     rarityWeight: 1.0
-  }
-};
-
-export const ARTIFACT_CATALOG = {
-  artifact_ammonite: {
-    id: 'artifact_ammonite',
-    name: 'Spiral-Ammonit',
-    sprite: 'artifact_ammonite',
-    description: 'Uraltes versteinertes Kopffüßer-Gehäuse aus Ur-Meeren.',
-    perk: '+10% Treibstoff-Effizienz beim Bohren',
-    bonusType: 'fuelEfficiency',
-    bonusValue: 0.10,
-    minDepth: 35
-  },
-  artifact_trilobite: {
-    id: 'artifact_trilobite',
-    name: 'Gepanzerter Trilobit',
-    sprite: 'artifact_trilobite',
-    description: 'Robuster Urzeit-Gliederfüßer mit unzerbrechlichem Chitin-Panzer.',
-    perk: '+15 Max-Panzerung / HP',
-    bonusType: 'maxHp',
-    bonusValue: 15,
-    minDepth: 80
-  },
-  artifact_dino_tooth: {
-    id: 'artifact_dino_tooth',
-    name: 'Säbelzahn-Fossil',
-    sprite: 'artifact_dino_tooth',
-    description: 'Rasiermesserscharfer Raubtier-Fangzahn aus tiefsten Sedimentschichten.',
-    perk: '+10% Bohrgeschwindigkeit',
-    bonusType: 'drillSpeed',
-    bonusValue: 0.10,
-    minDepth: 160
-  },
-  artifact_geode: {
-    id: 'artifact_geode',
-    name: 'Amethyst-Geode',
-    sprite: 'artifact_geode',
-    description: 'Perfekt kristallisierter Basalthohlraum voll leuchtender Bergkristalle.',
-    perk: '+15% Verkaufswert für alle Edelsteine',
-    bonusType: 'gemValue',
-    bonusValue: 0.15,
-    minDepth: 280
-  },
-  artifact_meteorite: {
-    id: 'artifact_meteorite',
-    name: 'Sternen-Meteorit',
-    sprite: 'artifact_meteorite',
-    description: 'Außerirdischer Nickel-Eisen-Meteorit mit enormer Thermoresistenz.',
-    perk: '-50% Hitze-Schaden durch Lava',
-    bonusType: 'lavaResistance',
-    bonusValue: 0.50,
-    minDepth: 450
-  },
-  artifact_mech_core: {
-    id: 'artifact_mech_core',
-    name: 'Precursor Mech-Kern',
-    sprite: 'artifact_mech_core',
-    description: 'Funktionierendes Gravitations-Relikt einer untergegangenen Hochkultur.',
-    perk: '+20% Ladekapazität (Frachtraum)',
-    bonusType: 'cargoCapacity',
-    bonusValue: 0.20,
-    minDepth: 750
   }
 };
 
@@ -426,7 +364,7 @@ export class GridSystem {
       baseHp = 1800;
     }
 
-    // 1b. Spezielle Gefahren- & Schatzkacheln (Geröll, Lava, Kapseln, Fossilien)
+    // 1b. Spezielle Gefahren- & Schatzkacheln (Geröll, Lava, Kapseln)
     const isEntranceCol = gx >= MINE_ENTRANCE_GX_START - 2 && gx <= MINE_ENTRANCE_GX_END + 2;
     let isSpecial = false;
 
@@ -440,23 +378,9 @@ export class GridSystem {
       const cCandidateGy = cCellY * cacheCellSize + Math.floor(hashCoord(cCellX, cCellY, 712) * cacheCellSize);
       const hasCacheInCell = hashCoord(cCellX, cCellY, 777) < 0.35;
 
-      // 2. Fossilien & Relikte:
-      // Zell-basiertes Spacing (10x10 Kacheln)
-      const fossilCellSize = 10;
-      const fCellX = Math.floor(gx / fossilCellSize);
-      const fCellY = Math.floor(gy / fossilCellSize);
-      const fCandidateGx = fCellX * fossilCellSize + Math.floor(hashCoord(fCellX, fCellY, 811) * fossilCellSize);
-      const fCandidateGy = fCellY * fossilCellSize + Math.floor(hashCoord(fCellX, fCellY, 812) * fossilCellSize);
-      const hasFossilInCell = hashCoord(fCellX, fCellY, 888) < 0.30;
-
       if (gy >= 15 && hasCacheInCell && gx === cCandidateGx && gy === cCandidateGy) {
         type = TILE_TYPES.CACHE;
         baseHp = 45;
-        isSpecial = true;
-      }
-      else if (gy >= 32 && hasFossilInCell && gx === fCandidateGx && gy === fCandidateGy) {
-        type = TILE_TYPES.FOSSIL;
-        baseHp = 90;
         isSpecial = true;
       }
       // Magma- & Lava-Adern (in tieferen Zonen ab 160m)
@@ -568,8 +492,6 @@ export class GridSystem {
       // Spezielle Beute- & Gefahreneffekte
       if (prevType === TILE_TYPES.CACHE) {
         this.handleCacheFound(gx, gy);
-      } else if (prevType === TILE_TYPES.FOSSIL) {
-        this.handleFossilFound(gx, gy);
       } else if (prevType === TILE_TYPES.BOULDER) {
         if (this.scene.player) {
           this.scene.player.cash += 25;
@@ -578,8 +500,7 @@ export class GridSystem {
         }
       } else if (prevType === TILE_TYPES.LAVA) {
         if (this.scene.player) {
-          const res = this.scene.player.hasArtifact?.('artifact_meteorite') ? 0.5 : 1.0;
-          const dmg = Math.round(16 * res);
+          const dmg = 16;
           this.scene.player.takeDamage(dmg);
           this.scene.hud?.showToast(`⚠️ Heiße Lava angebohrt! -${dmg} HP Hitzeschaden!`, 'danger');
         }
@@ -663,30 +584,6 @@ export class GridSystem {
     soundFx.playPurchase();
     this.scene.hud?.showToast(`📦 Expeditions-Kapsel geborgen! +$${cashBonus.toLocaleString('de-DE')}${bonusMsg}`, 'success');
     this.scene.events?.emit('player_updated');
-  }
-
-  handleFossilFound(gx, gy) {
-    const player = this.scene.player;
-    if (!player) return;
-    const catalogList = Object.values(ARTIFACT_CATALOG);
-    const eligible = catalogList.filter(art => gy >= art.minDepth);
-    const known = player.discoveredArtifacts || [];
-    const undiscovered = eligible.filter(art => !known.includes(art.id));
-    const pool = undiscovered.length > 0 ? undiscovered : (eligible.length > 0 ? eligible : catalogList);
-    const picked = pool[Math.floor(Math.random() * pool.length)];
-
-    if (picked) {
-      const isNew = player.addArtifact ? player.addArtifact(picked.id) : false;
-      soundFx.playArtifactFind();
-      if (isNew) {
-        this.scene.hud?.showToast(`🦖 Neues Relikt entdeckt: ${picked.name}! (${picked.perk})`, 'info');
-      } else {
-        const bonusCash = 1250;
-        player.cash += bonusCash;
-        this.scene.hud?.showToast(`🦖 Bekanntes Fossil ${picked.name} für $${bonusCash} an Museum verkauft!`, 'success');
-      }
-      this.scene.events?.emit('player_updated');
-    }
   }
 
   checkBoulderFall(gx, gy) {

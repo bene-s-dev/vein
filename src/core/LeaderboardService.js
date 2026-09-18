@@ -106,5 +106,70 @@ export const LeaderboardService = {
       console.warn('[Leaderboard] Fehler beim Senden an Supabase:', err);
       return false;
     }
+  },
+
+  /**
+   * Setzt den Game-Over-Status eines Spielers in Supabase.
+   * @param {string} name
+   * @param {boolean} isGameOver
+   * @param {number} depth
+   * @param {number} level
+   */
+  async setGameOver(name, isGameOver = true, depth = 0, level = 1) {
+    if (!this.isSupabaseConfigured()) return false;
+    const cleanName = (name || 'Fahrer').trim().slice(0, 24);
+    const cleanDepth = Math.max(0, Math.round(depth));
+    const cleanLevel = Math.max(1, Math.round(level));
+
+    try {
+      const { error } = await supabase
+        .from('leaderboard')
+        .upsert({
+          name: cleanName,
+          depth: cleanDepth,
+          level: cleanLevel,
+          is_game_over: !!isGameOver,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'name' });
+
+      if (error) {
+        console.warn('[Leaderboard] Fehler beim Setzen des Game-Over Status:', error.message);
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.warn('[Leaderboard] Fehler bei setGameOver:', err);
+      return false;
+    }
+  },
+
+  /**
+   * Prüft den Game-Over-Status in Supabase.
+   * Wenn der Entwickler in der Datenbank is_game_over auf false geändert hat,
+   * liefert diese Methode false zurück und der Spieler wird gerettet!
+   * @param {string} name
+   * @returns {Promise<boolean|null>}
+   */
+  async checkGameOver(name) {
+    if (!this.isSupabaseConfigured()) return null;
+    const cleanName = (name || 'Fahrer').trim().slice(0, 24);
+
+    try {
+      const { data, error } = await supabase
+        .from('leaderboard')
+        .select('is_game_over')
+        .eq('name', cleanName)
+        .maybeSingle();
+
+      if (error) {
+        console.warn('[Leaderboard] Fehler beim Abrufen des Game-Over Status:', error.message);
+        return null;
+      }
+      if (!data) return null;
+      return !!data.is_game_over;
+    } catch (err) {
+      console.warn('[Leaderboard] Fehler bei checkGameOver:', err);
+      return null;
+    }
   }
 };
