@@ -57,16 +57,16 @@ export const HULL_TIERS = [
 ];
 
 export const ENGINE_TIERS = [
-  { tier: 1, name: 'Standard-Raupenfahrwerk', stat: '175 px/s', moveDuration: 160, flightSpeed: 175, cost: 0, comp: null, mountComps: null, level: 1, desc: 'Sicheres Basis-Fahrwerk für solide Schachtmanöver.' },
-  { tier: 2, name: 'Verstärkte Getriebe Mk.II', stat: '195 px/s', moveDuration: 145, flightSpeed: 195, cost: 260, comp: null, mountComps: [{ key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1, source: 'Fabrik' }], level: 1, desc: 'Kürzere Schaltzeiten beschleunigen Kriechgang und Steigflug.' },
-  { tier: 3, name: 'Hydraulik-Raupen Mk.III', stat: '220 px/s', moveDuration: 130, flightSpeed: 220, cost: 1600, comp: null, mountComps: [{ key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1, source: 'Fabrik' }, { key: 'capacitor', name: 'Druck-Kondensator', count: 1, source: 'Forscher' }], level: 1, desc: 'Flüssigere Kettenbewegungen und mehr Schubdüsengeschwindigkeit.' },
-  { tier: 4, name: 'Hochdruck-Turbine Mk.IV', stat: '250 px/s', moveDuration: 115, flightSpeed: 250, cost: 4400, comp: null, mountComps: [{ key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1, source: 'Fabrik' }, { key: 'silver_coil', name: 'Silber-Spule', count: 1, source: 'Fabrik' }], level: 2, desc: 'Kraftvoller Vortrieb im Schacht und schnellerer Aufstieg.' },
-  { tier: 5, name: 'Titan-Kettenantrieb Mk.V', stat: '285 px/s', moveDuration: 100, flightSpeed: 285, cost: 11500, comp: null, mountComps: [{ key: 'silver_coil', name: 'Silber-Spule', count: 1, source: 'Fabrik' }, { key: 'spectrometer', name: 'Sensor-Spektrometer', count: 1, source: 'Forscher' }], level: 3, desc: 'Geringerer Rollwiderstand und kräftige Schwebetriebwerke.' },
-  { tier: 6, name: 'Vektor-Booster Mk.VI', stat: '325 px/s', moveDuration: 88, flightSpeed: 325, cost: 26000, comp: null, mountComps: [{ key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Forscher' }], level: 4, desc: 'Schnelle Manövrierfähigkeit im Gestein und hoher Schwebespeed.' },
-  { tier: 7, name: 'Magnet-Levitation Mk.VII', stat: '370 px/s', moveDuration: 76, flightSpeed: 370, cost: 56000, comp: null, mountComps: [{ key: 'silver_coil', name: 'Silber-Spule', count: 2, source: 'Fabrik' }, { key: 'crystal_lens', name: 'Kristall-Linse', count: 1, source: 'Fabrik' }], level: 5, desc: 'Magnetschwebende Fahrwerkssegmente für rasantes Gleiten.' },
-  { tier: 8, name: 'Quanten-Gravitationsantrieb Mk.VIII', stat: '420 px/s', moveDuration: 65, flightSpeed: 420, cost: 120000, comp: null, mountComps: [{ key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Forscher' }], level: 6, desc: 'Krümmt das Schwerefeld für blitzschnelle Fortbewegung.' },
-  { tier: 9, name: 'Impuls-Vortex-Schub Mk.IX', stat: '475 px/s', moveDuration: 55, flightSpeed: 475, cost: 235000, comp: null, mountComps: [{ key: 'titan_bolt', name: 'Titan-Bolzen', count: 1, source: 'Fabrik' }, { key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Forscher' }], level: 8, desc: 'Subatomare Schubdüsen für unvergleichliche Wendigkeit.' },
-  { tier: 10, name: 'Chrono-Tachyonen-Antrieb X', stat: '540 px/s', moveDuration: 45, flightSpeed: 540, cost: 460000, comp: null, mountComps: [{ key: 'quantum_core', name: 'Quanten-Kern', count: 1, source: 'Fabrik' }, { key: 'quantum_processor', name: 'Quanten-Prozessor', count: 1, source: 'Forscher' }], level: 10, desc: 'Höchstgeschwindigkeit im Erdreich und schwebende Schwerelosigkeit.' }
+  { tier: 1, name: 'Standard-Raupenfahrwerk', stat: '20 km/h', moveDuration: 160, flightSpeed: 175, cost: 0, comp: null, mountComps: null, level: 1, desc: 'Sicheres Basis-Fahrwerk für solide Schachtmanöver.' },
+  { tier: 2, name: 'Verstärkte Getriebe Mk.II', stat: '22 km/h', moveDuration: 145, flightSpeed: 195, cost: 260, comp: null, mountComps: [{ key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1, source: 'Fabrik' }], level: 1, desc: 'Kürzere Schaltzeiten beschleunigen Kriechgang und Steigflug.' },
+  { tier: 3, name: 'Hydraulik-Raupen Mk.III', stat: '25 km/h', moveDuration: 130, flightSpeed: 220, cost: 1600, comp: null, mountComps: [{ key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1, source: 'Fabrik' }, { key: 'capacitor', name: 'Druck-Kondensator', count: 1, source: 'Forscher' }], level: 1, desc: 'Flüssigere Kettenbewegungen und mehr Schubdüsengeschwindigkeit.' },
+  { tier: 4, name: 'Hochdruck-Turbine Mk.IV', stat: '28 km/h', moveDuration: 115, flightSpeed: 250, cost: 4400, comp: null, mountComps: [{ key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1, source: 'Fabrik' }, { key: 'silver_coil', name: 'Silber-Spule', count: 1, source: 'Fabrik' }], level: 2, desc: 'Kraftvoller Vortrieb im Schacht und schnellerer Aufstieg.' },
+  { tier: 5, name: 'Titan-Kettenantrieb Mk.V', stat: '32 km/h', moveDuration: 100, flightSpeed: 285, cost: 11500, comp: null, mountComps: [{ key: 'silver_coil', name: 'Silber-Spule', count: 1, source: 'Fabrik' }, { key: 'spectrometer', name: 'Sensor-Spektrometer', count: 1, source: 'Forscher' }], level: 3, desc: 'Geringerer Rollwiderstand und kräftige Schwebetriebwerke.' },
+  { tier: 6, name: 'Vektor-Booster Mk.VI', stat: '37 km/h', moveDuration: 88, flightSpeed: 325, cost: 26000, comp: null, mountComps: [{ key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Forscher' }], level: 4, desc: 'Schnelle Manövrierfähigkeit im Gestein und hoher Schwebespeed.' },
+  { tier: 7, name: 'Magnet-Levitation Mk.VII', stat: '42 km/h', moveDuration: 76, flightSpeed: 370, cost: 56000, comp: null, mountComps: [{ key: 'silver_coil', name: 'Silber-Spule', count: 2, source: 'Fabrik' }, { key: 'crystal_lens', name: 'Kristall-Linse', count: 1, source: 'Fabrik' }], level: 5, desc: 'Magnetschwebende Fahrwerkssegmente für rasantes Gleiten.' },
+  { tier: 8, name: 'Quanten-Gravitationsantrieb Mk.VIII', stat: '47 km/h', moveDuration: 65, flightSpeed: 420, cost: 120000, comp: null, mountComps: [{ key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Forscher' }], level: 6, desc: 'Krümmt das Schwerefeld für blitzschnelle Fortbewegung.' },
+  { tier: 9, name: 'Impuls-Vortex-Schub Mk.IX', stat: '53 km/h', moveDuration: 55, flightSpeed: 475, cost: 235000, comp: null, mountComps: [{ key: 'titan_bolt', name: 'Titan-Bolzen', count: 1, source: 'Fabrik' }, { key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Forscher' }], level: 8, desc: 'Subatomare Schubdüsen für unvergleichliche Wendigkeit.' },
+  { tier: 10, name: 'Chrono-Tachyonen-Antrieb X', stat: '60 km/h', moveDuration: 45, flightSpeed: 540, cost: 460000, comp: null, mountComps: [{ key: 'quantum_core', name: 'Quanten-Kern', count: 1, source: 'Fabrik' }, { key: 'quantum_processor', name: 'Quanten-Prozessor', count: 1, source: 'Forscher' }], level: 10, desc: 'Höchstgeschwindigkeit im Erdreich und schwebende Schwerelosigkeit.' }
 ];
 
 export const CARGO_TIERS = [
@@ -150,8 +150,8 @@ export class Player {
     this.drillFrame = 0;
     this.drillAnimTimer = 0;
 
-    // Set aller bisher entdeckten Erze (Kohle ist als Start-Brennstoff von Beginn an bekannt)
-    this.discoveredOres = new Set(['coal']);
+    // Set aller bisher entdeckten Erze (wird beim ersten Fund feierlich mit Konfetti freigeschaltet)
+    this.discoveredOres = new Set();
     // Set aller bisher hergestellten/entdeckten Fabrikprodukte und Barren
     this.discoveredProducts = new Set();
     // Set aller bisher entdeckten Spezialfelder (Felsbrocken, Kapseln, Fossilien, Lava)
@@ -1916,7 +1916,7 @@ export class Player {
     if (this.hull <= 0) {
       if (!this._hullBrokenToastShown) {
         this._hullBrokenToastShown = true;
-        this.scene.hud?.showToast('⚠️ Karosserie kritisch beschädigt (0 HP)! Bohrer blockiert – zur Basis zurückkehren oder Notfall-Reparatur (Taste R)!', 'danger');
+        this.scene.hud?.showToast('⚠️ Karosserie kritisch beschädigt (0 HP)! Bohrer blockiert – zur Basis zurückkehren oder Reparatur-Kit nutzen!', 'danger');
       }
       return;
     }
@@ -1999,6 +1999,7 @@ export class Player {
       this.addXp(1);
 
       if (result.ore) {
+        this.discoverOre(result.ore);
         this.collectOre(result.ore);
       }
 
@@ -2020,7 +2021,22 @@ export class Player {
     this.syncAttachments();
   }
 
+  discoverOre(oreType) {
+    if (!oreType || !ORE_DATA[oreType]) return false;
+    if (!this.discoveredOres) this.discoveredOres = new Set();
+    if (this.discoveredOres.has(oreType)) return false;
+
+    this.discoveredOres.add(oreType);
+    if (!this.scene?.isRestoringState && this.scene && this.scene.events) {
+      this.scene.events.emit('ore_discovered', oreType);
+    }
+    return true;
+  }
+
   collectOre(oreType) {
+    // Entdeckungs-Event bei erstem Fund ausführen (auch wenn Laderaum voll sein sollte)
+    this.discoverOre(oreType);
+
     if (this.cargo.length >= this.maxCargo) {
       this.scene.events.emit('notify', 'Laderaum voll! Kann Erz nicht aufnehmen.');
       soundFx.playError();
@@ -2039,18 +2055,10 @@ export class Player {
     if (this.scene && this.scene.events) {
       this.scene.events.emit('ore_collected', oreType);
     }
-
-    // Entdeckungs-Event beim allerersten Fund
-    if (this.discoveredOres && !this.discoveredOres.has(oreType)) {
-      this.discoveredOres.add(oreType);
-      if (!this.scene?.isRestoringState) {
-        this.scene.events.emit('ore_discovered', oreType);
-      }
-    }
   }
 
   isOreDiscovered(oreKey) {
-    if (!this.discoveredOres) this.discoveredOres = new Set(['coal']);
+    if (!this.discoveredOres) this.discoveredOres = new Set();
     if (this.discoveredOres.has(oreKey)) return true;
     if (this.cargo && this.cargo.includes(oreKey)) {
       this.discoveredOres.add(oreKey);
@@ -2226,7 +2234,7 @@ export class Player {
     soundFx.playDamage();
     if (this.hull <= 0 && !this._hullBrokenToastShown) {
       this._hullBrokenToastShown = true;
-      this.scene.hud?.showToast('⚠️ Karosserie kritisch beschädigt (0 HP)! Bohrer blockiert – zur Basis zurückkehren oder Notfall-Reparatur (Taste R)!', 'danger');
+      this.scene.hud?.showToast('⚠️ Karosserie kritisch beschädigt (0 HP)! Bohrer blockiert – zur Basis zurückkehren oder Reparatur-Kit nutzen!', 'danger');
     }
   }
 

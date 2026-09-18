@@ -1,8 +1,8 @@
 import { ORE_DATA, TILE_SIZE, TILE_TYPES } from '../core/GridSystem.js';
 import { soundFx } from '../core/SoundEffects.js';
-import { icon, refreshIcons, oreIcon } from './IconHelper.js';
-import { ORE_DESCRIPTIONS, GEOLOGICAL_LAYERS } from './MinerBookModal.js';
-import { isModalActive, notifyModalClosed } from '../core/BaseSystem.js';
+import { icon, refreshIcons, oreIcon, itemDisplayIcon, getRefinedOreName } from './IconHelper.js';
+import { ORE_DESCRIPTIONS, GEOLOGICAL_LAYERS, BOOK_PRODUCTS } from './MinerBookModal.js';
+import { isModalActive, notifyModalClosed, FACTORY_PRODUCTS, COMPONENT_DATA, EXPEDITION_ITEMS } from '../core/BaseSystem.js';
 import { launchConfetti } from './HUD.js';
 
 export const ORE_USAGE_INFO = {
@@ -37,7 +37,7 @@ export const SPECIAL_TILE_DATA = {
       { label: 'Gesteinshärte', val: '110 HP', color: '#38bdf8' },
       { label: 'Ertrag', val: '+€25 & +8 XP', color: '#10b981' }
     ],
-    desc: 'Ein massiver, schwerer Felsbrocken im Schacht. Wenn du den Boden direkt unter ihm wegbohrst, stürzt er ungebremst herab und zerschmettert alles darunter! Kann mit starkem Bohrkopf abgebaut oder mit Dynamit (Taste B) gesprengt werden.',
+    desc: 'Ein massiver, schwerer Felsbrocken im Schacht. Wenn du den Boden direkt unter ihm wegbohrst, stürzt er ungebremst herab und zerschmettert alles darunter! Kann mit starkem Bohrkopf abgebaut oder mit Dynamit gesprengt werden.',
     hint: '💡 Tipp: Stehe niemals unter einem untergrabenen Felsbrocken! Nutze Dynamit, um Schächte schnell freizusprengen.'
   },
   tile_cache: {
@@ -122,7 +122,10 @@ function shieldBackdrop(el) {
 export function showOreInfoModal(oreKey, scene) {
   if (!oreKey || !scene) return;
   const oreData = ORE_DATA[oreKey];
-  if (!oreData) return;
+  if (!oreData) {
+    // Falls es kein Roherz ist, als Ware / Produkt / Bauteil anzeigen
+    return showGoodsInfoModal(oreKey, scene);
+  }
 
   const desc = ORE_DESCRIPTIONS[oreKey] || 'Ein seltenes Mineral aus den Tiefen des Schachts.';
   const usage = ORE_USAGE_INFO[oreKey] || 'Verkauf an der Erzbörse und Weiterverarbeitung in der Basis.';
@@ -186,122 +189,94 @@ export function showOreInfoModal(oreKey, scene) {
 
     backdropEl.innerHTML = `
     <div class="ore-info-window" style="
-      width: 90%;
-      max-width: 380px;
-      max-height: 88vh;
-      overflow-y: auto;
+      width: 95%;
+      max-width: 520px;
       background: rgba(15, 23, 42, 0.96);
       backdrop-filter: blur(24px) saturate(180%);
       -webkit-backdrop-filter: blur(24px) saturate(180%);
-      border-radius: 20px;
+      border-radius: 18px;
       border: 1px solid rgba(255, 255, 255, 0.12);
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85), 0 0 35px ${layer.color}25;
-      padding: 22px 18px 18px 18px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85), 0 0 30px ${layer.color}20;
+      padding: 18px 22px;
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      text-align: center;
-      gap: 12px;
+      gap: 14px;
       position: relative;
       animation: oreInfoPopIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     ">
       <!-- Schließen X-Button oben rechts -->
       <button id="btn-ore-info-x" style="
         position: absolute;
-        top: 10px;
-        right: 10px;
+        top: 12px;
+        right: 12px;
         background: rgba(255, 255, 255, 0.08);
         border: none;
         border-radius: 99px;
-        width: 32px;
-        height: 32px;
+        width: 30px;
+        height: 30px;
         display: flex;
         align-items: center;
         justify-content: center;
         color: #94a3b8;
         cursor: pointer;
         touch-action: manipulation;
-        transition: background 0.15s, color 0.15s;
+        transition: all 0.15s;
+        z-index: 5;
       ">
         ${icon('x', '', 16)}
       </button>
 
-      <!-- Kopf-Badge: Schichtzugehörigkeit -->
-      <div style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; color: ${layer.color}; background: ${layer.color}18; padding: 4px 12px; border-radius: 9999px; border: 1px solid ${layer.color}35;">
-        ${icon('layers', '', 13)}
-        <span>${layer.name}</span>
-      </div>
-
-      <!-- Erz Icon & Name -->
-      <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 2px;">
-        <div style="transform: scale(1.35); filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5)); display: flex; align-items: center;">
-          ${oreIcon(oreKey, 34)}
+      <!-- Obere Zeile: Icon + Name + Schicht-Badge + Badges horizontal -->
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <div style="width: 56px; height: 56px; border-radius: 14px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 14px rgba(0,0,0,0.4);">
+          ${oreIcon(oreKey, 38)}
         </div>
-        <h2 style="margin: 0; font-size: 22px; font-weight: 800; color: #f8fafc; letter-spacing: 0.5px;">
-          ${oreData.name.toUpperCase()}
-        </h2>
-      </div>
 
-      <!-- Stat-Pills -->
-      <div style="display: flex; justify-content: center; gap: 6px; font-size: 12px; flex-wrap: wrap;">
-        <span style="background: rgba(251, 191, 36, 0.12); border: 1px solid rgba(251, 191, 36, 0.25); color: #fbbf24; font-weight: 800; padding: 4px 10px; border-radius: 8px;">
-          Wert: €${oreData.value}
-        </span>
-        <span style="background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.25); color: #38bdf8; font-weight: 700; padding: 4px 10px; border-radius: 8px;">
-          ab ${oreData.minDepth}m Tiefe
-        </span>
-        <span style="background: rgba(148, 163, 184, 0.12); border: 1px solid rgba(148, 163, 184, 0.25); color: #cbd5e1; font-weight: 700; padding: 4px 10px; border-radius: 8px;">
-          Härte ${oreData.hardness}x
-        </span>
-      </div>
+        <div style="display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 0;">
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #f8fafc; letter-spacing: 0.5px;">
+              ${oreData.name.toUpperCase()}
+            </h2>
+            <span style="font-size: 10px; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase; color: ${layer.color}; background: ${layer.color}18; padding: 2px 9px; border-radius: 9999px; border: 1px solid ${layer.color}35; display: inline-flex; align-items: center; gap: 4px;">
+              ${icon('layers', '', 11)} ${layer.name} (${layer.depthRange})
+            </span>
+          </div>
 
-      <!-- Geologische Fundschicht Box -->
-      <div style="width: 100%; background: rgba(255, 255, 255, 0.03); border: 1px solid ${layer.color}33; border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 5px; text-align: left; box-sizing: border-box;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.6px; display: inline-flex; align-items: center; gap: 4px;">
-            ${icon('layers', '', 12)} Fundschicht
-          </span>
-          <span style="font-size: 11px; font-weight: 700; color: #cbd5e1; font-variant-numeric: tabular-nums;">
-            ${layer.depthRange}
-          </span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 800; color: ${layer.color};">
-          <span style="display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: ${layer.color}; box-shadow: 0 0 8px ${layer.color};"></span>
-          ${layer.name}
+          <!-- Wichtige Kennzahlen Badges horizontal -->
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <span style="background: rgba(251, 191, 36, 0.14); border: 1px solid rgba(251, 191, 36, 0.3); color: #fbbf24; font-weight: 800; font-size: 11.5px; padding: 2px 9px; border-radius: 6px; font-variant-numeric: tabular-nums;">
+              €${oreData.value}
+            </span>
+            <span style="background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.25); color: #38bdf8; font-weight: 700; font-size: 11.5px; padding: 2px 9px; border-radius: 6px;">
+              ab ${oreData.minDepth}m
+            </span>
+            <span style="background: rgba(148, 163, 184, 0.12); border: 1px solid rgba(148, 163, 184, 0.25); color: #cbd5e1; font-weight: 700; font-size: 11.5px; padding: 2px 9px; border-radius: 6px;">
+              Härte ${oreData.hardness}x
+            </span>
+          </div>
         </div>
       </div>
 
-      <!-- Geologische Beschreibung / Lore -->
-      <p style="margin: 2px 0 4px 0; font-size: 13px; line-height: 1.5; color: #cbd5e1; max-width: 330px; text-align: center;">
-        ${desc}
-      </p>
-
-      <!-- Verwendung & Nutzen -->
-      <div style="width: 100%; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 10px; padding: 8px 12px; text-align: left; box-sizing: border-box; display: flex; flex-direction: column; gap: 3px;">
-        <span style="font-size: 10px; font-weight: 800; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 4px;">
-          ${icon('wrench', '', 11)} Verwendung
-        </span>
-        <span style="font-size: 11.5px; line-height: 1.4; color: #cbd5e1;">
-          ${usage}
-        </span>
+      <!-- Mittlerer Bereich: Minimalistische Beschreibung & Bestand -->
+      <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; gap: 14px;">
+        <div style="font-size: 12px; line-height: 1.45; color: #94a3b8; flex: 1;">
+          ${desc}
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 3px; align-items: flex-end; flex-shrink: 0; border-left: 1px solid rgba(255,255,255,0.08); padding-left: 14px; font-size: 11.5px;">
+          <span style="color: #cbd5e1;">Laderaum: <strong style="color: #38bdf8;">${cargoCount}x</strong></span>
+          <span style="color: #cbd5e1;">Depot: <strong style="color: #a855f7;">${depotCount}x</strong></span>
+        </div>
       </div>
 
-      <!-- Bestand-Info -->
-      <div style="display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 12px; color: #cbd5e1;">
-        <span>Im Bohrer: <strong style="color: #38bdf8;">${cargoCount}x</strong></span>
-        <span>•</span>
-        <span>Im Depot: <strong style="color: #a855f7;">${depotCount}x</strong></span>
-      </div>
-
-      <!-- Buttons -->
-      <div style="display: flex; gap: 8px; width: 100%; justify-content: center; margin-top: 4px;">
+      <!-- Fußleiste / Aktionen -->
+      <div style="display: flex; gap: 8px; justify-content: flex-end; align-items: center;">
         ${isDepotOpen && cargoCount > 0 ? `
-          <button id="btn-ore-info-deposit" class="btn-buy" style="height: 38px; flex: 1; max-width: 160px; font-size: 12.5px; font-weight: 800; border-radius: 10px; background: #0284c7;">
+          <button id="btn-ore-info-deposit" class="btn-buy" style="height: 34px; padding: 0 14px; font-size: 12px; font-weight: 800; border-radius: 8px; background: #0284c7;">
             ${icon('arrow-down-to-line', '', 13)} 1x Einlagern
           </button>
         ` : ''}
-        <button id="btn-ore-info-ok" class="btn-buy" style="height: 38px; flex: 1; max-width: ${isDepotOpen && cargoCount > 0 ? '130px' : '200px'}; font-size: 13px; font-weight: 800; border-radius: 10px;">
+        <button id="btn-ore-info-ok" class="btn-buy" style="height: 34px; padding: 0 20px; font-size: 12px; font-weight: 800; border-radius: 8px;">
           OK
         </button>
       </div>
@@ -367,6 +342,339 @@ export function showOreInfoModal(oreKey, scene) {
     window.addEventListener('keydown', activeKeydownListener);
   } catch (err) {
     console.error('Error in showOreInfoModal:', err);
+    if (!wasAlreadyPaused && scene) {
+      scene.isPaused = false;
+    }
+    const backdropEl = document.getElementById('ore-info-backdrop');
+    if (backdropEl) backdropEl.style.display = 'none';
+  }
+}
+
+/**
+ * Zeigt das minimalistische Informations-Popup für Waren, Fabrikprodukte, Barren und Bauteile an.
+ */
+export function showGoodsInfoModal(itemKey, scene) {
+  if (!itemKey || !scene) return;
+
+  const bookItem = BOOK_PRODUCTS?.find(p => p.id === itemKey);
+  const factoryItem = FACTORY_PRODUCTS?.[itemKey];
+  const compItem = COMPONENT_DATA?.[itemKey];
+  const expItem = EXPEDITION_ITEMS?.find(i => i.key === itemKey);
+  const isBar = typeof itemKey === 'string' && itemKey.startsWith('bar_');
+  const rawKey = isBar ? itemKey.replace('bar_', '') : null;
+
+  // Name
+  const name = bookItem?.name || factoryItem?.name || compItem?.name || expItem?.name || (isBar ? getRefinedOreName(itemKey) : itemKey);
+
+  // Kategorie
+  let categoryLabel = 'WARE · ERZEUGNIS';
+  let categoryIcon = 'layers';
+  let categoryColor = '#38bdf8';
+
+  if (isBar) {
+    categoryLabel = 'SCHMELZOFEN · BARREN';
+    categoryIcon = 'flame';
+    categoryColor = '#f59e0b';
+  } else if (bookItem?.category === 'goods' || (factoryItem && !factoryItem.isComponent)) {
+    categoryLabel = 'FABRIK · HANDELSGUT';
+    categoryIcon = 'factory';
+    categoryColor = '#10b981';
+  } else if (bookItem?.category === 'component' || factoryItem?.isComponent || compItem) {
+    categoryLabel = bookItem?.category === 'research' ? 'FORSCHER · ELEKTRONIK' : 'FABRIK · BAUTEIL';
+    categoryIcon = bookItem?.category === 'research' ? 'cpu' : 'wrench';
+    categoryColor = bookItem?.category === 'research' ? '#60a5fa' : '#a855f7';
+  } else if (expItem) {
+    categoryLabel = 'EXPEDITIONSAUSRÜSTUNG';
+    categoryIcon = 'package';
+    categoryColor = '#ef4444';
+  }
+
+  // Wert
+  let value = 0;
+  if (typeof bookItem?.value === 'number') value = bookItem.value;
+  else if (typeof factoryItem?.value === 'number') value = factoryItem.value;
+  else if (typeof expItem?.price === 'number') value = expItem.price;
+  else if (isBar && rawKey && ORE_DATA[rawKey]) value = Math.round(ORE_DATA[rawKey].value * 1.5);
+
+  // Rezeptur
+  let recipeText = bookItem?.req || '';
+  if (!recipeText && factoryItem?.recipe) {
+    const parts = Object.entries(factoryItem.recipe).map(([k, count]) => {
+      const oreN = ORE_DATA[k]?.name || k;
+      return `${count}x ${oreN}`;
+    });
+    recipeText = parts.join(' + ') + ' (Fabrik)';
+  } else if (!recipeText && isBar && rawKey) {
+    const rawN = ORE_DATA[rawKey]?.name || rawKey;
+    recipeText = `1x ${rawN} (im Schmelzofen)`;
+  } else if (!recipeText && expItem) {
+    recipeText = 'Im Depot-Shop erhältlich';
+  }
+
+  // Zweck / Verwendung
+  let usageText = bookItem?.usage || '';
+  if (!usageText) {
+    if (isBar) usageText = 'Börsen-Verkauf (+50% Erlös) & Legierungen';
+    else if (factoryItem && !factoryItem.isComponent) usageText = 'Börsen-Verkauf (Spitzenpreis)';
+    else if (compItem || factoryItem?.isComponent) usageText = 'Werkstatt & Hangar-Upgrades';
+    else if (expItem) usageText = 'Expeditionen & Schacht-Einsatz';
+    else usageText = 'Weiterverarbeitung & Handel';
+  }
+
+  // Beschreibung
+  const desc = bookItem?.desc || factoryItem?.desc || expItem?.desc || 'Ein wertvolles veredeltes Erzeugnis aus der industriellen Fertigung der Basis.';
+
+  // Sound abspielen
+  soundFx.playClick();
+  soundFx.stopAllLoops?.();
+
+  // Spiel pausieren falls nötig
+  const wasAlreadyPaused = Boolean(scene.isPaused);
+  if (!wasAlreadyPaused) {
+    scene.isPaused = true;
+  }
+
+  // Bestände ermitteln
+  const player = scene.player;
+  const cargoCount = player?.cargo ? player.cargo.filter(k => k === itemKey).length : 0;
+  const depotCount = (scene.baseSystem?.depot?.products?.[itemKey] || 0) + (isBar && scene.baseSystem?.depot?.ores?.[itemKey] ? scene.baseSystem.depot.ores[itemKey] : 0);
+  const inventoryCount = (player?.components?.[itemKey] || 0) + (player?.gadgets?.[itemKey] || 0);
+
+  // Prüfen, ob das Depot-Modal gerade geöffnet ist
+  const buildingModal = document.getElementById('building-modal');
+  const modalTitle = document.getElementById('modal-title');
+  const isDepotOpen = buildingModal && buildingModal.style.display !== 'none' && modalTitle && modalTitle.innerText.includes('DEPOT');
+
+  try {
+    let backdropEl = document.getElementById('ore-info-backdrop');
+    if (!backdropEl) {
+      backdropEl = document.createElement('div');
+      backdropEl.id = 'ore-info-backdrop';
+      backdropEl.style.cssText = `
+        display: none;
+        position: fixed;
+        inset: 0;
+        justify-content: center;
+        align-items: center;
+        padding: 16px;
+        background: rgba(3, 7, 18, 0.78);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        z-index: 10050;
+        box-sizing: border-box;
+      `;
+      document.body.appendChild(backdropEl);
+    }
+    shieldBackdrop(backdropEl);
+
+    const closeModal = () => {
+      backdropEl.style.display = 'none';
+      if (activeKeydownListener) {
+        window.removeEventListener('keydown', activeKeydownListener);
+        activeKeydownListener = null;
+      }
+      if (!wasAlreadyPaused) {
+        scene.isPaused = false;
+      }
+      notifyModalClosed();
+    };
+
+    backdropEl.innerHTML = `
+    <div class="ore-info-window" style="
+      width: 95%;
+      max-width: 520px;
+      background: rgba(15, 23, 42, 0.96);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85), 0 0 30px ${categoryColor}20;
+      padding: 18px 22px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      position: relative;
+      animation: oreInfoPopIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    ">
+      <!-- Schließen X-Button oben rechts -->
+      <button id="btn-goods-info-x" style="
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: rgba(255, 255, 255, 0.08);
+        border: none;
+        border-radius: 99px;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #94a3b8;
+        cursor: pointer;
+        touch-action: manipulation;
+        transition: all 0.15s;
+        z-index: 5;
+      ">
+        ${icon('x', '', 16)}
+      </button>
+
+      <!-- Obere Zeile: Icon + Name + Kategorie-Badge + Badges horizontal -->
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <div style="width: 56px; height: 56px; border-radius: 14px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 14px rgba(0,0,0,0.4); color: ${categoryColor};">
+          ${itemDisplayIcon(itemKey, 38)}
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 0;">
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #f8fafc; letter-spacing: 0.5px;">
+              ${name.toUpperCase()}
+            </h2>
+            <span style="font-size: 10px; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase; color: ${categoryColor}; background: ${categoryColor}18; padding: 2px 9px; border-radius: 9999px; border: 1px solid ${categoryColor}35; display: inline-flex; align-items: center; gap: 4px;">
+              ${icon(categoryIcon, '', 11)} ${categoryLabel}
+            </span>
+          </div>
+
+          <!-- Wichtige Kennzahlen Badges horizontal -->
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            ${value > 0 ? `
+              <span style="background: rgba(251, 191, 36, 0.14); border: 1px solid rgba(251, 191, 36, 0.3); color: #fbbf24; font-weight: 800; font-size: 11.5px; padding: 2px 9px; border-radius: 6px; font-variant-numeric: tabular-nums;">
+                €${value.toLocaleString('de-DE')}
+              </span>
+            ` : `
+              <span style="background: rgba(168, 85, 247, 0.14); border: 1px solid rgba(168, 85, 247, 0.3); color: #c084fc; font-weight: 800; font-size: 11.5px; padding: 2px 9px; border-radius: 6px;">
+                Werkstatt-Bauteil
+              </span>
+            `}
+            ${recipeText ? `
+              <span style="background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.25); color: #38bdf8; font-weight: 700; font-size: 11.5px; padding: 2px 9px; border-radius: 6px;">
+                ${recipeText}
+              </span>
+            ` : ''}
+            ${usageText ? `
+              <span style="background: rgba(148, 163, 184, 0.12); border: 1px solid rgba(148, 163, 184, 0.25); color: #cbd5e1; font-weight: 700; font-size: 11.5px; padding: 2px 9px; border-radius: 6px;">
+                ${usageText}
+              </span>
+            ` : ''}
+          </div>
+        </div>
+      </div>
+
+      <!-- Mittlerer Bereich: Minimalistische Beschreibung & Bestand -->
+      <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; gap: 14px;">
+        <div style="font-size: 12px; line-height: 1.45; color: #94a3b8; flex: 1;">
+          ${desc}
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 3px; align-items: flex-end; flex-shrink: 0; border-left: 1px solid rgba(255,255,255,0.08); padding-left: 14px; font-size: 11.5px;">
+          <span style="color: #cbd5e1;">Laderaum: <strong style="color: #38bdf8;">${cargoCount}x</strong></span>
+          <span style="color: #cbd5e1;">Depot: <strong style="color: #a855f7;">${depotCount}x</strong></span>
+          ${inventoryCount > 0 ? `<span style="color: #cbd5e1;">Inventar: <strong style="color: #34d399;">${inventoryCount}x</strong></span>` : ''}
+        </div>
+      </div>
+
+      <!-- Fußleiste / Aktionen -->
+      <div style="display: flex; gap: 8px; justify-content: flex-end; align-items: center;">
+        ${isDepotOpen && cargoCount > 0 ? `
+          <button id="btn-goods-info-deposit" class="btn-buy" style="height: 34px; padding: 0 14px; font-size: 12px; font-weight: 800; border-radius: 8px; background: #0284c7; display: inline-flex; align-items: center; gap: 5px;">
+            ${icon('arrow-down-to-line', '', 13)} 1x Einlagern
+          </button>
+        ` : ''}
+        ${isDepotOpen && depotCount > 0 && value > 0 ? `
+          <button id="btn-goods-info-sell" class="btn-buy" style="height: 34px; padding: 0 14px; font-size: 12px; font-weight: 800; border-radius: 8px; background: #16a34a; display: inline-flex; align-items: center; gap: 5px;">
+            ${icon('banknote', '', 13)} 1x Verkaufen (+€${value.toLocaleString()})
+          </button>
+        ` : ''}
+        <button id="btn-goods-info-ok" class="btn-buy" style="height: 34px; padding: 0 20px; font-size: 12px; font-weight: 800; border-radius: 8px;">
+          OK
+        </button>
+      </div>
+    </div>
+    `;
+
+    backdropEl.style.display = 'flex';
+    refreshIcons(backdropEl);
+
+    backdropEl.onclick = (e) => {
+      e.stopPropagation();
+      if (e.target === backdropEl) {
+        closeModal();
+      }
+    };
+
+    const btnOk = document.getElementById('btn-goods-info-ok');
+    if (btnOk) {
+      btnOk.onclick = (e) => {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        soundFx.playClick();
+        closeModal();
+      };
+    }
+
+    const btnX = document.getElementById('btn-goods-info-x');
+    if (btnX) {
+      btnX.onclick = (e) => {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        soundFx.playClick();
+        closeModal();
+      };
+    }
+
+    const btnDeposit = document.getElementById('btn-goods-info-deposit');
+    if (btnDeposit) {
+      btnDeposit.onclick = (e) => {
+        e.stopPropagation();
+        if (scene.baseSystem) {
+          if (isBar && typeof scene.baseSystem.depositOre === 'function') {
+            scene.baseSystem.depositOre(itemKey, 1);
+          } else {
+            const idx = player.cargo.indexOf(itemKey);
+            if (idx >= 0) {
+              player.cargo.splice(idx, 1);
+              scene.baseSystem.depot.products = scene.baseSystem.depot.products || {};
+              scene.baseSystem.depot.products[itemKey] = (scene.baseSystem.depot.products[itemKey] || 0) + 1;
+              scene.events?.emit('player_updated');
+              soundFx.playPurchase();
+            }
+          }
+          if (scene.baseSystem.renderDepotModal) {
+            scene.baseSystem.renderDepotModal();
+          }
+          showGoodsInfoModal(itemKey, scene);
+        }
+      };
+    }
+
+    const btnSell = document.getElementById('btn-goods-info-sell');
+    if (btnSell) {
+      btnSell.onclick = (e) => {
+        e.stopPropagation();
+        if (scene.baseSystem && typeof scene.baseSystem.sellDepotProduct === 'function') {
+          scene.baseSystem.sellDepotProduct(itemKey, 1);
+          if (scene.baseSystem.renderDepotModal) {
+            scene.baseSystem.renderDepotModal();
+          }
+          showGoodsInfoModal(itemKey, scene);
+        }
+      };
+    }
+
+    if (activeKeydownListener) {
+      window.removeEventListener('keydown', activeKeydownListener);
+    }
+    activeKeydownListener = (e) => {
+      if (e.key === 'Escape') {
+        closeModal();
+      }
+    };
+    window.addEventListener('keydown', activeKeydownListener);
+  } catch (err) {
+    console.error('Error in showGoodsInfoModal:', err);
     if (!wasAlreadyPaused && scene) {
       scene.isPaused = false;
     }
@@ -460,82 +768,76 @@ export function showSpecialTileInfoModal(tileType, scene, isDiscovery = false) {
 
   backdropEl.innerHTML = `
     <div class="ore-info-window" style="
-      width: 90%;
-      max-width: 380px;
-      max-height: 88vh;
-      overflow-y: auto;
+      width: 95%;
+      max-width: 520px;
       background: rgba(15, 23, 42, 0.96);
       backdrop-filter: blur(24px) saturate(180%);
       -webkit-backdrop-filter: blur(24px) saturate(180%);
-      border-radius: 20px;
+      border-radius: 18px;
       border: 1px solid rgba(255, 255, 255, 0.12);
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85), 0 0 35px ${tileInfo.badgeColor}25;
-      padding: 22px 18px 18px 18px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85), 0 0 30px ${tileInfo.badgeColor}20;
+      padding: 18px 22px;
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      text-align: center;
-      gap: 12px;
+      gap: 14px;
       position: relative;
       animation: oreInfoPopIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     ">
       <!-- Schließen X-Button oben rechts -->
       <button id="btn-ore-info-x" style="
         position: absolute;
-        top: 10px;
-        right: 10px;
+        top: 12px;
+        right: 12px;
         background: rgba(255, 255, 255, 0.08);
         border: none;
         border-radius: 99px;
-        width: 32px;
-        height: 32px;
+        width: 30px;
+        height: 30px;
         display: flex;
         align-items: center;
         justify-content: center;
         color: #94a3b8;
         cursor: pointer;
         touch-action: manipulation;
-        transition: background 0.15s, color 0.15s;
+        transition: all 0.15s;
+        z-index: 5;
       ">
         ${icon('x', '', 16)}
       </button>
 
-      <!-- Kopf-Badge: NEUE ENTDECKUNG / SPEZIALFELD -->
-      <div style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; color: ${tileInfo.badgeColor}; background: ${tileInfo.badgeColor}18; padding: 4px 12px; border-radius: 9999px; border: 1px solid ${tileInfo.badgeColor}35;">
-        ${icon(isDiscovery ? 'sparkles' : tileInfo.icon, '', 13)}
-        <span>${isDiscovery ? 'NEUE ENTDECKUNG · ' : ''}${tileInfo.badge}</span>
+      <!-- Obere Zeile: Icon + Name + Badges -->
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <div style="width: 56px; height: 56px; border-radius: 14px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 14px rgba(0,0,0,0.4);">
+          ${textureImgHtml}
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 0;">
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <h2 style="margin: 0; font-size: 19px; font-weight: 800; color: #f8fafc; letter-spacing: 0.5px;">
+              ${tileInfo.name.toUpperCase()}
+            </h2>
+            <span style="font-size: 10px; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase; color: ${tileInfo.badgeColor}; background: ${tileInfo.badgeColor}18; padding: 2px 9px; border-radius: 9999px; border: 1px solid ${tileInfo.badgeColor}35; display: inline-flex; align-items: center; gap: 4px;">
+              ${icon(isDiscovery ? 'sparkles' : tileInfo.icon, '', 11)} ${isDiscovery ? 'Neu · ' : ''}${tileInfo.badge}
+            </span>
+          </div>
+
+          <!-- Stat Pills -->
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            ${statsPills}
+          </div>
+        </div>
       </div>
 
-      <!-- Icon & Name -->
-      <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 2px;">
-        ${textureImgHtml}
-        <h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #f8fafc; letter-spacing: 0.5px;">
-          ${tileInfo.name.toUpperCase()}
-        </h2>
-      </div>
-
-      <!-- Stat-Pills -->
-      <div style="display: flex; justify-content: center; gap: 6px; font-size: 12px; flex-wrap: wrap;">
-        ${statsPills}
-      </div>
-
-      <!-- Beschreibung / Lore -->
-      <p style="margin: 2px 0 4px 0; font-size: 13px; line-height: 1.5; color: #cbd5e1; max-width: 330px; text-align: center;">
+      <!-- Beschreibung -->
+      <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 10px; padding: 10px 14px; font-size: 12px; line-height: 1.45; color: #94a3b8;">
         ${tileInfo.desc}
-      </p>
-
-      <!-- Taktischer Hinweis / Tipp -->
-      <div style="width: 100%; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 10px; padding: 8px 12px; text-align: left; box-sizing: border-box; display: flex; flex-direction: column; gap: 3px;">
-        <span style="font-size: 11.5px; line-height: 1.4; color: #94a3b8;">
-          ${tileInfo.hint}
-        </span>
       </div>
 
-      <!-- OK Button -->
-      <div style="display: flex; gap: 8px; width: 100%; justify-content: center; margin-top: 4px;">
-        <button id="btn-ore-info-ok" class="btn-buy" style="height: 38px; width: 100%; max-width: 200px; font-size: 13px; font-weight: 800; border-radius: 10px;">
-          VERSTANDEN
+      <!-- Fußleiste -->
+      <div style="display: flex; justify-content: flex-end;">
+        <button id="btn-ore-info-ok" class="btn-buy" style="height: 34px; padding: 0 20px; font-size: 12px; font-weight: 800; border-radius: 8px;">
+          OK
         </button>
       </div>
     </div>

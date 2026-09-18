@@ -2,7 +2,7 @@ import { ORE_DATA, ARTIFACT_CATALOG } from '../core/GridSystem.js';
 import { soundFx } from '../core/SoundEffects.js';
 import { icon, refreshIcons, oreIcon, itemDisplayIcon } from './IconHelper.js';
 import { closeActiveModal } from '../core/BaseSystem.js';
-import { SPECIAL_TILE_DATA } from './OreInfoModal.js';
+import { SPECIAL_TILE_DATA, showGoodsInfoModal } from './OreInfoModal.js';
 
 export const ORE_DESCRIPTIONS = {
   coal: 'Fossiler Kohlenstoff aus den oberen Schichten. Solide Einnahmequelle für den Einstieg und elementarer Brennstoff für Schmelzöfen.',
@@ -560,6 +560,17 @@ export class MinerBookModal {
       };
     });
 
+    // Klick auf entdeckte Waren öffnet das minimalistische Info-Modal
+    modalEl.querySelectorAll('.book-product-card').forEach(card => {
+      card.onclick = (e) => {
+        e.stopPropagation();
+        const key = card.getAttribute('data-key');
+        if (key) {
+          showGoodsInfoModal(key, this.scene);
+        }
+      };
+    });
+
     // Zurück zum Spielmenü
     const btnBack = document.getElementById('btn-book-back');
     if (btnBack) {
@@ -865,7 +876,7 @@ export class MinerBookModal {
           : '';
 
         itemsHtml += `
-          <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
+          <div class="book-product-card" data-key="${prod.id}" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; cursor: pointer; transition: transform 0.1s, border-color 0.15s;" title="${prod.name} anklicken für Detail-Ansicht">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
               <div style="display: flex; align-items: center; gap: 8px;">
                 ${itemDisplayIcon(prod.id, 20)}

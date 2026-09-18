@@ -11,7 +11,7 @@ import { TILE_SIZE, ORE_DATA } from './GridSystem.js';
 import { soundFx } from './SoundEffects.js';
 import { icon, refreshIcons, COMPONENT_ICONS, oreIcon, ORE_COLORS, REFINED_ORE_DATA, getRefinedOreName, refinedItemIcon, itemDisplayIcon, drillerVehicleIcon } from '../ui/IconHelper.js';
 import { TANK_TIERS, HULL_TIERS, ENGINE_TIERS, CARGO_TIERS, SENSOR_TIERS } from './Player.js';
-import { showOreInfoModal } from '../ui/OreInfoModal.js';
+import { showOreInfoModal, showGoodsInfoModal } from '../ui/OreInfoModal.js';
 
 // Dauer für das Einschmelzen einzelner Erze in Sekunden (verlängert für spürbaren Fortschritt)
 export const REFINERY_DURATIONS_SEC = {
@@ -339,7 +339,7 @@ export const EXPEDITION_ITEMS = [
     category: 'gadget',
     name: 'Dynamit-Sprengsatz',
     badge: 'Sprengladung',
-    desc: 'Platziert TNT im Fels. Kann mehrfach gelegt und per Aktions-Button gezündet werden (Taste B, T oder 1).',
+    desc: 'Platziert TNT im Fels. Kann mehrfach gelegt und per Touch-Aktionsbutton gezündet werden.',
     reqResearch: { track: 'tnt', tier: 1, label: 'Sprengtechnik Stufe 1' },
     price: 250,
     icon: 'bomb'
@@ -349,7 +349,8 @@ export const EXPEDITION_ITEMS = [
     category: 'gadget',
     name: 'Notfall-Treibstoffkanister',
     badge: '+20L Tank',
-    desc: 'Füllt unter Tage sofort +20L Treibstoff nach. (Taste F oder 2)',
+    desc: 'Füllt unter Tage sofort +20L Treibstoff nach (per Touch-Aktion im Cockpit).',
+    reqResearch: { track: 'emergency_gear', tier: 1, label: 'Notfallset Stufe 1' },
     price: 120,
     icon: 'fuel'
   },
@@ -358,7 +359,8 @@ export const EXPEDITION_ITEMS = [
     category: 'gadget',
     name: 'Feld-Reparatur-Kit',
     badge: '+40 HP Hülle',
-    desc: 'Repariert im Notfall sofort +40 HP Panzerung. (Taste R oder 3)',
+    desc: 'Repariert im Notfall sofort +40 HP Panzerung (per Touch-Aktion im Cockpit).',
+    reqResearch: { track: 'emergency_gear', tier: 1, label: 'Notfallset Stufe 1' },
     price: 180,
     icon: 'wrench'
   }
@@ -1478,6 +1480,9 @@ export class BaseSystem {
     this.player.cash -= price;
     this.player.gadgets = this.player.gadgets || { dynamite: 0, fuel_canister: 0, repair_kit: 0 };
     this.player.gadgets[key] = (this.player.gadgets[key] || 0) + 1;
+    if (key === 'dynamite') {
+      this.player.hasPurchasedDynamite = true;
+    }
     soundFx.playPurchase();
     this.scene.events.emit('player_updated');
     if (this.scene.hud) this.scene.hud.update();
@@ -3339,8 +3344,10 @@ export class BaseSystem {
           min-height: 90px;
           box-sizing: border-box;
           user-select: none;
-          cursor: default;
-        " title="${name}: ${depotCount}x im Depot">
+          cursor: pointer;
+          touch-action: manipulation;
+          transition: transform 0.1s, border-color 0.15s;
+        " title="${name}: ${depotCount}x im Depot (Klicken für Details)">
           <!-- Anzahl Badge -->
           <span style="
             position: absolute;
@@ -3406,8 +3413,10 @@ export class BaseSystem {
           min-height: 90px;
           box-sizing: border-box;
           user-select: none;
-          cursor: default;
-        " title="${compInfo.name}: ${count}x vorhanden (Spezial-Bauteil)">
+          cursor: pointer;
+          touch-action: manipulation;
+          transition: transform 0.1s, border-color 0.15s;
+        " title="${compInfo.name}: ${count}x vorhanden (Klicken für Details)">
           <!-- Anzahl Badge -->
           <span style="
             position: absolute;
@@ -3730,9 +3739,10 @@ export class BaseSystem {
 
     if (currentTab === 'storage') {
       this.setFloatingAction(`
-        <button id="btn-depot-all-ores" class="btn-buy btn-flyover" style="gap: 6px;" ${playerCargoOreLength > 0 && freeDepot > 0 ? '' : 'disabled'}>
-          ${icon('arrow-down-to-line', '', 14)}
-          <span>Erze einlagern (${playerCargoOreLength})</span>
+        <button id="btn-depot-all-ores" class="btn-buy btn-flyover" style="gap: 8px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1.5px solid rgba(56, 189, 248, 0.7); box-shadow: 0 4px 18px rgba(2, 132, 199, 0.6); font-weight: 800; padding: 0 18px; height: 40px; border-radius: 99px;" ${playerCargoOreLength > 0 && freeDepot > 0 ? '' : 'disabled'}>
+          ${icon('arrow-down-to-line', '', 16)}
+          <span>Alle Erze einlagern</span>
+          <span style="background: rgba(255,255,255,0.22); padding: 1px 7px; border-radius: 99px; font-size: 11px; font-weight: 800;">${playerCargoOreLength}</span>
         </button>
       `, (container) => {
         const btn = container.querySelector('#btn-depot-all-ores');
@@ -3805,6 +3815,17 @@ export class BaseSystem {
         const key = card.getAttribute('data-key');
         if (key) {
           showOreInfoModal(key, this.scene);
+        }
+      };
+    });
+
+    // Klick auf Waren- & Bauteil-Kachel öffnet das neue Waren-Info-Popup
+    body.querySelectorAll('.depot-goods-card').forEach(card => {
+      card.onclick = (e) => {
+        e.stopPropagation();
+        const key = card.getAttribute('data-key');
+        if (key) {
+          showGoodsInfoModal(key, this.scene);
         }
       };
     });

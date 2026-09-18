@@ -61,10 +61,13 @@ class SoundManager {
     this._ambientGain = null;
     this._rumbleTimer = null;
     this._voices = [];
+    this._lastDepth = 0;
+    this._lastClickMs = 0;
 
-    // Auto-Unlock Listener
+    // Auto-Unlock Listener & Globale Sound-Bindungen
     this._setupAutoUnlock();
     this._setupMenuWatchers();
+    this._setupGlobalButtonSounds();
   }
 
   // Kompatibilitäts-Getter für Player.js
@@ -193,18 +196,47 @@ class SoundManager {
   }
 
   _setupAutoUnlock() {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return;
+
     const unlock = () => {
       this.ensureContext();
       if (this.ctx && this.ctx.state === 'suspended') {
         this.ctx.resume().catch(() => {});
       }
-      window.removeEventListener('pointerdown', unlock);
-      window.removeEventListener('keydown', unlock);
-      window.removeEventListener('touchstart', unlock);
+      if (!this.musicMuted) {
+        this.startSoundtrack();
+      }
+      const events = ['pointerdown', 'keydown', 'touchstart', 'click'];
+      events.forEach((evt) => {
+        document.removeEventListener(evt, unlock, true);
+        window.removeEventListener(evt, unlock, true);
+      });
     };
-    window.addEventListener('pointerdown', unlock, { passive: true });
-    window.addEventListener('keydown', unlock, { passive: true });
-    window.addEventListener('touchstart', unlock, { passive: true });
+
+    const events = ['pointerdown', 'keydown', 'touchstart', 'click'];
+    events.forEach((evt) => {
+      document.addEventListener(evt, unlock, { capture: true, passive: true });
+      window.addEventListener(evt, unlock, { capture: true, passive: true });
+    });
+  }
+
+  _setupGlobalButtonSounds() {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return;
+
+    // Fängt verlässlich alle interaktiven UI-Buttons im gesamten Spiel ab (Modals, Tabs, Menüs, HUD)
+    const CLICKABLE_SELECTOR = 'button, [role="button"], .btn-action, .btn-secondary, .btn-primary, .btn-danger, .btn-close, .btn-buy, .btn-slot-load, .register-tab, .tab-btn, .modal-close-btn, .clickable, .dialog-btn, .start-slot-item, .hud-btn, .action-btn';
+
+    const handleInteraction = (e) => {
+      if (!e.target) return;
+      const btn = e.target.closest(CLICKABLE_SELECTOR);
+      if (!btn) return;
+      if (btn.disabled || btn.classList.contains('disabled') || btn.getAttribute('aria-disabled') === 'true') {
+        return;
+      }
+      this.playClick();
+    };
+
+    document.addEventListener('pointerdown', handleInteraction, { capture: true, passive: true });
   }
 
   init() {
@@ -341,6 +373,9 @@ class SoundManager {
       const now = this.ctx.currentTime;
       this.musicMasterGain.gain.cancelScheduledValues(now);
       this.musicMasterGain.gain.setTargetAtTime(this.musicMuted ? 0.0001 : 1.0, now, 0.1);
+    }
+    if (!this.musicMuted) {
+      this.startSoundtrack();
     }
     return this.musicMuted;
   }
@@ -741,30 +776,53 @@ class SoundManager {
   }
 
   // -----------------------------------------------------------------------
-  // 6. UI KLICK (Taktil & diskret)
+  // 6. UI KLICK (Taktil, diskret & einheitlich im ganzen Spiel)
   // -----------------------------------------------------------------------
   playClick() {
     if (this.muted) return;
+    const nowMs = performance.now();
+    // 55ms Debounce verhindert doppeltes Klicken bei manuellem Aufruf + globalem Listener
+    if (this._lastClickMs && (nowMs - this._lastClickMs) < 55) return;
+    this._lastClickMs = nowMs;
+
     this.ensureContext();
     if (!this.ctx) return;
 
     try {
       const now = this.ctx.currentTime;
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
 
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(950, now);
-      osc.frequency.exponentialRampToValueAtTime(420, now + 0.035);
+      // Hochwertiger, harmonischer taktiler UI-Klick
+      // 1. Zarter Mikroklick / Transiente (kurzer Nadelimpuls)
+      const osc1 = this.ctx.createOscillator();
+      const gain1 = this.ctx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(1400, now);
+      osc1.frequency.exponentialRampToValueAtTime(360, now + 0.026);
 
-      gain.gain.setValueAtTime(0.08, now);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.035);
+      gain1.gain.setValueAtTime(0.085, now);
+      gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.026);
 
-      osc.connect(gain);
-      gain.connect(this.sfxGain);
+      osc1.connect(gain1);
+      gain1.connect(this.sfxGain);
 
-      osc.start(now);
-      osc.stop(now + 0.035);
+      osc1.start(now);
+      osc1.stop(now + 0.028);
+
+      // 2. Subtiler warmer Körper (Haptik-Pop)
+      const osc2 = this.ctx.createOscillator();
+      const gain2 = this.ctx.createGain();
+      osc2.type = 'triangle';
+      osc2.frequency.setValueAtTime(520, now);
+      osc2.frequency.exponentialRampToValueAtTime(180, now + 0.024);
+
+      gain2.gain.setValueAtTime(0.05, now);
+      gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.024);
+
+      osc2.connect(gain2);
+      gain2.connect(this.sfxGain);
+
+      osc2.start(now);
+      osc2.stop(now + 0.026);
     } catch (_) {}
   }
 
@@ -952,7 +1010,7 @@ class SoundManager {
   }
 
   // -----------------------------------------------------------------------
-  // 13. COCKPIT KOLLISIONS- / RÜCKKEHR-WARNUNG (Flugzeug-Alarm "Whoop-Whoop")
+  // 13. COCKPIT TANKALARM / RÜCKKEHR-WARNUNG (Harmonischer Sci-Fi Bordcomputer Chime)
   // -----------------------------------------------------------------------
   playCockpitAlarm() {
     if (this.muted) return;
@@ -961,30 +1019,60 @@ class SoundManager {
 
     const now = this.ctx.currentTime;
 
-    // Zwei rasante, ansteigende Tonstöße wie im Flugzeugcockpit (GPWS / TCAS Warnung)
-    [0, 0.20].forEach((delay) => {
-      const startTime = now + delay;
+    // Zwei edle, melodische Chime-Impulse (E5 -> B5, Quinte aufsteigend)
+    // Klingt wie ein moderner Raumschiff-Bordcomputer: klar verständlich, elegant & wohlklingend
+    const pulses = [
+      { freq: 659.25, timeOffset: 0.0 },  // E5
+      { freq: 987.77, timeOffset: 0.16 }  // B5
+    ];
+
+    pulses.forEach(({ freq, timeOffset }) => {
+      const t = now + timeOffset;
+      const duration = 0.28;
+
+      // 1. Warmer Grundton (Kombination aus Sine und weichem Triangle)
       const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
+      const oscHarmonic = this.ctx.createOscillator();
+      const subTone = this.ctx.createOscillator();
+      const noteGain = this.ctx.createGain();
       const filter = this.ctx.createBiquadFilter();
 
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(440, startTime);
-      osc.frequency.exponentialRampToValueAtTime(960, startTime + 0.14);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, t);
 
+      // Zweiter Oszillator für sanften Glocken-Oberton (Oktave + dezente Schwebung)
+      oscHarmonic.type = 'triangle';
+      oscHarmonic.frequency.setValueAtTime(freq * 2, t);
+
+      // Sub-Ton für akustische Fülle im Cockpit (eine Oktave tiefer)
+      subTone.type = 'sine';
+      subTone.frequency.setValueAtTime(freq * 0.5, t);
+
+      // Warmer Tiefpassfilter, nimmt jegliche scharfe Härte
       filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(2400, startTime);
+      filter.frequency.setValueAtTime(2600, t);
+      filter.frequency.exponentialRampToValueAtTime(1400, t + duration);
+      filter.Q.setValueAtTime(1.5, t);
 
-      gain.gain.setValueAtTime(0.20, startTime);
-      gain.gain.setValueAtTime(0.20, startTime + 0.10);
-      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.15);
+      // Glockenartige Hüllkurve: Knackfreier 5ms Attack, langes warmes Ausklingen
+      noteGain.gain.setValueAtTime(0.0001, t);
+      noteGain.gain.linearRampToValueAtTime(0.18, t + 0.006);
+      noteGain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
 
       osc.connect(filter);
-      filter.connect(gain);
-      gain.connect(this.sfxGain);
+      oscHarmonic.connect(filter);
+      subTone.connect(filter);
+      filter.connect(noteGain);
+      noteGain.connect(this.sfxGain);
 
-      osc.start(startTime);
-      osc.stop(startTime + 0.16);
+      osc.start(t);
+      oscHarmonic.start(t);
+      subTone.start(t);
+
+      const stopT = t + duration + 0.02;
+      osc.stop(stopT);
+      oscHarmonic.stop(stopT);
+      subTone.stop(stopT);
     });
   }
 
@@ -1526,8 +1614,11 @@ class SoundManager {
     const scheduleLoop = () => {
       if (!this.ctx) return;
       const now = this.ctx.currentTime;
+      if (nextChordTime < now) {
+        nextChordTime = now + 0.1;
+      }
 
-      // Solange vorausschauend für die nächsten 12 Sekunden vorplanen
+      // Solange vorausschauend für die nächsten 14 Sekunden vorplanen
       while (nextChordTime < now + 14) {
         const chord = chords[chordIndex % chords.length];
         const t = nextChordTime;
@@ -1574,7 +1665,7 @@ class SoundManager {
   }
 
   _playSubterraneanRumble() {
-    if (this.muted || !this.ctx || !this._ambientGain || this._soundtrackDepth <= 0.05) return;
+    if (this.muted || this.musicMuted || !this.ctx || !this._ambientGain || (this._lastDepth || 0) < 3) return;
     try {
       const now = this.ctx.currentTime;
       const duration = 5.0 + Math.random() * 3.5;
@@ -1628,28 +1719,47 @@ class SoundManager {
   }
 
   /**
+   * Startet den Soundtrack verlässlich (z. B. nach Spielstart oder Entmutung).
+   */
+  startSoundtrack() {
+    if (this.musicMuted) return;
+    this.ensureContext();
+    if (!this._soundtrackInitialized) {
+      this._initSoundtrack();
+    }
+    this.updateSoundtrack(this._lastDepth || 0);
+  }
+
+  /**
    * Wird im Spielzyklus aufgerufen.
-   * Regelt den Übergang zwischen Oberfläche (0% Soundtrack) und Untertage (sanft eingefadet).
+   * Regelt den Übergang zwischen Oberfläche (ruhige, wohlklingende Atmosphäre) und Untertage (anschwellend & tief).
    * @param {number} depthMeters - Aktuelle Tiefe in Metern
    */
   updateSoundtrack(depthMeters = 0) {
+    this._lastDepth = depthMeters;
+    if (this.musicMuted) {
+      if (this._ambientGain && this.ctx) {
+        this._ambientGain.gain.setTargetAtTime(0.0001, this.ctx.currentTime, 0.4);
+      }
+      return;
+    }
     if (!this.initialized) return;
     if (!this._soundtrackInitialized) {
       this._initSoundtrack();
     }
     if (!this._ambientGain || !this.ctx) return;
 
-    // Tiefe normalisieren: Bei Tiefe <= 1m (an der Oberfläche) = 0 (stumm).
-    // Ab 2m Tiefe setzt der Soundtrack sanft ein, ab 8m Tiefe ist er voll da (1.0).
-    const targetIntensity = depthMeters <= 1 ? 0 : Math.min(1.0, Math.max(0, (depthMeters - 1) / 7));
+    // Tiefe normalisieren:
+    // An der Oberfläche (0m) ein sanfter, atmosphärischer Streicher-Grundteppich (0.35).
+    // Mit zunehmender Tiefe steigt die Intensität kontinuierlich bis auf 1.0 (ab ca. 25m Tiefe).
+    const targetIntensity = Math.min(1.0, 0.35 + (Math.max(0, depthMeters) / 25) * 0.65);
     this._soundtrackDepth = targetIntensity;
 
-    // Angenehme Lautstärke für gemütliche Hintergrundmusik
-    const targetGain = this.musicMuted ? 0.0001 : targetIntensity * 0.42;
+    // Angenehme, wohlklingende Lautstärke für Hintergrundmusik
+    const targetGain = 0.22 + targetIntensity * 0.22;
     const now = this.ctx.currentTime;
 
-    // Sanfte zeitliche Zeitkonstante (~2.5s) für langsames, natürliches Ein- und Ausfaden
-    this._ambientGain.gain.setTargetAtTime(Math.max(0.0001, targetGain), now, 2.5);
+    this._ambientGain.gain.setTargetAtTime(targetGain, now, 1.8);
   }
 }
 

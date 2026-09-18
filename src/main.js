@@ -137,7 +137,46 @@ function initModalObserver() {
   }
 }
 
+export async function enableFullscreenLandscape() {
+  try {
+    const doc = document.documentElement;
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+      if (doc.requestFullscreen) {
+        await doc.requestFullscreen({ navigationUI: 'hide' });
+      } else if (doc.webkitRequestFullscreen) {
+        await doc.webkitRequestFullscreen();
+      }
+    }
+  } catch (_) {}
+
+  try {
+    if (window.screen && window.screen.orientation && window.screen.orientation.lock) {
+      await window.screen.orientation.lock('landscape');
+    }
+  } catch (_) {}
+}
+
 async function initGame() {
+  // Sofortiger Versuch beim Aufruf der URL
+  enableFullscreenLandscape();
+
+  // One-time Touch/Click-Listener für Mobilgeräte & Browser mit User-Gesture-Pflicht
+  const triggerOnGesture = () => {
+    enableFullscreenLandscape();
+  };
+  ['pointerdown', 'touchstart', 'click', 'keydown'].forEach(evt => {
+    window.addEventListener(evt, triggerOnGesture, { once: true, passive: true });
+  });
+
+  const btnForceLandscape = document.getElementById('btn-force-landscape');
+  if (btnForceLandscape) {
+    btnForceLandscape.addEventListener('click', () => {
+      enableFullscreenLandscape();
+      const tip = document.getElementById('orientation-tip');
+      if (tip) tip.style.display = 'none';
+    });
+  }
+
   if (typeof document !== 'undefined' && document.fonts && document.fonts.ready) {
     try {
       await document.fonts.ready;
@@ -156,4 +195,5 @@ if (document.readyState === 'loading') {
 } else {
   initGame();
 }
+
 

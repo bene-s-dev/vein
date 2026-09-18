@@ -268,6 +268,11 @@ export class MiningScene extends Phaser.Scene {
       soundFx.stopAllLoops?.();
       return;
     }
+
+    // Soundtrack dynamisch an Tiefe anpassen (auch während Modals, Depot oder im Schacht)
+    const currentDepth = this.player ? (this.player.depthMeters || 0) : 0;
+    soundFx.updateSoundtrack?.(currentDepth);
+
     if (this.isPaused || this.inStartScreen) {
       soundFx.stopAllLoops?.();
       return;
@@ -482,6 +487,9 @@ export class MiningScene extends Phaser.Scene {
           const tile = this.gridSystem.getTile(tgx, tgy);
           if (tile && tile.type !== 'empty' && !tile.indestructible) {
             if (tile.ore) {
+              if (this.player.discoverOre) {
+                this.player.discoverOre(tile.ore);
+              }
               if (this.player.cargo.length < this.player.maxCargo) {
                 this.player.collectOre(tile.ore);
                 oresCollected++;

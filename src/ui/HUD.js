@@ -37,9 +37,9 @@ export function launchConfetti() {
   } else {
     canvas = document.createElement('canvas');
     canvas.id = 'confetti-canvas';
-    canvas.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 250;';
     document.body.appendChild(canvas);
   }
+  canvas.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 20000;';
 
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
@@ -52,18 +52,18 @@ export function launchConfetti() {
     '#92400e', '#b45309', '#78350f', '#854d0e' // Braun (Satter Erdton, Bronze, Gesteinsbraun)
   ];
   const particles = [];
-  const numParticles = 65;
+  const numParticles = 90;
 
   for (let i = 0; i < numParticles; i++) {
     particles.push({
-      x: canvas.width / 2 + (Math.random() - 0.5) * 80,
-      y: canvas.height * 0.45 + (Math.random() - 0.5) * 60,
-      vx: (Math.random() - 0.5) * 16,
-      vy: -Math.random() * 14 - 5,
+      x: canvas.width / 2 + (Math.random() - 0.5) * (canvas.width * 0.4),
+      y: canvas.height * 0.38 + (Math.random() - 0.5) * 80,
+      vx: (Math.random() - 0.5) * 20,
+      vy: -Math.random() * 15 - 6,
       size: Math.random() * 8 + 6,
       color: colors[Math.floor(Math.random() * colors.length)],
       rotation: Math.random() * 360,
-      vRotation: (Math.random() - 0.5) * 12,
+      vRotation: (Math.random() - 0.5) * 14,
       opacity: 1,
       gravity: 0.35
     });
@@ -142,6 +142,7 @@ export class HUD {
     this.cargoMax = document.getElementById('hud-cargo-max');
     this.cashText = document.getElementById('hud-cash');
     this.depthText = document.getElementById('hud-depth');
+    this.depthVal = document.getElementById('hud-depth-val');
     this.recallBtn = document.getElementById('btn-recall');
     this.pauseBtn = document.getElementById('btn-pause') || document.getElementById('btn-settings');
     this.cardGauges = document.getElementById('card-gauges');
@@ -234,8 +235,9 @@ export class HUD {
     if (this.labelActionPneumatic) bindActionBtn(this.labelActionPneumatic, () => this.scene.baseSystem?.buildPneumaticStationAtPlayer?.());
     if (this.labelActionGeothermal) bindActionBtn(this.labelActionGeothermal, () => this.scene.baseSystem?.buildGeothermalStationAtPlayer?.());
 
-    // Toast- und Alarm-Tracking (nur 1x beim Point of No Return)
+    // Toast- und Alarm-Tracking (Point of No Return & Abfahrt mit zu wenig Tank)
     this.warnedPointOfNoReturn = false;
+    this.warnedLowFuelOnEntry = false;
 
     // Oberes linkes Bohrer-Status-Widget (Tank, Hülle, Fracht) als ein einheitliches klick-/tippbares Element
     let lastDrillerModalOpen = 0;
@@ -372,31 +374,33 @@ export class HUD {
           <span>NEUE ENTDECKUNG</span>
         </div>
 
-        <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-          ${oreIcon(oreType, 26)}
-          <h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #f8fafc; letter-spacing: 0.5px;">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 12px;">
+          <div style="filter: drop-shadow(0 4px 14px rgba(0,0,0,0.6)); display: flex; align-items: center; transform: scale(1.2);">
+            ${oreIcon(oreType, 36)}
+          </div>
+          <h2 style="margin: 0; font-size: 22px; font-weight: 800; color: #f8fafc; letter-spacing: 0.5px;">
             ${data.name.toUpperCase()}
           </h2>
         </div>
 
         <div style="display: flex; justify-content: center; gap: 8px; font-size: 12px; flex-wrap: wrap;">
-          <span style="background: rgba(251, 191, 36, 0.12); color: #fbbf24; font-weight: 800; padding: 4px 10px; border-radius: 8px;">
-            +€${data.value}
+          <span style="background: rgba(251, 191, 36, 0.12); border: 1px solid rgba(251, 191, 36, 0.25); color: #fbbf24; font-weight: 800; padding: 4px 10px; border-radius: 8px;">
+            Wert: €${data.value}
           </span>
-          <span style="background: rgba(56, 189, 248, 0.12); color: #38bdf8; font-weight: 700; padding: 4px 10px; border-radius: 8px;">
+          <span style="background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.25); color: #38bdf8; font-weight: 700; padding: 4px 10px; border-radius: 8px;">
             ab ${data.minDepth}m
           </span>
-          <span style="background: rgba(148, 163, 184, 0.12); color: #cbd5e1; font-weight: 700; padding: 4px 10px; border-radius: 8px;">
+          <span style="background: rgba(148, 163, 184, 0.12); border: 1px solid rgba(148, 163, 184, 0.25); color: #cbd5e1; font-weight: 700; padding: 4px 10px; border-radius: 8px;">
             Härte ${data.hardness}x
           </span>
         </div>
 
-        <p style="margin: 2px 0 6px 0; font-size: 13px; line-height: 1.5; color: #94a3b8; max-width: 300px;">
+        <p style="margin: 2px 0 6px 0; font-size: 13px; line-height: 1.5; color: #cbd5e1; max-width: 310px;">
           ${desc}
         </p>
 
         <button id="btn-discovery-ok" class="btn-buy" style="height: 38px; width: 100%; max-width: 180px; font-size: 13px; font-weight: 800; border-radius: 10px; margin-top: 4px;">
-          OK
+          Alles klar! ✓
         </button>
       </div>
     `;
@@ -405,22 +409,37 @@ export class HUD {
     refreshIcons(modalEl);
 
     const btnOk = document.getElementById('btn-discovery-ok');
+    let onKey = null;
+    const handleClose = (e) => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      if (onKey) {
+        window.removeEventListener('keydown', onKey);
+        onKey = null;
+      }
+      modalEl.classList.remove('discovery-modal-active');
+      document.body.classList.remove('discovery-modal-open');
+      document.body.classList.remove('modal-open');
+      modalEl.style.display = 'none';
+      if (!wasAlreadyPaused && this.scene) {
+        this.scene.isPaused = false;
+      }
+      notifyModalClosed();
+    };
+
     if (btnOk) {
-      btnOk.onclick = (e) => {
-        if (e) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-        modalEl.classList.remove('discovery-modal-active');
-        document.body.classList.remove('discovery-modal-open');
-        document.body.classList.remove('modal-open');
-        modalEl.style.display = 'none';
-        if (!wasAlreadyPaused && this.scene) {
-          this.scene.isPaused = false;
-        }
-        notifyModalClosed();
-      };
+      btnOk.onclick = handleClose;
+      btnOk.ontouchend = handleClose;
     }
+
+    onKey = (e) => {
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
+        handleClose(e);
+      }
+    };
+    window.addEventListener('keydown', onKey);
   } catch (err) {
     console.error('Error in showDiscoveryModal:', err);
     if (!wasAlreadyPaused && this.scene) {
@@ -519,6 +538,10 @@ export class HUD {
 
     // Gadget-Zähler aktualisieren
     if (this.player.gadgets) {
+      // Schutz vor unberechtigtem Dynamitbestand (nicht erforscht oder nie im Depot gekauft)
+      if (this.player.gadgets.dynamite > 0 && ((this.player.researchedTnt || 0) < 1 || !this.player.hasPurchasedDynamite)) {
+        this.player.gadgets.dynamite = 0;
+      }
       const dCount = this.player.gadgets.dynamite || 0;
       const fCount = this.player.gadgets.fuel_canister || 0;
       const rCount = this.player.gadgets.repair_kit || 0;
@@ -683,7 +706,21 @@ export class HUD {
     // --- Einzige Warnung bei kritischem Rückweg: Sofort umkehren ---
     if (isAtSurface) {
       this.warnedPointOfNoReturn = false;
+      this.warnedLowFuelOnEntry = false;
     } else if (isBelowGround) {
+      // Warnung beim Einfahren in den Schacht mit zu wenig Treibstoff (< 50%)
+      if (!this.warnedLowFuelOnEntry) {
+        this.warnedLowFuelOnEntry = true;
+        if (fuelPercent < 50) {
+          toastManager.show({
+            id: 'tank-warning-entry',
+            text: `Achtung: Tank fast leer (${Math.round(fuelPercent)}%)! Vor der Abfahrt auftanken.`,
+            duration: 4500,
+            sound: 'cockpit'
+          });
+        }
+      }
+
       if (isReturnCritical && !this.warnedPointOfNoReturn) {
         this.warnedPointOfNoReturn = true;
         toastManager.show({
@@ -777,7 +814,13 @@ export class HUD {
     }
     if (this._lastDepth !== this.player.depthMeters) {
       this._lastDepth = this.player.depthMeters;
-      if (this.depthText) this.depthText.textContent = `${this.player.depthMeters} m`;
+      const dVal = this.player.depthMeters;
+      const displayStr = dVal > 0 ? `-${dVal}` : '0';
+      if (this.depthVal) {
+        this.depthVal.textContent = displayStr;
+      } else if (this.depthText) {
+        this.depthText.textContent = `${displayStr} m`;
+      }
     }
   }
 
@@ -941,19 +984,16 @@ export class HUD {
             <strong style="color: #f8fafc; font-size: 12.5px;">${s.label}</strong>
             ${s.isCurrent ? '<span style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); color: #10b981; font-size: 9.5px; font-weight: 800; padding: 1px 6px; border-radius: 99px;">AKTIV</span>' : ''}
           </div>
-          <div style="font-size: 11px; color: ${s.exists ? '#94a3b8' : '#64748b'};">
+          <div style="font-size: 11px; color: ${s.exists ? '#94a3b8' : '#64748b'}; font-variant-numeric: tabular-nums;">
             ${s.exists
-              ? `Lv. ${s.level} · €${s.cash.toLocaleString()} · Tiefe: ${s.highestDepth}m · <span style="color: #64748b;">${s.dateFormatted}</span>`
+              ? `Lv. ${s.level} · €${s.cash.toLocaleString()} · Tiefe: ${s.highestDepth > 0 ? `-${s.highestDepth}` : '0'}m · <span style="color: #64748b;">${s.dateFormatted}</span>`
               : 'Freier Speicherplatz (Leer)'
             }
           </div>
         </div>
         <div style="display: flex; gap: 6px; align-items: center;">
-          <button class="btn-slot-load ${s.exists ? 'btn-action' : 'btn-3d-secondary'}" data-slot="${s.slotId}" ${s.exists ? '' : 'disabled'} style="height: 30px; padding: 0 10px; font-size: 11px; border: none; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;" title="Spielstand laden">
+          <button class="btn-slot-load ${s.exists ? 'btn-action' : 'btn-3d-secondary'}" data-slot="${s.slotId}" ${s.exists ? '' : 'disabled'} style="height: 30px; padding: 0 12px; font-size: 11px; border: none; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px;" title="Spielstand laden">
             ${icon('play', '', 12)} Laden
-          </button>
-          <button class="btn-slot-save btn-buy" data-slot="${s.slotId}" style="height: 30px; padding: 0 10px; font-size: 11px; border: none; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;" title="Aktuelles Spiel hier sichern">
-            ${icon('save', '', 12)} Sichern
           </button>
           ${s.exists ? `
             <button class="btn-slot-delete btn-3d-danger" data-slot="${s.slotId}" style="height: 30px; width: 30px; padding: 0; justify-content: center; display: inline-flex; align-items: center; border: none; border-radius: 6px;" title="Diesen Slot löschen">
@@ -1020,7 +1060,7 @@ export class HUD {
                 ${icon('database', '', 14)}
                 SPEICHERSTÄNDE (LOCALHOST)
               </strong>
-              <span style="color: #94a3b8; font-size: 11px; display: block; margin-top: 1px;">Speichere und lade unterschiedliche Spielstände im Browser</span>
+              <span style="color: #94a3b8; font-size: 11px; display: block; margin-top: 1px;">Wird laufend automatisch gesichert · Spielstände wechseln & laden</span>
             </div>
           </div>
 

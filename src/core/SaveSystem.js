@@ -206,6 +206,7 @@ export class SaveSystem {
         researchedStationTube: p.researchedStationTube || 0,
         sensorRadius: p.sensorRadius,
         freeRescues: typeof p.freeRescues === 'number' ? p.freeRescues : 3,
+        hasPurchasedDynamite: !!p.hasPurchasedDynamite,
         gadgets: { ...(p.gadgets || { dynamite: 0, fuel_canister: 0, repair_kit: 0 }) },
         discoveredArtifacts: [...(p.discoveredArtifacts || [])]
       },
@@ -390,7 +391,10 @@ export class SaveSystem {
       const sensorData = SENSOR_TIERS[p.sensorTier - 1] || SENSOR_TIERS[0];
       p.sensorRadius = sensorData.radius || 1.8;
 
-      p.discoveredOres = new Set(data.player.discoveredOres && data.player.discoveredOres.length ? data.player.discoveredOres : ['coal']);
+      p.discoveredOres = new Set(data.player.discoveredOres && data.player.discoveredOres.length ? data.player.discoveredOres : []);
+      if ((p.highestDepthReached || 0) <= 0 && (!data.player.stats || (data.player.stats.totalTilesMined || 0) === 0)) {
+        p.discoveredOres = new Set();
+      }
       if (Array.isArray(data.player.cargo)) {
         data.player.cargo.forEach(c => {
           const oreType = typeof c === 'string' ? c : c?.type;
@@ -415,21 +419,48 @@ export class SaveSystem {
       p.freeRescues = typeof data.player.freeRescues === 'number' ? data.player.freeRescues : 3;
 
       p.components = { ...(data.player.components || {}) };
+      // Schutz vor Altlasten: Wenn ein frisches Spiel auf Stufe 1 bei 0m geladen wird, keine Spezialbauteile vergeben
+      if ((p.highestDepthReached || 0) <= 0 && (p.level || 1) <= 1 && (!data.player.discoveredArtifacts || data.player.discoveredArtifacts.length === 0)) {
+        if (p.components && p.components.hydraulic_part) {
+          p.components.hydraulic_part = 0;
+        }
+      }
       p.factoryProducts = { ...(data.player.factoryProducts || {}) };
-      p.researchedTnt = typeof data.player.researchedTnt === 'number' ? data.player.researchedTnt : (data.player.gadgets?.dynamite > 0 ? 1 : 0);
-      p.researchedEmergency = typeof data.player.researchedEmergency === 'number' ? data.player.researchedEmergency : (data.player.gadgets?.fuel_canister > 0 ? 1 : 0);
+      let researchedTnt = typeof data.player.researchedTnt === 'number' ? data.player.researchedTnt : 0;
+      const hasPurchasedDynamite = !!data.player.hasPurchasedDynamite;
+      p.hasPurchasedDynamite = hasPurchasedDynamite;
+
+      // Bereinigung von fälschlicherweise vergebenem TNT-Forschungsstatus aus Kapsel-Altlasten
+      if (researchedTnt === 1 && !hasPurchasedDynamite) {
+        const hasIronTube = (data.player.discoveredProducts && data.player.discoveredProducts.includes('iron_tube')) ||
+                            (data.player.components && (data.player.components.iron_tube || 0) > 0) ||
+                            (data.player.factoryProducts && (data.player.factoryProducts.iron_tube || 0) > 0);
+        if (!hasIronTube && (p.level || 1) <= 3) {
+          researchedTnt = 0;
+        }
+      }
+      p.researchedTnt = researchedTnt;
+      p.researchedEmergency = typeof data.player.researchedEmergency === 'number' ? data.player.researchedEmergency : 0;
       p.researchedStationFuel = data.player.researchedStationFuel || 0;
       p.researchedStationTube = data.player.researchedStationTube || 0;
 
       let dynamiteCount = data.player.gadgets?.dynamite ?? 0;
-      if (dynamiteCount === 3 && (p.researchedTnt || 0) === 0 && (p.highestDepthReached || 0) <= 0) {
+      // Wenn TNT im Labor nicht erforscht wurde oder Dynamit nie im Depot gekauft wurde: zwingend 0 Dynamit!
+      if ((p.researchedTnt || 0) < 1 || !hasPurchasedDynamite) {
         dynamiteCount = 0;
+      }
+
+      let fuelCanisterCount = data.player.gadgets?.fuel_canister ?? 0;
+      let repairKitCount = data.player.gadgets?.repair_kit ?? 0;
+      if ((p.researchedEmergency || 0) < 1) {
+        fuelCanisterCount = 0;
+        repairKitCount = 0;
       }
 
       p.gadgets = {
         dynamite: dynamiteCount,
-        fuel_canister: data.player.gadgets?.fuel_canister ?? 0,
-        repair_kit: data.player.gadgets?.repair_kit ?? 0,
+        fuel_canister: fuelCanisterCount,
+        repair_kit: repairKitCount,
         tube_s1: data.player.gadgets?.tube_s1 ?? 0,
         tube_s2: data.player.gadgets?.tube_s2 ?? 0,
         tube_s3: data.player.gadgets?.tube_s3 ?? 0,

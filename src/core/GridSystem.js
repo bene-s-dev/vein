@@ -641,18 +641,23 @@ export class GridSystem {
 
     let bonusMsg = '';
     const roll = Math.random();
-    if (roll < 0.35) {
+    if (roll < 0.35 && (player.researchedTnt || 0) >= 1) {
       player.gadgets = player.gadgets || { dynamite: 0, fuel_canister: 0, repair_kit: 0 };
       player.gadgets.dynamite = (player.gadgets.dynamite || 0) + 1;
       bonusMsg = ' + 1x Dynamit';
-    } else if (roll < 0.65) {
+    } else if (roll < 0.65 && (player.researchedEmergency || 0) >= 1) {
       player.gadgets = player.gadgets || { dynamite: 0, fuel_canister: 0, repair_kit: 0 };
       player.gadgets.fuel_canister = (player.gadgets.fuel_canister || 0) + 1;
       bonusMsg = ' + 1x Treibstoff-Kanister';
-    } else if (roll < 0.85) {
+    } else if (roll < 0.85 && (player.researchedEmergency || 0) >= 1) {
       player.gadgets = player.gadgets || { dynamite: 0, fuel_canister: 0, repair_kit: 0 };
       player.gadgets.repair_kit = (player.gadgets.repair_kit || 0) + 1;
       bonusMsg = ' + 1x Reparatur-Kit';
+    } else {
+      const extraCash = 250;
+      player.cash += extraCash;
+      player.stats.totalCashEarned = (player.stats.totalCashEarned || 0) + extraCash;
+      bonusMsg = ` + $${extraCash} Bonus`;
     }
 
     soundFx.playPurchase();

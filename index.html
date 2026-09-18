@@ -3,6 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="screen-orientation" content="landscape">
+  <meta name="x5-orientation" content="landscape">
   <title>VEIN</title>
   <meta name="description" content="VEIN - Tiefen-Bergbau & Bergungs-Expedition in die Erdkruste.">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
@@ -416,11 +421,28 @@
 
     .depth-badge {
       color: #ffffff !important;
-      font-weight: 700;
-      min-width: 48px;
-      text-align: center;
+      font-weight: 800;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 1.5px;
+      white-space: nowrap;
       font-variant-numeric: tabular-nums;
-      display: inline-block;
+    }
+
+    #hud-depth-val {
+      color: #ffffff;
+      font-variant-numeric: tabular-nums;
+      font-family: var(--font-family);
+    }
+
+    #hud-depth-unit {
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 13px;
+      user-select: none;
+      margin-left: 0.5px;
     }
 
     #hud-level-right {
@@ -498,13 +520,15 @@
       flex-shrink: 0;
     }
 
-    /* HUD im Menü: Vollständig transparenter Hintergrund, keinerlei Verschiebung oder Größenänderung */
+    /* HUD im Menü: Minimalistische Höhe knapp unter dem Schließen-Button, keine Trennlinie */
     body.modal-open #hud-overlay {
-      background: transparent !important;
-      backdrop-filter: none !important;
-      -webkit-backdrop-filter: none !important;
-      border: none !important;
-      box-shadow: none !important;
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.96) 0%, rgba(15, 23, 42, 0.90) 100%) !important;
+      backdrop-filter: blur(14px) !important;
+      -webkit-backdrop-filter: blur(14px) !important;
+      border-bottom: none !important;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45) !important;
+      padding-top: max(6px, env(safe-area-inset-top)) !important;
+      padding-bottom: 4px !important;
       pointer-events: none !important;
       transition: none !important;
     }
@@ -1114,26 +1138,53 @@
 
     /* Dezent gestalteter Orientierungs-Hinweis für Mobile */
     #orientation-tip {
-      position: absolute;
-      bottom: 18px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(15, 23, 42, 0.92);
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      color: #94a3b8;
-      font-size: 11px;
-      font-weight: 600;
-      padding: 6px 14px;
-      border-radius: 99px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(12px);
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(9, 13, 22, 0.95);
+      border: none;
+      color: #f8fafc;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 24px;
+      box-shadow: none;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       display: none;
+      flex-direction: column;
+      justify-content: center;
       align-items: center;
-      gap: 10px;
-      z-index: 110;
+      text-align: center;
+      gap: 16px;
+      z-index: 9999;
       pointer-events: auto;
-      white-space: nowrap;
       transition: opacity 0.25s ease-out;
+    }
+
+    #orientation-tip .rotate-icon {
+      width: 54px;
+      height: 54px;
+      color: #38bdf8;
+      animation: rotatePhone 2s infinite ease-in-out;
+    }
+
+    @keyframes rotatePhone {
+      0%, 10% { transform: rotate(0deg); }
+      50%, 60% { transform: rotate(-90deg); }
+      90%, 100% { transform: rotate(0deg); }
+    }
+
+    #orientation-tip button.btn-orient-action {
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      color: #ffffff;
+      border: 1px solid rgba(56, 189, 248, 0.6);
+      padding: 10px 22px;
+      border-radius: 99px;
+      font-weight: 800;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
     }
 
     #close-tip {
@@ -2718,7 +2769,7 @@
       <!-- Center: Cockpit Depth Widget / Modal Title in Menus -->
       <div class="hud-card" id="hud-center-depth">
         <div class="stat-row" style="align-items: center; justify-content: center;">
-          <span class="hud-value-badge depth-badge" id="hud-depth" style="color: #f8fafc; font-weight: 800; font-size: 14px;">0 m</span>
+          <span class="hud-value-badge depth-badge" id="hud-depth"><span id="hud-depth-val">0</span><span id="hud-depth-unit">m</span></span>
           <div id="hud-center-menu-title"></div>
         </div>
       </div>
@@ -2776,10 +2827,20 @@
     <!-- Top-Center Toast Container for Warnings & Notifications -->
     <div id="toast-container"></div>
 
-    <!-- Dezent gestalteter Orientierungs-Hinweis auf schmalen Bildschirmen -->
+    <!-- Orientierungs-Hinweis & Querformat-Aufforderung -->
     <div id="orientation-tip">
-      <span style="display: inline-flex; align-items: center; gap: 5px;"><i data-lucide="smartphone" style="width: 13px; height: 13px;"></i> Querformat empfohlen</span>
-      <button id="close-tip" onclick="document.getElementById('orientation-tip').style.display='none';">✕</button>
+      <svg class="rotate-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+        <line x1="12" y1="18" x2="12.01" y2="18"></line>
+      </svg>
+      <div style="font-size: 16px; font-weight: 800; color: #f8fafc;">Bitte Gerät ins Querformat drehen</div>
+      <div style="font-size: 12px; color: #94a3b8; max-width: 280px; line-height: 1.4;">
+        VEIN ist für das horizontale Bergbau-Erlebnis im Vollbild ausgelegt.
+      </div>
+      <button class="btn-orient-action" id="btn-force-landscape">
+        Vollbild & Querformat aktivieren
+      </button>
+      <button id="close-tip" onclick="document.getElementById('orientation-tip').style.display='none';" style="color: #64748b; font-size: 11px; margin-top: 8px;">Trotzdem fortfahren</button>
     </div>
 
     <!-- Frei platzierbarer Floating Joystick in dezenten Grautönen -->
@@ -2813,8 +2874,8 @@
 
         <!-- 3. Dynamit / TNT platzieren -->
         <div class="fab-item-row" id="row-action-dynamite">
-          <span class="fab-label">Dynamit (B)</span>
-          <button id="btn-gadget-dynamite" class="btn-fab-item" title="Dynamit im Fels platzieren (Taste B, T oder 1)">
+          <span class="fab-label">Dynamit</span>
+          <button id="btn-gadget-dynamite" class="btn-fab-item" title="Dynamit im Fels platzieren">
             <span class="fab-icon" style="color: #ef4444;"><i data-lucide="bomb" style="width: 17px; height: 17px;"></i></span>
             <span class="fab-badge" id="gadget-count-dynamite">0</span>
           </button>
@@ -2824,7 +2885,7 @@
       <!-- Aktionsleiste unten rechts -->
       <div style="display: flex; align-items: center; gap: 8px;">
         <!-- Direkter Fernzündungs-Button: erscheint automatisch, sobald 1+ TNT im Schacht scharf liegt -->
-        <button id="btn-action-detonate" class="btn-fab-detonate" style="display: none;" title="Alle platzierten TNT-Ladungen zünden (Taste Z)">
+        <button id="btn-action-detonate" class="btn-fab-detonate" style="display: none;" title="Alle platzierten TNT-Ladungen zünden">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>
           </svg>

@@ -3,6 +3,7 @@ import { SaveSystem } from '../core/SaveSystem.js';
 import { soundFx } from '../core/SoundEffects.js';
 import { icon, refreshIcons } from './IconHelper.js';
 import { TutorialModal } from './TutorialModal.js';
+import { enableFullscreenLandscape } from '../main.js';
 
 /**
  * Erzeugt das exakte, pixel-perfekte PNG-Bild des VEIN-Startbildschirms (1:1 wie im Screenshot).
@@ -313,8 +314,8 @@ export class StartScreen {
               </span>
               <span style="font-size: 9px; color: #94a3b8;">Lv.${levelVal}</span>
             </div>
-            <strong style="color: #38bdf8; font-weight: 800; font-size: 11.5px; margin-left: 8px; flex-shrink: 0;">
-              ${depthVal} m
+            <strong style="color: #38bdf8; font-weight: 800; font-size: 11.5px; margin-left: 8px; flex-shrink: 0; font-variant-numeric: tabular-nums;">
+              ${depthVal > 0 ? `-${depthVal}` : '0'} m
             </strong>
           </div>
         `;
@@ -328,6 +329,7 @@ export class StartScreen {
     const btnNew = document.getElementById('btn-start-new-game');
     if (btnNew) {
       btnNew.onclick = () => {
+        enableFullscreenLandscape();
         soundFx.playClick();
         this.openNameModal(false);
       };
@@ -336,6 +338,7 @@ export class StartScreen {
     const btnContinue = document.getElementById('btn-start-continue-game');
     if (btnContinue) {
       btnContinue.onclick = () => {
+        enableFullscreenLandscape();
         soundFx.playClick();
         this.openSlotsModal();
       };
@@ -414,7 +417,7 @@ export class StartScreen {
               ${s.isCurrent ? `<span style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; font-size: 9px; font-weight: 800; padding: 1px 6px; border-radius: 99px;">Aktiv</span>` : ''}
             </div>
             <div style="color: #94a3b8; font-size: 11px;">
-              Tiefe: <strong style="color: #38bdf8;">${s.highestDepth}m</strong> · Lv.${s.level} · ${s.dateFormatted}
+              Tiefe: <strong style="color: #38bdf8; font-variant-numeric: tabular-nums;">${s.highestDepth > 0 ? `-${s.highestDepth}` : '0'}m</strong> · Lv.${s.level} · ${s.dateFormatted}
             </div>
           </div>
           <button class="btn-buy" style="height: 32px; padding: 0 12px; font-size: 11.5px; font-weight: 800; border-radius: 7px; pointer-events: none;">
@@ -485,6 +488,8 @@ export class StartScreen {
         const p = this.scene.player;
         p.cargo = [];
         p.cash = 0;
+        p.discoveredOres = new Set();
+        p.seenGeologistQuests = new Set();
         p.level = 1;
         p.xp = 0;
         p.xpNeeded = 350;
@@ -501,7 +506,31 @@ export class StartScreen {
         p.maxFuel = 40;
         p.fuel = 40;
         p.freeRescues = 3;
+        p.hasPurchasedDynamite = false;
+        p.researchedTnt = 0;
+        p.researchedEmergency = 0;
+        p.researchedStationFuel = 0;
+        p.researchedStationTube = 0;
         p.gadgets = { dynamite: 0, fuel_canister: 0, repair_kit: 0 };
+        p.components = {
+          hydraulic_part: 0,
+          titan_alloy: 0,
+          laser_lens: 0,
+          quantum_chip: 0,
+          iron_tube: 0,
+          bronze_gear: 0,
+          silver_coil: 0,
+          crystal_lens: 0,
+          titan_bolt: 0,
+          quantum_core: 0,
+          microprocessor: 0,
+          capacitor: 0,
+          spectrometer: 0,
+          plasma_regulator: 0,
+          graviton_core: 0,
+          quantum_processor: 0
+        };
+        p.factoryProducts = {};
         p.gx = 15;
         p.gy = -1;
         p.x = 15 * 32 + 16;
@@ -555,6 +584,8 @@ export class StartScreen {
       this.container.style.pointerEvents = 'none';
       this.container.style.display = 'none';
     }
+
+    soundFx.startSoundtrack?.();
 
     if (this.scene) {
       this.scene.inStartScreen = false;

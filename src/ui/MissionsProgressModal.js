@@ -264,7 +264,7 @@ export class MissionsProgressModal {
           align-items: center;
           font-size: 12px;
         ">
-          <span style="color: #cbd5e1; font-weight: 600;">Aktuelle Schachttiefe: <strong style="color: #38bdf8; font-weight: 800;">${this.player.depthMeters}m</strong></span>
+          <span style="color: #cbd5e1; font-weight: 600;">Aktuelle Schachttiefe: <strong style="color: #38bdf8; font-weight: 800; font-variant-numeric: tabular-nums;">${this.player.depthMeters > 0 ? `-${this.player.depthMeters}` : '0'}m</strong></span>
           <span style="color: #cbd5e1; font-weight: 600;">Frachtraum: <strong style="color: #f8fafc; font-weight: 800;">${this.player.cargoCount}/${this.player.maxCargo}</strong></span>
           <button id="btn-go-pool" class="btn-action" style="padding: 5px 10px; font-size: 11px;">
             ${icon('list', '', 12)} Alle Aufträge ansehen
@@ -649,8 +649,8 @@ export class MissionsProgressModal {
             <span style="font-size: 11px; color: #cbd5e1; font-weight: 700; display: flex; align-items: center; gap: 4px;">
               ${icon('arrow-down', '', 12)} Maximale Schachttiefe
             </span>
-            <strong style="color: #38bdf8; font-size: 18px; font-weight: 800; display: block; margin-top: 2px;">
-              ${p.highestDepthReached || p.depthMeters || 0} m
+            <strong style="color: #38bdf8; font-size: 18px; font-weight: 800; display: block; margin-top: 2px; font-variant-numeric: tabular-nums;">
+              ${(p.highestDepthReached || p.depthMeters || 0) > 0 ? `-${p.highestDepthReached || p.depthMeters}` : '0'} m
             </strong>
           </div>
 
