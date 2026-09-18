@@ -484,7 +484,7 @@ export class StartScreen {
       if (this.scene && this.scene.player) {
         const p = this.scene.player;
         p.cargo = [];
-        p.cash = 60;
+        p.cash = 0;
         p.level = 1;
         p.xp = 0;
         p.xpNeeded = 350;
@@ -501,7 +501,7 @@ export class StartScreen {
         p.maxFuel = 40;
         p.fuel = 40;
         p.freeRescues = 3;
-        p.gadgets = { dynamite: 3, fuel_canister: 2, repair_kit: 2 };
+        p.gadgets = { dynamite: 0, fuel_canister: 0, repair_kit: 0 };
         p.gx = 15;
         p.gy = -1;
         p.x = 15 * 32 + 16;

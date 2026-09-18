@@ -213,7 +213,7 @@ export class Player {
     // Rettungen (3 kostenlos, danach Bergungsgebühr)
     this.freeRescues = 3;
 
-    this.cash = 60; // Startguthaben für Treibstoff und erste Ausrüstung
+    this.cash = 0; // Startet mit 0 Geld
 
     // Level- und XP-System (saubere Progression: Start bei Level 1)
     this.level = 1;
@@ -706,7 +706,7 @@ export class Player {
   }
 
   useFuelCanister() {
-    if (!this.gadgets) this.gadgets = { dynamite: 3, fuel_canister: 2, repair_kit: 2 };
+    if (!this.gadgets) this.gadgets = { dynamite: 0, fuel_canister: 0, repair_kit: 0 };
     if ((this.gadgets.fuel_canister || 0) <= 0) {
       this.scene.hud?.showToast('Kein Treibstoff-Kanister im Vorrat!', 'warning');
       soundFx.playError();

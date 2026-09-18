@@ -341,8 +341,10 @@ export class SaveSystem {
 
 
 
-      // 2. Spieler-Progression & Attribute
-      p.cash = typeof data.player.cash === 'number' ? data.player.cash : p.cash;
+      p.cash = typeof data.player.cash === 'number' ? data.player.cash : 0;
+      if (p.cash === 60 && (p.highestDepthReached || 0) <= 0 && (!data.player.stats || (data.player.stats.totalTilesMined || 0) === 0)) {
+        p.cash = 0;
+      }
       p.level = data.player.level || 1;
       p.xp = data.player.xp || 0;
       p.xpNeeded = data.player.xpNeeded || 350;
@@ -419,8 +421,13 @@ export class SaveSystem {
       p.researchedStationFuel = data.player.researchedStationFuel || 0;
       p.researchedStationTube = data.player.researchedStationTube || 0;
 
+      let dynamiteCount = data.player.gadgets?.dynamite ?? 0;
+      if (dynamiteCount === 3 && (p.researchedTnt || 0) === 0 && (p.highestDepthReached || 0) <= 0) {
+        dynamiteCount = 0;
+      }
+
       p.gadgets = {
-        dynamite: data.player.gadgets?.dynamite ?? 0,
+        dynamite: dynamiteCount,
         fuel_canister: data.player.gadgets?.fuel_canister ?? 0,
         repair_kit: data.player.gadgets?.repair_kit ?? 0,
         tube_s1: data.player.gadgets?.tube_s1 ?? 0,
