@@ -574,9 +574,11 @@ export class MiningScene extends Phaser.Scene {
   checkFuelStatusAndShowRescue() {
     if (!this.player || this.inStartScreen) return;
     const currentY = this.player.sprite ? this.player.sprite.y : (this.player.gy * 32 + 16);
-    const isBelowGround = (this.player.gy >= 0 || currentY >= 8);
+    const isAtSurface = this.player.gy < 0 || currentY <= -8;
+    const isNearHangar = isAtSurface && (this.player.gx >= 13 && this.player.gx <= 17);
+    const isFuelEmpty = (this.player.fuel <= 0.05);
 
-    if (this.player.isGameOver || (this.player.fuel <= 0 && isBelowGround)) {
+    if (this.player.isGameOver || (isFuelEmpty && (!isAtSurface || !isNearHangar))) {
       if (this.rescueModal && !this.rescueModal.isOpen) {
         this.rescueModal.open();
       }

@@ -143,14 +143,22 @@ export class EmergencyRescueModal {
             color: #cbd5e1;
           ">
             <div style="display: flex; gap: 10px; align-items: flex-start;">
-              <div style="color: #fbbf24; flex-shrink: 0; margin-top: 1px;">
-                ${icon('info', '', 16)}
+              <div style="color: #38bdf8; flex-shrink: 0; margin-top: 1px;">
+                ${icon('shield', '', 18)}
               </div>
               <div>
-                <strong>Erste Rettung ist kostenlos!</strong><br>
+                <strong style="color: #38bdf8; font-size: 12.5px;">1. Rettung ist kostenlos!</strong><br>
                 Die Basis schleppt deinen Crawler sofort zur Oberfläche und lädt den Tank auf 20% auf.<br><br>
-                <span style="color: #fb923c; font-weight: 700;">Wichtiger Hinweis:</span>
-                Dies ist deine einzige kostenlose Rettung. Für alle zukünftigen Notfälle musst du im <strong>Büro (Tab „Versicherung“)</strong> eine Schicht-Versicherung abschließen. Ohne Versicherung führt jeder weitere Treibstoffmangel zum <strong>Game Over</strong>!
+                <div style="
+                  background: rgba(245, 158, 11, 0.12);
+                  border: 1px solid rgba(245, 158, 11, 0.35);
+                  border-radius: 8px;
+                  padding: 8px 10px;
+                  margin-top: 4px;
+                ">
+                  <span style="color: #fbbf24; font-weight: 800; display: block; margin-bottom: 2px;">⚠️ Wichtiger Hinweis zu Versicherungen:</span>
+                  Dies ist deine <strong>einzige kostenlose Rettung</strong>! Für alle künftigen Schichten musst du im <strong>Büro (Tab „Versicherung“)</strong> eine Schicht-Versicherung abschließen. Ohne Versicherung führt der nächste Treibstoffmangel unweigerlich zum <strong>Game Over</strong>!
+                </div>
               </div>
             </div>
           </div>

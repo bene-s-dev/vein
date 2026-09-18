@@ -151,11 +151,18 @@ export class HUD {
     this.returnWarn = document.getElementById('hud-return-warn');
     this.rescueFab = document.getElementById('hud-rescue-fab');
     if (this.rescueFab) {
-      this.rescueFab.onclick = () => {
+      const openRescue = (e) => {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
         if (this.scene.rescueModal) {
           this.scene.rescueModal.open();
         }
       };
+      ['pointerdown', 'touchstart', 'click'].forEach(evt => {
+        this.rescueFab.addEventListener(evt, openRescue, { passive: false });
+      });
     }
 
     // Action FAB & Speed Dial (Ausrüstung & Untertage-Stationen)
@@ -711,9 +718,11 @@ export class HUD {
       this.returnWarn.style.display = isReturnCritical ? 'inline-flex' : 'none';
     }
 
-    // Notfall-Rettung Button (bei leerem Tank unter Tage)
+    // Notfall-Rettung Button (bei leerem Tank unter Tage oder außerhalb des Hangars)
     if (this.rescueFab) {
-      const showRescueFab = (this.player.fuel <= 0 && isBelowGround) || !!this.player.isGameOver;
+      const isFuelEmpty = (this.player.fuel <= 0.05);
+      const isAtHangar = isAtSurface && (this.player.gx >= 13 && this.player.gx <= 17);
+      const showRescueFab = (isFuelEmpty && (!isAtSurface || !isAtHangar)) || !!this.player.isGameOver;
       this.rescueFab.style.display = showRescueFab ? 'inline-flex' : 'none';
     }
 
