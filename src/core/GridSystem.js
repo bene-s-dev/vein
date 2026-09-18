@@ -41,6 +41,7 @@ export const ORE_DATA = {
     id: 'coal',
     name: 'Kohle',
     color: '#222222',
+    sprite: 'ore_coal',
     value: 5,
     hardness: 1.0,
     minDepth: 0,
@@ -50,6 +51,7 @@ export const ORE_DATA = {
     id: 'copper',
     name: 'Kupfer',
     color: '#b87333',
+    sprite: 'ore_copper',
     value: 12,
     hardness: 1.3,
     minDepth: 5,
@@ -59,6 +61,7 @@ export const ORE_DATA = {
     id: 'iron',
     name: 'Eisen',
     color: '#8b9bb4',
+    sprite: 'ore_iron',
     value: 28,
     hardness: 1.7,
     minDepth: 18,
@@ -68,6 +71,7 @@ export const ORE_DATA = {
     id: 'tin',
     name: 'Zinn',
     color: '#cbd5e1',
+    sprite: 'ore_tin',
     value: 45,
     hardness: 2.0,
     minDepth: 65,
@@ -77,6 +81,7 @@ export const ORE_DATA = {
     id: 'silver',
     name: 'Silber',
     color: '#e2e8f0',
+    sprite: 'ore_silver',
     value: 75,
     hardness: 2.3,
     minDepth: 130,
@@ -86,6 +91,7 @@ export const ORE_DATA = {
     id: 'gold',
     name: 'Gold',
     color: '#fbbf24',
+    sprite: 'ore_gold',
     value: 120,
     hardness: 2.6,
     minDepth: 220,
@@ -95,6 +101,7 @@ export const ORE_DATA = {
     id: 'emerald',
     name: 'Smaragd',
     color: '#10b981',
+    sprite: 'ore_emerald',
     value: 200,
     hardness: 3.0,
     minDepth: 340,
@@ -104,6 +111,7 @@ export const ORE_DATA = {
     id: 'sapphire',
     name: 'Saphir',
     color: '#3b82f6',
+    sprite: 'ore_sapphire',
     value: 320,
     hardness: 3.3,
     minDepth: 490,
@@ -113,6 +121,7 @@ export const ORE_DATA = {
     id: 'ruby',
     name: 'Rubin',
     color: '#ef4444',
+    sprite: 'ore_ruby',
     value: 500,
     hardness: 3.6,
     minDepth: 680,
@@ -122,6 +131,7 @@ export const ORE_DATA = {
     id: 'diamond',
     name: 'Diamant',
     color: '#38bdf8',
+    sprite: 'ore_diamond',
     value: 800,
     hardness: 4.0,
     minDepth: 890,
@@ -131,6 +141,7 @@ export const ORE_DATA = {
     id: 'titanium',
     name: 'Titan',
     color: '#94a3b8',
+    sprite: 'ore_titanium',
     value: 1250,
     hardness: 4.3,
     minDepth: 1100,
@@ -140,6 +151,7 @@ export const ORE_DATA = {
     id: 'platinum',
     name: 'Platin',
     color: '#f1f5f9',
+    sprite: 'ore_platinum',
     value: 1800,
     hardness: 4.6,
     minDepth: 1300,
@@ -149,6 +161,7 @@ export const ORE_DATA = {
     id: 'uranium',
     name: 'Uran',
     color: '#4ade80',
+    sprite: 'ore_uranium',
     value: 2600,
     hardness: 4.9,
     minDepth: 1450,
@@ -158,6 +171,7 @@ export const ORE_DATA = {
     id: 'obsidian_gem',
     name: 'Obsidian-Kern',
     color: '#818cf8',
+    sprite: 'ore_obsidian_gem',
     value: 3800,
     hardness: 5.2,
     minDepth: 1600,
@@ -167,6 +181,7 @@ export const ORE_DATA = {
     id: 'dark_matter',
     name: 'Dunkle Materie',
     color: '#c084fc',
+    sprite: 'ore_dark_matter',
     value: 6000,
     hardness: 5.5,
     minDepth: 1700,
@@ -845,8 +860,9 @@ export class GridSystem {
             .setTint(tileTint);
           let oreSprite = null;
 
-          if (tile.ore && ORE_DATA[tile.ore]) {
-            oreSprite = this.scene.add.image(tileCenterX, tileCenterY, ORE_DATA[tile.ore].sprite)
+          if (tile.ore && (ORE_DATA[tile.ore] || this.scene.textures.exists(`ore_${tile.ore}`))) {
+            const oreTex = ORE_DATA[tile.ore]?.sprite || `ore_${tile.ore}`;
+            oreSprite = this.scene.add.image(tileCenterX, tileCenterY, oreTex)
               .setDepth(3)
               .setTint(oreTint);
           }
@@ -867,7 +883,7 @@ export class GridSystem {
           }
           if (!bundle.bgSprite.visible) bundle.bgSprite.setVisible(true);
 
-          const expectedOreSprite = (tile.ore && ORE_DATA[tile.ore]) ? ORE_DATA[tile.ore].sprite : null;
+          const expectedOreSprite = tile.ore ? (ORE_DATA[tile.ore]?.sprite || `ore_${tile.ore}`) : null;
           if (expectedOreSprite) {
             if (!bundle.oreSprite) {
               bundle.oreSprite = this.scene.add.image(tileCenterX, tileCenterY, expectedOreSprite)
