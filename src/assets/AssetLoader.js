@@ -4141,22 +4141,13 @@ export class AssetLoader {
       ctx.fillStyle = '#94a3b8';
       ctx.fillRect(37.5, 16, 1, 36);
 
-      // 6. Explosionsgeschützte Industrie-Grubenleuchte mit volumetrischem Lichtkegel
+      // 6. Explosionsgeschützte Industrie-Grubenleuchte
       ctx.fillStyle = '#334155';
       ctx.fillRect(35, 17, 6, 3); // Fassung mit Schutzkorb
       ctx.fillStyle = '#f59e0b';
       ctx.fillRect(36, 20, 4, 3); // Birne
       ctx.fillStyle = '#fef08a';
       ctx.fillRect(37, 21, 2, 2); // Glühwendel
-
-      // Weicher Lichtkegel in die Tiefe
-      ctx.fillStyle = 'rgba(251, 191, 36, 0.18)';
-      ctx.beginPath();
-      ctx.moveTo(38, 23);
-      ctx.lineTo(16, 52);
-      ctx.lineTo(60, 52);
-      ctx.closePath();
-      ctx.fill();
     });
 
     // D1) STARTER-LABOR TIER 1 (54x40) - Kompaktes Modernes Weißes Labor

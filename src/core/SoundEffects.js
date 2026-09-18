@@ -1219,8 +1219,8 @@ class SoundManager {
     const now = this.ctx.currentTime;
     // Harmonischer Aufwärts-Doppelakkord (C6 1046.5 Hz -> E6 1318.5 Hz) als klares "Voll!"-Signal
     const tones = [
-      { freq: 1046.50, delay: 0.0, gain: 0.18, decay: 0.25 },
-      { freq: 1318.51, delay: 0.08, gain: 0.24, decay: 0.38 }
+      { freq: 1046.50, delay: 0.0, gain: 0.09, decay: 0.22 },
+      { freq: 1318.51, delay: 0.08, gain: 0.12, decay: 0.35 }
     ];
 
     tones.forEach(({ freq, delay, gain: vol, decay }) => {
