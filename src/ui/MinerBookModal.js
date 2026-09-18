@@ -422,7 +422,7 @@ export class MinerBookModal {
       { id: 'ores', label: 'Erze', icon: 'gem' },
       { id: 'layers', label: 'Schichten', icon: 'mountain' },
       { id: 'products', label: 'Waren', icon: 'factory' },
-      { id: 'codex', label: 'Kodex', icon: 'shield-check' }
+      { id: 'codex', label: 'Infos', icon: 'info' }
     ];
 
     const tabButtonsHtml = tabs.map(t => {
@@ -912,45 +912,47 @@ export class MinerBookModal {
   renderCodexTab() {
     return `
       <div style="display: flex; flex-direction: column; gap: 8px;">
-        <div style="background: rgba(15, 23, 42, 0.75); border: none; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
           <div style="font-size: 12px; font-weight: 800; color: #f59e0b; display: flex; align-items: center; gap: 6px;">
             ${icon('fuel', '', 14)}
-            <span>§ 1 TREIBSTOFF & BOHRVERBRAUCH</span>
+            <span>§ 1 TREIBSTOFF & RÜCKKEHR-RESERVE</span>
           </div>
-          <div style="font-size: 11px; color: #94a3b8; line-height: 1.5;">
-            Sowohl Fahren als auch das kontinuierliche <strong>Bohren durch festes Gestein verbraucht Treibstoff (1.5 L/s)</strong>.
-            Beobachte stets die dynamische schwarze Markierung auf deinem Tankbalken: Fällt dein Tank unter diese Linie, reicht das Kerosin nicht mehr für den freien Steigflug zur Erdoberfläche!
+          <div style="font-size: 11px; color: #cbd5e1; line-height: 1.5;">
+            Sowohl Fahren als auch Bohren und der Steigflug verbrauchen Treibstoff. Der <strong>rote Balken in deiner Tankanzeige</strong> markiert deinen dynamischen Rückkehr-Bedarf inklusive Sicherheitsreserve: Fällt dein Kerosinstand in diesen roten Bereich, solltest du sofort umkehren, um noch aus eigener Kraft die Erdoberfläche zu erreichen!
           </div>
         </div>
 
-        <div style="background: rgba(15, 23, 42, 0.75); border: none; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
           <div style="font-size: 12px; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 6px;">
             ${icon('rocket', '', 14)}
             <span>§ 2 STEIGFLUG & SCHUBDÜSEN</span>
           </div>
-          <div style="font-size: 11px; color: #94a3b8; line-height: 1.5;">
-            Halte <strong>W</strong> oder <strong>↑</strong> (oder auf Mobile den Joystick nach oben) gedrückt, um mit dem Triebwerk aufzusteigen.
-            <strong>Tipp:</strong> Fliege immer durch bereits freigebohrte Schächte zurück, anstatt neues Gestein zu zerkleinern – das spart enormes Kerosin.
+          <div style="font-size: 11px; color: #cbd5e1; line-height: 1.5;">
+            Halte <strong>W</strong> oder <strong>↑</strong> (bzw. auf Mobilgeräten den Joystick nach oben) gedrückt, um mit dem Triebwerk aufzusteigen.
+            <strong>Tipp:</strong> Fliege immer durch bereits freigebohrte Schächte zurück, anstatt neues Gestein im Steigflug zu zerkleinern – das spart enormes Kerosin.
           </div>
         </div>
 
-        <div style="background: rgba(15, 23, 42, 0.75); border: none; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
           <div style="font-size: 12px; font-weight: 800; color: #10b981; display: flex; align-items: center; gap: 6px;">
             ${icon('wrench', '', 14)}
-            <span>§ 3 HÜLLE & SCHACHT-INTEGRITÄT</span>
+            <span>§ 3 HÜLLE & PANZERUNG</span>
           </div>
-          <div style="font-size: 11px; color: #94a3b8; line-height: 1.5;">
-            Starke Reibung an harten Gesteinsschichten nagt an der Karosserie. Parke am Hangar an der Oberfläche, um die Hülle reparieren zu lassen und das Tankkabel automatisch anzudocken.
+          <div style="font-size: 11px; color: #cbd5e1; line-height: 1.5;">
+            Stürze aus großer Höhe, herabstürzende <strong>Felsbrocken</strong> und der Kontakt mit glühenden <strong>Lava-Adern</strong> beschädigen die Panzerung deines Fahrzeugs. Parke an der Oberfläche am <strong>Hangar</strong>, um deinen Crawler automatisch reparieren und vollbetanken zu lassen. Unter Tage kannst du Reparatur-Kits aus deinem Inventar einsetzen.
           </div>
         </div>
 
-        <div style="background: rgba(15, 23, 42, 0.75); border: none; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
           <div style="font-size: 12px; font-weight: 800; color: #f87171; display: flex; align-items: center; gap: 6px;">
             ${icon('shield-alert', '', 14)}
-            <span>§ 4 NOTFALL-RETTUNG</span>
+            <span>§ 4 BERGUNG & VERSICHERUNG</span>
           </div>
-          <div style="font-size: 11px; color: #94a3b8; line-height: 1.5;">
-            Solltest du tief unten festsitzen oder der Tank komplett leerlaufen: Öffne das Spielmenü und starte die Notfall-Rettung. Die ersten <strong>3 Bergungen sind absolut kostenlos</strong> und laden deinen Tank auf 15 Liter auf!
+          <div style="font-size: 11px; color: #cbd5e1; line-height: 1.5;">
+            Sollte dein Tank unter Tage komplett leerlaufen, erscheint automatisch ein Notfall-Rettungsbutton:<br>
+            • Deine <strong>erste Bergung ist kostenlos</strong> und bringt dich sicher an die Oberfläche zurück.<br>
+            • Für jede weitere Rettung musst du an der Oberfläche im <strong>Büro</strong> (Reiter <em>Versicherung</em>) einen <strong>Bergungsschutz</strong> für deine Zielschicht abschließen.<br>
+            • Läuft dein Tank ohne aktive Versicherung leer, gilt der Crawler als verschollen – <strong>Game Over</strong>!
           </div>
         </div>
 
@@ -959,23 +961,25 @@ export class MinerBookModal {
             ${icon('building-2', '', 14)}
             <span>§ 5 OBERFLÄCHEN-STATIONEN</span>
           </div>
-          <div style="font-size: 11px; color: #94a3b8; line-height: 1.45;">
-            • <strong>Depot:</strong> Sichere Lagerstätte für Erze, Barren & Bauteile. Schützt vor Frachtverlust.<br>
-            • <strong>Büro:</strong> Schacht-Aufträge, Bergmann-Ränge und Geologe für Erzproben-Abgaben gegen seltene Bauteile.<br>
-            • <strong>Erzbörse:</strong> Verkaufe Roherze oder nutze den Sofort-Verkauf.<br>
-            • <strong>Hangar:</strong> Montiere erforschte Module & rüste die Hangar-Infrastruktur auf, um Betankungs- und Reparaturzeiten drastisch zu verkürzen.<br>
-            • <strong>Fabrik & Raffinerie:</strong> Schmelze Barren (+50% Erlös) und fertige Montage-Bauteile & Güter.<br>
-            • <strong>Labor:</strong> High-Tech-Forschung für neue Stufen und Radar-Sensoren.
+          <div style="font-size: 11px; color: #cbd5e1; line-height: 1.5;">
+            • <strong>Hangar:</strong> Montiere erforschte Upgrades und rüste die Hangar-Infrastruktur auf, um Betankungs- und Reparaturzeiten zu verkürzen.<br>
+            • <strong>Erzbörse:</strong> Verkaufe Roherze und Barren zu aktuellen Tageskursen. Halte nach gewinnbringenden <em>Börsen-Booms</em> Ausschau!<br>
+            • <strong>Depot:</strong> Sichere Lagerstätte für Erze, Barren & Bauteile. Schützt deine Schätze vor Verlust.<br>
+            • <strong>Büro:</strong> Nimm lukrative Schacht-Aufträge an, steige in Bergbau-Rängen auf, reiche Gesteinsproben beim <strong>Geologen</strong> ein und schließe <strong>Bergungs-Versicherungen</strong> ab.<br>
+            • <strong>Fabrik:</strong> Schmelze Roherze in der Raffinerie zu wertvollen Barren (+50% Börsenwert) und fertige Industrieprodukte.<br>
+            • <strong>Labor:</strong> High-Tech-Forschung für neue Fahrzeugstufen, TNT-Sprengstoff, Radar-Sensoren und unterirdische Versorgungsstationen.
           </div>
         </div>
 
         <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
           <div style="font-size: 12px; font-weight: 800; color: #f59e0b; display: flex; align-items: center; gap: 6px;">
             ${icon('mountain', '', 14)}
-            <span>§ 6 BESONDERE GESTEINE & GEFAHREN</span>
+            <span>§ 6 GESTEINE, SCHÄTZE & GEFAHREN</span>
           </div>
-          <div style="font-size: 11px; color: #94a3b8; line-height: 1.5;">
-            Achte beim Bohren auf instabile <strong>Felsbrocken</strong>: Werden sie untergraben, stürzen sie ungebremst herab und beschädigen deinen Driller. Baue sie von oben/seitlich ab oder sprenge sie mit Dynamit (+€25, +8 XP). Verlassene <strong>Expeditions-Kapseln</strong> schenken Notfall-Bargeld und Gadgets. <strong>Lava-Adern</strong> erfordern Hitzeschilde. Alle Kennwerte findest du unter <em>Schichten → Gesteine & Gefahren</em>.
+          <div style="font-size: 11px; color: #cbd5e1; line-height: 1.5;">
+            • <strong>Felsbrocken:</strong> Fallen ungebremst nach unten, wenn sie untergraben werden. Baue sie von oben oder seitlich ab oder sprenge sie mit Dynamit (+€25, +8 XP).<br>
+            • <strong>Bergungskapseln:</strong> Alte verschollene Expeditionskapseln belohnen dich beim Anbohren mit Notfall-Bargeld und nützlichen Gadgets (Dynamit, Kerosinkanister, Reparatur-Kits).<br>
+            • <strong>Lava-Adern:</strong> Glühendes Magma in tiefen Schichten verursacht plötzlichen Hitzeschaden – umgehe Lava weiträumig oder rüste stärkere Panzerungen aus!
           </div>
         </div>
       </div>
