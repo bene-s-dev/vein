@@ -348,6 +348,10 @@ export class MissionSystem {
     const xp = this.activeMission.rewardXp;
 
     this.player.cash += cash;
+    if (this.player.stats) {
+      this.player.stats.missionsCompleted = (this.player.stats.missionsCompleted || 0) + 1;
+      this.player.stats.totalCashEarned = (this.player.stats.totalCashEarned || 0) + cash;
+    }
     this.player.addXp(xp);
 
     let compMsg = '';

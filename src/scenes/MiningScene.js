@@ -497,6 +497,9 @@ export class MiningScene extends Phaser.Scene {
 
           const tile = this.gridSystem.getTile(tgx, tgy);
           if (tile && tile.type !== 'empty' && !tile.indestructible) {
+            if (this.player.stats) {
+              this.player.stats.totalTilesMined = (this.player.stats.totalTilesMined || 0) + 1;
+            }
             if (tile.ore) {
               if (this.player.discoverOre) {
                 this.player.discoverOre(tile.ore);

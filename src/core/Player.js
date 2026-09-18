@@ -30,6 +30,18 @@ export const RANK_NAMES = [
   'Meister der Tiefe'
 ];
 
+export const LEVEL_BONUS_REWARDS = {
+  2: 500,
+  3: 1200,
+  4: 2500,
+  5: 5000,
+  6: 8500,
+  7: 13000,
+  8: 18500,
+  9: 25000,
+  10: 35000
+};
+
 export const TANK_TIERS = [
   { tier: 1, name: 'Standard-Tank', maxFuel: 40, stat: '40 L', cost: 0, comp: null, mountComps: null, level: 1, desc: 'Kompakter Basis-Treibstofftank für kurze Schacht-Expeditionen.' },
   { tier: 2, name: 'Kerosin-Tank Mk.II', maxFuel: 70, stat: '70 L', cost: 250, comp: null, mountComps: [{ key: 'iron_tube', name: 'Stahl-Rohr', count: 2, source: 'Fabrik' }], level: 1, desc: 'Erhöht Treibstoff auf 70 Liter und senkt Verbrauch um 12%.' },
@@ -303,7 +315,7 @@ export class Player {
     this.stats = {
       totalTilesMined: 0,
       totalOresMined: {},
-      totalCashEarned: 10,
+      totalCashEarned: 0,
       missionsCompleted: 0,
       researchCompleted: 0
     };
@@ -2150,8 +2162,13 @@ export class Player {
       this.xp -= this.xpNeeded;
       this.level++;
       this.xpNeeded = Math.round(this.xpNeeded * 1.6);
+      const bonusCash = LEVEL_BONUS_REWARDS[this.level] || (this.level * 2500);
+      this.cash += bonusCash;
+      if (this.stats) {
+        this.stats.totalCashEarned = (this.stats.totalCashEarned || 0) + bonusCash;
+      }
       soundFx.playPurchase();
-      this.scene.events.emit('notify', `LEVEL AUFSTIEG: Du bist jetzt ${this.rankTitle}!`);
+      this.scene.events.emit('notify', `LEVEL AUFSTIEG: Du bist jetzt ${this.rankTitle}! (+€${bonusCash.toLocaleString('de-DE')} Beförderungs-Prämie)`);
       this.scene.events.emit('level_up', this.level);
     }
   }

@@ -212,6 +212,13 @@ export class SaveSystem {
         activeInsurance: p.activeInsurance ? { ...p.activeInsurance } : null,
         isGameOver: !!p.isGameOver,
         hasPurchasedDynamite: !!p.hasPurchasedDynamite,
+        stats: {
+          totalTilesMined: p.stats?.totalTilesMined || 0,
+          totalOresMined: { ...(p.stats?.totalOresMined || {}) },
+          totalCashEarned: typeof p.stats?.totalCashEarned === 'number' ? p.stats.totalCashEarned : (p.cash || 0),
+          missionsCompleted: p.stats?.missionsCompleted || 0,
+          researchCompleted: p.stats?.researchCompleted || 0
+        },
         gadgets: { ...(p.gadgets || { dynamite: 0, fuel_canister: 0, repair_kit: 0 }) }
       },
       grid: {
@@ -472,6 +479,18 @@ export class SaveSystem {
         fuel_s1: data.player.gadgets?.fuel_s1 ?? 0,
         fuel_s2: data.player.gadgets?.fuel_s2 ?? 0,
         fuel_s3: data.player.gadgets?.fuel_s3 ?? 0
+      };
+
+      p.stats = {
+        totalTilesMined: typeof data.player.stats?.totalTilesMined === 'number'
+          ? data.player.stats.totalTilesMined
+          : (data.grid?.destroyedTiles?.length || 0),
+        totalOresMined: { ...(data.player.stats?.totalOresMined || {}) },
+        totalCashEarned: typeof data.player.stats?.totalCashEarned === 'number'
+          ? data.player.stats.totalCashEarned
+          : (p.cash || 0),
+        missionsCompleted: data.player.stats?.missionsCompleted || 0,
+        researchCompleted: data.player.stats?.researchCompleted || 0
       };
 
       // Spielerposition & Bewegungszustand absolut sauber synchronisieren

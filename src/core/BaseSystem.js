@@ -464,7 +464,7 @@ export const COMPONENT_DATA = {
 export const GEOLOGIST_QUESTS = [
   {
     id: 'geologist_microprocessor',
-    title: 'Elektronik-Grundlagen I',
+    title: 'Humus- & Sedimentforschung I',
     depthHint: 'Tiefe 0-50m (Humus)',
     reqs: { coal: 3, iron: 2 },
     rewardComp: { key: 'microprocessor', name: 'Mikroprozessor', iconName: 'cpu' },
@@ -474,7 +474,7 @@ export const GEOLOGIST_QUESTS = [
   },
   {
     id: 'geologist_capacitor',
-    title: 'Energiespeicher-Analyse II',
+    title: 'Schiefer-Mineralogie II',
     depthHint: 'Tiefe 30-150m (Schiefer)',
     reqs: { copper: 3, tin: 3 },
     rewardComp: { key: 'capacitor', name: 'Druck-Kondensator', iconName: 'battery-charging' },
@@ -484,7 +484,7 @@ export const GEOLOGIST_QUESTS = [
   },
   {
     id: 'geologist_spectrometer',
-    title: 'Optische Spektrometrie III',
+    title: 'Tiefengranit-Kristallographie III',
     depthHint: 'Tiefe 130-350m (Granit)',
     reqs: { silver: 3, gold: 2 },
     rewardComp: { key: 'spectrometer', name: 'Sensor-Spektrometer', iconName: 'activity' },
@@ -494,7 +494,7 @@ export const GEOLOGIST_QUESTS = [
   },
   {
     id: 'geologist_plasma_regulator',
-    title: 'Thermodynamische Plasmaforschung IV',
+    title: 'Vulkanische Obsidian-Petrologie IV',
     depthHint: 'Tiefe 340-800m (Obsidian)',
     reqs: { emerald: 2, sapphire: 2 },
     rewardComp: { key: 'plasma_regulator', name: 'Plasma-Injektor', iconName: 'flame' },
@@ -504,7 +504,7 @@ export const GEOLOGIST_QUESTS = [
   },
   {
     id: 'geologist_graviton_core',
-    title: 'Gravitationswellen-Erfassung V',
+    title: 'Basalt-Geophysik & Tiefenseismik V',
     depthHint: 'Tiefe 850m+ (Urgestein)',
     reqs: { titanium: 2, diamond: 1 },
     rewardComp: { key: 'graviton_core', name: 'Gravitations-Modulator', iconName: 'compass' },
@@ -514,7 +514,7 @@ export const GEOLOGIST_QUESTS = [
   },
   {
     id: 'geologist_quantum_processor',
-    title: 'Subatomare Quantenrechner VI',
+    title: 'Isotopen-Geochemie & Erdkern-Geologie VI',
     depthHint: 'Tiefe 1.500m+ (Erdkern)',
     reqs: { uranium: 2, platinum: 1 },
     rewardComp: { key: 'quantum_processor', name: 'Quanten-Prozessor', iconName: 'atom' },
@@ -524,7 +524,7 @@ export const GEOLOGIST_QUESTS = [
   },
   {
     id: 'geologist_amethyst_bonus',
-    title: 'Tiefenfeld-Gravitation VII',
+    title: 'Mantelgesteins-Kristallisation VII',
     depthHint: 'Tiefe 1.000-1.500m (Urgestein)',
     reqs: { obsidian_gem: 2, sapphire: 2 },
     rewardComp: { key: 'graviton_core', name: 'Gravitations-Modulator', iconName: 'compass' },
@@ -534,7 +534,7 @@ export const GEOLOGIST_QUESTS = [
   },
   {
     id: 'geologist_darkmatter_bonus',
-    title: 'Kosmologische Quantenforschung VIII',
+    title: 'Planetares Gravitationsfeld & Tiefen-Astrophysik VIII',
     depthHint: 'Tiefe 2.000m+ (Erdkern)',
     reqs: { dark_matter: 1, platinum: 2 },
     rewardComp: { key: 'quantum_processor', name: 'Quanten-Prozessor', iconName: 'atom' },

@@ -485,9 +485,9 @@ export class HUD {
     const fuelPercent = Math.max(0, Math.min(100, (this.player.fuel / this.player.maxFuel) * 100));
     const returnPercent = this.player.getReturnFuelPercent ? this.player.getReturnFuelPercent() : 0;
 
-    // Rückkehr-Schwelle inkl. Sicherheitspuffer zur rechtzeitigen Umkehr (nur unter Tage aktiv)
+    // Rückkehr-Schwelle inkl. Sicherheitspuffer zur rechtzeitigen Umkehr (auch überirdisch aktiv)
     const safetyBuffer = 3.0; // 3% Sicherheitspuffer
-    const effectiveReturnThreshold = isBelowGround ? Math.min(100, Math.max(0, returnPercent + safetyBuffer)) : 0;
+    const effectiveReturnThreshold = Math.min(100, Math.max(0, returnPercent + safetyBuffer));
 
     const reserveWidth = Math.min(fuelPercent, effectiveReturnThreshold);
     const usableWidth = Math.max(0, fuelPercent - effectiveReturnThreshold);
@@ -538,7 +538,7 @@ export class HUD {
       if (this._lastFuelTitleFuel !== curFuel || this._lastFuelTitleReturn !== roundedReturn) {
         this._lastFuelTitleFuel = curFuel;
         this._lastFuelTitleReturn = roundedReturn;
-        this.fuelBarContainer.title = isBelowGround
+        this.fuelBarContainer.title = roundedReturn > 0
           ? `Tank: ${curFuel}/${maxFuel}L (${fuelPct}%) | Rückkehr-Bedarf (rot): ${returnCost}L (${roundedReturn}%)`
           : `Tank: ${curFuel}/${maxFuel}L (${fuelPct}%)`;
       }
