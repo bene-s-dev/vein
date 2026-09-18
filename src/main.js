@@ -36,7 +36,88 @@ const config = {
 };
 
 import { refreshIcons } from './ui/IconHelper.js';
-import { closeActiveModal, notifyModalClosed } from './core/BaseSystem.js';
+import { closeActiveModal, notifyModalClosed, isModalActive } from './core/BaseSystem.js';
+
+let isHandlingPopstate = false;
+let pushedModalHistoryCount = 0;
+
+function initMobileSwipeBackHandler() {
+  // 1. Touch-Swipe-Geste (von links nach rechts wischen zum Schließen von Fenstern)
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let touchStartTime = 0;
+
+  window.addEventListener('touchstart', (e) => {
+    if (!isModalActive()) return;
+    if (e.touches && e.touches.length === 1) {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      touchStartTime = Date.now();
+    }
+  }, { passive: true, capture: true });
+
+  window.addEventListener('touchend', (e) => {
+    if (!isModalActive()) return;
+    if (e.changedTouches && e.changedTouches.length === 1) {
+      const touchEndX = e.changedTouches[0].clientX;
+      const touchEndY = e.changedTouches[0].clientY;
+      const deltaX = touchEndX - touchStartX;
+      const deltaY = touchEndY - touchStartY;
+      const duration = Date.now() - touchStartTime;
+
+      // Rechtswisch-Bedingung: Mindestens 45px nach rechts, überwiegend horizontal, < 650ms
+      if (deltaX > 45 && Math.abs(deltaX) > Math.abs(deltaY) * 1.15 && duration < 650) {
+        closeActiveModal();
+        if (pushedModalHistoryCount > 0) {
+          pushedModalHistoryCount--;
+          isHandlingPopstate = true;
+          window.history.back();
+          setTimeout(() => { isHandlingPopstate = false; }, 100);
+        }
+      }
+    }
+  }, { passive: true, capture: true });
+
+  // 2. Browser / Handy System-Zurück (Android Back Button / Safari Zurück-Geste)
+  const syncHistoryWithModal = (isOpen) => {
+    if (isHandlingPopstate) return;
+    if (isOpen) {
+      if (pushedModalHistoryCount === 0) {
+        window.history.pushState({ veinModal: true }, '');
+        pushedModalHistoryCount = 1;
+      }
+    } else {
+      if (pushedModalHistoryCount > 0) {
+        pushedModalHistoryCount--;
+        isHandlingPopstate = true;
+        window.history.back();
+        setTimeout(() => { isHandlingPopstate = false; }, 100);
+      }
+    }
+  };
+
+  const modalBodyObserver = new MutationObserver(() => {
+    const active = isModalActive();
+    if (active && pushedModalHistoryCount === 0) {
+      window.history.pushState({ veinModal: true }, '');
+      pushedModalHistoryCount = 1;
+    } else if (!active && pushedModalHistoryCount > 0 && !isHandlingPopstate) {
+      pushedModalHistoryCount--;
+      isHandlingPopstate = true;
+      window.history.back();
+      setTimeout(() => { isHandlingPopstate = false; }, 100);
+    }
+  });
+  modalBodyObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+  window.addEventListener('popstate', (e) => {
+    if (isHandlingPopstate) return;
+    if (isModalActive()) {
+      pushedModalHistoryCount = Math.max(0, pushedModalHistoryCount - 1);
+      closeActiveModal();
+    }
+  });
+}
 
 function shieldUiElements() {
   // Verhindert das Durchklicken von Modals, HUD, Action-FAB und Dialogen auf den Phaser-Canvas
@@ -187,6 +268,7 @@ async function initGame() {
   refreshIcons();
   shieldUiElements();
   initModalObserver();
+  initMobileSwipeBackHandler();
   window.__game = new Phaser.Game(config);
 }
 

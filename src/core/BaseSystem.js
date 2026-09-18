@@ -62,8 +62,34 @@ export function closeActiveModal(scene) {
   if (oreBackdrop) {
     oreBackdrop.style.display = 'none';
   }
+  // Emergency Rescue Modal schließen (sofern nicht Game Over)
+  const rescueModal = document.getElementById('emergency-rescue-modal');
+  if (rescueModal && rescueModal.style.display !== 'none') {
+    const scPlayer = (scene && scene.player) || (window.__game?.scene?.getScene('MiningScene')?.player);
+    if (!scPlayer || !scPlayer.isGameOver) {
+      if (sc && sc.emergencyRescueModal && sc.emergencyRescueModal.close) {
+        sc.emergencyRescueModal.close();
+      } else {
+        rescueModal.style.display = 'none';
+      }
+    }
+  }
+
+  // Speed Dial FAB schließen falls geöffnet
+  const actionFab = document.getElementById('hud-action-fab');
+  if (actionFab && actionFab.classList.contains('open')) {
+    actionFab.classList.remove('open');
+  }
+
+  // Tutorial schliessen falls aktiv
+  const tutorialCont = document.getElementById('tutorial-container');
+  if (tutorialCont && sc && sc.tutorialModal && sc.tutorialModal.close) {
+    sc.tutorialModal.close();
+  }
+
   document.body.classList.remove('modal-open');
   document.body.classList.remove('discovery-modal-open');
+  document.body.classList.remove('tutorial-open');
 
   try {
     soundFx.stopAllLoops?.();
@@ -105,6 +131,14 @@ export function isModalActive() {
     }
     const oreInfoBackdrop = document.getElementById('ore-info-backdrop');
     if (oreInfoBackdrop && oreInfoBackdrop.style && (oreInfoBackdrop.style.display === 'flex' || (oreInfoBackdrop.style.display !== 'none' && oreInfoBackdrop.style.display !== ''))) {
+      return true;
+    }
+    const rescueModal = document.getElementById('emergency-rescue-modal');
+    if (rescueModal && rescueModal.style && (rescueModal.style.display === 'flex' || (rescueModal.style.display !== 'none' && rescueModal.style.display !== ''))) {
+      return true;
+    }
+    const tutorialCont = document.getElementById('tutorial-container');
+    if (tutorialCont && tutorialCont.parentNode) {
       return true;
     }
     const actionFab = document.getElementById('hud-action-fab');
