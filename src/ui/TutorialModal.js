@@ -245,7 +245,7 @@ export class TutorialModal {
       if (!this.container) return;
 
       const isLastStep = this.currentStep === this.steps.length - 1;
-      const btnText = isLastStep ? "Alles klar, los geht's! ✓" : `Weiter (${this.currentStep + 1}/${this.steps.length}) →`;
+      const btnText = isLastStep ? "Alles klar, los geht's! ✓" : "Weiter →";
       const cardBorderColor = '#0369a1';
       const cardWidth = (step.id === 'gauges' || step.id === 'pause_menu') ? Math.min(285, window.innerWidth - 24) : Math.min(270, window.innerWidth - 24);
       const pingColor = '#1d4ed8'; // Dunkelblau für den blinkenden Ziel-Marker
