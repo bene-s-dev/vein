@@ -6056,7 +6056,7 @@ export class BaseSystem {
                           ${icon('lock', '', 11)} Stufe ${prod.minTier}
                         </span>
                       ` : `
-                        <button class="btn-craft-product btn-buy" data-prod="${prodId}" ${canCraft ? '' : 'disabled'} style="width: 100%; height: 32px; padding: 0 10px; font-size: 11.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 6px;" title="${!hasFuel ? 'Brennkammer benötigt 2x Kohle!' : 'Produkt herstellen'}">
+                        <button class="btn-craft-product btn-buy" data-prod="${prodId}" ${canCraft ? '' : 'disabled'} style="width: 100%; height: 32px; padding: 0 10px; font-size: 11.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 6px;" title="${canCraft ? 'Produkt herstellen' : 'Nicht genügend Materialien im Frachtraum oder Depot'}">
                           ${icon('hammer', '', 13)} Herstellen
                         </button>
                       `}
