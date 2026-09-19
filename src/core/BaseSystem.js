@@ -5776,63 +5776,51 @@ export class BaseSystem {
     let html = `
       <div style="display: flex; flex-direction: column; gap: 10px;">
 
-        <!-- 1. ZENTRALE BRENNKAMMER (GEMEINSAME FABRIK-ENERGIE FÜR BEIDE ANLAGEN) -->
+        <!-- 1. ZENTRALE BRENNKAMMER -->
         <div style="
-          background: rgba(15, 23, 42, 0.85);
-          border: 1px solid ${loadedCoal > 0 ? 'rgba(249, 115, 22, 0.35)' : 'rgba(239, 68, 68, 0.3)'};
-          border-left: 4px solid ${loadedCoal > 0 ? '#f97316' : '#ef4444'};
-          border-radius: 10px;
-          padding: 12px 14px;
+          background: rgba(15, 23, 42, 0.65);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 8px;
+          padding: 8px 12px;
           display: flex;
-          flex-direction: column;
+          justify-content: space-between;
+          align-items: center;
           gap: 10px;
-          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+          flex-wrap: wrap;
         ">
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-              <span style="display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; background: rgba(249, 115, 22, 0.15); border: 1px solid rgba(249, 115, 22, 0.35); border-radius: 8px; color: #f97316; flex-shrink: 0;">
-                ${itemDisplayIcon('coal', 18)}
-              </span>
-              <div>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <strong style="color: #f8fafc; font-size: 13px; letter-spacing: 0.5px; text-transform: uppercase;">Zentrale Brennkammer</strong>
-                  <span style="background: rgba(249, 115, 22, 0.15); color: #fb923c; font-size: 10px; font-weight: 700; padding: 1.5px 6px; border-radius: 4px;">Gemeinsame Energie</span>
-                </div>
-                <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">
-                  Befeuert Schmelzofen <span style="color: #fbbf24; font-weight: 700;">(1x Kohle/Barren)</span> &amp; Industriemaschine <span style="color: #38bdf8; font-weight: 700;">(2x Kohle/Bauteil)</span>
-                </div>
-              </div>
-            </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: rgba(249, 115, 22, 0.12); border: 1px solid rgba(249, 115, 22, 0.25); border-radius: 6px; color: #f97316; flex-shrink: 0;">
+              ${itemDisplayIcon('coal', 15)}
+            </span>
+            <strong style="color: #f8fafc; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase;">Brennkammer</strong>
+          </div>
 
-            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-              <span style="
-                background: ${loadedCoal > 0 ? 'rgba(16, 185, 129, 0.18)' : 'rgba(239, 68, 68, 0.18)'};
-                border: 1px solid ${loadedCoal > 0 ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)'};
-                color: ${loadedCoal > 0 ? '#34d399' : '#f87171'};
-                font-size: 12px;
-                font-weight: 800;
-                padding: 4px 10px;
-                border-radius: 6px;
-                display: inline-flex;
-                align-items: center;
-                gap: 5px;
-                white-space: nowrap;
-              ">
-                ${icon('flame', loadedCoal > 0 ? 'flame-anim' : '', 13)}
-                <span>${loadedCoal > 0 ? `${loadedCoal}x Kohle geladen` : 'Keine Kohle geladen'}</span>
-              </span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="
+              background: ${loadedCoal > 0 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255, 255, 255, 0.05)'};
+              border: 1px solid ${loadedCoal > 0 ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.1)'};
+              color: ${loadedCoal > 0 ? '#34d399' : '#94a3b8'};
+              font-size: 11px;
+              font-weight: 700;
+              padding: 3px 8px;
+              border-radius: 5px;
+              display: inline-flex;
+              align-items: center;
+              gap: 4px;
+              white-space: nowrap;
+            ">
+              ${icon('flame', loadedCoal > 0 ? 'flame-anim' : '', 12)}
+              <span>${loadedCoal}x Kohle geladen</span>
+            </span>
 
-              <div style="display: flex; gap: 6px; align-items: center;">
-                <button id="btn-add-fuel-coal" class="btn-buy" ${availableCoal > 0 ? '' : 'disabled'} style="height: 32px; font-size: 11px; font-weight: 700; padding: 0 12px; display: inline-flex; align-items: center; justify-content: center; gap: 5px;" title="1x Kohle aus Fracht/Depot in die Brennkammer laden (${availableCoal}x vorrätig)">
-                  ${icon('flame', '', 12)} Kohle einfüllen (+1)
-                </button>
-                ${availableCoal > 1 ? `
-                  <button id="btn-add-fuel-all" class="btn-buy" style="height: 32px; font-size: 11px; font-weight: 700; padding: 0 12px; display: inline-flex; align-items: center; justify-content: center;" title="Alle verfügbare Kohle (${availableCoal}x) einfüllen">
-                    Alle (${availableCoal})
-                  </button>
-                ` : ''}
-              </div>
-            </div>
+            <button id="btn-add-fuel-coal" class="btn-buy" ${availableCoal > 0 ? '' : 'disabled'} style="height: 28px; font-size: 11px; padding: 0 10px; gap: 4px;" title="1x Kohle in die Brennkammer laden (${availableCoal}x verfügbar)">
+              +1 Kohle
+            </button>
+            ${availableCoal > 1 ? `
+              <button id="btn-add-fuel-all" class="btn-buy" style="height: 28px; font-size: 11px; padding: 0 10px;" title="Alle Kohle (${availableCoal}x) einfüllen">
+                Alle (${availableCoal})
+              </button>
+            ` : ''}
           </div>
         </div>
 
@@ -5841,27 +5829,22 @@ export class BaseSystem {
 
           <!-- 2A. SCHMELZOFEN -->
           <div style="
-            background: rgba(15, 23, 42, 0.75);
-            border: 1px solid ${isSmelting ? 'rgba(249, 115, 22, 0.45)' : 'rgba(255,255,255,0.08)'};
-            border-radius: 10px;
-            padding: 12px 14px;
+            background: rgba(15, 23, 42, 0.65);
+            border: 1px solid ${isSmelting ? 'rgba(249, 115, 22, 0.4)' : 'rgba(255,255,255,0.08)'};
+            border-radius: 8px;
+            padding: 10px 12px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            gap: 10px;
+            gap: 8px;
             box-sizing: border-box;
           ">
             <div>
-              <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 6px;">
-                <div style="display: flex; align-items: center; gap: 6px;">
-                  <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: ${isSmelting ? '#f97316' : '#64748b'}; box-shadow: 0 0 6px ${isSmelting ? '#f97316' : 'transparent'}; flex-shrink: 0;"></span>
-                  <strong style="color: #f8fafc; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 5px;">
-                    ${icon('flame', isSmelting ? 'flame-anim' : '', 13)} SCHMELZOFEN
-                  </strong>
-                </div>
-                <span style="font-size: 10.5px; font-weight: 700; color: ${hasSmeltFuel ? '#34d399' : '#f87171'}; background: ${hasSmeltFuel ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'}; padding: 1.5px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;">
-                  ${itemDisplayIcon('coal', 11)} 1x Kohle / Barren
-                </span>
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 4px;">
+                <strong style="color: #f8fafc; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 5px;">
+                  ${icon('flame', isSmelting ? 'flame-anim' : '', 13)} Schmelzofen
+                </strong>
+                <span style="font-size: 10px; color: #94a3b8; white-space: nowrap;">1 Kohle / Barren</span>
               </div>
 
               <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
@@ -5871,7 +5854,7 @@ export class BaseSystem {
                     ${smeltQueue.length > 1 ? `<span style="font-size: 9.5px; color: #94a3b8; background: rgba(0,0,0,0.35); padding: 1px 5px; border-radius: 4px;">+${smeltQueue.length - 1}</span>` : ''}
                   </span>
                 ` : `
-                  <span style="color: ${hasSmeltFuel ? '#cbd5e1' : '#f87171'};">${hasSmeltFuel ? 'Bereit für Roherze' : 'Brennkammer leer'}</span>
+                  <span style="color: ${hasSmeltFuel ? '#64748b' : '#f87171'};">${hasSmeltFuel ? 'Bereit für Roherze' : 'Keine Kohle'}</span>
                 `}
                 <span id="smelt-timer" style="font-family: monospace; font-size: 12px; font-weight: 800; color: ${isSmelting ? '#fbbf24' : '#64748b'}; font-variant-numeric: tabular-nums;">
                   ${isSmelting ? this.formatRefineryClock(currentSmelt.remainingMs) : '00:00'}
@@ -5880,35 +5863,32 @@ export class BaseSystem {
             </div>
 
             <!-- Fortschrittsbalken -->
-            <div style="height: 8px; background: #090d16; border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden;">
+            <div style="height: 6px; background: #090d16; border: 1px solid rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden;">
               <div id="smelt-progress-fill" style="width: ${pctSmelt}%; height: 100%; background: linear-gradient(90deg, #ea580c 0%, #f59e0b 80%, #fde047 100%); box-shadow: ${isSmelting ? '0 0 8px rgba(245, 158, 11, 0.6)' : 'none'}; transition: width 0.15s linear;"></div>
             </div>
           </div>
 
           <!-- 2B. INDUSTRIE-MASCHINE -->
           <div style="
-            background: rgba(15, 23, 42, 0.75);
-            border: 1px solid ${isCrafting ? 'rgba(56, 189, 248, 0.45)' : 'rgba(255,255,255,0.08)'};
-            border-radius: 10px;
-            padding: 12px 14px;
+            background: rgba(15, 23, 42, 0.65);
+            border: 1px solid ${isCrafting ? 'rgba(56, 189, 248, 0.4)' : 'rgba(255,255,255,0.08)'};
+            border-radius: 8px;
+            padding: 10px 12px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            gap: 10px;
+            gap: 8px;
             box-sizing: border-box;
           ">
             <div>
-              <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 6px;">
-                <div style="display: flex; align-items: center; gap: 6px;">
-                  <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: ${isCrafting ? '#38bdf8' : '#64748b'}; box-shadow: 0 0 6px ${isCrafting ? '#38bdf8' : 'transparent'}; flex-shrink: 0;"></span>
-                  <strong style="color: #f8fafc; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 5px;">
-                    ${icon('anvil', isCrafting ? 'craft-icon-active' : '', 13)} INDUSTRIE-MASCHINE
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 4px;">
+                <div style="display: flex; align-items: center; gap: 6px; min-width: 0;">
+                  <strong style="color: #f8fafc; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;">
+                    ${icon('anvil', isCrafting ? 'craft-icon-active' : '', 13)} Industriemaschine
                   </strong>
-                  <span style="font-size: 10px; color: #38bdf8; font-weight: 700; background: rgba(56, 189, 248, 0.15); padding: 1px 6px; border-radius: 4px;">Stufe ${currentTier}/5</span>
+                  <span style="font-size: 10px; color: #38bdf8; font-weight: 700; background: rgba(56, 189, 248, 0.15); padding: 1px 5px; border-radius: 4px; white-space: nowrap;">Lvl ${currentTier}</span>
                 </div>
-                <span style="font-size: 10.5px; font-weight: 700; color: ${hasCraftFuel ? '#34d399' : '#f87171'}; background: ${hasCraftFuel ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'}; padding: 1.5px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;">
-                  ${itemDisplayIcon('coal', 11)} 2x Kohle / Bauteil
-                </span>
+                <span style="font-size: 10px; color: #94a3b8; white-space: nowrap;">2 Kohle / Bauteil</span>
               </div>
 
               <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
@@ -5918,7 +5898,7 @@ export class BaseSystem {
                     ${craftQueue.length > 1 ? `<span style="font-size: 9.5px; color: #94a3b8; background: rgba(0,0,0,0.35); padding: 1px 5px; border-radius: 4px;">+${craftQueue.length - 1}</span>` : ''}
                   </span>
                 ` : `
-                  <span style="color: ${hasCraftFuel ? '#cbd5e1' : '#f87171'};">${hasCraftFuel ? currentTierData.name : 'Brennkammer benötigt 2x Kohle'}</span>
+                  <span style="color: ${hasCraftFuel ? '#64748b' : '#f87171'};">${hasCraftFuel ? currentTierData.name : 'Keine Kohle (2x nötig)'}</span>
                 `}
                 <span id="craft-timer" style="font-family: monospace; font-size: 12px; font-weight: 800; color: ${isCrafting ? '#38bdf8' : '#64748b'}; font-variant-numeric: tabular-nums;">
                   ${isCrafting ? this.formatRefineryClock(currentCraft.remainingMs) : '00:00'}
@@ -5927,18 +5907,18 @@ export class BaseSystem {
             </div>
 
             <!-- Fortschrittsbalken -->
-            <div style="height: 8px; background: #090d16; border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden;">
+            <div style="height: 6px; background: #090d16; border: 1px solid rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden;">
               <div id="craft-progress-fill" style="width: ${pctCraft}%; height: 100%; background: linear-gradient(90deg, #0284c7 0%, #38bdf8 80%, #bae6fd 100%); box-shadow: ${isCrafting ? '0 0 8px rgba(56, 189, 248, 0.6)' : 'none'}; transition: width 0.15s linear;"></div>
             </div>
 
             <!-- Upgrade-Button direkt in der Industrie-Maschine -->
             ${nextTierData ? `
-              <button id="btn-upgrade-machine" class="btn-buy" ${canAffordUpgrade ? '' : 'disabled'} style="height: 28px; font-size: 10.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 4px; border-radius: 6px;" title="Schaltet tiefere Erze & Bauteile frei: ${nextTierData.desc}">
-                ${icon('chevrons-up', '', 12)} Upgrade auf Stufe ${nextTierData.tier} (${nextTierData.name}) &bull; €${nextTierData.costCash.toLocaleString('de-DE')}
+              <button id="btn-upgrade-machine" class="btn-buy" ${canAffordUpgrade ? '' : 'disabled'} style="height: 26px; font-size: 10.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 4px; border-radius: 6px; margin-top: 2px;" title="Schaltet tiefere Erze & Bauteile frei: ${nextTierData.desc}">
+                ${icon('chevrons-up', '', 12)} Upgrade Level ${nextTierData.tier} &bull; €${nextTierData.costCash.toLocaleString('de-DE')}
               </button>
             ` : `
-              <div style="height: 28px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10.5px; font-weight: 700; color: #34d399; gap: 4px;">
-                ${icon('check-circle', '', 12)} Maximale Stufe erreicht
+              <div style="height: 26px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #34d399; gap: 4px; margin-top: 2px;">
+                ${icon('check-circle', '', 11)} Max Level
               </div>
             `}
           </div>
