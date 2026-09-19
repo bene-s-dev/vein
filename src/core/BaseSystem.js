@@ -5811,322 +5811,262 @@ export class BaseSystem {
             ">
               ${icon('flame', loadedCoal > 0 ? 'flame-anim' : '', 12)}
               <span>${loadedCoal}x Kohle geladen</span>
+             </div>
+
+        <!-- 2. FERTIGE WAREN (FALLS VORHANDEN) -->
+        ${finished.length > 0 ? (() => {
+          const grouped = {};
+          finished.forEach(item => {
+            const itemKey = item.isProduct ? item.productId : ('bar_' + item.ore);
+            if (!grouped[item.name]) grouped[item.name] = { count: 0, value: 0, itemKey };
+            grouped[item.name].count++;
+            grouped[item.name].value += item.value;
+          });
+
+          const finishedBadges = Object.entries(grouped).map(([name, data]) => `
+            <span style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.5); padding: 3px 8px; border-radius: 6px; font-size: 11.5px; color: #a7f3d0; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+              ${itemDisplayIcon(data.itemKey, 13)}
+              <span>${data.count}x ${name}</span>
             </span>
+          `).join('');
 
-            <button id="btn-add-fuel-coal" class="btn-buy" ${availableCoal > 0 ? '' : 'disabled'} style="height: 28px; font-size: 11px; padding: 0 10px; gap: 4px;" title="1x Kohle in die Brennkammer laden (${availableCoal}x verfügbar)">
-              +1 Kohle
-            </button>
-            ${availableCoal > 1 ? `
-              <button id="btn-add-fuel-all" class="btn-buy" style="height: 28px; font-size: 11px; padding: 0 10px;" title="Alle Kohle (${availableCoal}x) einfüllen">
-                Alle (${availableCoal})
-              </button>
-            ` : ''}
-          </div>
-        </div>
-
-        <!-- 2. PRODUKTIONSLINIEN: SCHMELZOFEN & INDUSTRIEMASCHINE NEBENEINANDER -->
-        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; align-items: stretch;">
-
-          <!-- 2A. SCHMELZOFEN -->
-          <div style="
-            background: rgba(15, 23, 42, 0.65);
-            border: 1px solid ${isSmelting ? 'rgba(249, 115, 22, 0.4)' : 'rgba(255,255,255,0.08)'};
-            border-radius: 8px;
-            padding: 10px 12px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            gap: 8px;
-            box-sizing: border-box;
-          ">
-            <div>
-              <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 4px;">
-                <strong style="color: #f8fafc; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 5px;">
-                  ${icon('flame', isSmelting ? 'flame-anim' : '', 13)} Schmelzofen
+          return `
+            <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.45); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; width: 100%;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <strong style="color: #34d399; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px;">
+                  ${icon('check-circle', '', 14)}
+                  Fertiggestellt (${finished.length === 1 ? '1 Einheit' : `${finished.length} Einheiten`})
                 </strong>
-                <span style="font-size: 10px; color: #94a3b8; white-space: nowrap;">1 Kohle / Barren</span>
               </div>
 
-              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
-                ${isSmelting ? `
-                  <span style="font-weight: 700; color: #fbbf24; display: inline-flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                    &bull; ${itemDisplayIcon('bar_' + currentSmelt.ore, 12)} ${currentSmelt.name}
-                    ${smeltQueue.length > 1 ? `<span style="font-size: 9.5px; color: #94a3b8; background: rgba(0,0,0,0.35); padding: 1px 5px; border-radius: 4px;">+${smeltQueue.length - 1}</span>` : ''}
-                  </span>
-                ` : `
-                  <span style="color: ${hasSmeltFuel ? '#64748b' : '#f87171'};">${hasSmeltFuel ? 'Bereit für Roherze' : 'Keine Kohle'}</span>
-                `}
-                <span id="smelt-timer" style="font-family: monospace; font-size: 12px; font-weight: 800; color: ${isSmelting ? '#fbbf24' : '#64748b'}; font-variant-numeric: tabular-nums;">
-                  ${isSmelting ? this.formatRefineryClock(currentSmelt.remainingMs) : '00:00'}
-                </span>
+              <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                ${finishedBadges}
               </div>
+
+              <button id="btn-transfer-to-storage" class="btn-buy" style="height: 34px; font-size: 11.5px; font-weight: 700; padding: 0 14px; width: 100%; justify-content: center; display: inline-flex; align-items: center; gap: 6px;">
+                ${icon('warehouse', '', 14)}
+                <span>Waren ins Depot einlagern</span>
+              </button>
+            </div>
+          `;
+        })() : ''}
+
+        <!-- 3. SCHMELZOFEN (STATUS & MENÜ VEREINT) -->
+        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid ${isSmelting ? 'rgba(249, 115, 22, 0.4)' : 'rgba(255,255,255,0.08)'}; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px;">
+          <!-- Schmelzofen Status & Fortschritt -->
+          <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
+              <strong style="color: #f8fafc; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 6px;">
+                ${icon('flame', isSmelting ? 'flame-anim' : '', 14)} Schmelzofen
+              </strong>
+              <span style="font-size: 10.5px; color: #94a3b8;">1 Kohle / Barren</span>
             </div>
 
-            <!-- Fortschrittsbalken -->
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
+              ${isSmelting ? `
+                <span style="font-weight: 700; color: #fbbf24; display: inline-flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                  &bull; ${itemDisplayIcon('bar_' + currentSmelt.ore, 12)} ${currentSmelt.name}
+                  ${smeltQueue.length > 1 ? `<span style="font-size: 9.5px; color: #94a3b8; background: rgba(0,0,0,0.35); padding: 1px 5px; border-radius: 4px;">+${smeltQueue.length - 1}</span>` : ''}
+                </span>
+              ` : `
+                <span style="color: ${hasSmeltFuel ? '#64748b' : '#f87171'};">${hasSmeltFuel ? 'Bereit für Roherze' : 'Keine Kohle in Brennkammer'}</span>
+              `}
+              <span id="smelt-timer" style="font-family: monospace; font-size: 12px; font-weight: 800; color: ${isSmelting ? '#fbbf24' : '#64748b'}; font-variant-numeric: tabular-nums;">
+                ${isSmelting ? this.formatRefineryClock(currentSmelt.remainingMs) : '00:00'}
+              </span>
+            </div>
+
             <div style="height: 6px; background: #090d16; border: 1px solid rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden;">
               <div id="smelt-progress-fill" style="width: ${pctSmelt}%; height: 100%; background: linear-gradient(90deg, #ea580c 0%, #f59e0b 80%, #fde047 100%); box-shadow: ${isSmelting ? '0 0 8px rgba(245, 158, 11, 0.6)' : 'none'}; transition: width 0.15s linear;"></div>
             </div>
           </div>
 
-          <!-- 2B. INDUSTRIE-MASCHINE -->
-          <div style="
-            background: rgba(15, 23, 42, 0.65);
-            border: 1px solid ${isCrafting ? 'rgba(56, 189, 248, 0.4)' : 'rgba(255,255,255,0.08)'};
-            border-radius: 8px;
-            padding: 10px 12px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            gap: 8px;
-            box-sizing: border-box;
-          ">
-            <div>
-              <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 4px;">
-                <div style="display: flex; align-items: center; gap: 6px; min-width: 0;">
-                  <strong style="color: #f8fafc; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;">
-                    ${icon('anvil', isCrafting ? 'craft-icon-active' : '', 13)} Industriemaschine
-                  </strong>
-                  <span style="font-size: 10px; color: #38bdf8; font-weight: 700; background: rgba(56, 189, 248, 0.15); padding: 1px 5px; border-radius: 4px; white-space: nowrap;">Lvl ${currentTier}</span>
-                </div>
-                <span style="font-size: 10px; color: #94a3b8; white-space: nowrap;">2 Kohle / Bauteil</span>
-              </div>
+          <!-- Schmelzofen Roherz-Liste -->
+          ${(() => {
+            const totalCargoOres = cargo.length;
+            const totalDepotOres = Object.values(this.depot?.ores || {}).reduce((s, v) => s + v, 0);
+            const totalAvailableOres = totalCargoOres + totalDepotOres;
 
-              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
-                ${isCrafting ? `
-                  <span style="font-weight: 700; color: #38bdf8; display: inline-flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                    &bull; ${itemDisplayIcon(currentCraft.productId, 12)} ${currentCraft.name}
-                    ${craftQueue.length > 1 ? `<span style="font-size: 9.5px; color: #94a3b8; background: rgba(0,0,0,0.35); padding: 1px 5px; border-radius: 4px;">+${craftQueue.length - 1}</span>` : ''}
-                  </span>
+            if (totalAvailableOres === 0) {
+              return `
+                <div style="color: #64748b; font-size: 12px; text-align: center; padding: 10px 0;">
+                  Keine Erze im Frachtraum oder Depot vorhanden. Baue unter Tage Erze ab, um sie hier einzuschmelzen.
+                </div>
+              `;
+            }
+
+            const canSmeltAny = loadedCoal > 0 && totalAvailableOres > 0;
+            let oresHtml = `
+              <button id="btn-deposit-all-ores" class="btn-buy" ${canSmeltAny ? '' : 'disabled'} style="width: 100%; height: 34px; font-size: 11.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                ${icon('flame', '', 14)}
+                <span>Alle Erze schmelzen (${Math.min(totalAvailableOres, loadedCoal)} / ${totalAvailableOres})</span>
+              </button>
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+            `;
+
+            const allOreKeys = Object.keys(ORE_DATA).filter(k => this.player.isOreDiscovered(k) && ((cargoCounts[k] || 0) > 0 || (this.depot?.ores?.[k] || 0) > 0));
+
+            for (const oreKey of allOreKeys) {
+              const oreName = ORE_DATA[oreKey]?.name || oreKey;
+              const refinedName = getRefinedOreName(oreKey);
+              const durSec = REFINERY_DURATIONS_SEC[oreKey] || Math.max(20, Math.round((ORE_DATA[oreKey]?.value || 25) * 0.70));
+              const inCargo = cargoCounts[oreKey] || 0;
+              const inDepot = this.depot?.ores?.[oreKey] || 0;
+              const totalThisOre = inCargo + inDepot;
+
+              const hasFuel = loadedCoal >= 1;
+              const canSmeltThis = hasFuel && totalThisOre > 0;
+
+              oresHtml += `
+                <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 12px; box-sizing: border-box;">
+                  <!-- Spalte 1: Icon + Erz ➔ Barren (flex: 1) -->
+                  <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;">
+                    <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.25); border-radius: 8px; flex-shrink: 0;">
+                      ${itemDisplayIcon(oreKey, 18)}
+                    </span>
+                    <strong style="color: #f8fafc; font-size: 12.5px; display: inline-flex; align-items: center; min-width: 0; flex: 1;">
+                      <span style="display: inline-block; min-width: 92px; text-align: left; white-space: nowrap;">${oreName}</span>
+                      <span style="color: #64748b; font-size: 11px; width: 16px; min-width: 16px; margin: 0 8px; display: inline-flex; justify-content: center; align-items: center; flex-shrink: 0;">➔</span>
+                      <span style="color: #f8fafc; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${itemDisplayIcon('bar_' + oreKey, 14)} ${refinedName}</span>
+                    </strong>
+                  </div>
+
+                  <!-- Spalte 2: Dauer (68px) -->
+                  <div style="width: 68px; min-width: 68px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+                    <span style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); padding: 2px 7px; border-radius: 6px; font-size: 10.5px; color: #94a3b8; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 4px; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
+                      ${icon('clock', '', 10)} ${durSec}s
+                    </span>
+                  </div>
+
+                  <!-- Spalte 3: Buttons (136px) -->
+                  <div style="width: 136px; min-width: 136px; flex-shrink: 0; display: flex; gap: 6px; align-items: center; justify-content: flex-end;">
+                    <button class="btn-deposit-one btn-3d-secondary" data-ore="${oreKey}" ${canSmeltThis ? '' : 'disabled'} style="width: 42px; min-width: 42px; height: 30px; padding: 0; font-size: 11px; font-weight: 700; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;">+1</button>
+                    <button class="btn-deposit-all-type btn-action" data-ore="${oreKey}" ${canSmeltThis ? '' : 'disabled'} style="width: 88px; min-width: 88px; height: 30px; padding: 0 4px; font-size: 11px; font-weight: 700; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; white-space: nowrap;">Alle (${totalThisOre})</button>
+                  </div>
+                </div>
+              `;
+            }
+            oresHtml += `</div>`;
+            return oresHtml;
+          })()}
+        </div>
+
+        <!-- 4. INDUSTRIEMASCHINE (STATUS & FERTIGUNG VEREINT) -->
+        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid ${isCrafting ? 'rgba(56, 189, 248, 0.4)' : 'rgba(255,255,255,0.08)'}; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px;">
+          <!-- Industriemaschine Status, Fortschritt & Upgrade -->
+          <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <strong style="color: #f8fafc; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 6px;">
+                  ${icon('anvil', isCrafting ? 'craft-icon-active' : '', 14)} Industriemaschine
+                </strong>
+                <span style="font-size: 10px; color: #38bdf8; font-weight: 700; background: rgba(56, 189, 248, 0.15); padding: 1px 5px; border-radius: 4px;">Lvl ${currentTier}</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 10.5px; color: #94a3b8;">2 Kohle / Bauteil</span>
+                ${nextTierData ? `
+                  <button id="btn-upgrade-machine" class="btn-buy" ${canAffordUpgrade ? '' : 'disabled'} style="height: 24px; font-size: 10.5px; font-weight: 700; padding: 0 8px; gap: 4px; border-radius: 5px;" title="Schaltet tiefere Erze & Bauteile frei: ${nextTierData.desc}">
+                    ${icon('chevrons-up', '', 11)} Upgrade Lvl ${nextTierData.tier} &bull; €${nextTierData.costCash.toLocaleString('de-DE')}
+                  </button>
                 ` : `
-                  <span style="color: ${hasCraftFuel ? '#64748b' : '#f87171'};">${hasCraftFuel ? currentTierData.name : 'Keine Kohle (2x nötig)'}</span>
+                  <span style="font-size: 10px; font-weight: 700; color: #34d399; background: rgba(16, 185, 129, 0.12); padding: 2px 6px; border-radius: 4px;">Max Lvl</span>
                 `}
-                <span id="craft-timer" style="font-family: monospace; font-size: 12px; font-weight: 800; color: ${isCrafting ? '#38bdf8' : '#64748b'}; font-variant-numeric: tabular-nums;">
-                  ${isCrafting ? this.formatRefineryClock(currentCraft.remainingMs) : '00:00'}
-                </span>
               </div>
             </div>
 
-            <!-- Fortschrittsbalken -->
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
+              ${isCrafting ? `
+                <span style="font-weight: 700; color: #38bdf8; display: inline-flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                  &bull; ${itemDisplayIcon(currentCraft.productId, 12)} ${currentCraft.name}
+                  ${craftQueue.length > 1 ? `<span style="font-size: 9.5px; color: #94a3b8; background: rgba(0,0,0,0.35); padding: 1px 5px; border-radius: 4px;">+${craftQueue.length - 1}</span>` : ''}
+                </span>
+              ` : `
+                <span style="color: ${hasCraftFuel ? '#64748b' : '#f87171'};">${hasCraftFuel ? currentTierData.name : 'Keine Kohle (2x nötig)'}</span>
+              `}
+              <span id="craft-timer" style="font-family: monospace; font-size: 12px; font-weight: 800; color: ${isCrafting ? '#38bdf8' : '#64748b'}; font-variant-numeric: tabular-nums;">
+                ${isCrafting ? this.formatRefineryClock(currentCraft.remainingMs) : '00:00'}
+              </span>
+            </div>
+
             <div style="height: 6px; background: #090d16; border: 1px solid rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden;">
               <div id="craft-progress-fill" style="width: ${pctCraft}%; height: 100%; background: linear-gradient(90deg, #0284c7 0%, #38bdf8 80%, #bae6fd 100%); box-shadow: ${isCrafting ? '0 0 8px rgba(56, 189, 248, 0.6)' : 'none'}; transition: width 0.15s linear;"></div>
             </div>
-
-            <!-- Upgrade-Button direkt in der Industrie-Maschine -->
-            ${nextTierData ? `
-              <button id="btn-upgrade-machine" class="btn-buy" ${canAffordUpgrade ? '' : 'disabled'} style="height: 26px; font-size: 10.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 4px; border-radius: 6px; margin-top: 2px;" title="Schaltet tiefere Erze & Bauteile frei: ${nextTierData.desc}">
-                ${icon('chevrons-up', '', 12)} Upgrade Level ${nextTierData.tier} &bull; €${nextTierData.costCash.toLocaleString('de-DE')}
-              </button>
-            ` : `
-              <div style="height: 26px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #34d399; gap: 4px; margin-top: 2px;">
-                ${icon('check-circle', '', 11)} Max Level
-              </div>
-            `}
           </div>
 
-        </div>
-    `;
+          <!-- Industriemaschine Produkt-Rezepte -->
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            ${(() => {
+              const visibleFactoryProducts = Object.entries(FACTORY_PRODUCTS).filter(([prodId, prod]) => {
+                return Object.keys(prod.recipe).every(ore => this.player.isOreDiscovered(ore));
+              });
 
-    // 2. Fertige Waren (Abholung / Einlagern)
-    if (finished.length > 0) {
-      const grouped = {};
-      finished.forEach(item => {
-        const itemKey = item.isProduct ? item.productId : ('bar_' + item.ore);
-        if (!grouped[item.name]) grouped[item.name] = { count: 0, value: 0, itemKey };
-        grouped[item.name].count++;
-        grouped[item.name].value += item.value;
-      });
+              if (visibleFactoryProducts.length === 0) {
+                return `
+                  <div style="text-align: center; padding: 16px; color: #94a3b8; font-size: 11.5px; background: rgba(0,0,0,0.25); border-radius: 8px;">
+                    Keine Industrie-Rezepte verfügbar. Entdecke neue Erzadern im Schacht, um Fertigungspläne freizuschalten!
+                  </div>
+                `;
+              }
 
-      const finishedBadges = Object.entries(grouped).map(([name, data]) => `
-        <span style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.5); padding: 3px 8px; border-radius: 6px; font-size: 11.5px; color: #a7f3d0; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
-          ${itemDisplayIcon(data.itemKey, 13)}
-          <span>${data.count}x ${name}</span>
-        </span>
-      `).join('');
+              let prodsHtml = '';
+              for (const [prodId, prod] of visibleFactoryProducts) {
+                const isTierLocked = (prod.minTier || 1) > currentTier;
+                const fuelNeeded = prod.fuelCoal || 2;
+                const hasFuel = loadedCoal >= fuelNeeded;
 
-      html += `
-        <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.45); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; width: 100%;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <strong style="color: #34d399; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px;">
-              ${icon('check-circle', '', 14)}
-              Fertiggestellt (${finished.length === 1 ? '1 Einheit' : `${finished.length} Einheiten`})
-            </strong>
+                let canCraft = !isTierLocked && hasFuel;
+                const ingBadges = Object.entries(prod.recipe).map(([ore, need]) => {
+                  const inCargo = cargoCounts[ore] || 0;
+                  const inDepot = this.depot?.ores?.[ore] || 0;
+                  const have = inCargo + inDepot;
+                  if (have < need) canCraft = false;
+                  const oreName = ORE_DATA[ore]?.name || ore;
+                  const isMet = have >= need;
+                  return `<span style="background: ${isMet ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'}; border: 1px solid ${isMet ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'}; color: ${isMet ? '#34d399' : '#f87171'}; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">${itemDisplayIcon(ore, 13)} ${need}x ${oreName} <span style="font-size: 9.5px; opacity: 0.85; font-variant-numeric: tabular-nums;">(${have}/${need})</span></span>`;
+                }).join('');
+
+                prodsHtml += `
+                  <div style="background: rgba(0,0,0,0.3); border: 1px solid ${isTierLocked ? 'rgba(245, 158, 11, 0.2)' : 'rgba(255,255,255,0.06)'}; border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 12px; box-sizing: border-box; opacity: ${isTierLocked ? '0.75' : '1'};">
+                    <!-- Spalte 1: Icon (32px) + Name (185px) -->
+                    <div style="display: flex; align-items: center; gap: 10px; width: 185px; min-width: 185px; flex-shrink: 0;">
+                      <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.25); border-radius: 8px; flex-shrink: 0; color: #38bdf8;">
+                        ${itemDisplayIcon(prodId, 18)}
+                      </span>
+                      <strong style="color: #f8fafc; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${prod.name}</strong>
+                    </div>
+
+                    <!-- Spalte 2: Fertigungs-Dauer (68px) -->
+                    <div style="width: 68px; min-width: 68px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+                      <span style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); padding: 2px 7px; border-radius: 6px; font-size: 10.5px; color: #94a3b8; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 4px; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
+                        ${icon('clock', '', 10)} ${prod.durationSec}s
+                      </span>
+                    </div>
+
+                    <!-- Spalte 3: Zutaten / Bauplan-Rezepte (flex: 1) -->
+                    <div style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                      ${ingBadges}
+                    </div>
+
+                    <!-- Spalte 4: Herstellen-Button / Sperre (120px) -->
+                    <div style="width: 120px; min-width: 120px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end;">
+                      ${isTierLocked ? `
+                        <span style="font-size: 10px; font-weight: 800; color: #f59e0b; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 6px; padding: 4px 8px; display: inline-flex; align-items: center; gap: 4px; text-align: center; line-height: 1.2;">
+                          ${icon('lock', '', 11)} Stufe ${prod.minTier}
+                        </span>
+                      ` : `
+                        <button class="btn-craft-product btn-buy" data-prod="${prodId}" ${canCraft ? '' : 'disabled'} style="width: 100%; height: 32px; padding: 0 10px; font-size: 11.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 6px;" title="${!hasFuel ? 'Brennkammer benötigt 2x Kohle!' : 'Produkt herstellen'}">
+                          ${icon('hammer', '', 13)} Herstellen
+                        </button>
+                      `}
+                    </div>
+                  </div>
+                `;
+              }
+              return prodsHtml;
+            })()}
           </div>
-
-          <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-            ${finishedBadges}
-          </div>
-
-          <button id="btn-transfer-to-storage" class="btn-buy" style="height: 34px; font-size: 11.5px; font-weight: 700; padding: 0 14px; width: 100%; justify-content: center; display: inline-flex; align-items: center; gap: 6px;">
-            ${icon('warehouse', '', 14)}
-            <span>Waren ins Depot einlagern</span>
-          </button>
         </div>
-      `;
-    }
 
-    // 3. INDUSTRIE-FERTIGUNG (Neue Produkte aus Erzen herstellen)
-    const visibleFactoryProducts = Object.entries(FACTORY_PRODUCTS).filter(([prodId, prod]) => {
-      return Object.keys(prod.recipe).every(ore => this.player.isOreDiscovered(ore));
-    });
-
-    html += `
-      <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <strong style="color: #38bdf8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 6px;">
-            ${icon('anvil', '', 14)}
-            Industrie-Fertigung
-          </strong>
-        </div>
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-    `;
-
-    if (visibleFactoryProducts.length === 0) {
-      html += `
-        <div style="text-align: center; padding: 16px; color: #94a3b8; font-size: 11.5px; background: rgba(0,0,0,0.25); border-radius: 8px;">
-          Keine Industrie-Rezepte verfügbar. Entdecke neue Erzadern im Schacht, um Fertigungspläne freizuschalten!
-        </div>
-      `;
-    } else {
-      for (const [prodId, prod] of visibleFactoryProducts) {
-        const isTierLocked = (prod.minTier || 1) > currentTier;
-        const fuelNeeded = prod.fuelCoal || 2;
-        const hasFuel = loadedCoal >= fuelNeeded;
-
-        let canCraft = !isTierLocked && hasFuel;
-        const ingBadges = Object.entries(prod.recipe).map(([ore, need]) => {
-          const inCargo = cargoCounts[ore] || 0;
-          const inDepot = this.depot?.ores?.[ore] || 0;
-          const have = inCargo + inDepot;
-          if (have < need) canCraft = false;
-          const oreName = ORE_DATA[ore]?.name || ore;
-          const isMet = have >= need;
-          return `<span style="background: ${isMet ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'}; border: 1px solid ${isMet ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'}; color: ${isMet ? '#34d399' : '#f87171'}; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">${itemDisplayIcon(ore, 13)} ${need}x ${oreName} <span style="font-size: 9.5px; opacity: 0.85; font-variant-numeric: tabular-nums;">(${have}/${need})</span></span>`;
-        }).join('');
-
-        html += `
-          <div style="background: rgba(0,0,0,0.3); border: 1px solid ${isTierLocked ? 'rgba(245, 158, 11, 0.2)' : 'rgba(255,255,255,0.06)'}; border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 12px; box-sizing: border-box; opacity: ${isTierLocked ? '0.75' : '1'};">
-            <!-- Spalte 1: Icon (32px) + Name (185px) -->
-            <div style="display: flex; align-items: center; gap: 10px; width: 185px; min-width: 185px; flex-shrink: 0;">
-              <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.25); border-radius: 8px; flex-shrink: 0; color: #38bdf8;">
-                ${itemDisplayIcon(prodId, 18)}
-              </span>
-              <strong style="color: #f8fafc; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${prod.name}</strong>
-            </div>
-
-            <!-- Spalte 2: Fertigungs-Dauer (68px) -->
-            <div style="width: 68px; min-width: 68px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
-              <span style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); padding: 2px 7px; border-radius: 6px; font-size: 10.5px; color: #94a3b8; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 4px; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
-                ${icon('clock', '', 10)} ${prod.durationSec}s
-              </span>
-            </div>
-
-            <!-- Spalte 3: Zutaten / Bauplan-Rezepte (flex: 1) -->
-            <div style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-              ${ingBadges}
-            </div>
-
-            <!-- Spalte 4: Herstellen-Button / Sperre (120px) -->
-            <div style="width: 120px; min-width: 120px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end;">
-              ${isTierLocked ? `
-                <span style="font-size: 10px; font-weight: 800; color: #f59e0b; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 6px; padding: 4px 8px; display: inline-flex; align-items: center; gap: 4px; text-align: center; line-height: 1.2;">
-                  ${icon('lock', '', 11)} Stufe ${prod.minTier}
-                </span>
-              ` : `
-                <button class="btn-craft-product btn-buy" data-prod="${prodId}" ${canCraft ? '' : 'disabled'} style="width: 100%; height: 32px; padding: 0 10px; font-size: 11.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 6px;" title="${!hasFuel ? 'Brennkammer benötigt 2x Kohle!' : 'Produkt herstellen'}">
-                  ${icon('hammer', '', 13)} Herstellen
-                </button>
-              `}
-            </div>
-          </div>
-        `;
-      }
-    }
-
-    html += `
-        </div>
-      </div>
-    `;
-
-    // 4. ROHERZ-SCHMELZOFEN (Einschmelzen einzelner Erze)
-    const totalCargoOres = cargo.length;
-    const totalDepotOres = Object.values(this.depot?.ores || {}).reduce((s, v) => s + v, 0);
-    const totalAvailableOres = totalCargoOres + totalDepotOres;
-
-    html += `
-      <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
-          <strong style="color: #38bdf8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 6px;">
-            ${icon('container', '', 14)}
-            Roherz-Schmelzofen
-          </strong>
-        </div>
-    `;
-
-    if (totalAvailableOres === 0) {
-      html += `
-        <div style="color: #64748b; font-size: 12px; text-align: center; padding: 10px 0;">
-          Keine Erze im Frachtraum oder Depot vorhanden. Baue unter Tage Erze ab, um sie hier einzuschmelzen.
-        </div>
-      `;
-    } else {
-      const canSmeltAny = loadedCoal > 0 && totalAvailableOres > 0;
-      html += `
-        ${totalAvailableOres > 0 ? `
-          <button id="btn-deposit-all-ores" class="btn-buy" ${canSmeltAny ? '' : 'disabled'} style="width: 100%; height: 34px; font-size: 11.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
-            ${icon('flame', '', 14)}
-            <span>Alle Erze schmelzen (${Math.min(totalAvailableOres, loadedCoal)} / ${totalAvailableOres})</span>
-          </button>
-        ` : ''}
-      `;
-
-      const allOreKeys = Object.keys(ORE_DATA).filter(k => this.player.isOreDiscovered(k) && ((cargoCounts[k] || 0) > 0 || (this.depot?.ores?.[k] || 0) > 0));
-
-      html += `<div style="display: flex; flex-direction: column; gap: 6px;">`;
-      for (const oreKey of allOreKeys) {
-        const oreName = ORE_DATA[oreKey]?.name || oreKey;
-        const refinedName = getRefinedOreName(oreKey);
-        const durSec = REFINERY_DURATIONS_SEC[oreKey] || Math.max(20, Math.round((ORE_DATA[oreKey]?.value || 25) * 0.70));
-        const inCargo = cargoCounts[oreKey] || 0;
-        const inDepot = this.depot?.ores?.[oreKey] || 0;
-        const totalThisOre = inCargo + inDepot;
-
-        const hasFuel = loadedCoal >= 1;
-        const canSmeltThis = hasFuel && totalThisOre > 0;
-
-        html += `
-          <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 12px; box-sizing: border-box;">
-            <!-- Spalte 1: Icon + Erz ➔ Barren (flex: 1) -->
-            <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;">
-              <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.25); border-radius: 8px; flex-shrink: 0;">
-                ${itemDisplayIcon(oreKey, 18)}
-              </span>
-              <strong style="color: #f8fafc; font-size: 12.5px; display: inline-flex; align-items: center; min-width: 0; flex: 1;">
-                <span style="display: inline-block; min-width: 92px; text-align: left; white-space: nowrap;">${oreName}</span>
-                <span style="color: #64748b; font-size: 11px; width: 16px; min-width: 16px; margin: 0 8px; display: inline-flex; justify-content: center; align-items: center; flex-shrink: 0;">➔</span>
-                <span style="color: #f8fafc; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${itemDisplayIcon('bar_' + oreKey, 14)} ${refinedName}</span>
-              </strong>
-            </div>
-
-            <!-- Spalte 2: Dauer (68px) -->
-            <div style="width: 68px; min-width: 68px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
-              <span style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); padding: 2px 7px; border-radius: 6px; font-size: 10.5px; color: #94a3b8; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 4px; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
-                ${icon('clock', '', 10)} ${durSec}s
-              </span>
-            </div>
-
-            <!-- Spalte 3: Buttons (136px - bündig und einheitlich) -->
-            <div style="width: 136px; min-width: 136px; flex-shrink: 0; display: flex; gap: 6px; align-items: center; justify-content: flex-end;">
-              <button class="btn-deposit-one btn-3d-secondary" data-ore="${oreKey}" ${canSmeltThis ? '' : 'disabled'} style="width: 42px; min-width: 42px; height: 30px; padding: 0; font-size: 11px; font-weight: 700; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;">+1</button>
-              <button class="btn-deposit-all-type btn-action" data-ore="${oreKey}" ${canSmeltThis ? '' : 'disabled'} style="width: 88px; min-width: 88px; height: 30px; padding: 0 4px; font-size: 11px; font-weight: 700; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; white-space: nowrap;">Alle (${totalThisOre})</button>
-            </div>
-          </div>
-        `;
-      }
-      html += `</div>`;
-    }
-
-    html += `
-        </div>
       </div>
     `;
 
