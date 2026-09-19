@@ -582,9 +582,10 @@ export class MiningScene extends Phaser.Scene {
     if (!this.player || this.inStartScreen || this.isRescueCutsceneActive) return;
     const isFuelEmpty = (this.player.fuel <= 0.05);
     const isActivelyRefueling = this.player.fuelArmState && this.player.fuelArmState.isDockedOnVehicle;
+    const atSurface = this.player.gy <= -1 || (this.player.sprite && this.player.sprite.y <= -16);
 
-    // Rettungsmodal öffnet sowohl unter Tage als auch über der Erde bei leerem Tank (sofern nicht aktiv am Hangar betankt) oder Game Over
-    if (this.player.isGameOver || (isFuelEmpty && !isActivelyRefueling)) {
+    // Rettungsmodal öffnet bei Game Over oder bei leerem Tank unter Tage (an der Oberfläche ist Verbrauch aus)
+    if (this.player.isGameOver || (isFuelEmpty && !isActivelyRefueling && !atSurface)) {
       if (this.rescueModal && !this.rescueModal.isOpen) {
         this.rescueModal.open();
       }

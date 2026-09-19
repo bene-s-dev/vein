@@ -1590,9 +1590,10 @@ export class Player {
     if (soundFx && soundFx._refuelActive && soundFx.stopRefuel) {
       soundFx.stopRefuel();
     }
-    if (this.fuel <= 0) {
+    const atSurface = this.gy <= -1 || (this.sprite && this.sprite.y <= -16);
+    if (this.fuel <= 0 && !atSurface) {
       soundFx.stopDrive();
-      return false; // Kein Treibstoff
+      return false; // Kein Treibstoff unter Tage
     }
 
     let targetGx = this.gx;
@@ -1961,7 +1962,8 @@ export class Player {
 
         // Nahtlose Weiterfahrt prüfen (kein 1-Frame-Hänger zwischen Kacheln!)
         const nextDir = inputDir || (this.scene.inputHandler ? this.scene.inputHandler.getDirection() : this.lastInputDir);
-        if (nextDir && this.fuel > 0) {
+        const atSurfaceMoving = this.gy <= -1 || (this.sprite && this.sprite.y <= -16);
+        if (nextDir && (this.fuel > 0 || atSurfaceMoving)) {
           let nextGx = this.gx;
           let nextGy = this.gy;
           if (nextDir === 'LEFT') nextGx--;
@@ -2343,6 +2345,10 @@ export class Player {
   }
 
   consumeFuel(amount) {
+    // An der Erdoberfläche (gy <= -1 bzw. y <= -16) ist der Spritverbrauch komplett aus!
+    if (this.gy <= -1 || (this.sprite && this.sprite.y <= -16)) {
+      return true;
+    }
     const actualAmount = amount / this.fuelEfficiency;
     const oldFuel = this.fuel;
     this.fuel = Math.max(0, this.fuel - actualAmount);
@@ -2361,10 +2367,7 @@ export class Player {
     const atSurface = this.gy <= -1 || (this.sprite && this.sprite.y <= -16);
 
     if (atSurface) {
-      // Auch oberirdisch anzeigen: horizontaler Rückweg zur Tanksäule/Hangar (gx 15) plus Mindestreserve
-      const tilesX = Math.abs(this.gx - 15);
-      const horizontalFuel = tilesX * (0.25 / efficiency);
-      return horizontalFuel + baseReserve;
+      return 0; // An der Erdoberfläche kein Verbrauch und keine Kerosinkosten nötig
     }
 
     // Unterirdisch: Steigflug + horizontaler Weg + 15% Sicherheitsmarge + Reserve

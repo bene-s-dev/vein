@@ -748,28 +748,18 @@ export class HUD {
       this.returnWarn.style.display = isReturnCritical ? 'inline-flex' : 'none';
     }
 
-    // Notfall-Rettung Button (bei leerem Tank unter Tage sowie über der Erde oder bei Game Over)
+    // Notfall-Rettung Button (bei leerem Tank unter Tage oder bei Game Over)
     if (this.rescueFab) {
       const isFuelEmpty = (this.player.fuel <= 0.05);
       const isActivelyRefueling = this.player.fuelArmState && this.player.fuelArmState.isDockedOnVehicle;
-      const showRescueFab = (isFuelEmpty && !isActivelyRefueling) || !!this.player.isGameOver;
+      const showRescueFab = (isFuelEmpty && !isActivelyRefueling && !isAtSurface) || !!this.player.isGameOver;
       this.rescueFab.style.display = showRescueFab ? 'inline-flex' : 'none';
     }
 
-    // --- Warnung bei kritischem Rückweg: Sofort umkehren (sowohl unter- als auch oberirdisch) ---
+    // --- Warnung bei kritischem Rückweg unter Tage ---
     if (isAtSurface) {
       this.warnedLowFuelOnEntry = false;
-      if (isReturnCritical && !this.warnedPointOfNoReturn) {
-        this.warnedPointOfNoReturn = true;
-        toastManager.show({
-          id: 'tank-warning-return',
-          text: 'Tankwarnung: Sofort zum Hangar zurückkehren!',
-          duration: 5000,
-          sound: 'cockpit'
-        });
-      } else if (isAtHangar || fuelPercent > effectiveReturnThreshold + 5) {
-        this.warnedPointOfNoReturn = false;
-      }
+      this.warnedPointOfNoReturn = false;
     } else if (isBelowGround) {
       // Warnung beim Einfahren in den Schacht mit zu wenig Treibstoff (< 50%)
       if (!this.warnedLowFuelOnEntry) {
