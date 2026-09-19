@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sprite Export Tool</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      padding: 24px;
+    }
+    h1 { font-size: 1.5rem; margin-bottom: 8px; color: #38bdf8; }
+    #status {
+      font-size: 0.9rem;
+      color: #94a3b8;
+      margin-bottom: 16px;
+      min-height: 24px;
+    }
+    #progress-bar-wrap {
+      background: #1e293b;
+      border-radius: 8px;
+      height: 12px;
+      width: 100%;
+      max-width: 600px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    #progress-bar {
+      background: linear-gradient(90deg, #0ea5e9, #38bdf8);
+      height: 100%;
+      width: 0%;
+      transition: width 0.2s;
+    }
+    #sprite-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .sprite-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #1e293b;
+      border-radius: 6px;
+      padding: 6px;
+      gap: 4px;
+    }
+    .sprite-cell canvas {
+      image-rendering: pixelated;
+      max-width: 96px;
+      max-height: 96px;
+    }
+    .sprite-cell .label {
+      font-size: 9px;
+      color: #64748b;
+      text-align: center;
+      word-break: break-all;
+      max-width: 96px;
+    }
+    .sprite-cell.ok .label { color: #34d399; }
+    .sprite-cell.err .label { color: #f87171; }
+  </style>
+</head>
+<body>
+  <h1>🗺️ Sprite Export Tool</h1>
+  <div id="status">Initialisierung…</div>
+  <div id="progress-bar-wrap"><div id="progress-bar"></div></div>
+  <div id="sprite-grid"></div>
+
+<script type="module">
+// ─── Inline-Kopie der ORE_COLORS / ORE_FILL_COLORS aus IconHelper.js ──────────
+const ORE_COLORS = {
+  coal: '#64748b',
+  copper: '#ea580c',
+  iron: '#94a3b8',
+  tin: '#cbd5e1',
+  silver: '#e2e8f0',
+  gold: '#f59e0b',
+  emerald: '#10b981',
+  sapphire: '#3b82f6',
+  ruby: '#ef4444',
+  diamond: '#67e8f9',
+  titanium: '#818cf8',
+  platinum: '#f1f5f9',
+  uranium: '#a3e635',
+  obsidian_gem: '#7c3aed',
+  dark_matter: '#312e81',
+};
+const ORE_FILL_COLORS = {
+  coal: 'rgba(71,85,105,0.5)',
+  copper: 'rgba(234,88,12,0.4)',
+  iron: 'rgba(148,163,184,0.4)',
+  tin: 'rgba(203,213,225,0.4)',
+  silver: 'rgba(226,232,240,0.45)',
+  gold: 'rgba(245,158,11,0.45)',
+  emerald: 'rgba(16,185,129,0.45)',
+  sapphire: 'rgba(59,130,246,0.45)',
+  ruby: 'rgba(239,68,68,0.45)',
+  diamond: 'rgba(103,232,249,0.45)',
+  titanium: 'rgba(129,140,248,0.45)',
+  platinum: 'rgba(241,245,249,0.45)',
+  uranium: 'rgba(163,230,53,0.45)',
+  obsidian_gem: 'rgba(124,58,237,0.45)',
+  dark_matter: 'rgba(49,46,129,0.5)',
+};
+
+// ─── Pseudo-scene: sammelt alle Canvases ──────────────────────────────────────
+const sprites = []; // { key, canvas }
+
+const scene = {
+  textures: {
+    exists: () => false,
+    remove: () => {},
+    addCanvas: (key, canvas) => {
+      sprites.push({ key, canvas });
+    }
+  }
+};
+
+// ─── Inline AssetLoader (drawFn direkt aufrufen) ──────────────────────────────
+// Statt den echten AssetLoader zu importieren (Phaser-Abhängigkeit),
+// verwenden wir einen Mini-Wrapper der genauso funktioniert.
+
+const TILE_SIZE = 32;
+
+function createTexture(key, width, height, drawFn) {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  drawFn(ctx, width, height);
+  sprites.push({ key, canvas });
+}
+
+// ─── Importiere den echten AssetLoader mit dem Ersatz-scene-Objekt ─────────────
+// Wir patchen window.ORE_COLORS / window.ORE_FILL_COLORS damit der Import klappt.
+// Da AssetLoader einen ES-Modul-Import hat können wir ihn nicht direkt patchen,
+// daher inline kopieren wir die relevante Logik aus AssetLoader.js.
+// (Die Datei AssetLoader.js ist ~155 kB – wir lassen den Browser sie importieren.)
+
+// Statt des echten Phasers übergeben wir das scene-Stub-Objekt.
+// AssetLoader.generateTextures(scene) muss intern canvas erstellen und addCanvas aufrufen.
+// Das scene-Stub akzeptiert das.
+
+// Wir laden den AssetLoader als echtes Modul:
+import('/src/assets/AssetLoader.js').then(({ AssetLoader }) => {
+  // Übergib unser stub-scene-Objekt
+  const stubScene = {
+    textures: {
+      exists: () => false,
+      remove: () => {},
+      addCanvas: (key, canvas) => {
+        sprites.push({ key, canvas });
+      }
+    }
+  };
+
+  try {
+    AssetLoader.generateTextures(stubScene);
+    startExport();
+  } catch (err) {
+    document.getElementById('status').textContent = '❌ Fehler beim Generieren: ' + err.message;
+    console.error(err);
+  }
+}).catch(err => {
+  document.getElementById('status').textContent = '❌ Import-Fehler: ' + err.message;
+  console.error(err);
+});
+
+async function startExport() {
+  const grid = document.getElementById('sprite-grid');
+  const statusEl = document.getElementById('status');
+  const bar = document.getElementById('progress-bar');
+
+  statusEl.textContent = `${sprites.length} Sprites gefunden – Export startet…`;
+
+  let done = 0;
+  const errors = [];
+
+  for (const { key, canvas } of sprites) {
+    // Canvas als WebP exportieren
+    const dataUrl = canvas.toDataURL('image/webp', 1.0);
+
+    // Vorschau zeigen
+    const cell = document.createElement('div');
+    cell.className = 'sprite-cell';
+    const displayCanvas = document.createElement('canvas');
+    displayCanvas.width = canvas.width;
+    displayCanvas.height = canvas.height;
+    displayCanvas.getContext('2d').drawImage(canvas, 0, 0);
+    const label = document.createElement('div');
+    label.className = 'label';
+    label.textContent = key;
+    cell.appendChild(displayCanvas);
+    cell.appendChild(label);
+    grid.appendChild(cell);
+
+    // An den Vite-Plugin-Endpunkt senden
+    try {
+      const res = await fetch('/api/save-sprite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, dataUrl })
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(`HTTP ${res.status}: ${txt}`);
+      }
+      cell.classList.add('ok');
+    } catch (err) {
+      cell.classList.add('err');
+      label.textContent += ` ❌ ${err.message}`;
+      errors.push({ key, err: err.message });
+    }
+
+    done++;
+    bar.style.width = `${Math.round((done / sprites.length) * 100)}%`;
+    statusEl.textContent = `${done} / ${sprites.length} exportiert…`;
+
+    // kurz yielden damit der Browser atmen kann
+    if (done % 20 === 0) await new Promise(r => setTimeout(r, 10));
+  }
+
+  if (errors.length === 0) {
+    statusEl.textContent = `✅ Alle ${sprites.length} Sprites erfolgreich als WebP gespeichert!`;
+    bar.style.background = 'linear-gradient(90deg, #10b981, #34d399)';
+    // Manifest generieren und ausgeben
+    generateManifest();
+  } else {
+    statusEl.textContent = `⚠️ ${done} exportiert, ${errors.length} Fehler. Prüfe die Konsole.`;
+    console.error('Fehler:', errors);
+  }
+}
+
+function generateManifest() {
+  const keys = sprites.map(s => s.key);
+  const js = `// Auto-generated by export-sprites.html – bitte nicht manuell bearbeiten!\nexport const SPRITE_KEYS = [\n${keys.map(k => `  '${k}'`).join(',\n')}\n];\n`;
+  console.log('=== spriteManifest.js ===\n' + js);
+
+  // Auch im DOM anzeigen
+  const pre = document.createElement('pre');
+  pre.style.cssText = 'margin-top:20px;background:#1e293b;padding:16px;border-radius:8px;font-size:11px;color:#38bdf8;overflow:auto;max-height:300px;';
+  pre.textContent = js;
+  document.body.appendChild(pre);
+}
+</script>
+</body>
+</html>

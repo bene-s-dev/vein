@@ -585,6 +585,8 @@ export class Player {
       if (this.state === PLAYER_STATES.DRILLING) {
         this.cancelDrilling();
       }
+      // Tanken weiter ermöglichen, auch wenn das Menü offen ist
+      this.checkDocking(delta);
       return;
     }
 
