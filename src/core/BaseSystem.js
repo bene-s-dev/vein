@@ -5842,7 +5842,6 @@ export class BaseSystem {
               ${itemDisplayIcon('coal', 15)}
             </span>
             <strong style="color: #f8fafc; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase;">Brennkammer</strong>
-            <span style="font-size: 10px; color: #94a3b8; font-weight: 600;">(Ofen: 1x &bull; Maschine: 2x)</span>
           </div>
 
           <div style="display: flex; align-items: center; gap: 8px;">
@@ -5919,8 +5918,8 @@ export class BaseSystem {
               ${icon('flame', isSmelting ? 'flame-anim' : '', 14)} Schmelzofen
             </strong>
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="background: rgba(249, 115, 22, 0.12); border: 1px solid rgba(249, 115, 22, 0.3); padding: 2px 8px; border-radius: 6px; font-size: 10.5px; color: #fb923c; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;" title="Verbrauch pro geschmolzenem Barren">
-                ${icon('flame', '', 11)} 1x Kohle / Barren
+              <span style="background: ${hasSmeltFuel ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'}; border: 1px solid ${hasSmeltFuel ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'}; color: ${hasSmeltFuel ? '#34d399' : '#f87171'}; padding: 2px 7px; border-radius: 6px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;" title="Brennstoffverbrauch: 1x Kohle pro Barren">
+                ${itemDisplayIcon('coal', 13)} 1×
               </span>
               <span id="smelt-timer" style="font-family: monospace; font-size: 12px; font-weight: 800; color: ${isSmelting ? '#fbbf24' : '#64748b'}; font-variant-numeric: tabular-nums;">
                 ${isSmelting ? this.formatRefineryClock(currentSmelt.remainingMs) : '00:00'}
@@ -5935,7 +5934,10 @@ export class BaseSystem {
                 ${smeltQueue.length > 1 ? `<span style="font-size: 9.5px; color: #94a3b8; background: rgba(0,0,0,0.35); padding: 1px 5px; border-radius: 4px;">+${smeltQueue.length - 1}</span>` : ''}
               </span>
             ` : `
-              <span style="color: ${hasSmeltFuel ? '#64748b' : '#f87171'};">${hasSmeltFuel ? 'Bereit für Roherze &bull; Verbraucht 1x Kohle aus Brennkammer pro Barren' : 'Keine Kohle in Brennkammer &bull; Bitte oben Kohle einfüllen'}</span>
+              <span style="color: ${hasSmeltFuel ? '#94a3b8' : '#f87171'}; font-weight: ${hasSmeltFuel ? '500' : '600'}; display: inline-flex; align-items: center; gap: 5px;">
+                <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: ${hasSmeltFuel ? '#34d399' : '#ef4444'}; box-shadow: 0 0 6px ${hasSmeltFuel ? 'rgba(52, 211, 153, 0.7)' : 'rgba(239, 68, 68, 0.7)'};"></span>
+                ${hasSmeltFuel ? 'Bereit für Roherze' : 'Brennkammer leer'}
+              </span>
             `}
           </div>
 
@@ -6024,8 +6026,8 @@ export class BaseSystem {
               <span style="font-size: 10px; color: #38bdf8; font-weight: 700; background: rgba(56, 189, 248, 0.15); padding: 1px 5px; border-radius: 4px;">Lvl ${currentTier}</span>
             </div>
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="background: rgba(249, 115, 22, 0.12); border: 1px solid rgba(249, 115, 22, 0.3); padding: 2px 8px; border-radius: 6px; font-size: 10.5px; color: #fb923c; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;" title="Verbrauch pro hergestelltem Industrieprodukt">
-                ${icon('flame', '', 11)} 2x Kohle / Fertigung
+              <span style="background: ${hasCraftFuel ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'}; border: 1px solid ${hasCraftFuel ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'}; color: ${hasCraftFuel ? '#34d399' : '#f87171'}; padding: 2px 7px; border-radius: 6px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;" title="Brennstoffverbrauch: 2x Kohle pro Fertigung">
+                ${itemDisplayIcon('coal', 13)} 2×
               </span>
               ${nextTierData ? `
                 <button id="btn-upgrade-machine" class="btn-buy" ${canAffordUpgrade ? '' : 'disabled'} style="height: 24px; font-size: 10.5px; font-weight: 700; padding: 0 8px; gap: 4px; border-radius: 5px;" title="Schaltet tiefere Erze & Bauteile frei: ${nextTierData.desc}">
@@ -6047,7 +6049,10 @@ export class BaseSystem {
                 ${craftQueue.length > 1 ? `<span style="font-size: 9.5px; color: #94a3b8; background: rgba(0,0,0,0.35); padding: 1px 5px; border-radius: 4px;">+${craftQueue.length - 1}</span>` : ''}
               </span>
             ` : `
-              <span style="color: ${hasCraftFuel ? '#64748b' : '#f87171'};">${hasCraftFuel ? `${currentTierData.name} &bull; Verbraucht 2x Kohle aus Brennkammer pro Fertigung` : 'Keine Kohle in Brennkammer (2x nötig) &bull; Bitte oben Kohle laden'}</span>
+              <span style="color: ${hasCraftFuel ? '#94a3b8' : '#f87171'}; font-weight: ${hasCraftFuel ? '500' : '600'}; display: inline-flex; align-items: center; gap: 5px;">
+                <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: ${hasCraftFuel ? '#34d399' : '#ef4444'}; box-shadow: 0 0 6px ${hasCraftFuel ? 'rgba(52, 211, 153, 0.7)' : 'rgba(239, 68, 68, 0.7)'};"></span>
+                ${hasCraftFuel ? currentTierData.name : 'Brennkammer leer'}
+              </span>
             `}
           </div>
 
