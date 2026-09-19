@@ -2886,11 +2886,18 @@ export class BaseSystem {
     return val;
   }
 
+  getDepotCapacity() {
+    const tier = Math.max(1, Math.min(DEPOT_TIERS.length, this.depot?.tier || 1));
+    const tierInfo = DEPOT_TIERS.find(t => t.tier === tier) || DEPOT_TIERS[0];
+    const baseCap = tierInfo.capacity;
+    return Math.max(baseCap, this.depot?.capacity || baseCap);
+  }
+
   getDepotSaveData() {
     return {
       ores: { ...(this.depot?.ores || {}) },
       products: { ...(this.depot?.products || {}) },
-      capacity: this.depot?.capacity || 10,
+      capacity: this.getDepotCapacity(),
       tier: this.depot?.tier || 1
     };
   }
@@ -2900,15 +2907,15 @@ export class BaseSystem {
     if (!this.depot) this.depot = {};
     this.depot.ores = { ...(data.ores || {}) };
     this.depot.products = { ...(data.products || {}) };
-    this.depot.tier = data.tier || 1;
+    this.depot.tier = Math.max(1, Math.min(DEPOT_TIERS.length, Number(data.tier) || 1));
 
     const tierInfo = DEPOT_TIERS.find(t => t.tier === this.depot.tier) || DEPOT_TIERS[0];
     if (!data.capacity || (this.depot.tier === 1 && data.capacity === 150)) {
       this.depot.capacity = tierInfo.capacity;
     } else {
-      this.depot.capacity = data.capacity;
+      this.depot.capacity = Math.max(tierInfo.capacity, Number(data.capacity) || tierInfo.capacity);
     }
-    this.depot.currentTab = 'ores';
+    this.depot.currentTab = 'storage';
   }
 
   updateHangarBuildingLabel() {
@@ -3266,7 +3273,7 @@ export class BaseSystem {
     `;
 
     const totalStored = this.getDepotTotalCount();
-    const capacity = this.depot.capacity || 10;
+    const capacity = this.getDepotCapacity();
     const occPct = Math.min(100, Math.round((totalStored / capacity) * 100));
     const isFull = totalStored >= capacity;
     const totalVal = this.getDepotTotalValue();
@@ -3300,7 +3307,7 @@ export class BaseSystem {
     const canAffordDepot = nextTierData && (this.player.cash >= nextTierData.costCash) && canAffordDepotComp;
 
     const totalStoredOresCount = Object.values(this.depot.ores || {}).reduce((s, v) => s + v, 0);
-    const totalStoredGoodsCount = Object.values(this.depot.products || {}).reduce((s, v) => s + v, 0) + Object.values(this.player.components || {}).reduce((s, v) => s + v, 0);
+    const totalStoredGoodsCount = Object.values(this.depot.products || {}).reduce((s, v) => s + v, 0);
 
     // 2. OBERES INVENTAR: ERZE & MINERALIEN
 
@@ -3397,23 +3404,11 @@ export class BaseSystem {
       `;
     });
 
-    // Leere Slots für das Erze-Grid
-    const minOreSlots = 12;
-    const totalOreSlots = Math.max(minOreSlots, Math.ceil(Math.max(1, filledOresCount) / 4) * 4);
-    const emptyOreSlots = Math.max(0, totalOreSlots - filledOresCount);
-    for (let i = 0; i < emptyOreSlots; i++) {
-      oresItemsHtml += `
-        <div style="
-          background: rgba(5, 8, 15, 0.55);
-          border: 1px dashed rgba(255, 255, 255, 0.12);
-          border-radius: 10px;
-          min-height: 90px;
-          box-sizing: border-box;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        ">
-          <span style="color: rgba(255, 255, 255, 0.18); font-size: 16px; font-weight: 700;">•</span>
+    // Leerer Zustand für Erze
+    if (filledOresCount === 0) {
+      oresItemsHtml = `
+        <div style="grid-column: 1 / -1; padding: 20px 12px; text-align: center; color: #64748b; font-size: 11.5px; background: rgba(5, 8, 15, 0.4); border: 1px dashed rgba(255, 255, 255, 0.08); border-radius: 10px;">
+          Keine Erze im Depot gelagert
         </div>
       `;
     }
@@ -3627,26 +3622,65 @@ export class BaseSystem {
       `;
     });
 
-    // Leere Slots für das Waren-Grid
-    const minGoodsSlots = 8;
-    const totalGoodsSlots = Math.max(minGoodsSlots, Math.ceil(Math.max(1, filledGoodsCount) / 4) * 4);
-    const emptyGoodsSlots = Math.max(0, totalGoodsSlots - filledGoodsCount);
-    for (let i = 0; i < emptyGoodsSlots; i++) {
-      goodsItemsHtml += `
-        <div style="
-          background: rgba(5, 8, 15, 0.55);
-          border: 1px dashed rgba(255, 255, 255, 0.12);
-          border-radius: 10px;
-          min-height: 90px;
-          box-sizing: border-box;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        ">
-          <span style="color: rgba(255, 255, 255, 0.18); font-size: 16px; font-weight: 700;">•</span>
+    // Leerer Zustand für Waren
+    if (filledGoodsCount === 0) {
+      goodsItemsHtml = `
+        <div style="grid-column: 1 / -1; padding: 20px 12px; text-align: center; color: #64748b; font-size: 11.5px; background: rgba(5, 8, 15, 0.4); border: 1px dashed rgba(255, 255, 255, 0.08); border-radius: 10px;">
+          Keine Barren oder Waren im Depot gelagert
         </div>
       `;
     }
+
+    const barColor = isFull ? '#ef4444' : (occPct > 80 ? '#f59e0b' : '#38bdf8');
+    const storageStatusBarHtml = `
+      <div style="
+        background: #090e1a;
+        border: 1px solid ${isFull ? 'rgba(239, 68, 68, 0.35)' : 'rgba(255, 255, 255, 0.12)'};
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        border-radius: 10px;
+        padding: 10px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        box-sizing: border-box;
+      ">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 12px; font-weight: 800; color: #f8fafc; letter-spacing: 0.3px; display: inline-flex; align-items: center; gap: 6px;">
+              ${icon('warehouse', '', 14)} Depot-Kapazität
+            </span>
+            <span style="font-size: 10px; font-weight: 800; color: ${barColor}; background: ${isFull ? 'rgba(239, 68, 68, 0.15)' : 'rgba(56, 189, 248, 0.15)'}; padding: 1px 6px; border-radius: 4px;">
+              Stufe ${currentTier}/10
+            </span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 12px; font-weight: 800; color: ${barColor};">
+              ${totalStored} / ${capacity} Plätze (${occPct}%)
+            </span>
+            ${isFull ? `
+              <span style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); font-size: 9.5px; font-weight: 800; padding: 1px 6px; border-radius: 4px;">
+                DEPOT VOLL
+              </span>
+            ` : `
+              <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; font-size: 9.5px; font-weight: 700; padding: 1px 6px; border-radius: 4px;">
+                ${freeDepot} frei
+              </span>
+            `}
+          </div>
+        </div>
+
+        <!-- Progress bar -->
+        <div style="width: 100%; height: 6px; background: rgba(255, 255, 255, 0.08); border-radius: 99px; overflow: hidden; position: relative;">
+          <div style="height: 100%; width: ${occPct}%; background: ${barColor}; border-radius: 99px; transition: width 0.3s ease;"></div>
+        </div>
+
+        <!-- Breakdown -->
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: #94a3b8; flex-wrap: wrap; gap: 4px;">
+          <span>${totalStoredOresCount} Erze · ${totalStoredGoodsCount} Barren & Waren</span>
+          <span>Gesamtwert: <strong style="color: #fbbf24;">€${totalVal.toLocaleString()}</strong></span>
+        </div>
+      </div>
+    `;
 
     const oresSectionHtml = `
       <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -3654,11 +3688,6 @@ export class BaseSystem {
           <span style="font-size: 11.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 5px;">
             ${icon('stone', '', 12)} Erze (${totalStoredOresCount})
           </span>
-          ${isFull ? `
-            <span style="background: rgba(239, 68, 68, 0.2); color: #ef4444; font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 4px;">
-              DEPOT VOLL
-            </span>
-          ` : ''}
         </div>
 
         <div style="
@@ -3721,6 +3750,7 @@ export class BaseSystem {
     if (currentTab === 'storage') {
       tabContentHtml = `
         <div style="display: flex; flex-direction: column; gap: 14px;">
+          ${storageStatusBarHtml}
           ${oresSectionHtml}
           ${goodsSectionHtml}
         </div>
@@ -4140,9 +4170,10 @@ export class BaseSystem {
 
   depositOre(oreKey, count = 1) {
     if (!this.depot.ores) this.depot.ores = {};
-    const freeCapacity = (this.depot.capacity || 10) - this.getDepotTotalCount();
+    const capacity = this.getDepotCapacity();
+    const freeCapacity = capacity - this.getDepotTotalCount();
     if (freeCapacity <= 0) {
-      this.scene.events.emit('notify', '⚠️ Depot ist voll! Baue die Lagerkapazität aus.');
+      this.scene.events.emit('notify', `⚠️ Depot ist voll (${capacity}/${capacity})! Baue die Lagerkapazität aus.`);
       return;
     }
 
@@ -4278,9 +4309,10 @@ export class BaseSystem {
 
   depositProduct(productKey, count = 1) {
     if (!this.depot.products) this.depot.products = {};
-    const freeCapacity = (this.depot.capacity || 10) - this.getDepotTotalCount();
+    const capacity = this.getDepotCapacity();
+    const freeCapacity = capacity - this.getDepotTotalCount();
     if (freeCapacity <= 0) {
-      this.scene.events.emit('notify', '⚠️ Depot ist voll! Baue die Lagerkapazität aus.');
+      this.scene.events.emit('notify', `⚠️ Depot ist voll (${capacity}/${capacity})! Baue die Lagerkapazität aus.`);
       return;
     }
 
@@ -4399,9 +4431,10 @@ export class BaseSystem {
 
   depositAllOres() {
     if (!this.depot.ores) this.depot.ores = {};
-    const freeCapacity = (this.depot.capacity || 10) - this.getDepotTotalCount();
+    const capacity = this.getDepotCapacity();
+    const freeCapacity = capacity - this.getDepotTotalCount();
     if (freeCapacity <= 0) {
-      this.scene.events.emit('notify', '⚠️ Depot ist voll! Baue die Lagerkapazität aus.');
+      this.scene.events.emit('notify', `⚠️ Depot ist voll (${capacity}/${capacity})! Baue die Lagerkapazität aus.`);
       return;
     }
     if (!this.player.cargo || this.player.cargo.length === 0) {
@@ -4436,9 +4469,10 @@ export class BaseSystem {
 
   depositAllProducts() {
     if (!this.depot.products) this.depot.products = {};
-    const freeCapacity = (this.depot.capacity || 10) - this.getDepotTotalCount();
+    const capacity = this.getDepotCapacity();
+    const freeCapacity = capacity - this.getDepotTotalCount();
     if (freeCapacity <= 0) {
-      this.scene.events.emit('notify', '⚠️ Depot ist voll! Baue die Lagerkapazität aus.');
+      this.scene.events.emit('notify', `⚠️ Depot ist voll (${capacity}/${capacity})! Baue die Lagerkapazität aus.`);
       return;
     }
 
@@ -6558,12 +6592,12 @@ export class BaseSystem {
     if (!this.depot.ores) this.depot.ores = {};
     if (!this.depot.products) this.depot.products = {};
 
-    const depotCap = this.depot.capacity || 10;
+    const depotCap = this.getDepotCapacity();
     let currentDepotCount = this.getDepotTotalCount();
     let freeCapacity = Math.max(0, depotCap - currentDepotCount);
 
     if (freeCapacity <= 0) {
-      this.scene.events.emit('notify', '⚠️ Depot ist voll! Bitte Lagerkapazität im Depot ausbauen.');
+      this.scene.events.emit('notify', `⚠️ Depot ist voll (${depotCap}/${depotCap})! Bitte Lagerkapazität im Depot ausbauen.`);
       return;
     }
 
