@@ -327,6 +327,10 @@ export class HUD {
       this.updateMissionWidget(info);
     });
 
+    this.scene.events.on('player_updated', () => {
+      this.update(true);
+    });
+
     // Neu entdeckte Steinsorte: Konfetti & Info-Popup anzeigen
     this.scene.events.on('ore_discovered', (oreType) => {
       this.showDiscoveryModal(oreType);
@@ -480,8 +484,33 @@ export class HUD {
     }
   }
 
-  update() {
-    if (this.scene && (this.scene.inStartScreen || this.scene.isPaused)) return;
+  update(force = false) {
+    // 1. Statische HUD-Werte (Geld, Fracht, Level) IMMER sofort aktualisieren – auch wenn ein Menü geöffnet oder das Spiel pausiert ist!
+    if (this.player) {
+      if (this._lastCash !== this.player.cash) {
+        this._lastCash = this.player.cash;
+        if (this.cashText) this.cashText.textContent = `€${this.player.cash.toLocaleString('de-DE')}`;
+      }
+
+      const lvl = this.player.level || 1;
+      if (this._lastLevel !== lvl) {
+        this._lastLevel = lvl;
+        if (this.rankName) this.rankName.textContent = lvl;
+        if (this.levelRight) this.levelRight.textContent = lvl;
+      }
+
+      if (this.cargoText) {
+        const cargoCount = this.player.cargoCount || (this.player.cargo ? this.player.cargo.length : 0);
+        const maxCargo = this.player.maxCargo || 12;
+        const cargoStr = `${cargoCount}/${maxCargo}`;
+        if (this._lastCargoStr !== cargoStr) {
+          this._lastCargoStr = cargoStr;
+          this.cargoText.innerHTML = cargoStr;
+        }
+      }
+    }
+
+    if (this.scene && (this.scene.inStartScreen || (this.scene.isPaused && !force))) return;
 
     // Position & Tiefenstatus
     const currentY = this.player.sprite ? this.player.sprite.y : (this.player.gy * 32 + 16);
@@ -843,7 +872,7 @@ export class HUD {
     // Cash & Tiefe (textContent + Dirty-Check verhindert teure Browser-Reflows)
     if (this._lastCash !== this.player.cash) {
       this._lastCash = this.player.cash;
-      if (this.cashText) this.cashText.textContent = `€${this.player.cash}`;
+      if (this.cashText) this.cashText.textContent = `€${this.player.cash.toLocaleString('de-DE')}`;
     }
     if (this._lastDepth !== this.player.depthMeters) {
       this._lastDepth = this.player.depthMeters;

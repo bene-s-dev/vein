@@ -2173,6 +2173,7 @@ export class Player {
       soundFx.playPurchase();
       this.scene.events.emit('notify', `LEVEL AUFSTIEG: Du bist jetzt ${this.rankTitle}! (+€${bonusCash.toLocaleString('de-DE')} Beförderungs-Prämie)`);
       this.scene.events.emit('level_up', this.level);
+      this.scene.events.emit('player_updated');
     }
   }
 
@@ -2263,6 +2264,7 @@ export class Player {
     this.cash += total;
     this.stats.totalCashEarned = (this.stats.totalCashEarned || 0) + total;
     this.cargo = [];
+    this.scene?.events?.emit('player_updated');
     return total;
   }
 
@@ -2282,6 +2284,7 @@ export class Player {
     const totalEarned = Math.round(count * val * mult);
     this.cash += totalEarned;
     this.stats.totalCashEarned = (this.stats.totalCashEarned || 0) + totalEarned;
+    this.scene?.events?.emit('player_updated');
     return { count, totalEarned };
   }
 
@@ -2319,6 +2322,7 @@ export class Player {
     const totalEarned = Math.round(count * val);
     this.cash += totalEarned;
     this.stats.totalCashEarned = (this.stats.totalCashEarned || 0) + totalEarned;
+    this.scene?.events?.emit('player_updated');
     return totalEarned;
   }
 
