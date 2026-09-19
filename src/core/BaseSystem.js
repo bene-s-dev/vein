@@ -3000,8 +3000,8 @@ export class BaseSystem {
             ${icon('wrench', '', 12)} Montieren
           </button>
         ` : `
-          <button id="${mountBtnId}" class="btn-buy" style="width: 100%; height: 30px; padding: 0 6px; font-size: 10.5px; font-weight: 700; background: #334155; color: #f87171; border: 1px solid rgba(239,68,68,0.3); display: inline-flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap;" title="Benötigt Bauteile aus der Fabrik oder vom Sammler">
-            ${icon('wrench', '', 12)} Fehlt Bauteil
+          <button id="${mountBtnId}" class="btn-buy" style="width: 100%; height: 30px; padding: 0 6px; font-size: 10.5px; font-weight: 700; background: #334155; color: #f87171; border: 1px solid rgba(239,68,68,0.3); display: inline-flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap;" title="Benötigt Bauteile aus der Fabrik oder vom Geologen">
+            ${icon('wrench', '', 12)} Bauteil fehlt
           </button>
         `;
 
