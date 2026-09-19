@@ -948,6 +948,15 @@ export class HUD {
             <span style="color: #cbd5e1; font-size: 10.5px; font-weight: 500;">Version, Lizenzen & Entwickler</span>
           </div>
         </button>
+
+        <!-- 5. Zur Startseite -->
+        <button id="btn-menu-startscreen" class="btn-action" style="height: 48px; width: 100%; font-size: 12.5px; font-weight: 700; justify-content: flex-start; padding: 0 16px; gap: 14px; border-radius: 12px; background: rgba(30, 41, 59, 0.65); border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
+          <span style="color: #f97316; display: inline-flex;">${icon('home', '', 18)}</span>
+          <div style="display: flex; flex-direction: column; text-align: left; line-height: 1.2;">
+            <span style="color: #f8fafc; font-weight: 700;">Zur Startseite</span>
+            <span style="color: #cbd5e1; font-size: 10.5px; font-weight: 500;">Speichern & Hauptmenü öffnen</span>
+          </div>
+        </button>
       </div>
     `;
 
@@ -968,6 +977,18 @@ export class HUD {
     const aboutBtn = document.getElementById('btn-menu-about');
     if (aboutBtn) {
       aboutBtn.onclick = () => this.openAboutView();
+    }
+
+    const startscreenBtn = document.getElementById('btn-menu-startscreen');
+    if (startscreenBtn) {
+      startscreenBtn.onclick = () => {
+        soundFx.playClick();
+        SaveSystem.saveGame(this.scene);
+        closeActiveModal(this.scene);
+        if (this.scene?.startScreen) {
+          this.scene.startScreen.show();
+        }
+      };
     }
 
     modalEl.style.display = 'flex';
@@ -1003,14 +1024,18 @@ export class HUD {
           </div>
         </div>
         <div style="display: flex; gap: 6px; align-items: center;">
-          <button class="btn-slot-load ${s.exists ? 'btn-action' : 'btn-3d-secondary'}" data-slot="${s.slotId}" ${s.exists ? '' : 'disabled'} style="height: 30px; padding: 0 12px; font-size: 11px; border: none; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px;" title="Spielstand laden">
-            ${icon('play', '', 12)} Laden
-          </button>
           ${s.exists ? `
+            <button class="btn-slot-load btn-action" data-slot="${s.slotId}" style="height: 30px; padding: 0 12px; font-size: 11px; border: none; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px;" title="Spielstand laden">
+              ${icon('play', '', 12)} Spiel laden
+            </button>
             <button class="btn-slot-delete btn-3d-danger" data-slot="${s.slotId}" style="height: 30px; width: 30px; padding: 0; justify-content: center; display: inline-flex; align-items: center; border: none; border-radius: 6px;" title="Diesen Slot löschen">
               ${icon('trash-2', '', 12)}
             </button>
-          ` : ''}
+          ` : `
+            <button class="btn-slot-start btn-buy" data-slot="${s.slotId}" style="height: 30px; padding: 0 12px; font-size: 11px; border: none; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px;" title="Neues Spiel in diesem Slot starten">
+              ${icon('play', '', 12)} Neu starten
+            </button>
+          `}
         </div>
       </div>
     `).join('');
@@ -1256,12 +1281,35 @@ export class HUD {
     }
 
     // Slots Aktionen
+    bodyEl.querySelectorAll('.btn-slot-start').forEach(btn => {
+      btn.onclick = () => {
+        const slotId = parseInt(btn.getAttribute('data-slot'), 10);
+        if (confirm(`Neues Spiel in Slot ${slotId} starten? Dein aktueller Spielfortschritt wird zuvor gesichert.`)) {
+          SaveSystem.saveGame(this.scene);
+          SaveSystem.setActiveSlotId(slotId);
+          SaveSystem.resetToNewGame(this.scene);
+          SaveSystem.saveGame(this.scene);
+          soundFx.playPurchase();
+          closeActiveModal(this.scene);
+          if (this.scene) {
+            this.scene.isPaused = false;
+            this.scene.events.emit('notify', `Neues Spiel in Slot ${slotId} gestartet!`);
+          }
+        }
+      };
+    });
+
     bodyEl.querySelectorAll('.btn-slot-load').forEach(btn => {
       btn.onclick = () => {
         const slotId = parseInt(btn.getAttribute('data-slot'), 10);
+        SaveSystem.saveGame(this.scene);
         if (SaveSystem.loadSlot(this.scene, slotId)) {
           soundFx.playPurchase();
-          this.openSettingsModal();
+          closeActiveModal(this.scene);
+          if (this.scene) {
+            this.scene.isPaused = false;
+            this.scene.events.emit('notify', `Slot ${slotId} geladen!`);
+          }
         }
       };
     });
@@ -1273,7 +1321,7 @@ export class HUD {
           SaveSystem.setActiveSlotId(slotId);
           soundFx.playClick();
           this.scene.events.emit('notify', `💾 Spielstand in Slot ${slotId} gesichert!`);
-          this.openSettingsModal();
+          this.openSettingsView();
         }
       };
     });
@@ -1285,7 +1333,7 @@ export class HUD {
           SaveSystem.deleteSlot(slotId);
           soundFx.playClick();
           this.scene.events.emit('notify', `🗑️ Slot ${slotId} gelöscht!`);
-          this.openSettingsModal();
+          this.openSettingsView();
         }
       };
     });
@@ -1297,7 +1345,7 @@ export class HUD {
         if (confirm(`Entwicklermodus: Möchtest du das [${preset.toUpperCase()}]-Preset laden?\nDein aktueller Slot wird mit diesem Test-Spielfortschritt überschrieben.`)) {
           SaveSystem.loadDevPreset(this.scene, preset);
           soundFx.playLevelUp();
-          this.openSettingsModal();
+          this.openSettingsView();
         }
       };
     });
