@@ -504,6 +504,10 @@ export class MiningScene extends Phaser.Scene {
               if (this.player.discoverOre) {
                 this.player.discoverOre(tile.ore);
               }
+              if (this.player.stats) {
+                if (!this.player.stats.totalOresMined) this.player.stats.totalOresMined = {};
+                this.player.stats.totalOresMined[tile.ore] = (this.player.stats.totalOresMined[tile.ore] || 0) + 1;
+              }
               if (this.player.cargo.length < this.player.maxCargo) {
                 this.player.collectOre(tile.ore);
                 oresCollected++;

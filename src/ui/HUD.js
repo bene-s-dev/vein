@@ -701,8 +701,9 @@ export class HUD {
       if (this.btnActionDetonate) this.btnActionDetonate.style.display = 'none';
     }
 
-    // Rückkehr-Status (Kritisch: aktueller Tank erreicht die Rückkehr-Schwelle inkl. Puffer - auch oberirdisch)
-    const isReturnCritical = returnPercent > 2 && fuelPercent <= effectiveReturnThreshold;
+    // Rückkehr-Status (Kritisch: aktueller Tank erreicht die Rückkehr-Schwelle inkl. Puffer - außerhalb des Hangars)
+    const isAtHangar = isAtSurface && (this.player.gx >= 13 && this.player.gx <= 17);
+    const isReturnCritical = !isAtHangar && returnPercent > 2 && fuelPercent <= effectiveReturnThreshold;
 
     // Tankwarnung: NUR wenn der Tank tatsächlich niedrig ist (<= 15%), NICHT bei Rückkehrschwelle!
     const isFuelLow = fuelPercent <= 15;
@@ -721,7 +722,6 @@ export class HUD {
     // Notfall-Rettung Button (bei leerem Tank unter Tage oder außerhalb des Hangars)
     if (this.rescueFab) {
       const isFuelEmpty = (this.player.fuel <= 0.05);
-      const isAtHangar = isAtSurface && (this.player.gx >= 13 && this.player.gx <= 17);
       const showRescueFab = (isFuelEmpty && (!isAtSurface || !isAtHangar)) || !!this.player.isGameOver;
       this.rescueFab.style.display = showRescueFab ? 'inline-flex' : 'none';
     }
@@ -737,7 +737,7 @@ export class HUD {
           duration: 5000,
           sound: 'cockpit'
         });
-      } else if (fuelPercent > effectiveReturnThreshold + 5) {
+      } else if (isAtHangar || fuelPercent > effectiveReturnThreshold + 5) {
         this.warnedPointOfNoReturn = false;
       }
     } else if (isBelowGround) {

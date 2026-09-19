@@ -481,13 +481,36 @@ export class SaveSystem {
         fuel_s3: data.player.gadgets?.fuel_s3 ?? 0
       };
 
+      const destroyedCount = (data.grid?.destroyedTiles?.length || 0);
+      const savedTilesMined = typeof data.player.stats?.totalTilesMined === 'number'
+        ? data.player.stats.totalTilesMined
+        : 0;
+      const highestDepth = Math.round(p.highestDepthReached || 0);
+
+      // Falls stats aus Altlasten (z.B. nur 4 Kacheln trotz 65m Tiefe) unterzählt war, mit zerstörten Kacheln & Tiefe abgleichen
+      const resolvedTilesMined = Math.max(savedTilesMined, destroyedCount, highestDepth);
+
+      const resolvedOresMined = { ...(data.player.stats?.totalOresMined || {}) };
+      // Plausibilitäts-Abgleich mit vorhandenem Cargo & Depot
+      if (Array.isArray(data.player.cargo)) {
+        data.player.cargo.forEach(ore => {
+          const k = typeof ore === 'string' ? ore : ore?.type;
+          if (k) resolvedOresMined[k] = Math.max(resolvedOresMined[k] || 0, 1);
+        });
+      }
+      if (data.depot && data.depot.ores) {
+        Object.entries(data.depot.ores).forEach(([ore, count]) => {
+          if (count > 0) {
+            resolvedOresMined[ore] = Math.max(resolvedOresMined[ore] || 0, count);
+          }
+        });
+      }
+
       p.stats = {
-        totalTilesMined: typeof data.player.stats?.totalTilesMined === 'number'
-          ? data.player.stats.totalTilesMined
-          : (data.grid?.destroyedTiles?.length || 0),
-        totalOresMined: { ...(data.player.stats?.totalOresMined || {}) },
+        totalTilesMined: resolvedTilesMined,
+        totalOresMined: resolvedOresMined,
         totalCashEarned: typeof data.player.stats?.totalCashEarned === 'number'
-          ? data.player.stats.totalCashEarned
+          ? Math.max(data.player.stats.totalCashEarned, p.cash || 0)
           : (p.cash || 0),
         missionsCompleted: data.player.stats?.missionsCompleted || 0,
         researchCompleted: data.player.stats?.researchCompleted || 0

@@ -234,7 +234,7 @@ class SoundManager {
         return;
       }
       const now = performance.now();
-      if (btn._lastSoundMs && (now - btn._lastSoundMs) < 280) return;
+      if (btn._lastSoundMs && (now - btn._lastSoundMs) < 320) return;
       btn._lastSoundMs = now;
       this.playClick();
     };
@@ -784,8 +784,8 @@ class SoundManager {
   playClick() {
     if (this.muted) return;
     const nowMs = performance.now();
-    // 160ms Debounce verhindert doppeltes oder dreifaches Klicken bei manuellem Aufruf + globalem Listener + Touch-Events
-    if (this._lastClickMs && (nowMs - this._lastClickMs) < 160) return;
+    // 240ms Debounce verhindert doppeltes oder dreifaches Klicken bei manuellem Aufruf + globalem Listener + Touch-Events
+    if (this._lastClickMs && (nowMs - this._lastClickMs) < 240) return;
     this._lastClickMs = nowMs;
 
     this.ensureContext();

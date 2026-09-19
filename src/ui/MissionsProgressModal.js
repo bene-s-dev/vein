@@ -514,10 +514,25 @@ export class MissionsProgressModal {
           ${ranks.map(r => {
             const isCurrent = curLevel === r.level;
             const isUnlocked = curLevel >= r.level;
+            const isNext = r.level === curLevel + 1;
             const bonus = LEVEL_BONUS_REWARDS[r.level];
-            const displayTitle = isUnlocked ? r.title : `Stufe ${r.level} – Verborgener Rang`;
-            const displayDesc = isUnlocked ? r.desc : `Erreiche Stufe ${r.level}, um diesen Rang und die zugehörige Gesteinsschicht freizuschalten.`;
-            const displayPerks = isUnlocked ? r.perks : `🔒 Ausrüstung & Details werden auf Stufe ${r.level} enthüllt`;
+
+            // Spoiler-Schutz: Verdeckt Namen, Tiefen & Spezial-Perks für zukünftige Ränge
+            let displayTitle = r.title;
+            let displayDesc = r.desc;
+            let displayPerks = r.perks;
+
+            if (!isUnlocked) {
+              if (isNext) {
+                displayTitle = `Stufe ${r.level} – Nächste Beförderung`;
+                displayDesc = `Erreiche Stufe ${r.level}, um diese neue Tiefenregion und verbesserte Bergbau-Ausrüstung freizuschalten.`;
+                displayPerks = `🔒 Belohnungen & Tech-Upgrades ab Stufe ${r.level}`;
+              } else {
+                displayTitle = `Stufe ${r.level} – 🔒 Verborgener Rang`;
+                displayDesc = `Dieser Rang und die unbekannte Tiefenschicht sind noch streng vertraulich.`;
+                displayPerks = `🔒 Ausrüstung & Details streng geheim`;
+              }
+            }
 
             return `
               <div style="
@@ -528,18 +543,19 @@ export class MissionsProgressModal {
                 display: flex;
                 flex-direction: column;
                 gap: 5px;
+                ${!isUnlocked && !isNext ? 'opacity: 0.75;' : ''}
               ">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                   <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-weight: 800; font-size: 11px; color: ${isUnlocked ? '#10b981' : '#64748b'};">
+                    <span style="font-weight: 800; font-size: 11px; color: ${isUnlocked ? '#10b981' : (isNext ? '#38bdf8' : '#64748b')};">
                       LVL ${r.level}
                     </span>
-                    <strong style="color: ${isCurrent ? '#38bdf8' : isUnlocked ? '#f8fafc' : '#94a3b8'}; font-size: 13px;">
+                    <strong style="color: ${isCurrent ? '#38bdf8' : isUnlocked ? '#f8fafc' : (isNext ? '#cbd5e1' : '#94a3b8')}; font-size: 13px;">
                       ${displayTitle}
                     </strong>
                   </div>
-                  <span style="font-size: 10.5px; font-weight: 700; color: ${isCurrent ? '#38bdf8' : isUnlocked ? '#10b981' : '#64748b'};">
-                    ${isCurrent ? 'AKTUELL' : isUnlocked ? 'FREIGESCHALTET' : 'GESPERRT'}
+                  <span style="font-size: 10.5px; font-weight: 700; color: ${isCurrent ? '#38bdf8' : isUnlocked ? '#10b981' : (isNext ? '#fbbf24' : '#64748b')};">
+                    ${isCurrent ? 'AKTUELL' : isUnlocked ? 'FREIGESCHALTET' : (isNext ? 'NÄCHSTES ZIEL' : 'GESPERRT')}
                   </span>
                 </div>
                 <p style="font-size: 11.5px; color: ${isUnlocked ? '#cbd5e1' : '#64748b'}; margin: 0;">${displayDesc}</p>
@@ -634,8 +650,8 @@ export class MissionsProgressModal {
               if (totalHave < needed) canFulfill = false;
               const isMet = totalHave >= needed;
               return `
-                <span style="background: rgba(15, 23, 42, 0.8); border: 1px solid ${isMet ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}; color: ${isMet ? '#10b981' : '#f87171'}; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
-                  ${oreIcon(ore, 12)} ${oreName} (${totalHave}/${needed})
+                <span style="background: ${isMet ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)'}; border: 1px solid ${isMet ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)'}; color: ${isMet ? '#34d399' : '#f87171'}; font-weight: 700; font-size: 11.5px; padding: 3px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px;">
+                  ${oreIcon(ore, 13)} ${oreName}: <strong>${totalHave}/${needed}</strong> ${isMet ? '✓' : ''}
                 </span>
               `;
             }).join('');
@@ -644,7 +660,7 @@ export class MissionsProgressModal {
               <div style="
                 background: #131b2c;
                 border: 1px solid ${canFulfill ? 'rgba(16, 185, 129, 0.6)' : 'rgba(255,255,255,0.08)'};
-                border-radius: 8px;
+                border-radius: 10px;
                 padding: 12px 14px;
                 display: flex;
                 flex-direction: column;
@@ -655,37 +671,40 @@ export class MissionsProgressModal {
                   <span style="font-size: 11px; color: #94a3b8; font-weight: 600;">${q.depthHint}</span>
                 </div>
 
-                <!-- Benötigte Erzproben (Abgabe) -->
-                <div style="display: flex; flex-direction: column; gap: 5px;">
-                  <span style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 4px;">
-                    ${icon('arrow-up-right', '', 11)} Gesuchte Proben (Abgabe):
-                  </span>
+                <!-- 1. Du gibst ab (Gesteins- & Erzproben) -->
+                <div style="background: rgba(15, 23, 42, 0.55); border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 10.5px; font-weight: 800; color: #f87171; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 5px;">
+                      ${icon('arrow-up-right', '', 12)} Du gibst ab (Proben-Abgabe):
+                    </span>
+                    <span style="font-size: 10px; color: #94a3b8;">Lager & Fracht</span>
+                  </div>
                   <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                     ${reqBadges}
                   </div>
                 </div>
 
-                <!-- Forschungs-Vergütung (Erhalt) & Abgeben-Button -->
-                <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 8px; flex-wrap: wrap; margin-top: 2px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06);">
+                <!-- 2. Du erhältst (Forschungsvergütung) -->
+                <div style="background: rgba(16, 185, 129, 0.06); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; padding: 8px 10px; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
                   <div style="display: flex; flex-direction: column; gap: 5px;">
-                    <span style="font-size: 10px; font-weight: 800; color: #10b981; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 4px;">
-                      ${icon('gift', '', 11)} Forschungs-Vergütung (Erhalt):
+                    <span style="font-size: 10.5px; font-weight: 800; color: #34d399; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 5px;">
+                      ${icon('gift', '', 12)} Du erhältst (Belohnung):
                     </span>
                     <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                      <span style="background: rgba(192, 132, 252, 0.14); border: 1px solid rgba(192, 132, 252, 0.35); color: #c084fc; font-weight: 700; font-size: 11px; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
-                        ${icon(q.rewardComp.iconName, '', 11)} 1x ${q.rewardComp.name}
+                      <span style="background: rgba(192, 132, 252, 0.18); border: 1px solid rgba(192, 132, 252, 0.4); color: #c084fc; font-weight: 800; font-size: 11.5px; padding: 3px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+                        ${icon(q.rewardComp.iconName, '', 12)} 1x ${q.rewardComp.name}
                       </span>
-                      <span style="background: rgba(251, 191, 36, 0.14); border: 1px solid rgba(251, 191, 36, 0.35); color: #fbbf24; font-weight: 800; font-size: 11.5px; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
-                        ${icon('coins', '', 11)} +€${q.rewardCash.toLocaleString('de-DE')}
+                      <span style="background: rgba(251, 191, 36, 0.18); border: 1px solid rgba(251, 191, 36, 0.4); color: #fbbf24; font-weight: 800; font-size: 11.5px; padding: 3px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+                        ${icon('coins', '', 12)} +€${q.rewardCash.toLocaleString('de-DE')}
                       </span>
-                      <span style="background: rgba(168, 85, 247, 0.14); border: 1px solid rgba(168, 85, 247, 0.35); color: #c084fc; font-weight: 800; font-size: 11.5px; padding: 2px 8px; border-radius: 6px;">
+                      <span style="background: rgba(56, 189, 248, 0.18); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; font-weight: 800; font-size: 11.5px; padding: 3px 8px; border-radius: 6px;">
                         +${q.rewardXp} XP
                       </span>
                     </div>
                   </div>
 
-                  <button class="btn-claim-geologist-modal btn-buy" data-qid="${q.id}" ${canFulfill ? '' : 'disabled'} style="height: 32px; box-sizing: border-box; padding: 0 14px; font-size: 11.5px; font-weight: 800; display: inline-flex; align-items: center; gap: 5px;">
-                    ${icon('check', '', 13)}
+                  <button class="btn-claim-geologist-modal btn-buy" data-qid="${q.id}" ${canFulfill ? '' : 'disabled'} style="height: 34px; box-sizing: border-box; padding: 0 16px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px;">
+                    ${icon('check', '', 14)}
                     <span>Proben abgeben</span>
                   </button>
                 </div>
@@ -852,6 +871,10 @@ export class MissionsProgressModal {
 
     // Maximale Tiefe (stets sauberer positiver Meterwert)
     const maxDepth = Math.max(0, Math.round(p.highestDepthReached || p.depthMeters || 0));
+    const actualDestroyed = this.scene?.gridSystem?.destroyedTiles?.size || 0;
+    const tilesMined = Math.max(stats.totalTilesMined || 0, actualDestroyed, maxDepth);
+    stats.totalTilesMined = tilesMined;
+
     const totalOresCount = Object.values(stats.totalOresMined || {}).reduce((sum, n) => sum + (n || 0), 0);
     const totalEarned = Math.max(stats.totalCashEarned || 0, p.cash || 0);
 
@@ -877,7 +900,7 @@ export class MissionsProgressModal {
               ${icon('pickaxe', '', 12)} Kacheln abgebaut
             </span>
             <strong style="color: #f8fafc; font-size: 18px; font-weight: 800; display: block; margin-top: 2px;">
-              ${(stats.totalTilesMined || 0).toLocaleString('de-DE')}
+              ${tilesMined.toLocaleString('de-DE')}
             </strong>
           </div>
 

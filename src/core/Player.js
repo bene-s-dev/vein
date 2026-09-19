@@ -31,15 +31,15 @@ export const RANK_NAMES = [
 ];
 
 export const LEVEL_BONUS_REWARDS = {
-  2: 500,
-  3: 1200,
-  4: 2500,
-  5: 5000,
-  6: 8500,
-  7: 13000,
-  8: 18500,
-  9: 25000,
-  10: 35000
+  2: 250,
+  3: 500,
+  4: 1000,
+  5: 1800,
+  6: 3000,
+  7: 4800,
+  8: 7200,
+  9: 10500,
+  10: 15000
 };
 
 export const TANK_TIERS = [
@@ -2018,6 +2018,10 @@ export class Player {
     // Entdeckungs-Event bei erstem Fund ausführen (auch wenn Laderaum voll sein sollte)
     this.discoverOre(oreType);
 
+    // Statistik: Erzabbau verlässlich erfassen (auch wenn Laderaum voll ist)
+    if (!this.stats.totalOresMined) this.stats.totalOresMined = {};
+    this.stats.totalOresMined[oreType] = (this.stats.totalOresMined[oreType] || 0) + 1;
+
     if (this.cargo.length >= this.maxCargo) {
       this.scene.events.emit('notify', 'Laderaum voll! Kann Erz nicht aufnehmen.');
       soundFx.playError();
@@ -2025,7 +2029,6 @@ export class Player {
     }
 
     this.cargo.push(oreType);
-    this.stats.totalOresMined[oreType] = (this.stats.totalOresMined[oreType] || 0) + 1;
 
     const data = ORE_DATA[oreType];
     const xpGain = data ? Math.max(3, Math.round(data.value * 0.15)) : 5;
@@ -2192,23 +2195,15 @@ export class Player {
   getReturnFuelCost() {
     const efficiency = Math.max(0.1, this.fuelEfficiency || 1.0);
     const entranceGx = 19.5;
+    const baseReserve = 1.6; // Solide Mindestreserve für Landung, Notfall & Schachtmanöver
     const atSurface = this.gy <= -1 || (this.sprite && this.sprite.y <= -16);
 
     if (atSurface) {
-      // Wenn der Spieler an der Oberfläche im Basis-Bereich (Hangar/Tanksäule gx 13..17) steht,
-      // ist er bereits sicher an der Basis -> 0 L Rückkehrbedarf!
-      const isNearHangar = this.gx >= 13 && this.gx <= 17;
-      if (isNearHangar) {
-        return 0;
-      }
-      // Wenn der Spieler weit entfernt an der Oberfläche steht (z.B. bei der Fabrik oder im Feld),
-      // benötigt er lediglich den horizontalen Rückweg zur Basis ohne künstlichen Sockel
+      // Auch oberirdisch anzeigen: horizontaler Rückweg zur Tanksäule/Hangar (gx 15) plus Mindestreserve
       const tilesX = Math.abs(this.gx - 15);
-      if (tilesX <= 2.5) return 0;
-      return (tilesX * (0.25 / efficiency));
+      const horizontalFuel = tilesX * (0.25 / efficiency);
+      return horizontalFuel + baseReserve;
     }
-
-    const baseReserve = 1.6; // Solide Mindestreserve für Landung & Schachtmanöver unter Tage
 
     // Unterirdisch: Steigflug + horizontaler Weg + 15% Sicherheitsmarge + Reserve
     const currentY = this.sprite ? this.sprite.y : (this.gy * TILE_SIZE + TILE_SIZE / 2);
