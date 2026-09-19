@@ -668,9 +668,9 @@ export class SaveSystem {
             p.isGameOver = false;
             SaveSystem.save(scene);
             if (scene.playRescueCutscene) {
-              scene.playRescueCutscene('Vom Entwickler gerettet! Willkommen zurück an der Oberfläche.');
+              scene.playRescueCutscene('Bergung erfolgreich');
             } else {
-              p.teleportToSurface('Vom Entwickler gerettet!');
+              p.teleportToSurface('Bergung erfolgreich');
             }
           } else if (scene.rescueModal) {
             scene.rescueModal.open();

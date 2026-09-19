@@ -82,97 +82,47 @@ export class EmergencyRescueModal {
     if (isFirstRescue) {
       this.modalEl.innerHTML = `
         <div class="emergency-rescue-window" style="
-          background: linear-gradient(180deg, #111827 0%, #0b0f19 100%);
-          border: 1px solid rgba(239, 68, 68, 0.45);
-          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 24px rgba(239, 68, 68, 0.2);
-          border-radius: 14px;
-          max-width: 420px;
-          width: 95%;
-          max-height: 94vh;
-          overflow-y: auto;
-          padding: 16px 18px;
+          background: #0f172a;
+          border: 1px solid rgba(239, 68, 68, 0.35);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+          border-radius: 16px;
+          max-width: 360px;
+          width: 92%;
+          padding: 22px 20px;
           box-sizing: border-box;
           color: #f8fafc;
-          position: relative;
+          text-align: center;
         ">
-          <!-- Funkspruch Header -->
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <span style="
-              display: inline-flex;
-              align-items: center;
-              gap: 6px;
-              background: rgba(239, 68, 68, 0.16);
-              border: 1px solid rgba(239, 68, 68, 0.4);
-              color: #f87171;
-              padding: 2px 8px;
-              border-radius: 6px;
-              font-size: 10px;
-              font-weight: 800;
-              letter-spacing: 0.6px;
-            ">
-              <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #ef4444; animation: warnPulse 0.9s infinite;"></span>
-              MINENRETTUNGSDIENST • NOTRUF
-            </span>
-            <span style="
-              background: rgba(56, 189, 248, 0.14);
-              border: 1px solid rgba(56, 189, 248, 0.35);
-              color: #38bdf8;
-              padding: 2px 8px;
-              border-radius: 6px;
-              font-size: 10px;
-              font-weight: 800;
-            ">
-              ERSTBERGUNG
-            </span>
+          <div style="width: 46px; height: 46px; border-radius: 12px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.25); color: #f87171; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+            ${icon('fuel', '', 22)}
           </div>
 
-          <h2 style="margin: 0 0 4px 0; font-size: 16.5px; font-weight: 800; color: #ffffff; letter-spacing: -0.2px;">
-            Crawler havariert: Rettungstrupp bereit
+          <h2 style="margin: 0 0 6px 0; font-size: 18px; font-weight: 800; color: #ffffff;">
+            Treibstoff leer
           </h2>
-          <div style="font-size: 11px; color: #94a3b8; margin-bottom: 12px; line-height: 1.4;">
-            Ortung bestätigt: Position bei <strong>${depth} m</strong> (${layer.name}). Treibstoffreserven vollständig erschöpft.
+          <div style="font-size: 13px; color: #94a3b8; margin-bottom: 12px;">
+            ${depth} m Tiefe (${layer.name})
           </div>
 
-          <!-- Funkspruch Box -->
           <div style="
-            background: rgba(15, 23, 42, 0.75);
+            display: inline-block;
+            background: rgba(56, 189, 248, 0.08);
             border: 1px solid rgba(56, 189, 248, 0.2);
-            border-radius: 10px;
-            padding: 10px 12px;
-            margin-bottom: 14px;
-            font-size: 11px;
-            line-height: 1.45;
-            color: #cbd5e1;
+            color: #38bdf8;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 8px;
+            margin-bottom: 18px;
           ">
-            <div style="display: flex; gap: 9px; align-items: flex-start;">
-              <div style="color: #38bdf8; flex-shrink: 0; margin-top: 1px;">
-                ${icon('radio', '', 16)}
-              </div>
-              <div>
-                <strong style="color: #f8fafc; font-size: 11.5px;">Einsatzprotokoll der Grubenwehr:</strong><br>
-                „Ein schweres Bergefahrzeug ist einsatzbereit. Unser Team schleppt deinen Crawler an die Erdoberfläche und betankt ihn mit 20% Notreserve.“
-                <div style="
-                  background: rgba(245, 158, 11, 0.1);
-                  border: 1px solid rgba(245, 158, 11, 0.3);
-                  border-radius: 6px;
-                  padding: 7px 9px;
-                  margin-top: 7px;
-                  font-size: 10.5px;
-                  color: #e2e8f0;
-                ">
-                  <span style="color: #fbbf24; font-weight: 800; display: block; margin-bottom: 2px;">⚠️ Grubenordnung & Versicherungspflicht:</span>
-                  Dies ist deine <strong>einmalige Kulanz-Bergung</strong>. Für künftige Tiefenfahrten musst du im <strong>Büro (Tab „Versicherung“)</strong> eine Schicht-Police abschließen. Ohne Deckung endet jeder weitere Treibstoffausfall im <strong>Game Over</strong>!
-                </div>
-              </div>
-            </div>
+            Kostenlose Erstbergung verfügbar
           </div>
 
-          <!-- Buttons -->
           <div style="display: flex; flex-direction: column; gap: 8px;">
             <button id="btn-rescue-free" class="btn-3d-danger" style="
-              height: 44px;
+              height: 42px;
               width: 100%;
-              font-size: 12.5px;
+              font-size: 13px;
               font-weight: 800;
               justify-content: center;
               gap: 8px;
@@ -180,16 +130,17 @@ export class EmergencyRescueModal {
               border: none;
               background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
               box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+              cursor: pointer;
             ">
-              ${icon('truck', '', 16)}
-              <span>RETTUNGSFAHRZEUG ANFORDERN</span>
+              ${icon('truck', '', 15)}
+              <span>Crawler bergen</span>
             </button>
 
             ${canUseCanister ? `
               <button id="btn-rescue-use-fuel" class="btn-action" style="
                 height: 38px;
                 width: 100%;
-                font-size: 11.5px;
+                font-size: 12px;
                 font-weight: 700;
                 justify-content: center;
                 gap: 6px;
@@ -197,9 +148,10 @@ export class EmergencyRescueModal {
                 background: rgba(30, 41, 59, 0.7);
                 border: 1px solid rgba(255, 255, 255, 0.1);
                 color: #38bdf8;
+                cursor: pointer;
               ">
                 ${icon('fuel', '', 14)}
-                <span>Treibstoff-Kanister verwenden (${p.gadgets.fuel_canister}x)</span>
+                <span>Kanister nutzen (${p.gadgets.fuel_canister}x)</span>
               </button>
             ` : ''}
           </div>
@@ -217,9 +169,9 @@ export class EmergencyRescueModal {
           SaveSystem.save(this.scene);
           this.close();
           if (this.scene && this.scene.playRescueCutscene) {
-            this.scene.playRescueCutscene('Erstbergung durch die Minenrettung erfolgreich! Schließe im Büro eine Versicherung ab.');
+            this.scene.playRescueCutscene('Bergung erfolgreich');
           } else {
-            p.teleportToSurface('Erstbergung erfolgreich! Schließe im Büro eine Versicherung ab.');
+            p.teleportToSurface('Bergung erfolgreich');
           }
         };
       }
@@ -240,89 +192,47 @@ export class EmergencyRescueModal {
       const ins = p.activeInsurance;
       this.modalEl.innerHTML = `
         <div class="emergency-rescue-window" style="
-          background: linear-gradient(180deg, #111827 0%, #0b0f19 100%);
-          border: 1px solid rgba(56, 189, 248, 0.4);
-          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 24px rgba(56, 189, 248, 0.15);
-          border-radius: 14px;
-          max-width: 420px;
-          width: 95%;
-          max-height: 94vh;
-          overflow-y: auto;
-          padding: 16px 18px;
+          background: #0f172a;
+          border: 1px solid rgba(16, 185, 129, 0.35);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+          border-radius: 16px;
+          max-width: 360px;
+          width: 92%;
+          padding: 22px 20px;
           box-sizing: border-box;
           color: #f8fafc;
-          position: relative;
+          text-align: center;
         ">
-          <!-- Header Tag -->
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <span style="
-              display: inline-flex;
-              align-items: center;
-              gap: 5px;
-              background: rgba(239, 68, 68, 0.15);
-              border: 1px solid rgba(239, 68, 68, 0.35);
-              color: #f87171;
-              padding: 2px 8px;
-              border-radius: 20px;
-              font-size: 10.5px;
-              font-weight: 800;
-            ">
-              ${icon('alert-triangle', '', 12)}
-              TREIBSTOFF LEER
-            </span>
-            <span style="
-              background: rgba(16, 185, 129, 0.18);
-              border: 1px solid rgba(16, 185, 129, 0.4);
-              color: #34d399;
-              padding: 2px 8px;
-              border-radius: 20px;
-              font-size: 10.5px;
-              font-weight: 800;
-              display: inline-flex;
-              align-items: center;
-              gap: 4px;
-            ">
-              ${icon('shield-check', '', 12)}
-              VERSICHERT
-            </span>
+          <div style="width: 46px; height: 46px; border-radius: 12px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.25); color: #34d399; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+            ${icon('shield-check', '', 22)}
           </div>
 
-          <h2 style="margin: 0 0 4px 0; font-size: 17px; font-weight: 800; color: #ffffff;">
-            Versicherte Bergung
+          <h2 style="margin: 0 0 6px 0; font-size: 18px; font-weight: 800; color: #ffffff;">
+            Treibstoff leer
           </h2>
-          <div style="font-size: 11px; color: #94a3b8; margin-bottom: 12px;">
-            Dein Crawler sitzt bei <strong>${depth} m</strong> (${layer.name}) fest.
+          <div style="font-size: 13px; color: #94a3b8; margin-bottom: 12px;">
+            ${depth} m Tiefe (${layer.name})
           </div>
 
-          <!-- Infobox Versicherung -->
           <div style="
+            display: inline-block;
             background: rgba(16, 185, 129, 0.08);
-            border: 1px solid rgba(16, 185, 129, 0.25);
-            border-radius: 10px;
-            padding: 10px 12px;
-            margin-bottom: 14px;
-            font-size: 11px;
-            line-height: 1.45;
-            color: #cbd5e1;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 8px;
+            margin-bottom: 18px;
           ">
-            <div style="display: flex; gap: 10px; align-items: flex-start;">
-              <div style="color: #34d399; flex-shrink: 0; margin-top: 1px;">
-                ${icon('shield-check', '', 16)}
-              </div>
-              <div>
-                <strong>Gedeckt durch deine ${ins.layerName}-Versicherung!</strong><br>
-                Deine Police deckt Tiefen bis <strong>${ins.maxDepth} m</strong> ab. Die Bergungsdrohnen bringen deinen Crawler sicher zur Basis zurück (Tank wird auf 20% geladen).<br><br>
-                <span style="color: #94a3b8;">Hinweis: Die Police wird bei der Rettung verbraucht. Schließe an der Oberfläche im Büro einen neuen Schutz ab.</span>
-              </div>
-            </div>
+            Versichert (${ins.layerName})
           </div>
 
-          <!-- Buttons -->
           <div style="display: flex; flex-direction: column; gap: 8px;">
             <button id="btn-rescue-insured" class="btn-3d-success" style="
               height: 42px;
               width: 100%;
-              font-size: 12.5px;
+              font-size: 13px;
               font-weight: 800;
               justify-content: center;
               gap: 8px;
@@ -330,16 +240,17 @@ export class EmergencyRescueModal {
               border: none;
               background: linear-gradient(180deg, #10b981 0%, #059669 100%);
               box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+              cursor: pointer;
             ">
-              ${icon('shield', '', 16)}
-              <span>VERSICHERTE RETTUNG STARTEN</span>
+              ${icon('truck', '', 15)}
+              <span>Crawler bergen</span>
             </button>
 
             ${canUseCanister ? `
               <button id="btn-rescue-use-fuel" class="btn-action" style="
                 height: 38px;
                 width: 100%;
-                font-size: 11.5px;
+                font-size: 12px;
                 font-weight: 700;
                 justify-content: center;
                 gap: 6px;
@@ -347,9 +258,10 @@ export class EmergencyRescueModal {
                 background: rgba(30, 41, 59, 0.7);
                 border: 1px solid rgba(255, 255, 255, 0.1);
                 color: #38bdf8;
+                cursor: pointer;
               ">
                 ${icon('fuel', '', 14)}
-                <span>Treibstoff-Kanister verwenden (${p.gadgets.fuel_canister}x)</span>
+                <span>Kanister nutzen (${p.gadgets.fuel_canister}x)</span>
               </button>
             ` : ''}
           </div>
@@ -366,9 +278,9 @@ export class EmergencyRescueModal {
           SaveSystem.save(this.scene);
           this.close();
           if (this.scene && this.scene.playRescueCutscene) {
-            this.scene.playRescueCutscene('Versicherte Bergung erfolgreich! Versicherung aufgebraucht.');
+            this.scene.playRescueCutscene('Bergung erfolgreich');
           } else {
-            p.teleportToSurface('Versicherte Bergung erfolgreich! Versicherung aufgebraucht.');
+            p.teleportToSurface('Bergung erfolgreich');
           }
         };
       }
@@ -394,85 +306,71 @@ export class EmergencyRescueModal {
 
     this.modalEl.innerHTML = `
       <div class="emergency-rescue-window" style="
-        background: radial-gradient(circle at top, #1f1212 0%, #0a0505 100%);
-        border: 2px solid rgba(239, 68, 68, 0.6);
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85), 0 0 30px rgba(239, 68, 68, 0.3);
-        border-radius: 14px;
-        max-width: 440px;
-        width: 95%;
-        max-height: 94vh;
-        overflow-y: auto;
-        padding: 18px 20px;
+        background: #0f172a;
+        border: 1px solid rgba(239, 68, 68, 0.35);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+        border-radius: 16px;
+        max-width: 360px;
+        width: 92%;
+        padding: 22px 20px;
         box-sizing: border-box;
         color: #f8fafc;
         text-align: center;
-        position: relative;
       ">
-        <div style="font-size: 32px; line-height: 1; margin-bottom: 6px;">💀</div>
-        <h2 style="margin: 0 0 3px 0; font-size: 22px; font-weight: 900; color: #ef4444; letter-spacing: 0.8px;">
-          GAME OVER
-        </h2>
-        <div style="font-size: 11.5px; font-weight: 700; color: #fca5a5; margin-bottom: 10px;">
-          Treibstoff erschöpft in ${depth} m Tiefe (${layer.name})
+        <div style="width: 46px; height: 46px; border-radius: 12px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.25); color: #f87171; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px; font-size: 22px;">
+          💀
         </div>
 
-        <p style="font-size: 11px; color: #cbd5e1; line-height: 1.45; margin: 0 0 12px 0;">
-          Deine Erstbergung wurde bereits aufgebraucht und du hattest <strong>keine Versicherung</strong> für die Schicht <em>${layer.name}</em> abgeschlossen. Dein Crawler sitzt im Tiefengestein fest.
-        </p>
+        <h2 style="margin: 0 0 6px 0; font-size: 18px; font-weight: 800; color: #ef4444;">
+          Keine Versicherung
+        </h2>
+        <div style="font-size: 13px; color: #94a3b8; margin-bottom: 14px;">
+          ${depth} m Tiefe (${layer.name})
+        </div>
 
-        <!-- Entwickler-Rettung Kasten (nicht-technisch) -->
         <div style="
-          background: rgba(15, 23, 42, 0.85);
-          border: 1px solid rgba(56, 189, 248, 0.3);
+          background: rgba(15, 23, 42, 0.6);
+          border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 10px;
-          padding: 10px 14px;
+          padding: 8px 12px;
           margin-bottom: 14px;
-          text-align: left;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          font-size: 12px;
         ">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
-            <span style="font-size: 11px; font-weight: 800; color: #38bdf8; display: inline-flex; align-items: center; gap: 6px;">
-              ${icon('life-buoy', '', 14)}
-              Entwickler-Unterstützung
-            </span>
-            <span id="gameover-db-badge" style="
-              background: rgba(239, 68, 68, 0.2);
-              color: #f87171;
-              font-size: 9.5px;
-              font-weight: 800;
-              padding: 2px 7px;
-              border-radius: 4px;
-            ">
-              Wartet auf Freigabe
-            </span>
-          </div>
-          <div style="font-size: 11px; color: #cbd5e1; line-height: 1.45;">
-            Fahrer: <strong style="color: #f8fafc;">${p.name}</strong><br>
-            Der Entwickler kann deinen Crawler aus der Ferne kostenlos freischalten und bergen. Klicke auf den Button, sobald er die Rettung für dich freigegeben hat.
-          </div>
+          <span style="color: #cbd5e1; font-weight: 600;">${p.name}</span>
+          <span id="gameover-db-badge" style="
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            font-size: 10.5px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 6px;
+          ">
+            Wartet auf Freigabe
+          </span>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 8px;">
           <button id="btn-check-db-rescue" class="btn-action" style="
             height: 42px;
             width: 100%;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 800;
             justify-content: center;
             gap: 7px;
             border-radius: 10px;
             background: linear-gradient(180deg, #0284c7 0%, #0369a1 100%);
-            border: 1px solid rgba(56, 189, 248, 0.5);
+            border: 1px solid rgba(56, 189, 248, 0.4);
             color: #ffffff;
-            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
             cursor: pointer;
           ">
             ${icon('refresh-cw', '', 14)}
-            <span>FREIGABE PRÜFEN & RETTUNG STARTEN</span>
+            <span>Freigabe prüfen</span>
           </button>
 
-          <div id="gameover-status-msg" style="font-size: 10.5px; color: #94a3b8; min-height: 14px;">
-            Klicke auf den Button, um den Status abzufragen.
-          </div>
+          <div id="gameover-status-msg" style="font-size: 11px; color: #94a3b8; min-height: 14px;"></div>
         </div>
       </div>
     `;
@@ -497,7 +395,7 @@ export class EmergencyRescueModal {
           badgeEl.style.color = '#34d399';
         }
         if (msgEl) {
-          msgEl.innerHTML = '<span style="color: #34d399; font-weight: 800;">🎉 Rettung freigegeben! Rettungsfahrzeug rückt an...</span>';
+          msgEl.innerHTML = '<span style="color: #34d399; font-weight: 700;">Rettung freigegeben!</span>';
         }
         soundFx.playUpgrade?.();
         p.isGameOver = false;
@@ -506,14 +404,14 @@ export class EmergencyRescueModal {
         setTimeout(() => {
           this.close();
           if (this.scene && this.scene.playRescueCutscene) {
-            this.scene.playRescueCutscene('Vom Entwickler gerettet! Willkommen zurück an der Oberfläche.');
+            this.scene.playRescueCutscene('Bergung erfolgreich');
           } else {
-            p.teleportToSurface('Vom Entwickler gerettet! Willkommen zurück an der Oberfläche.');
+            p.teleportToSurface('Bergung erfolgreich');
           }
         }, 600);
       } else {
         if (msgEl) {
-          msgEl.textContent = 'Noch keine Freigabe vorhanden. Bitte Entwickler kontaktieren und erneut prüfen.';
+          msgEl.textContent = 'Noch nicht freigegeben.';
         }
       }
     };

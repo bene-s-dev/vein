@@ -2493,7 +2493,7 @@ export class Player {
     this.components[key] = (this.components[key] || 0) + amt;
   }
 
-  teleportToSurface(message = 'Rettung zur Basis erfolgreich!') {
+  teleportToSurface(message = 'Bergung erfolgreich') {
     this.isGameOver = false;
 
     // 1. Alle laufenden Tweens auf dem Sprite abbrechen

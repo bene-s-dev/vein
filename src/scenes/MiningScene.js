@@ -599,7 +599,7 @@ export class MiningScene extends Phaser.Scene {
    * 4. Zieht den Driller auf demselben Tunnelpfad wieder zurück nach oben an die Oberfläche.
    * 5. Übergibt den Driller sanft an das Hangar-Dock und fährt mit Ketten nach links weg.
    */
-  playRescueCutscene(message = 'Rettung durch die Minenrettung erfolgreich!') {
+  playRescueCutscene(message = 'Bergung erfolgreich') {
     if (this.isRescueCutsceneActive) return;
     this.isRescueCutsceneActive = true;
 
