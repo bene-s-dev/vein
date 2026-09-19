@@ -12,13 +12,23 @@ import { enableFullscreenLandscape } from '../main.js';
 export function generateShowcasePng(scene) {
   if (!scene || !scene.textures) return null;
 
-  const TILE = 32;
-  const screenW = Math.max(window.innerWidth || 0, document.documentElement?.clientWidth || 0, 800);
-  const screenH = Math.max(window.innerHeight || 0, document.documentElement?.clientHeight || 0, 420);
+  const realW = Math.max(window.innerWidth || 0, document.documentElement?.clientWidth || 0, 320);
+  const realH = Math.max(window.innerHeight || 0, document.documentElement?.clientHeight || 0, 320);
+
+  // Das VEIN-Logo benötigt 20 Tiles in der Breite (V:5 + 1 + E:4 + 1 + I:3 + 1 + N:5 = 20) und 5 Tiles in der Höhe.
+  // Berechne TILE so, dass die 20 Tiles + Rand immer vollständig auf das Display passen.
+  let TILE = 32;
+  if (realW < 768) {
+    TILE = Math.min(32, Math.max(12, Math.floor((realW - 16) / 22)));
+  }
+  // Bei sehr niedrigen Bildschirmen (z. B. Smartphone im Querformat) Skalierung anpassen
+  if (realH < 420) {
+    TILE = Math.min(TILE, Math.max(14, Math.floor((realH * 0.35) / 5)));
+  }
 
   // Berechne Spalten und Zeilen basierend auf dem Bildschirm
-  const cols = Math.max(22, Math.ceil(screenW / TILE));
-  const rows = Math.max(12, Math.ceil(screenH / TILE));
+  const cols = Math.max(22, Math.ceil(realW / TILE));
+  const rows = Math.max(12, Math.ceil(realH / TILE));
   const width = cols * TILE;
   const height = rows * TILE;
 
@@ -63,7 +73,8 @@ export function generateShowcasePng(scene) {
   // 2. VEIN Buchstaben horizontal zentrieren
   // V(5) + 1 + E(4) + 1 + I(3) + 1 + N(5) = 20 Spalten
   const startCol = Math.max(1, Math.floor((cols - 20) / 2));
-  const startRow = 1; // Zeile 1..5 für die Buchstaben (schöner Abstand oben und zur Menükarte)
+  // Bei hohen Bildschirmen (z. B. Smartphone Portrait) angenehmer Abstand nach oben
+  const startRow = Math.max(1, Math.min(3, Math.floor((rows - 8) * 0.1)));
 
   // V (Gold-Erz) - 100% symmetrisch
   const vCol = startCol;
@@ -177,7 +188,7 @@ export class StartScreen {
         <div style="flex: 1; pointer-events: none;"></div>
 
         <!-- UNTERE KARTE (EINE KOMPAKTE KARTE, BLAUER RAND, PERFEKT PROPORTIONIERT) -->
-        <div style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.93) 0%, rgba(17, 24, 39, 0.91) 100%); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1.5px solid rgba(56, 189, 248, 0.6); border-radius: 16px; padding: 10px 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.1); width: 100%; pointer-events: auto; margin-bottom: 2px; box-sizing: border-box; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start;">
+        <div class="start-screen-box">
           
           <!-- Linker Bereich: Expedition / Start -->
           <div style="display: flex; flex-direction: column; gap: 6px;">
@@ -206,7 +217,7 @@ export class StartScreen {
               </div>
             </div>
 
-            <div id="start-leaderboard-list" style="display: flex; flex-direction: column; gap: 3px; min-height: 70px; max-height: 85px; overflow-y: auto; padding-right: 2px;">
+            <div id="start-leaderboard-list" class="start-leaderboard-scroll">
               <div style="color: #94a3b8; font-size: 10.5px; text-align: center; padding: 12px 0;">
                 Lade Bestenliste...
               </div>
@@ -216,8 +227,8 @@ export class StartScreen {
       </div>
 
       <!-- Popup-Modal für Slot-Auswahl beim Laden -->
-      <div id="start-slots-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(2, 6, 23, 0.85); backdrop-filter: blur(8px); z-index: 500; justify-content: center; align-items: center; padding: 16px; box-sizing: border-box; pointer-events: auto;">
-        <div style="background: #0f172a; border: 1.5px solid rgba(56, 189, 248, 0.5); border-radius: 16px; padding: 18px; width: 100%; max-width: 380px; box-shadow: 0 16px 40px rgba(0,0,0,0.85); display: flex; flex-direction: column; gap: 12px; pointer-events: auto;">
+      <div id="start-slots-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(2, 6, 23, 0.85); backdrop-filter: blur(8px); z-index: 500; justify-content: center; align-items: center; padding: 12px; box-sizing: border-box; pointer-events: auto;">
+        <div class="start-modal-dialog" style="background: #0f172a; border: 1.5px solid rgba(56, 189, 248, 0.5); border-radius: 16px; padding: 18px; width: 100%; max-width: 380px; box-shadow: 0 16px 40px rgba(0,0,0,0.85); display: flex; flex-direction: column; gap: 12px; pointer-events: auto;">
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">
             <div style="display: flex; align-items: center; gap: 8px;">
               <span style="color: #38bdf8;">${icon('folder-open', '', 18)}</span>
@@ -234,8 +245,8 @@ export class StartScreen {
       </div>
 
       <!-- Popup-Modal für Fahrer-Namenseingabe -->
-      <div id="start-name-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(2, 6, 23, 0.85); backdrop-filter: blur(8px); z-index: 500; justify-content: center; align-items: center; padding: 16px; box-sizing: border-box; pointer-events: auto;">
-        <div style="background: #0f172a; border: 1.5px solid rgba(249, 115, 22, 0.5); border-radius: 16px; padding: 20px; width: 100%; max-width: 380px; box-shadow: 0 16px 40px rgba(0,0,0,0.8); display: flex; flex-direction: column; gap: 14px; pointer-events: auto;">
+      <div id="start-name-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(2, 6, 23, 0.85); backdrop-filter: blur(8px); z-index: 500; justify-content: center; align-items: center; padding: 12px; box-sizing: border-box; pointer-events: auto;">
+        <div class="start-modal-dialog" style="background: #0f172a; border: 1.5px solid rgba(249, 115, 22, 0.5); border-radius: 16px; padding: 20px; width: 100%; max-width: 380px; box-shadow: 0 16px 40px rgba(0,0,0,0.8); display: flex; flex-direction: column; gap: 14px; pointer-events: auto;">
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">
             <div style="display: flex; align-items: center; gap: 8px;">
               <span style="color: #f97316;">${icon('id-card', '', 20)}</span>
