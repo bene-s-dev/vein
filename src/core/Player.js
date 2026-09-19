@@ -590,6 +590,11 @@ export class Player {
 
     this.lastInputDir = inputDir;
 
+    // Automatischer Steigflug stoppen wenn Oberfläche erreicht oder kein Sprit mehr
+    if ((this.gy <= 0 || this.fuel <= 0) && this.scene.inputHandler?.isAutoAscending) {
+      this.scene.inputHandler.cancelAutoAscend();
+    }
+
     if (this.hull > 0) {
       this._hullBrokenToastShown = false;
     }
@@ -1666,7 +1671,7 @@ export class Player {
   processFlying(delta, inputDir) {
     const inputHandler = this.scene.inputHandler;
     const isUpActive = (inputDir === 'UP') ||
-      (inputHandler && (inputHandler.cursors?.up?.isDown || inputHandler.wasd?.W?.isDown || inputHandler.flyButtonPressed || inputHandler.touchDirection === 'UP'));
+      (inputHandler && (inputHandler.cursors?.up?.isDown || inputHandler.wasd?.W?.isDown || inputHandler.flyButtonPressed || inputHandler.touchDirection === 'UP' || inputHandler.isAutoAscending));
 
     // Wenn kein Treibstoff mehr vorhanden ist oder Aufstieg beendet wurde
     if (this.fuel <= 0 || !isUpActive) {
@@ -1840,6 +1845,11 @@ export class Player {
     }
     if (this.rightThrustParticles) {
       this.rightThrustParticles.stop();
+    }
+
+    // Wenn automatischer Steigflug aktiv war, sauber lösen
+    if (this.scene?.inputHandler?.isAutoAscending) {
+      this.scene.inputHandler.cancelAutoAscend();
     }
 
     // Präzise Kachel-Zentrierung beim Beenden des Flugs (verhindert ungleiche Teilstrecken/Geschwindigkeits-Sprünge)

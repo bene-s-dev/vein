@@ -1252,6 +1252,50 @@
       background: rgba(241, 245, 249, 0.8);
     }
 
+    /* Eingerasteter Joystick für automatischen Steigflug nach oben */
+    #floating-joystick.locked-up {
+      display: block !important;
+      opacity: 1 !important;
+    }
+
+    #floating-joystick.locked-up #joystick-base {
+      border-color: rgba(56, 189, 248, 0.75);
+      background: rgba(15, 23, 42, 0.65);
+      box-shadow: 0 0 24px rgba(56, 189, 248, 0.45);
+    }
+
+    #floating-joystick.locked-up #joystick-knob {
+      transform: translate(0px, -40px) !important;
+      background: rgba(2, 132, 199, 0.85);
+      border-color: #38bdf8;
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.8);
+      animation: pulse-joystick-lock 1.2s infinite ease-in-out;
+    }
+
+    #floating-joystick.locked-up #joystick-knob::after {
+      content: '▲';
+      font-size: 11px;
+      font-weight: 800;
+      color: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: none;
+      width: auto;
+      height: auto;
+    }
+
+    @keyframes pulse-joystick-lock {
+      0%, 100% {
+        box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+        border-color: #38bdf8;
+      }
+      50% {
+        box-shadow: 0 0 24px rgba(56, 189, 248, 0.95);
+        border-color: #7dd3fc;
+      }
+    }
+
     .mobile-fly-btn {
       display: none !important;
     }

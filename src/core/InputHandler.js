@@ -16,6 +16,7 @@ export class InputHandler {
     this.currentDirection = null;
     this.touchDirection = null;
     this.flyButtonPressed = false;
+    this.isAutoAscending = false;
 
     // Desktop Tastatur
     this.cursors = scene.input.keyboard.createCursorKeys();
@@ -129,6 +130,29 @@ export class InputHandler {
     this.setupControls();
   }
 
+  cancelAutoAscend() {
+    if (!this.isAutoAscending) return;
+    this.isAutoAscending = false;
+    this.touchDirection = null;
+    const joystickContainer = document.getElementById('floating-joystick');
+    const knob = document.getElementById('joystick-knob');
+    if (joystickContainer) {
+      joystickContainer.classList.remove('locked-up');
+      joystickContainer.style.opacity = '0';
+      setTimeout(() => {
+        if (!this.isAutoAscending && joystickContainer) {
+          joystickContainer.style.display = 'none';
+        }
+      }, 150);
+    }
+    if (knob) {
+      knob.style.transform = 'translate(0px, 0px)';
+    }
+    if (this.scene?.player && this.scene.player.state === 'flying') {
+      this.scene.player.stopFlying();
+    }
+  }
+
   setupControls() {
     const joystickContainer = document.getElementById('floating-joystick');
     const knob = document.getElementById('joystick-knob');
@@ -174,10 +198,13 @@ export class InputHandler {
     const hideJoystick = () => {
       activePointerId = null;
       this.touchDirection = null;
+      if (this.isAutoAscending) {
+        return; // Eingerasteter Zustand bleibt aktiv
+      }
       if (joystickContainer) {
         joystickContainer.style.opacity = '0';
         setTimeout(() => {
-          if (activePointerId === null) {
+          if (activePointerId === null && !this.isAutoAscending) {
             joystickContainer.style.display = 'none';
           }
         }, 150);
@@ -189,6 +216,11 @@ export class InputHandler {
 
     // POINTER DOWN: Frei auf dem Bildschirm berühren spawnt den Joystick
     this.scene.input.on('pointerdown', (pointer, currentlyOver) => {
+      // Wenn der automatische Steigflug aktiv war: Jede Berührung bricht ihn sofort ab!
+      if (this.isAutoAscending) {
+        this.cancelAutoAscend();
+      }
+
       if (isModalActive()) {
         const hud = this.scene.hud;
         if (hud && hud.actionFabContainer && hud.actionFabContainer.classList.contains('open')) {
@@ -301,6 +333,26 @@ export class InputHandler {
       const upClientY = (pointer && pointer.event && pointer.event.clientY != null) ? pointer.event.clientY : (pointer ? pointer.y : startClientY);
       const tapDist = Math.hypot(upClientX - startClientX, upClientY - startClientY);
 
+      // Prüfen, ob der Spieler gerade nach oben geflogen ist (Untertage im offenen Schacht)
+      const player = this.scene.player;
+      const isFlyingUp = (this.touchDirection === 'UP') && player && (player.state === 'flying' || (player.gy > 0 && !this.scene.gridSystem?.isSolid(player.gx, Math.floor(player.gy - 0.5))));
+      const canLockAscent = isFlyingUp && player && player.fuel > 0 && player.gy > 0;
+
+      if (canLockAscent) {
+        // Joystick rastet oben ein -> selbstständiger Steigflug!
+        this.isAutoAscending = true;
+        activePointerId = null;
+        if (joystickContainer) {
+          joystickContainer.classList.add('locked-up');
+          joystickContainer.style.opacity = '1';
+        }
+        if (knob) {
+          knob.style.transform = 'translate(0px, -40px)';
+        }
+        this.scene.hud?.showToast?.('🚀 Steigflug eingerastet • Tippen zum Abbrechen', 'info', 1800);
+        return;
+      }
+
       hideJoystick();
 
       if (isModalActive()) return;
@@ -318,6 +370,7 @@ export class InputHandler {
           const gy = Math.floor(startWorldY / TILE_SIZE);
           if (gy >= 1) {
             const tile = this.scene.gridSystem.getTile(gx, gy);
+            const key = `${gx},${gy}`;
             const isExplored = tile && (tile.explored || (this.scene.gridSystem.exploredTiles && this.scene.gridSystem.exploredTiles.has(key)));
             if (tile && tile.type !== TILE_TYPES.EMPTY && isExplored) {
               if (tile.ore) {
@@ -336,7 +389,7 @@ export class InputHandler {
     this.scene.input.on('pointerup', handlePointerUp);
     this.scene.input.on('pointercancel', handlePointerUp);
     this.scene.input.on('gameout', handlePointerUp);
-    window.addEventListener('blur', hideJoystick);
+    window.addEventListener('blur', () => this.cancelAutoAscend());
   }
 
   getDirection() {
@@ -350,19 +403,27 @@ export class InputHandler {
       return 'UP';
     }
 
-    // 2. Mobile Floating-Joystick
+    // 2. Automatischer Steigflug (eingerasteter Joystick)
+    if (this.isAutoAscending) {
+      return 'UP';
+    }
+
+    // 3. Mobile Floating-Joystick
     if (this.touchDirection) {
       return this.touchDirection;
     }
 
-    // 3. Desktop Tastatur (WASD / Pfeiltasten)
+    // 4. Desktop Tastatur (WASD / Pfeiltasten)
     if (this.cursors.left.isDown || this.wasd.A.isDown) {
+      if (this.isAutoAscending) this.cancelAutoAscend();
       return 'LEFT';
     }
     if (this.cursors.right.isDown || this.wasd.D.isDown) {
+      if (this.isAutoAscending) this.cancelAutoAscend();
       return 'RIGHT';
     }
     if (this.cursors.down.isDown || this.wasd.S.isDown) {
+      if (this.isAutoAscending) this.cancelAutoAscend();
       return 'DOWN';
     }
     if (this.cursors.up.isDown || this.wasd.W.isDown) {
