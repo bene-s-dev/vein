@@ -5881,7 +5881,7 @@ export class BaseSystem {
                 ${smeltQueue.length > 1 ? `<span style="font-size: 9.5px; color: #94a3b8; background: rgba(0,0,0,0.35); padding: 1px 5px; border-radius: 4px;">+${smeltQueue.length - 1}</span>` : ''}
               </span>
             ` : `
-              <span style="color: ${hasSmeltFuel ? '#64748b' : '#f87171'};">${hasSmeltFuel ? 'Bereit für Roherze' : 'Keine Kohle in Brennkammer'}</span>
+              <span style="color: ${hasSmeltFuel ? '#64748b' : '#f87171'};">${hasSmeltFuel ? 'Bereit für Roherze &bull; Verbraucht 1x Kohle aus Brennkammer pro Barren' : 'Keine Kohle in Brennkammer &bull; Bitte oben Kohle einfüllen'}</span>
             `}
           </div>
 
@@ -5939,10 +5939,13 @@ export class BaseSystem {
                     </strong>
                   </div>
 
-                  <!-- Spalte 2: Dauer (68px) -->
-                  <div style="width: 68px; min-width: 68px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
-                    <span style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); padding: 2px 7px; border-radius: 6px; font-size: 10.5px; color: #94a3b8; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 4px; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
+                  <!-- Spalte 2: Dauer & Kohle-Brennstoff -->
+                  <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+                    <span style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); padding: 2px 7px; border-radius: 6px; font-size: 10.5px; color: #94a3b8; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 4px; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
                       ${icon('clock', '', 10)} ${durSec}s
+                    </span>
+                    <span style="background: rgba(249, 115, 22, 0.12); border: 1px solid rgba(249, 115, 22, 0.3); padding: 2px 7px; border-radius: 6px; font-size: 10.5px; color: #fb923c; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 4px; box-sizing: border-box; white-space: nowrap;" title="Verbraucht 1x Kohle aus der Brennkammer pro Barren">
+                      ${icon('flame', '', 10)} 1x Kohle
                     </span>
                   </div>
 
