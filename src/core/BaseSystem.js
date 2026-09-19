@@ -851,7 +851,11 @@ export class BaseSystem {
         gx: -16,
         height: 70,
         costCash: 3800,
-        costComp: { iron_tube: 1 },
+        costComp: {
+          iron_tube: 4,
+          bronze_gear: 2,
+          microprocessor: 1
+        },
         isBuilt: false,
         storedOres: ['coal', 'copper'],
         timer: 0,
@@ -868,7 +872,12 @@ export class BaseSystem {
         gx: 42,
         height: 76,
         costCash: 18500,
-        costComp: { silver_coil: 2, crystal_lens: 1 },
+        costComp: {
+          iron_tube: 4,
+          silver_coil: 4,
+          crystal_lens: 2,
+          capacitor: 2
+        },
         isBuilt: false,
         timer: 0,
         accumulatedCash: 0,
@@ -4930,7 +4939,12 @@ export class BaseSystem {
       if (have < count) canAffordComp = false;
       const cName = COMPONENT_DATA[key]?.name || key;
       const compIcon = COMPONENT_ICONS[key] || 'box';
-      reqCompsHtml.push(`<span style="color: ${have >= count ? '#10b981' : '#f87171'}; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">${icon(compIcon, '', 13)} ${cName}: ${have}/${count}</span>`);
+      const isMet = have >= count;
+      reqCompsHtml.push(`
+        <span style="background: ${isMet ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'}; border: 1px solid ${isMet ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'}; color: ${isMet ? '#34d399' : '#f87171'}; font-size: 11.5px; font-weight: 700; padding: 4px 9px; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px;">
+          ${icon(compIcon, '', 13)} ${cName}: <span style="font-variant-numeric: tabular-nums;">${have}/${count}</span>
+        </span>
+      `);
     }
 
     const canBuild = canAffordCash && canAffordComp;
@@ -4941,13 +4955,17 @@ export class BaseSystem {
           ${pb.desc}
         </p>
 
-        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
           <strong style="color: #f8fafc; font-size: 12px; text-transform: uppercase;">Baukosten:</strong>
-          <div style="font-size: 13px;">
-            Finanzierung: <strong style="color: ${canAffordCash ? '#fbbf24' : '#f87171'};">€${pb.costCash.toLocaleString()}</strong>
+          <div style="font-size: 13px; display: flex; align-items: center; gap: 6px;">
+            <span style="color: #94a3b8;">Finanzierung:</span>
+            <strong style="color: ${canAffordCash ? '#fbbf24' : '#f87171'};">€${pb.costCash.toLocaleString('de-DE')}</strong>
           </div>
-          <div style="font-size: 13px;">
-            Bauteile: ${reqCompsHtml.join(', ')}
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <span style="color: #94a3b8; font-size: 12px;">Benötigte Bauteile:</span>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+              ${reqCompsHtml.join('')}
+            </div>
           </div>
         </div>
 
