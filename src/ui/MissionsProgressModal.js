@@ -146,7 +146,7 @@ export class MissionsProgressModal {
     // Tab Navigation Bar
     const tabs = [
       { id: 'missions', label: 'Aufträge', icon: 'clipboard-list', badgeHtml: missionBadge },
-      { id: 'levels', label: 'Ränge', icon: 'award' },
+      { id: 'levels', label: 'Level', icon: 'award' },
       { id: 'geologist', label: 'Geologe', icon: 'microscope', badgeHtml: geologistBadge },
       { id: 'insurance', label: 'Versicherung', icon: 'shield-check', badgeHtml: insuranceBadge },
       { id: 'stats', label: 'Statistik', icon: 'bar-chart-3' }
@@ -327,7 +327,7 @@ export class MissionsProgressModal {
               ` : `
                 <span style="font-size: 11px; color: #94a3b8; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; padding: 0 4px;">
                   ${icon('clock', '', 12)}
-                  <span>${isUpcoming ? `Freischaltung ab Rang ${m.minLevel}` : 'Aktiv im Schacht'}</span>
+                  <span>${isUpcoming ? `Freischaltung ab Level ${m.minLevel}` : 'Aktiv im Schacht'}</span>
                 </span>
               `}
             </div>
@@ -367,7 +367,7 @@ export class MissionsProgressModal {
   }
 
   // =========================================================================
-  // TAB 2: LEVEL & RÄNGE
+  // TAB 2: LEVEL (NUR AKTUELLES & NÄCHSTES LEVEL)
   // =========================================================================
   renderLevelsTab() {
     const p = this.player;
@@ -376,161 +376,182 @@ export class MissionsProgressModal {
     const neededXp = p.xpNeeded || 350;
     const pct = Math.min(100, Math.round((curXp / neededXp) * 100));
 
-    const ranks = [
-      {
-        level: 1,
+    const levelDetails = {
+      1: {
         title: 'Novize',
-        desc: 'Humus (0-50m). Einstieg in den Schacht-Bergbau.',
+        layer: 'Humus (0–50m)',
+        desc: 'Einstieg in den Schacht-Bergbau.',
         perks: 'Zugang zu Basis-Upgrades und Erzbörse'
       },
-      {
-        level: 2,
+      2: {
         title: 'Schürfer',
-        desc: curLevel >= 2 ? 'Schiefer (50-180m). Härtere Gesteinsformationen.' : 'Schiefer (50-180m). Unbekannte Gesteinsschichten.',
-        perks: 'Hydraulik-Zylinder und Titan-Legierung montierbar'
+        layer: 'Schiefer (30–150m)',
+        desc: 'Erste Festgesteins-Schichten.',
+        perks: 'Freischaltung von Fabrik und Steinforscher'
       },
-      {
-        level: 3,
+      3: {
         title: 'Tiefen-Geologe',
-        desc: curLevel >= 3 ? 'Granit (180-350m). Wertvolle Minerale & Adern.' : 'Granit (180-350m). Unbekannte Tiefenadern.',
-        perks: 'Kristall-Fokuslinsen und Plasmabrenner freigeschaltet'
+        layer: 'Granit (130–350m)',
+        desc: 'Zähe Tiefengesteine und reiche Mineraladern.',
+        perks: 'Bohrkopf Mk.III & Kompressions-Tank'
       },
-      {
-        level: 4,
+      4: {
         title: 'Basalt-Pionier',
-        desc: curLevel >= 4 ? 'Basalt (350-550m). Enormer Gebirgsdruck.' : 'Basalt (350-550m). Massiver Basaltfels.',
-        perks: 'Schwere Verbundpanzerung und Vektor-Booster'
+        layer: 'Basalt (300–600m)',
+        desc: 'Vulkanisches Gestein unter hohem Gebirgsdruck.',
+        perks: 'Schwere Verbundpanzerung & Booster'
       },
-      {
-        level: 5,
+      5: {
         title: 'Kern-Ingenieur',
-        desc: curLevel >= 5 ? 'Obsidian (550-850m). Magmatische Hochdruck-Zone.' : 'Obsidian (550-850m). Magmatische Tiefenregion.',
-        perks: 'Quanten-Steuerkerne und Fusions-Reaktoren'
+        layer: 'Obsidian (500–900m)',
+        desc: 'Magmatische Hochdruck-Zone.',
+        perks: 'Industrie-Werkstatt & Laser-Schub'
       },
-      {
-        level: 6,
+      6: {
         title: 'Magma-Schürfer',
-        desc: curLevel >= 6 ? 'Magma (850-1.200m). Intensive Hitze.' : 'Magma (850-1.200m). Glutflüssiges Gestein.',
-        perks: 'Nanit-Matrix-Chassis und Plasmareaktoren'
+        layer: 'Magma (850–1.200m)',
+        desc: 'Glutflüssiges Tiefengestein.',
+        perks: 'Nanit-Matrix & Plasmareaktoren'
       },
-      {
-        level: 7,
+      7: {
         title: 'Kavitations-Experte',
-        desc: curLevel >= 7 ? 'Kavitation (1.200-1.600m). Seltene Kristallgeoden.' : 'Kavitation (1.200-1.600m). Tiefe Hohlraum-Systeme.',
-        perks: 'Kraftfeld-Deflektoren und Subraum-Module'
+        layer: 'Kavitation (1.200–1.600m)',
+        desc: 'Tiefe Hohlraum-Systeme & Geoden.',
+        perks: 'Kraftfeld-Deflektoren & Subraum-Module'
       },
-      {
-        level: 8,
+      8: {
         title: 'Urgestein-Meister',
-        desc: curLevel >= 8 ? 'Urgestein (1.600-2.000m). Extrem verdichtetes Gestein.' : 'Urgestein (1.600-2.000m). Unerreichtes Tiefengestein.',
-        perks: 'Singularitäts-Fräsen und Dimensions-Kompaktoren'
+        layer: 'Urgestein (1.600–2.000m)',
+        desc: 'Extrem verdichtetes Tiefengestein.',
+        perks: 'Singularitäts-Fräsen & Kompaktoren'
       },
-      {
-        level: 9,
+      9: {
         title: 'Quanten-Architekt',
-        desc: curLevel >= 9 ? 'Erdkern (2.000-2.500m). Fluktuierende Gravitationsfelder.' : 'Erdkern (2.000-2.500m). Der Gravitations-Kern.',
-        perks: 'Chrono-Tachyonen-Antrieb und Adamantit-Hülle'
+        layer: 'Erdkern (2.000–2.500m)',
+        desc: 'Fluktuierende Gravitationsfelder.',
+        perks: 'Chrono-Tachyonen & Adamantit-Hülle'
       },
-      {
-        level: 10,
+      10: {
         title: 'Meister der Tiefe',
-        desc: curLevel >= 10 ? 'Planetenherz (2.500m+). Das Herz der Welt.' : 'Planetenherz (2.500m+). Das unberührte Planetenherz.',
-        perks: 'Tachyonen-Disruptor X, Quanten-Aura und Omnispektrum'
+        layer: 'Planetenherz (2.500m+)',
+        desc: 'Das Herz der Welt.',
+        perks: 'Tachyonen-Disruptor & Quanten-Aura'
       }
-    ];
+    };
+
+    const cur = levelDetails[curLevel] || {
+      title: p.rankTitle || `Level ${curLevel}`,
+      layer: 'Schacht-Tiefe',
+      desc: 'Aktuelle Expedition.',
+      perks: 'Standard-Ausrüstung'
+    };
+
+    const nextLvl = curLevel + 1;
+    const next = levelDetails[nextLvl];
+    const nextBonus = LEVEL_BONUS_REWARDS[nextLvl];
 
     return `
-      <div style="display: flex; flex-direction: column; gap: 14px;">
-        <!-- Aktueller Level Status -->
+      <div style="display: flex; flex-direction: column; gap: 12px; max-width: 620px; margin: 0 auto; width: 100%;">
+        <!-- AKTUELLES LEVEL -->
         <div style="
-          background: rgba(15, 23, 42, 0.75);
-          border: none;
-          border-left: 4px solid #c084fc;
+          background: rgba(15, 23, 42, 0.85);
+          border: 1px solid rgba(56, 189, 248, 0.3);
+          border-left: 4px solid #38bdf8;
           border-radius: 12px;
           padding: 14px 16px;
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
         ">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="background: rgba(168, 85, 247, 0.2); color: #c084fc; font-size: 13px; font-weight: 800; padding: 4px 10px; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px;">
-                ${icon('award', '', 14)} STUFE ${curLevel}
-              </span>
-              <span style="font-weight: 700; color: #f8fafc; font-size: 14px;">${p.rankTitle}</span>
-            </div>
-            <span style="font-size: 12px; color: #c084fc; font-weight: 700;">${curXp} / ${neededXp} XP (${pct}%)</span>
-          </div>
-
-          <div style="width: 100%; height: 8px; background: rgba(15, 23, 42, 0.9); border-radius: 99px; overflow: hidden; margin-top: 8px;">
-            <div style="width: ${pct}%; height: 100%; background: linear-gradient(90deg, #9333ea, #c084fc); border-radius: 99px; transition: width 0.3s ease;"></div>
-          </div>
-          <p style="font-size: 11px; color: #cbd5e1; margin-top: 8px;">
-            Erhalte XP durch das Bohren (+1 XP), seltene Erze (+15 bis +750 XP) und Aufträge. Jeder Stufenaufstieg schüttet eine Beförderungs-Prämie auf dein Konto aus!
-          </p>
-        </div>
-
-        <!-- Rang-Stufen Roadmap -->
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-          ${ranks.map(r => {
-            const isCurrent = curLevel === r.level;
-            const isUnlocked = curLevel >= r.level;
-            const isNext = r.level === curLevel + 1;
-            const bonus = LEVEL_BONUS_REWARDS[r.level];
-
-            // Spoiler-Schutz: Verdeckt Namen, Tiefen & Spezial-Perks für zukünftige Ränge
-            let displayTitle = r.title;
-            let displayDesc = r.desc;
-            let displayPerks = r.perks;
-
-            if (!isUnlocked) {
-              if (isNext) {
-                displayTitle = `Stufe ${r.level} – Nächste Beförderung`;
-                displayDesc = `Erreiche Stufe ${r.level}, um diese neue Tiefenregion und verbesserte Bergbau-Ausrüstung freizuschalten.`;
-                displayPerks = `🔒 Belohnungen & Tech-Upgrades ab Stufe ${r.level}`;
-              } else {
-                displayTitle = `Stufe ${r.level} – 🔒 Verborgener Rang`;
-                displayDesc = `Dieser Rang und die unbekannte Tiefenschicht sind noch streng vertraulich.`;
-                displayPerks = `🔒 Ausrüstung & Details streng geheim`;
-              }
-            }
-
-            return `
-              <div style="
-                background: ${isCurrent ? 'rgba(56, 189, 248, 0.12)' : isUnlocked ? 'rgba(15, 23, 42, 0.65)' : 'rgba(15, 23, 42, 0.4)'};
-                border: ${isCurrent ? '1px solid #38bdf8' : isUnlocked ? '1px solid rgba(255,255,255,0.06)' : '1px dashed rgba(255,255,255,0.08)'};
-                border-radius: 10px;
-                padding: 10px 14px;
-                display: flex;
-                flex-direction: column;
-                gap: 5px;
-                ${!isUnlocked && !isNext ? 'opacity: 0.75;' : ''}
+              <span style="
+                background: rgba(56, 189, 248, 0.15);
+                color: #38bdf8;
+                font-size: 11px;
+                font-weight: 800;
+                padding: 2px 8px;
+                border-radius: 5px;
+                letter-spacing: 0.5px;
               ">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-weight: 800; font-size: 11px; color: ${isUnlocked ? '#10b981' : (isNext ? '#38bdf8' : '#64748b')};">
-                      LVL ${r.level}
-                    </span>
-                    <strong style="color: ${isCurrent ? '#38bdf8' : isUnlocked ? '#f8fafc' : (isNext ? '#cbd5e1' : '#94a3b8')}; font-size: 13px;">
-                      ${displayTitle}
-                    </strong>
-                  </div>
-                  <span style="font-size: 10.5px; font-weight: 700; color: ${isCurrent ? '#38bdf8' : isUnlocked ? '#10b981' : (isNext ? '#fbbf24' : '#64748b')};">
-                    ${isCurrent ? 'AKTUELL' : isUnlocked ? 'FREIGESCHALTET' : (isNext ? 'NÄCHSTES ZIEL' : 'GESPERRT')}
-                  </span>
-                </div>
-                <p style="font-size: 11.5px; color: ${isUnlocked ? '#cbd5e1' : '#64748b'}; margin: 0;">${displayDesc}</p>
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 2px;">
-                  <div style="font-size: 11px; color: ${isUnlocked ? '#38bdf8' : '#64748b'}; display: inline-flex; align-items: center; gap: 4px;">
-                    ${icon('sparkles', '', 11)} ${displayPerks}
-                  </div>
-                  ${bonus ? `
-                    <span style="background: rgba(251, 191, 36, 0.12); border: 1px solid rgba(251, 191, 36, 0.25); color: #fbbf24; font-size: 10.5px; font-weight: 700; padding: 2px 7px; border-radius: 5px; display: inline-flex; align-items: center; gap: 4px;">
-                      ${icon('coins', '', 11)} +€${bonus.toLocaleString('de-DE')} ${isUnlocked ? 'Prämie erhalten' : 'Prämie bei Aufstieg'}
-                    </span>
-                  ` : ''}
-                </div>
-              </div>
-            `;
-          }).join('')}
+                LEVEL ${curLevel}
+              </span>
+              <strong style="color: #f8fafc; font-size: 15px;">${cur.title}</strong>
+            </div>
+            <span style="font-size: 10px; font-weight: 800; color: #10b981; background: rgba(16, 185, 129, 0.15); padding: 2px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;">
+              ${icon('check', '', 11)} AKTUELL
+            </span>
+          </div>
+
+          <div style="font-size: 11.5px; color: #cbd5e1; margin-bottom: 10px; line-height: 1.4;">
+            ${cur.layer} · ${cur.desc}
+          </div>
+
+          <div style="font-size: 11px; color: #94a3b8; display: flex; align-items: center; gap: 5px; margin-bottom: 12px;">
+            ${icon('sparkles', '', 12)} <span style="color: #cbd5e1;">Aktiv:</span> <strong style="color: #38bdf8;">${cur.perks}</strong>
+          </div>
+
+          <!-- XP-Balken -->
+          <div style="padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, 0.06);">
+            <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; margin-bottom: 5px;">
+              <span style="color: #94a3b8; display: inline-flex; align-items: center; gap: 4px;">
+                ${icon('award', '', 12)} Fortschritt zu Level ${nextLvl <= 10 ? nextLvl : 'Max'}
+              </span>
+              <span style="color: #38bdf8; font-weight: 800;">${curXp.toLocaleString('de-DE')} / ${neededXp.toLocaleString('de-DE')} XP (${pct}%)</span>
+            </div>
+            <div style="width: 100%; height: 6px; background: rgba(15, 23, 42, 0.9); border-radius: 99px; overflow: hidden;">
+              <div style="width: ${pct}%; height: 100%; background: linear-gradient(90deg, #0284c7, #38bdf8); border-radius: 99px; transition: width 0.3s ease;"></div>
+            </div>
+          </div>
         </div>
+
+        <!-- NÄCHSTES LEVEL -->
+        ${next ? `
+          <div style="
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px dashed rgba(168, 85, 247, 0.35);
+            border-left: 4px solid #a855f7;
+            border-radius: 12px;
+            padding: 14px 16px;
+          ">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="
+                  background: rgba(168, 85, 247, 0.15);
+                  color: #c084fc;
+                  font-size: 11px;
+                  font-weight: 800;
+                  padding: 2px 8px;
+                  border-radius: 5px;
+                  letter-spacing: 0.5px;
+                ">
+                  LEVEL ${nextLvl}
+                </span>
+                <strong style="color: #f8fafc; font-size: 15px;">${next.title}</strong>
+              </div>
+              <span style="font-size: 10px; font-weight: 800; color: #c084fc; background: rgba(168, 85, 247, 0.15); padding: 2px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;">
+                ${icon('lock', '', 11)} NÄCHSTES LEVEL
+              </span>
+            </div>
+
+            <div style="font-size: 11.5px; color: #cbd5e1; margin-bottom: 10px; line-height: 1.4;">
+              ${next.layer} · ${next.desc}
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, 0.06); font-size: 11px;">
+              <span style="color: #94a3b8; display: inline-flex; align-items: center; gap: 4px;">
+                ${icon('sparkles', '', 12)} Schaltet frei: <strong style="color: #e2e8f0; margin-left: 2px;">${next.perks}</strong>
+              </span>
+              ${nextBonus ? `
+                <span style="color: #fbbf24; font-weight: 700; background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.2); padding: 2px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;">
+                  ${icon('coins', '', 11)} +€${nextBonus.toLocaleString('de-DE')} Bonus
+                </span>
+              ` : ''}
+            </div>
+          </div>
+        ` : `
+          <div style="text-align: center; padding: 16px; color: #10b981; font-weight: 700; font-size: 12px; background: rgba(16, 185, 129, 0.1); border-radius: 10px; border: 1px solid rgba(16, 185, 129, 0.25);">
+            ${icon('award', '', 16)} Maximales Level erreicht! Du bist Meister der Tiefe.
+          </div>
+        `}
       </div>
     `;
   }
