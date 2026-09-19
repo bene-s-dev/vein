@@ -5780,115 +5780,173 @@ export class BaseSystem {
     let html = `
       <div style="display: flex; flex-direction: column; gap: 10px;">
 
-        <!-- OBERER BEREICH: LINKS STATUS/PROGRESS, RECHTS KOHLE-EINFÜLLEN & UPGRADE -->
-        <div style="display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap;">
-
-          <!-- LINKE HÄLFTE: OFEN & MASCHINEN-ANZEIGE -->
-          <div style="flex: 1.15; min-width: 270px; display: flex; flex-direction: column; gap: 8px;">
-            <!-- 1. SCHMELZOFEN -->
-            <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid ${isSmelting ? 'rgba(249, 115, 22, 0.45)' : 'rgba(255,255,255,0.08)'}; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; justify-content: space-between; flex: 1; min-height: 72px; box-sizing: border-box; gap: 8px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
-                <div style="display: flex; align-items: center; gap: 6px; min-width: 0;">
-                  <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: ${isSmelting ? '#f97316' : '#64748b'}; box-shadow: 0 0 6px ${isSmelting ? '#f97316' : 'transparent'}; flex-shrink: 0;"></span>
-                  <strong style="color: #f8fafc; font-size: 11.5px; letter-spacing: 0.5px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; width: 156px; min-width: 156px; flex-shrink: 0;">
-                    ${icon('flame', isSmelting ? 'flame-anim' : '', 13)} SCHMELZOFEN
-                  </strong>
-                  ${isSmelting ? `
-                    <span style="font-size: 10.5px; font-weight: 700; color: #fbbf24; display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                      &bull; ${itemDisplayIcon('bar_' + currentSmelt.ore, 12)} ${currentSmelt.name}
-                    </span>
-                  ` : `
-                    <span style="background: ${hasSmeltFuel ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'}; border: 1px solid ${hasSmeltFuel ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'}; color: ${hasSmeltFuel ? '#34d399' : '#f87171'}; font-size: 10.5px; font-weight: 700; padding: 1.5px 6px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; margin-left: 2px;">
-                      ${itemDisplayIcon('coal', 12)} <span style="font-size: 9.5px; opacity: 0.9; font-variant-numeric: tabular-nums;">(${loadedCoal}/1)</span>
-                    </span>
-                  `}
-                  ${smeltQueue.length > 1 ? `<span style="font-size: 9.5px; color: #94a3b8; background: rgba(0,0,0,0.35); padding: 1px 5px; border-radius: 4px;">+${smeltQueue.length - 1}</span>` : ''}
+        <!-- 1. ZENTRALE BRENNKAMMER (GEMEINSAME FABRIK-ENERGIE FÜR BEIDE ANLAGEN) -->
+        <div style="
+          background: rgba(15, 23, 42, 0.85);
+          border: 1px solid ${loadedCoal > 0 ? 'rgba(249, 115, 22, 0.35)' : 'rgba(239, 68, 68, 0.3)'};
+          border-left: 4px solid ${loadedCoal > 0 ? '#f97316' : '#ef4444'};
+          border-radius: 10px;
+          padding: 12px 14px;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+        ">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; background: rgba(249, 115, 22, 0.15); border: 1px solid rgba(249, 115, 22, 0.35); border-radius: 8px; color: #f97316; flex-shrink: 0;">
+                ${itemDisplayIcon('coal', 18)}
+              </span>
+              <div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <strong style="color: #f8fafc; font-size: 13px; letter-spacing: 0.5px; text-transform: uppercase;">Zentrale Brennkammer</strong>
+                  <span style="background: rgba(249, 115, 22, 0.15); color: #fb923c; font-size: 10px; font-weight: 700; padding: 1.5px 6px; border-radius: 4px;">Gemeinsame Energie</span>
                 </div>
-                <span id="smelt-timer" style="font-family: monospace; font-size: 11.5px; font-weight: 800; color: ${isSmelting ? '#fbbf24' : '#64748b'}; font-variant-numeric: tabular-nums; text-align: right; flex-shrink: 0;">
-                  ${isSmelting ? this.formatRefineryClock(currentSmelt.remainingMs) : '00:00'}
-                </span>
-              </div>
-              <!-- Fortschrittsbalken -->
-              <div style="height: 8px; background: #090d16; border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden;">
-                <div id="smelt-progress-fill" style="width: ${pctSmelt}%; height: 100%; background: linear-gradient(90deg, #ea580c 0%, #f59e0b 80%, #fde047 100%); box-shadow: ${isSmelting ? '0 0 8px rgba(245, 158, 11, 0.6)' : 'none'}; transition: width 0.15s linear;"></div>
+                <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">
+                  Befeuert Schmelzofen <span style="color: #fbbf24; font-weight: 700;">(1x Kohle/Barren)</span> &amp; Industriemaschine <span style="color: #38bdf8; font-weight: 700;">(2x Kohle/Bauteil)</span>
+                </div>
               </div>
             </div>
 
-            <!-- 2. INDUSTRIE-MASCHINE -->
-            <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid ${isCrafting ? 'rgba(56, 189, 248, 0.45)' : 'rgba(255,255,255,0.08)'}; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; justify-content: space-between; flex: 1; min-height: 72px; box-sizing: border-box; gap: 8px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
-                <div style="display: flex; align-items: center; gap: 6px; min-width: 0;">
-                  <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: ${isCrafting ? '#38bdf8' : '#64748b'}; box-shadow: 0 0 6px ${isCrafting ? '#38bdf8' : 'transparent'}; flex-shrink: 0;"></span>
-                  <strong style="color: #f8fafc; font-size: 11.5px; letter-spacing: 0.5px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; width: 156px; min-width: 156px; flex-shrink: 0;">
-                    ${icon('anvil', isCrafting ? 'craft-icon-active' : '', 13)} INDUSTRIE-MASCHINE
-                  </strong>
-                  ${isCrafting ? `
-                    <span style="font-size: 10.5px; font-weight: 700; color: #38bdf8; display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                      &bull; ${itemDisplayIcon(currentCraft.productId, 12)} ${currentCraft.name}
-                    </span>
-                  ` : `
-                    <span style="background: ${hasCraftFuel ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'}; border: 1px solid ${hasCraftFuel ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'}; color: ${hasCraftFuel ? '#34d399' : '#f87171'}; font-size: 10.5px; font-weight: 700; padding: 1.5px 6px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; margin-left: 2px;">
-                      ${itemDisplayIcon('coal', 12)} <span style="font-size: 9.5px; opacity: 0.9; font-variant-numeric: tabular-nums;">(${loadedCoal}/2)</span>
-                    </span>
-                  `}
-                  ${craftQueue.length > 1 ? `<span style="font-size: 9.5px; color: #94a3b8; background: rgba(0,0,0,0.35); padding: 1px 5px; border-radius: 4px;">+${craftQueue.length - 1}</span>` : ''}
-                </div>
-                <span id="craft-timer" style="font-family: monospace; font-size: 11.5px; font-weight: 800; color: ${isCrafting ? '#38bdf8' : '#64748b'}; font-variant-numeric: tabular-nums; text-align: right; flex-shrink: 0;">
-                  ${isCrafting ? this.formatRefineryClock(currentCraft.remainingMs) : '00:00'}
-                </span>
-              </div>
-              <!-- Fortschrittsbalken -->
-              <div style="height: 8px; background: #090d16; border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden;">
-                <div id="craft-progress-fill" style="width: ${pctCraft}%; height: 100%; background: linear-gradient(90deg, #0284c7 0%, #38bdf8 80%, #bae6fd 100%); box-shadow: ${isCrafting ? '0 0 8px rgba(56, 189, 248, 0.6)' : 'none'}; transition: width 0.15s linear;"></div>
-              </div>
-            </div>
-          </div>
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+              <span style="
+                background: ${loadedCoal > 0 ? 'rgba(16, 185, 129, 0.18)' : 'rgba(239, 68, 68, 0.18)'};
+                border: 1px solid ${loadedCoal > 0 ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)'};
+                color: ${loadedCoal > 0 ? '#34d399' : '#f87171'};
+                font-size: 12px;
+                font-weight: 800;
+                padding: 4px 10px;
+                border-radius: 6px;
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                white-space: nowrap;
+              ">
+                ${icon('flame', loadedCoal > 0 ? 'flame-anim' : '', 13)}
+                <span>${loadedCoal > 0 ? `${loadedCoal}x Kohle geladen` : 'Keine Kohle geladen'}</span>
+              </span>
 
-          <!-- RECHTE HÄLFTE: STEUERUNG (KOHLE EINFÜLLEN & MASCHINE UPGRADEN) -->
-          <div style="flex: 1; min-width: 250px; display: flex; flex-direction: column; gap: 8px;">
-
-            <!-- Box 1: Kohle-Brennkammer & Einfüll-Button -->
-            <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; justify-content: space-between; flex: 1; min-height: 72px; box-sizing: border-box; gap: 8px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
-                <span style="font-size: 11px; font-weight: 700; color: #cbd5e1; display: inline-flex; align-items: center; gap: 4px;">
-                  ${itemDisplayIcon('coal', 13)} Brennkammer
-                </span>
-                <span style="background: ${loadedCoal > 0 ? 'rgba(16, 185, 129, 0.18)' : 'rgba(239, 68, 68, 0.18)'}; border: 1px solid ${loadedCoal > 0 ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)'}; color: ${loadedCoal > 0 ? '#34d399' : '#f87171'}; font-size: 11px; font-weight: 800; padding: 1px 8px; border-radius: 5px;">
-                  ${loadedCoal}x geladen
-                </span>
-              </div>
               <div style="display: flex; gap: 6px; align-items: center;">
-                <button id="btn-add-fuel-coal" class="btn-buy" ${availableCoal > 0 ? '' : 'disabled'} style="flex: 1; height: 32px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 4px;" title="1x Kohle aus Fracht/Depot in die Brennkammer laden (${availableCoal}x vorrätig)">
+                <button id="btn-add-fuel-coal" class="btn-buy" ${availableCoal > 0 ? '' : 'disabled'} style="height: 32px; font-size: 11px; font-weight: 700; padding: 0 12px; display: inline-flex; align-items: center; justify-content: center; gap: 5px;" title="1x Kohle aus Fracht/Depot in die Brennkammer laden (${availableCoal}x vorrätig)">
                   ${icon('flame', '', 12)} Kohle einfüllen (+1)
                 </button>
                 ${availableCoal > 1 ? `
-                  <button id="btn-add-fuel-all" class="btn-buy" style="height: 32px; font-size: 11px; font-weight: 700; padding: 0 10px; display: inline-flex; align-items: center; justify-content: center;" title="Alle verfügbare Kohle (${availableCoal}x) einfüllen">
+                  <button id="btn-add-fuel-all" class="btn-buy" style="height: 32px; font-size: 11px; font-weight: 700; padding: 0 12px; display: inline-flex; align-items: center; justify-content: center;" title="Alle verfügbare Kohle (${availableCoal}x) einfüllen">
                     Alle (${availableCoal})
                   </button>
                 ` : ''}
               </div>
             </div>
+          </div>
+        </div>
 
-            <!-- Box 2: Industrie-Maschine Upgrade -->
-            <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(56, 189, 248, 0.22); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; justify-content: space-between; flex: 1; min-height: 72px; box-sizing: border-box; gap: 8px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
-                <span style="font-size: 11px; font-weight: 700; color: #38bdf8; display: inline-flex; align-items: center; gap: 4px;">
-                  ${icon('cpu', '', 12)} Industrie-Maschine: Stufe ${currentTier}/5
-                </span>
-                <span style="font-size: 10.5px; color: #94a3b8; font-weight: 600;">${currentTierData.name}</span>
-              </div>
-              ${nextTierData ? `
-                <button id="btn-upgrade-machine" class="btn-buy" ${canAffordUpgrade ? '' : 'disabled'} style="height: 32px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 5px;" title="Schaltet tiefere Erze & Bauteile frei: ${nextTierData.desc}">
-                  ${icon('chevrons-up', '', 13)} Upgrade auf Stufe ${nextTierData.tier} (€${nextTierData.costCash.toLocaleString()})
-                </button>
-              ` : `
-                <div style="height: 32px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: #34d399; gap: 5px;">
-                  ${icon('check-circle', '', 12)} Maximale Maschinenstufe erreicht
+        <!-- 2. PRODUKTIONSLINIEN: SCHMELZOFEN & INDUSTRIEMASCHINE NEBENEINANDER -->
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; align-items: stretch;">
+
+          <!-- 2A. SCHMELZOFEN -->
+          <div style="
+            background: rgba(15, 23, 42, 0.75);
+            border: 1px solid ${isSmelting ? 'rgba(249, 115, 22, 0.45)' : 'rgba(255,255,255,0.08)'};
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 10px;
+            box-sizing: border-box;
+          ">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 6px;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: ${isSmelting ? '#f97316' : '#64748b'}; box-shadow: 0 0 6px ${isSmelting ? '#f97316' : 'transparent'}; flex-shrink: 0;"></span>
+                  <strong style="color: #f8fafc; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 5px;">
+                    ${icon('flame', isSmelting ? 'flame-anim' : '', 13)} SCHMELZOFEN
+                  </strong>
                 </div>
-              `}
+                <span style="font-size: 10.5px; font-weight: 700; color: ${hasSmeltFuel ? '#34d399' : '#f87171'}; background: ${hasSmeltFuel ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'}; padding: 1.5px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;">
+                  ${itemDisplayIcon('coal', 11)} 1x Kohle / Barren
+                </span>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
+                ${isSmelting ? `
+                  <span style="font-weight: 700; color: #fbbf24; display: inline-flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    &bull; ${itemDisplayIcon('bar_' + currentSmelt.ore, 12)} ${currentSmelt.name}
+                    ${smeltQueue.length > 1 ? `<span style="font-size: 9.5px; color: #94a3b8; background: rgba(0,0,0,0.35); padding: 1px 5px; border-radius: 4px;">+${smeltQueue.length - 1}</span>` : ''}
+                  </span>
+                ` : `
+                  <span style="color: ${hasSmeltFuel ? '#cbd5e1' : '#f87171'};">${hasSmeltFuel ? 'Bereit für Roherze' : 'Brennkammer leer'}</span>
+                `}
+                <span id="smelt-timer" style="font-family: monospace; font-size: 12px; font-weight: 800; color: ${isSmelting ? '#fbbf24' : '#64748b'}; font-variant-numeric: tabular-nums;">
+                  ${isSmelting ? this.formatRefineryClock(currentSmelt.remainingMs) : '00:00'}
+                </span>
+              </div>
             </div>
 
+            <!-- Fortschrittsbalken -->
+            <div style="height: 8px; background: #090d16; border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden;">
+              <div id="smelt-progress-fill" style="width: ${pctSmelt}%; height: 100%; background: linear-gradient(90deg, #ea580c 0%, #f59e0b 80%, #fde047 100%); box-shadow: ${isSmelting ? '0 0 8px rgba(245, 158, 11, 0.6)' : 'none'}; transition: width 0.15s linear;"></div>
+            </div>
           </div>
+
+          <!-- 2B. INDUSTRIE-MASCHINE -->
+          <div style="
+            background: rgba(15, 23, 42, 0.75);
+            border: 1px solid ${isCrafting ? 'rgba(56, 189, 248, 0.45)' : 'rgba(255,255,255,0.08)'};
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 10px;
+            box-sizing: border-box;
+          ">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 6px;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: ${isCrafting ? '#38bdf8' : '#64748b'}; box-shadow: 0 0 6px ${isCrafting ? '#38bdf8' : 'transparent'}; flex-shrink: 0;"></span>
+                  <strong style="color: #f8fafc; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 5px;">
+                    ${icon('anvil', isCrafting ? 'craft-icon-active' : '', 13)} INDUSTRIE-MASCHINE
+                  </strong>
+                  <span style="font-size: 10px; color: #38bdf8; font-weight: 700; background: rgba(56, 189, 248, 0.15); padding: 1px 6px; border-radius: 4px;">Stufe ${currentTier}/5</span>
+                </div>
+                <span style="font-size: 10.5px; font-weight: 700; color: ${hasCraftFuel ? '#34d399' : '#f87171'}; background: ${hasCraftFuel ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'}; padding: 1.5px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;">
+                  ${itemDisplayIcon('coal', 11)} 2x Kohle / Bauteil
+                </span>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
+                ${isCrafting ? `
+                  <span style="font-weight: 700; color: #38bdf8; display: inline-flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    &bull; ${itemDisplayIcon(currentCraft.productId, 12)} ${currentCraft.name}
+                    ${craftQueue.length > 1 ? `<span style="font-size: 9.5px; color: #94a3b8; background: rgba(0,0,0,0.35); padding: 1px 5px; border-radius: 4px;">+${craftQueue.length - 1}</span>` : ''}
+                  </span>
+                ` : `
+                  <span style="color: ${hasCraftFuel ? '#cbd5e1' : '#f87171'};">${hasCraftFuel ? currentTierData.name : 'Brennkammer benötigt 2x Kohle'}</span>
+                `}
+                <span id="craft-timer" style="font-family: monospace; font-size: 12px; font-weight: 800; color: ${isCrafting ? '#38bdf8' : '#64748b'}; font-variant-numeric: tabular-nums;">
+                  ${isCrafting ? this.formatRefineryClock(currentCraft.remainingMs) : '00:00'}
+                </span>
+              </div>
+            </div>
+
+            <!-- Fortschrittsbalken -->
+            <div style="height: 8px; background: #090d16; border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden;">
+              <div id="craft-progress-fill" style="width: ${pctCraft}%; height: 100%; background: linear-gradient(90deg, #0284c7 0%, #38bdf8 80%, #bae6fd 100%); box-shadow: ${isCrafting ? '0 0 8px rgba(56, 189, 248, 0.6)' : 'none'}; transition: width 0.15s linear;"></div>
+            </div>
+
+            <!-- Upgrade-Button direkt in der Industrie-Maschine -->
+            ${nextTierData ? `
+              <button id="btn-upgrade-machine" class="btn-buy" ${canAffordUpgrade ? '' : 'disabled'} style="height: 28px; font-size: 10.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 4px; border-radius: 6px;" title="Schaltet tiefere Erze & Bauteile frei: ${nextTierData.desc}">
+                ${icon('chevrons-up', '', 12)} Upgrade auf Stufe ${nextTierData.tier} (${nextTierData.name}) &bull; €${nextTierData.costCash.toLocaleString('de-DE')}
+              </button>
+            ` : `
+              <div style="height: 28px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10.5px; font-weight: 700; color: #34d399; gap: 4px;">
+                ${icon('check-circle', '', 12)} Maximale Stufe erreicht
+              </div>
+            `}
+          </div>
+
         </div>
     `;
 
