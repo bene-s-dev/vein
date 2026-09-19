@@ -5424,10 +5424,10 @@ export class BaseSystem {
         ${dockTabs.map(t => {
           const isActive = t.id === currentTab;
           return `
-            <button class="register-tab-btn ${isActive ? 'active' : ''}" data-tab="${t.id}">
+            <button class="register-tab dock-tab-btn ${isActive ? 'active' : ''}" data-tab="${t.id}">
               ${icon(t.icon, '', 14)}
               <span>${t.label}</span>
-              ${t.badge ? `<span class="badge">${t.badge}</span>` : ''}
+              ${t.badge ? `<span class="tab-badge">${t.badge}</span>` : ''}
             </button>
           `;
         }).join('')}
