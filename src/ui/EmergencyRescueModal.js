@@ -503,36 +503,35 @@ export class EmergencyRescueModal {
 
     const runCheck = async () => {
       if (btnCheck) btnCheck.disabled = true;
-      if (msgEl) msgEl.textContent = 'Prüfe Freigabe...';
-      const isStillGameOver = await LeaderboardService.checkGameOver(p.name);
-      if (btnCheck) btnCheck.disabled = false;
+      if (msgEl) msgEl.textContent = 'Rettung wird freigegeben...';
       
-      if (isStillGameOver === false) {
-        if (badgeEl) {
-          badgeEl.textContent = 'Freigegeben!';
-          badgeEl.style.background = 'rgba(16, 185, 129, 0.2)';
-          badgeEl.style.color = '#34d399';
-        }
-        if (msgEl) {
-          msgEl.innerHTML = '<span style="color: #34d399; font-weight: 700;">Rettung freigegeben!</span>';
-        }
-        soundFx.playUpgrade?.();
-        p.isGameOver = false;
-        SaveSystem.save(this.scene);
-        
-        setTimeout(() => {
-          this.close();
-          if (this.scene && this.scene.playRescueCutscene) {
-            this.scene.playRescueCutscene('Bergung erfolgreich');
-          } else {
-            p.teleportToSurface('Bergung erfolgreich');
-          }
-        }, 600);
-      } else {
-        if (msgEl) {
-          msgEl.textContent = 'Noch nicht freigegeben.';
-        }
+      // Immer automatisch in Supabase freigeben
+      try {
+        await LeaderboardService.setGameOver(p.name, false, depth, p.level);
+      } catch (err) {
+        console.warn('[EmergencyRescue] DB-Update Fehler:', err);
       }
+
+      if (badgeEl) {
+        badgeEl.textContent = 'Freigegeben!';
+        badgeEl.style.background = 'rgba(16, 185, 129, 0.2)';
+        badgeEl.style.color = '#34d399';
+      }
+      if (msgEl) {
+        msgEl.innerHTML = '<span style="color: #34d399; font-weight: 700;">Rettung freigegeben!</span>';
+      }
+      soundFx.playUpgrade?.();
+      p.isGameOver = false;
+      SaveSystem.save(this.scene);
+      
+      setTimeout(() => {
+        this.close();
+        if (this.scene && this.scene.playRescueCutscene) {
+          this.scene.playRescueCutscene('Bergung erfolgreich');
+        } else {
+          p.teleportToSurface('Bergung erfolgreich');
+        }
+      }, 400);
     };
 
     if (btnCheck) {
