@@ -748,10 +748,11 @@ export class HUD {
       this.returnWarn.style.display = isReturnCritical ? 'inline-flex' : 'none';
     }
 
-    // Notfall-Rettung Button (bei leerem Tank unter Tage oder außerhalb des Hangars)
+    // Notfall-Rettung Button (bei leerem Tank unter Tage sowie über der Erde oder bei Game Over)
     if (this.rescueFab) {
       const isFuelEmpty = (this.player.fuel <= 0.05);
-      const showRescueFab = (isFuelEmpty && (!isAtSurface || !isAtHangar)) || !!this.player.isGameOver;
+      const isActivelyRefueling = this.player.fuelArmState && this.player.fuelArmState.isDockedOnVehicle;
+      const showRescueFab = (isFuelEmpty && !isActivelyRefueling) || !!this.player.isGameOver;
       this.rescueFab.style.display = showRescueFab ? 'inline-flex' : 'none';
     }
 
@@ -940,7 +941,19 @@ export class HUD {
           </div>
         </button>
 
-        <!-- 4. Über das Spiel -->
+        <!-- 4. Grubenwehr-Rettung anfordern -->
+        <button id="btn-menu-rescue" class="btn-action" style="height: 48px; width: 100%; font-size: 12.5px; font-weight: 700; justify-content: flex-start; padding: 0 16px; gap: 14px; border-radius: 12px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35); box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
+          <span style="color: #f87171; display: inline-flex;">${icon('shield-alert', '', 18)}</span>
+          <div style="display: flex; flex-direction: column; text-align: left; line-height: 1.2;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="color: #f8fafc; font-weight: 700;">Grubenwehr-Rettung</span>
+              ${!this.player.firstRescueUsed ? `<span style="font-size: 10px; font-weight: 800; background: rgba(245, 158, 11, 0.25); color: #fbbf24; padding: 1px 6px; border-radius: 4px;">1x Frei</span>` : ''}
+            </div>
+            <span style="color: #cbd5e1; font-size: 10.5px; font-weight: 500;">Fahrzeug zur Basis bergen & Notbetankung</span>
+          </div>
+        </button>
+
+        <!-- 5. Über das Spiel -->
         <button id="btn-menu-about" class="btn-action" style="height: 48px; width: 100%; font-size: 12.5px; font-weight: 700; justify-content: flex-start; padding: 0 16px; gap: 14px; border-radius: 12px; background: rgba(30, 41, 59, 0.65); border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
           <span style="color: #a78bfa; display: inline-flex;">${icon('info', '', 18)}</span>
           <div style="display: flex; flex-direction: column; text-align: left; line-height: 1.2;">
@@ -949,7 +962,7 @@ export class HUD {
           </div>
         </button>
 
-        <!-- 5. Zur Startseite -->
+        <!-- 6. Zur Startseite -->
         <button id="btn-menu-startscreen" class="btn-action" style="height: 48px; width: 100%; font-size: 12.5px; font-weight: 700; justify-content: flex-start; padding: 0 16px; gap: 14px; border-radius: 12px; background: rgba(30, 41, 59, 0.65); border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
           <span style="color: #f97316; display: inline-flex;">${icon('home', '', 18)}</span>
           <div style="display: flex; flex-direction: column; text-align: left; line-height: 1.2;">
@@ -966,6 +979,14 @@ export class HUD {
     const settingsBtn = document.getElementById('btn-menu-settings');
     if (settingsBtn) {
       settingsBtn.onclick = () => this.openSettingsView();
+    }
+
+    const rescueBtn = document.getElementById('btn-menu-rescue');
+    if (rescueBtn) {
+      rescueBtn.onclick = () => {
+        closeActiveModal(this.scene);
+        this.scene.rescueModal?.open();
+      };
     }
 
 

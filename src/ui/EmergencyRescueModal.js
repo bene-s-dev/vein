@@ -72,11 +72,15 @@ export class EmergencyRescueModal {
 
   render() {
     const p = this.player;
-    const depth = Math.max(0, Math.floor(p.depthMeters || p.gy || 0));
+    const currentY = p.sprite ? p.sprite.y : (p.gy * 32 + 16);
+    const isAtSurface = p.gy < 0 || currentY <= -8;
+    const depth = isAtSurface ? 0 : Math.max(0, Math.floor(p.depthMeters || p.gy || 0));
     const layer = this.getCurrentLayer(depth);
     const isFirstRescue = !p.firstRescueUsed;
-    const hasValidInsurance = this.checkInsuranceValid(depth);
+    const hasValidInsurance = this.checkInsuranceValid(depth) || isAtSurface;
     const canUseCanister = (p.gadgets?.fuel_canister || 0) > 0;
+    const titleText = (p.fuel <= 0.05) ? 'Treibstoff leer' : 'Grubenwehr-Rettung';
+    const locText = isAtSurface ? 'Erdoberfläche (Basis-Gelände)' : `${depth} m Tiefe (${layer.name})`;
 
     // ── FALL 1: ERSTE RETTUNG KOSTENLOS ──────────────────────────────────────
     if (isFirstRescue) {
@@ -98,10 +102,10 @@ export class EmergencyRescueModal {
           </div>
 
           <h2 style="margin: 0 0 4px 0; font-size: 18px; font-weight: 800; color: #ffffff;">
-            Treibstoff leer
+            ${titleText}
           </h2>
           <div style="font-size: 12.5px; color: #94a3b8; margin-bottom: 12px;">
-            ${depth} m Tiefe (${layer.name})
+            ${locText}
           </div>
 
           <div style="
@@ -194,6 +198,23 @@ export class EmergencyRescueModal {
                 <span>Kanister nutzen (${p.gadgets.fuel_canister}x)</span>
               </button>
             ` : ''}
+
+            ${p.fuel > 0.05 ? `
+              <button id="btn-rescue-cancel" class="btn-action" style="
+                height: 34px;
+                width: 100%;
+                font-size: 11.5px;
+                font-weight: 700;
+                justify-content: center;
+                border-radius: 10px;
+                background: rgba(30, 41, 59, 0.5);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                color: #94a3b8;
+                cursor: pointer;
+              ">
+                Abbrechen
+              </button>
+            ` : ''}
           </div>
         </div>
       `;
@@ -224,12 +245,19 @@ export class EmergencyRescueModal {
           }
         };
       }
+
+      const btnCancel = this.modalEl.querySelector('#btn-rescue-cancel');
+      if (btnCancel) {
+        btnCancel.onclick = () => this.close();
+      }
       return;
     }
 
-    // ── FALL 2: VERSICHERUNG AKTIV & GÜLTIG FÜR DIESE TIEFE ──────────────────
+    // ── FALL 2: VERSICHERUNG AKTIV ODER AN DER ERDOBERFLÄCHE ──────────────────
     if (hasValidInsurance) {
       const ins = p.activeInsurance;
+      const badgeText = isAtSurface && !ins ? 'Oberflächen-Bergung' : `Versichert (${ins ? ins.layerName : 'Basis'})`;
+
       this.modalEl.innerHTML = `
         <div class="emergency-rescue-window" style="
           background: #0f172a;
@@ -248,10 +276,10 @@ export class EmergencyRescueModal {
           </div>
 
           <h2 style="margin: 0 0 6px 0; font-size: 18px; font-weight: 800; color: #ffffff;">
-            Treibstoff leer
+            ${titleText}
           </h2>
           <div style="font-size: 13px; color: #94a3b8; margin-bottom: 12px;">
-            ${depth} m Tiefe (${layer.name})
+            ${locText}
           </div>
 
           <div style="
@@ -265,7 +293,7 @@ export class EmergencyRescueModal {
             border-radius: 6px;
             margin-bottom: 12px;
           ">
-            Versichert (${ins.layerName})
+            ${badgeText}
           </div>
 
           <!-- Einsatzbefehl -->
@@ -327,6 +355,23 @@ export class EmergencyRescueModal {
                 <span>Kanister nutzen (${p.gadgets.fuel_canister}x)</span>
               </button>
             ` : ''}
+
+            ${p.fuel > 0.05 ? `
+              <button id="btn-rescue-cancel" class="btn-action" style="
+                height: 34px;
+                width: 100%;
+                font-size: 11.5px;
+                font-weight: 700;
+                justify-content: center;
+                border-radius: 10px;
+                background: rgba(30, 41, 59, 0.5);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                color: #94a3b8;
+                cursor: pointer;
+              ">
+                Abbrechen
+              </button>
+            ` : ''}
           </div>
         </div>
       `;
@@ -337,7 +382,9 @@ export class EmergencyRescueModal {
       if (btnInsured) {
         btnInsured.onclick = () => {
           soundFx.playPurchase();
-          p.activeInsurance = null; // Versicherung wird verbraucht
+          if (p.activeInsurance) {
+            p.activeInsurance = null; // Versicherung wird verbraucht
+          }
           SaveSystem.save(this.scene);
           this.close();
           if (this.scene && this.scene.playRescueCutscene) {
@@ -355,6 +402,11 @@ export class EmergencyRescueModal {
             this.close();
           }
         };
+      }
+
+      const btnCancel = this.modalEl.querySelector('#btn-rescue-cancel');
+      if (btnCancel) {
+        btnCancel.onclick = () => this.close();
       }
       return;
     }

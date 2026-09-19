@@ -577,12 +577,11 @@ export class MiningScene extends Phaser.Scene {
    */
   checkFuelStatusAndShowRescue() {
     if (!this.player || this.inStartScreen || this.isRescueCutsceneActive) return;
-    const currentY = this.player.sprite ? this.player.sprite.y : (this.player.gy * 32 + 16);
-    const isAtSurface = this.player.gy < 0 || currentY <= -8;
-    const isNearHangar = isAtSurface && (this.player.gx >= 13 && this.player.gx <= 17);
     const isFuelEmpty = (this.player.fuel <= 0.05);
+    const isActivelyRefueling = this.player.fuelArmState && this.player.fuelArmState.isDockedOnVehicle;
 
-    if (this.player.isGameOver || (isFuelEmpty && (!isAtSurface || !isNearHangar))) {
+    // Rettungsmodal öffnet sowohl unter Tage als auch über der Erde bei leerem Tank (sofern nicht aktiv am Hangar betankt) oder Game Over
+    if (this.player.isGameOver || (isFuelEmpty && !isActivelyRefueling)) {
       if (this.rescueModal && !this.rescueModal.isOpen) {
         this.rescueModal.open();
       }
@@ -751,12 +750,28 @@ export class MiningScene extends Phaser.Scene {
         x: startX,
         y: surfaceY
       });
-      descentPath.push({
-        gx: playerGx,
-        gy: surfaceGy,
-        x: p.sprite.x,
-        y: surfaceY
-      });
+      // Wenn der Spieler sich in der Luft oder auf einem Dach befindet
+      if (p.sprite.y < surfaceY - 10) {
+        descentPath.push({
+          gx: playerGx,
+          gy: surfaceGy,
+          x: p.sprite.x,
+          y: surfaceY
+        });
+        descentPath.push({
+          gx: playerGx,
+          gy: playerGy,
+          x: p.sprite.x,
+          y: p.sprite.y
+        });
+      } else {
+        descentPath.push({
+          gx: playerGx,
+          gy: surfaceGy,
+          x: p.sprite.x,
+          y: surfaceY
+        });
+      }
     }
 
     // Rotes Rettungsfahrzeug Sprite erzeugen - startet rechts auf der Erdoberfläche
@@ -952,127 +967,148 @@ export class MiningScene extends Phaser.Scene {
             p.sprite.setVisible(false);
             soundFx.playClick?.();
 
-            // Phase 3: Rückfahrt an die Oberfläche (Bohrer ist im Rettungsfahrzeug sicher verstaut)
-            // Fährt den gegrabenen Tunnelpfad wieder hinauf bis zur Schachtmündung (gx: 20, gy: -1)
-            const ascentRaw = (playerGy > 0 ? [...tunnelPath] : [{ gx: playerGx, gy: surfaceGy, x: p.sprite.x, y: surfaceY }]).reverse();
-            const surfaceWaypoint = {
-              gx: shaftGx,
-              gy: surfaceGy,
-              x: shaftGx * TILE_SIZE + TILE_SIZE / 2,
-              y: surfaceY
-            };
-            const ascentPath = [];
-            for (const wp of ascentRaw) {
-              ascentPath.push(wp);
-            }
-            if (!ascentPath.some(w => w.gx === shaftGx && w.gy === surfaceGy)) {
-              ascentPath.push(surfaceWaypoint);
-            }
+            // Phase 3 & 4: Rückfahrt an die Oberfläche / zum Hangar
+            const hangarGx = 15;
+            const hangarGy = -1;
+            const hangarX = hangarGx * TILE_SIZE + TILE_SIZE / 2; // 496
+            const hangarY = hangarGy * TILE_SIZE + TILE_SIZE / 2; // -16
 
-            followPathSmoothly(
-              rescueSprite,
-              ascentPath,
-              260, // Rückfahrtgeschwindigkeit
-              handleDirectionChange,
-              (curX, curY) => {
-                // Spieler-Position bleibt im Inneren des Rettungsfahrzeugs synchron
-                p.sprite.setPosition(curX, curY);
-              },
-              () => {
-                // Phase 4: Ankunft an der Oberfläche
-                setSoundMode(null);
-                cam.stopFollow();
+            const arriveAtHangar = () => {
+              setSoundMode(null);
+              cam.stopFollow();
 
-                const hangarGx = 15;
-                const hangarGy = -1;
-                const hangarX = hangarGx * TILE_SIZE + TILE_SIZE / 2; // 496
-                const hangarY = hangarGy * TILE_SIZE + TILE_SIZE / 2; // -16
+              crawlerFacing = 'left';
+              rescueSprite.setTexture(`rescue_crawler_left_track_${trackStep}`);
+              setSoundMode('drive');
 
-                // Rettungsfahrzeug fährt an den Hangar
-                crawlerFacing = 'left';
-                rescueSprite.setTexture(`rescue_crawler_left_track_${trackStep}`);
-                setSoundMode('drive');
+              cam.pan(hangarX, hangarY, 1000, 'Sine.easeInOut');
 
-                cam.pan(hangarX, hangarY, 1200, 'Sine.easeInOut');
+              this.tweens.add({
+                targets: rescueSprite,
+                x: hangarX + 36,
+                y: hangarY,
+                duration: 900,
+                ease: 'Linear',
+                onComplete: () => {
+                  setSoundMode(null);
 
-                this.tweens.add({
-                  targets: rescueSprite,
-                  x: hangarX + 36,
-                  y: hangarY,
-                  duration: 1000,
-                  ease: 'Linear',
-                  onComplete: () => {
-                    setSoundMode(null);
+                  // Phase 5: Bohrer wird hinten aus dem Rettungsfahrzeug wieder herausgelassen
+                  p.sprite.setPosition(rescueSprite.x, rescueSprite.y);
+                  p.sprite.setVisible(true);
+                  p.sprite.setAlpha(0);
+                  p.sprite.setScale(0.3);
 
-                    // Phase 5: Bohrer wird hinten aus dem Rettungsfahrzeug wieder herausgelassen
-                    p.sprite.setPosition(rescueSprite.x, rescueSprite.y);
-                    p.sprite.setVisible(true);
-                    p.sprite.setAlpha(0);
-                    p.sprite.setScale(0.3);
+                  soundFx.playPurchase?.();
 
-                    soundFx.playPurchase?.();
+                  this.tweens.add({
+                    targets: p.sprite,
+                    x: hangarX,
+                    y: hangarY,
+                    scaleX: 1,
+                    scaleY: 1,
+                    alpha: 1,
+                    duration: 700,
+                    ease: 'Quad.easeOut',
+                    onComplete: () => {
+                      p.sprite.setDepth(10);
+                      p.isGameOver = false;
+                      p.gx = hangarGx;
+                      p.gy = hangarGy;
+                      p.x = hangarX;
+                      p.y = hangarY;
+                      p.sprite.setPosition(hangarX, hangarY);
+                      p.setVisualDirection('RIGHT');
+                      p.state = 'IDLE';
+
+                      // Notfall-Auftankung bei komplett leerem Tank (mind. 20% oder 15L)
+                      const minReserve = Math.max(15, Math.round(p.maxFuel * 0.2));
+                      if (p.fuel < minReserve) {
+                        p.fuel = Math.min(minReserve, p.maxFuel);
+                      }
+
+                      cam.startFollow(p.sprite, false, 1, 1);
+                      if (this.gridSystem) {
+                        this.gridSystem.updateViewport(cam, p);
+                      }
+
+                      if (this.events) {
+                        this.events.emit('notify', message);
+                      }
+
+                      this.isRescueCutsceneActive = false;
+                    }
+                  });
+
+                  // Rettungsfahrzeug fährt nach links aus dem Bildschirm
+                  this.time.delayedCall(400, () => {
+                    crawlerFacing = 'left';
+                    setSoundMode('drive');
 
                     this.tweens.add({
-                      targets: p.sprite,
-                      x: hangarX,
-                      y: hangarY,
-                      scaleX: 1,
-                      scaleY: 1,
-                      alpha: 1,
-                      duration: 700,
-                      ease: 'Quad.easeOut',
+                      targets: rescueSprite,
+                      x: -350,
+                      duration: 3200,
+                      ease: 'Linear',
                       onComplete: () => {
-                        p.sprite.setDepth(10);
-                        p.isGameOver = false;
-                        p.gx = hangarGx;
-                        p.gy = hangarGy;
-                        p.x = hangarX;
-                        p.y = hangarY;
-                        p.sprite.setPosition(hangarX, hangarY);
-                        p.setVisualDirection('RIGHT');
-                        p.state = 'IDLE';
-
-                        // Notfall-Auftankung bei komplett leerem Tank (mind. 20% oder 15L)
-                        const minReserve = Math.max(15, Math.round(p.maxFuel * 0.2));
-                        if (p.fuel < minReserve) {
-                          p.fuel = Math.min(minReserve, p.maxFuel);
-                        }
-
-                        cam.startFollow(p.sprite, false, 1, 1);
-                        if (this.gridSystem) {
-                          this.gridSystem.updateViewport(cam, p);
-                        }
-
-                        if (this.events) {
-                          this.events.emit('notify', message);
-                        }
-
-                        this.isRescueCutsceneActive = false;
+                        setSoundMode(null);
+                        crawlerTimer.remove();
+                        thrusterParticles.destroy();
+                        rescueSprite.destroy();
                       }
                     });
+                  });
+                }
+              });
+            };
 
-                    // Rettungsfahrzeug fährt nach links aus dem Bildschirm
-                    this.time.delayedCall(400, () => {
-                      crawlerFacing = 'left';
-                      setSoundMode('drive');
-
-                      this.tweens.add({
-                        targets: rescueSprite,
-                        x: -350,
-                        duration: 3200,
-                        ease: 'Linear',
-                        onComplete: () => {
-                          setSoundMode(null);
-                          crawlerTimer.remove();
-                          thrusterParticles.destroy();
-                          rescueSprite.destroy();
-                        }
-                      });
-                    });
-                  }
-                });
+            if (playerGy <= 0) {
+              // Spieler war an/über der Oberfläche: Direkt zum Hangar fahren (kein unnötiger Schacht-Umweg)
+              const directPath = [
+                { gx: playerGx, gy: surfaceGy, x: rescueSprite.x, y: surfaceY },
+                { gx: hangarGx, gy: hangarGy, x: hangarX + 36, y: hangarY }
+              ];
+              followPathSmoothly(
+                rescueSprite,
+                directPath,
+                280,
+                handleDirectionChange,
+                (curX, curY) => {
+                  p.sprite.setPosition(curX, curY);
+                },
+                () => {
+                  arriveAtHangar();
+                }
+              );
+            } else {
+              // Unter Tage: Tunnelpfad hinauf bis zur Schachtmündung (gx: 20, gy: -1)
+              const ascentRaw = [...tunnelPath].reverse();
+              const surfaceWaypoint = {
+                gx: shaftGx,
+                gy: surfaceGy,
+                x: shaftGx * TILE_SIZE + TILE_SIZE / 2,
+                y: surfaceY
+              };
+              const ascentPath = [];
+              for (const wp of ascentRaw) {
+                ascentPath.push(wp);
               }
-            );
+              if (!ascentPath.some(w => w.gx === shaftGx && w.gy === surfaceGy)) {
+                ascentPath.push(surfaceWaypoint);
+              }
+
+              followPathSmoothly(
+                rescueSprite,
+                ascentPath,
+                260, // Rückfahrtgeschwindigkeit
+                handleDirectionChange,
+                (curX, curY) => {
+                  p.sprite.setPosition(curX, curY);
+                },
+                () => {
+                  arriveAtHangar();
+                }
+              );
+            }
           }
         });
       }
