@@ -594,6 +594,10 @@ export class Player {
     if ((this.gy <= -1 || this.sprite?.y <= -16 || this.fuel <= 0) && this.scene.inputHandler?.isAutoAscending) {
       this.scene.inputHandler.cancelAutoAscend();
     }
+    // Automatischer Sinkflug stoppen wenn kein Sprit mehr
+    if (this.fuel <= 0 && this.scene.inputHandler?.isAutoDescending) {
+      this.scene.inputHandler.cancelAutoDescend();
+    }
 
     if (this.hull > 0) {
       this._hullBrokenToastShown = false;
@@ -1650,6 +1654,10 @@ export class Player {
     // Prüfen ob Zielfeld solid ist (für LINKS, RECHTS, UNTEN)
     const isTargetSolid = this.gridSystem.isSolid(targetGx, targetGy);
 
+    if (isTargetSolid && dir === 'DOWN' && this.scene.inputHandler?.isAutoDescending) {
+      this.scene.inputHandler.cancelAutoDescend();
+    }
+
     if (!isTargetSolid) {
       // Freies Feld: normale Fahrt
       soundFx.startDrive();
@@ -1851,12 +1859,15 @@ export class Player {
       this.rightThrustParticles.stop();
     }
 
-    // Wenn automatischer Steigflug aktiv war, sauber lösen
+    // Wenn automatischer Steigflug oder Sinkflug aktiv war, sauber lösen
     if (this.scene?.inputHandler?.isAutoAscending) {
       this.scene.inputHandler.cancelAutoAscend();
     }
+    if (this.scene?.inputHandler?.isAutoDescending) {
+      this.scene.inputHandler.cancelAutoDescend();
+    }
 
-    // Präzise Kachel-Zentrierung beim Beenden des Flugs (verhindert ungleiche Teilstrecken/Geschwindigkeits-Sprünge)
+    // Präzise Kachel-Zentrierung beim Beenden des Flugs oder Sinkflugs (stets sauber auf Kachelzentrum einrasten)
     if (this.sprite.y <= -16 || this.gy <= -1) {
       this.sprite.y = -16;
       this.y = -16;
@@ -1867,10 +1878,8 @@ export class Player {
     } else {
       this.gx = Math.round((this.sprite.x - TILE_SIZE / 2) / TILE_SIZE);
       this.gy = Math.round((this.sprite.y - TILE_SIZE / 2) / TILE_SIZE);
-      if (!this.isHoveringInAir()) {
-        this.sprite.x = this.gx * TILE_SIZE + TILE_SIZE / 2;
-        this.sprite.y = this.gy * TILE_SIZE + TILE_SIZE / 2;
-      }
+      this.sprite.x = this.gx * TILE_SIZE + TILE_SIZE / 2;
+      this.sprite.y = this.gy * TILE_SIZE + TILE_SIZE / 2;
       this.x = this.sprite.x;
       this.y = this.sprite.y;
     }
@@ -1987,6 +1996,9 @@ export class Player {
             soundFx.startDrive();
           } else {
             // Feste Wand / Gestein: Anhalten oder Bohren starten
+            if (this.scene.inputHandler?.isAutoDescending) {
+              this.scene.inputHandler.cancelAutoDescend();
+            }
             this.state = PLAYER_STATES.IDLE;
             soundFx.stopDrive();
             this.handleInput(nextDir);

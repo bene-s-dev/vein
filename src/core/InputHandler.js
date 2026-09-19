@@ -17,6 +17,7 @@ export class InputHandler {
     this.touchDirection = null;
     this.flyButtonPressed = false;
     this.isAutoAscending = false;
+    this.isAutoDescending = false;
 
     // Desktop Tastatur
     this.cursors = scene.input.keyboard.createCursorKeys();
@@ -153,6 +154,26 @@ export class InputHandler {
     }
   }
 
+  cancelAutoDescend() {
+    if (!this.isAutoDescending) return;
+    this.isAutoDescending = false;
+    this.touchDirection = null;
+    const joystickContainer = document.getElementById('floating-joystick');
+    const knob = document.getElementById('joystick-knob');
+    if (joystickContainer) {
+      joystickContainer.classList.remove('locked-down');
+      joystickContainer.style.opacity = '0';
+      setTimeout(() => {
+        if (!this.isAutoAscending && !this.isAutoDescending && joystickContainer) {
+          joystickContainer.style.display = 'none';
+        }
+      }, 150);
+    }
+    if (knob) {
+      knob.style.transform = 'translate(0px, 0px)';
+    }
+  }
+
   setupControls() {
     const joystickContainer = document.getElementById('floating-joystick');
     const knob = document.getElementById('joystick-knob');
@@ -198,13 +219,13 @@ export class InputHandler {
     const hideJoystick = () => {
       activePointerId = null;
       this.touchDirection = null;
-      if (this.isAutoAscending) {
+      if (this.isAutoAscending || this.isAutoDescending) {
         return; // Eingerasteter Zustand bleibt aktiv
       }
       if (joystickContainer) {
         joystickContainer.style.opacity = '0';
         setTimeout(() => {
-          if (activePointerId === null && !this.isAutoAscending) {
+          if (activePointerId === null && !this.isAutoAscending && !this.isAutoDescending) {
             joystickContainer.style.display = 'none';
           }
         }, 150);
@@ -216,9 +237,12 @@ export class InputHandler {
 
     // POINTER DOWN: Frei auf dem Bildschirm berühren spawnt den Joystick
     this.scene.input.on('pointerdown', (pointer, currentlyOver) => {
-      // Wenn der automatische Steigflug aktiv war: Jede Berührung bricht ihn sofort ab!
+      // Wenn der automatische Steigflug oder Sinkflug aktiv war: Jede Berührung bricht ihn sofort ab!
       if (this.isAutoAscending) {
         this.cancelAutoAscend();
+      }
+      if (this.isAutoDescending) {
+        this.cancelAutoDescend();
       }
 
       if (isModalActive()) {
@@ -353,6 +377,28 @@ export class InputHandler {
         return;
       }
 
+      // Prüfen, ob der Spieler gerade nach unten fliegt / fährt (im Schacht / Freiraum)
+      const nextDownGy = Math.floor((player ? player.gy : 0) + 1);
+      const isDescending = (this.touchDirection === 'DOWN') && player && (
+        !this.scene.gridSystem?.isSolid(player.gx, nextDownGy) ||
+        (player.state === 'moving' && player.currentDirection === 'DOWN')
+      );
+      const canLockDescent = isDescending && player && player.fuel > 0;
+
+      if (canLockDescent) {
+        // Joystick rastet unten ein -> selbstständiger Sinkflug nach unten!
+        this.isAutoDescending = true;
+        activePointerId = null;
+        if (joystickContainer) {
+          joystickContainer.classList.add('locked-down');
+          joystickContainer.style.opacity = '1';
+        }
+        if (knob) {
+          knob.style.transform = 'translate(0px, 40px)';
+        }
+        return;
+      }
+
       hideJoystick();
 
       if (isModalActive()) return;
@@ -403,9 +449,12 @@ export class InputHandler {
       return 'UP';
     }
 
-    // 2. Automatischer Steigflug (eingerasteter Joystick)
+    // 2. Automatischer Steigflug / Sinkflug (eingerasteter Joystick)
     if (this.isAutoAscending) {
       return 'UP';
+    }
+    if (this.isAutoDescending) {
+      return 'DOWN';
     }
 
     // 3. Mobile Floating-Joystick
@@ -416,10 +465,12 @@ export class InputHandler {
     // 4. Desktop Tastatur (WASD / Pfeiltasten)
     if (this.cursors.left.isDown || this.wasd.A.isDown) {
       if (this.isAutoAscending) this.cancelAutoAscend();
+      if (this.isAutoDescending) this.cancelAutoDescend();
       return 'LEFT';
     }
     if (this.cursors.right.isDown || this.wasd.D.isDown) {
       if (this.isAutoAscending) this.cancelAutoAscend();
+      if (this.isAutoDescending) this.cancelAutoDescend();
       return 'RIGHT';
     }
     if (this.cursors.down.isDown || this.wasd.S.isDown) {
@@ -427,6 +478,7 @@ export class InputHandler {
       return 'DOWN';
     }
     if (this.cursors.up.isDown || this.wasd.W.isDown) {
+      if (this.isAutoDescending) this.cancelAutoDescend();
       return 'UP';
     }
 
