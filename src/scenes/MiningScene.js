@@ -303,6 +303,10 @@ export class MiningScene extends Phaser.Scene {
       this.player.update(delta, inputDir);
     } else if (!this.isRescueCutsceneActive) {
       soundFx.stopAllLoops?.();
+      // Tanken & Reparatur weiterlaufen lassen, auch wenn Bewegung blockiert ist
+      if (this.player && !this.player.isGameOver) {
+        this.player.update(delta, null);
+      }
     }
 
     // Basis-System, NPC & Gebäude-Funktionen aktualisieren (Produktion läuft weiter)
