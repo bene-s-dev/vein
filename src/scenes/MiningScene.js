@@ -627,10 +627,12 @@ export class MiningScene extends Phaser.Scene {
     const playerGx = Math.floor(p.sprite.x / TILE_SIZE);
     const playerGy = Math.floor(p.sprite.y / TILE_SIZE);
 
-    const startGx = 20;
-    const startGy = -1;
-    const startX = startGx * TILE_SIZE + TILE_SIZE / 2;
-    const startY = -120;
+    const startSurfaceGx = 48;
+    const surfaceGy = -1;
+    const surfaceY = -16;
+    const shaftGx = 20;
+    const startX = startSurfaceGx * TILE_SIZE + TILE_SIZE / 2;
+    const startY = surfaceY;
 
     // BFS-Wegfindung STRIKT durch nicht-solide Kacheln (gegrabene Tunnel & Schächte)
     const findTunnelPath = (fromGx, fromGy, toGx, toGy) => {
@@ -720,10 +722,52 @@ export class MiningScene extends Phaser.Scene {
       return path;
     };
 
-    // Tunnelpfad von der Oberfläche bis zum havarierten Driller
-    const descentPath = findTunnelPath(startGx, startGy, playerGx, playerGy);
+    // Tunnelpfad von der Schachtmündung (gx: 20, gy: -1) bis zum havarierten Driller
+    const tunnelPath = findTunnelPath(shaftGx, surfaceGy, playerGx, playerGy);
 
-    // Rotes Rettungsfahrzeug Sprite erzeugen
+    // Gesamter Anfahrtspfad: Startet auf der Erde rechts (gx: 48) und fährt zum Minenschacht (gx: 20)
+    const descentPath = [];
+    if (playerGy > 0) {
+      for (let gx = startSurfaceGx; gx >= shaftGx; gx -= 2) {
+        descentPath.push({
+          gx,
+          gy: surfaceGy,
+          x: gx * TILE_SIZE + TILE_SIZE / 2,
+          y: surfaceY
+        });
+      }
+      if (descentPath[descentPath.length - 1].gx !== shaftGx) {
+        descentPath.push({
+          gx: shaftGx,
+          gy: surfaceGy,
+          x: shaftGx * TILE_SIZE + TILE_SIZE / 2,
+          y: surfaceY
+        });
+      }
+      for (const wp of tunnelPath) {
+        if (wp.gx === shaftGx && wp.gy === surfaceGy) continue;
+        descentPath.push(wp);
+      }
+    } else {
+      const targetGx = playerGx;
+      const step = targetGx < startSurfaceGx ? -2 : 2;
+      for (let gx = startSurfaceGx; step < 0 ? gx >= targetGx : gx <= targetGx; gx += step) {
+        descentPath.push({
+          gx,
+          gy: surfaceGy,
+          x: gx * TILE_SIZE + TILE_SIZE / 2,
+          y: surfaceY
+        });
+      }
+      descentPath.push({
+        gx: targetGx,
+        gy: surfaceGy,
+        x: p.sprite.x,
+        y: surfaceY
+      });
+    }
+
+    // Rotes Rettungsfahrzeug Sprite erzeugen - startet rechts auf der Erdoberfläche
     const rescueSprite = this.add.sprite(startX, startY, 'rescue_crawler_left')
       .setDepth(14)
       .setOrigin(0.5, 0.5);
@@ -744,9 +788,13 @@ export class MiningScene extends Phaser.Scene {
       thrusterParticles.setPosition(rescueSprite.x, rescueSprite.y + 13);
     };
 
-    // Kamera folgt dem Rettungsfahrzeug
+    // Kamera sofort auf die Oberfläche zum startenden Bergungsfahrzeug ausrichten
     const cam = this.cameras.main;
     cam.stopFollow();
+    cam.centerOn(startX - 120, startY);
+    if (this.gridSystem) {
+      this.gridSystem.updateViewport(cam, p);
+    }
 
     // Ticker für Partikelposition & Viewport-Aktualisierung
     const thrusterTimer = this.time.addEvent({
@@ -836,20 +884,21 @@ export class MiningScene extends Phaser.Scene {
       moveToNext();
     };
 
-    // Phase 1: Anfahrt zum Havaristen entlang des gegrabenen Tunnelpfads
-    setSoundMode('fly');
+    // Phase 1: Anfahrt zum Havaristen von rechts auf der Erdoberfläche
+    crawlerFacing = 'left';
+    setSoundMode('drive');
     cam.startFollow(rescueSprite, true, 0.08, 0.08);
 
     followWaypointList(
       rescueSprite,
       descentPath,
-      280, // Zügige Bergungsgeschwindigkeit
+      300, // Zügige Bergungsgeschwindigkeit
       (wp, prevX, prevY) => {
         const dx = wp.x - prevX;
         const dy = wp.y - prevY;
 
         if (Math.abs(dx) > Math.abs(dy)) {
-          // Horizontale Tunnel-Fahrt
+          // Horizontale Fahrt (z. B. auf der Erde oder in Stollen)
           crawlerFacing = dx > 0 ? 'right' : 'left';
           setSoundMode('drive');
         } else if (dy > 0) {
@@ -889,15 +938,17 @@ export class MiningScene extends Phaser.Scene {
             soundFx.playClick?.();
 
             // Phase 3: Rückfahrt an die Oberfläche (Bohrer ist im Rettungsfahrzeug sicher verstaut)
-            const ascentPath = [...descentPath].reverse();
-            // Bis zur Schachtmündung / Oberfläche (gy = -1, y = -16)
+            // Fährt den gegrabenen Tunnelpfad wieder hinauf bis zur Schachtmündung (gx: 20, gy: -1)
+            const ascentPath = (playerGy > 0 ? [...tunnelPath] : [{ gx: playerGx, gy: surfaceGy, x: p.sprite.x, y: surfaceY }]).reverse();
             const surfaceWaypoint = {
-              gx: 20,
-              gy: -1,
-              x: 20 * TILE_SIZE + TILE_SIZE / 2,
-              y: -16
+              gx: shaftGx,
+              gy: surfaceGy,
+              x: shaftGx * TILE_SIZE + TILE_SIZE / 2,
+              y: surfaceY
             };
-            ascentPath.push(surfaceWaypoint);
+            if (!ascentPath.some(w => w.gx === shaftGx && w.gy === surfaceGy)) {
+              ascentPath.push(surfaceWaypoint);
+            }
 
             followWaypointList(
               rescueSprite,
