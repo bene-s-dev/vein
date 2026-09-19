@@ -556,7 +556,7 @@ export class Player {
     const baseSys = this.scene?.baseSystem;
     const tier = Math.max(1, Math.min(HANGAR_TIERS.length, baseSys?.hangarTier || 1));
     const tierData = HANGAR_TIERS[tier - 1] || HANGAR_TIERS[0];
-    let speed = tierData.fuelSpeed || 20;
+    let speed = tierData.fuelSpeed || 6;
 
     const pp = baseSys?.purchasableBuildings?.find(b => b.id === 'powerplant') || baseSys?.buildings?.find(b => b.id === 'powerplant');
     if (pp?.isBuilt) {
@@ -569,7 +569,7 @@ export class Player {
     const baseSys = this.scene?.baseSystem;
     const tier = Math.max(1, Math.min(HANGAR_TIERS.length, baseSys?.hangarTier || 1));
     const tierData = HANGAR_TIERS[tier - 1] || HANGAR_TIERS[0];
-    let speed = tierData.repairSpeed || 50;
+    let speed = tierData.repairSpeed || 12;
 
     const pp = baseSys?.purchasableBuildings?.find(b => b.id === 'powerplant') || baseSys?.buildings?.find(b => b.id === 'powerplant');
     if (pp?.isBuilt) {
@@ -837,7 +837,7 @@ export class Player {
     // Untertage-Tankanlage: Betankung über den mechanischen Tankarm
     if (isParkedAtUndergroundFuel) {
       const isUndergroundFuelReady = this.fuelArmState && this.fuelArmState.activeWeight > 0.8;
-      const undergroundChargeSpeed = 35; // 35 L/s Durchfluss
+      const undergroundChargeSpeed = 12; // 12 L/s Durchfluss
       const wasFuelFull = this.fuel >= this.maxFuel;
 
       if (isUndergroundFuelReady && this.fuel < this.maxFuel) {

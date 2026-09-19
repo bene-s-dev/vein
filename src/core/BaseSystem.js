@@ -194,8 +194,8 @@ export const HANGAR_TIERS = [
   {
     tier: 1,
     name: 'Basis-Servicestation',
-    fuelSpeed: 20,
-    repairSpeed: 50,
+    fuelSpeed: 6,
+    repairSpeed: 12,
     costCash: 0,
     costComps: null,
     desc: 'Standard-Tankanlage mit Basisausleger und manueller Schweißtechnik.'
@@ -203,8 +203,8 @@ export const HANGAR_TIERS = [
   {
     tier: 2,
     name: 'Druckluft-Schnellbetankung Mk.II',
-    fuelSpeed: 40,
-    repairSpeed: 100,
+    fuelSpeed: 12,
+    repairSpeed: 24,
     costCash: 1100,
     costComps: [{ key: 'iron_tube', name: 'Stahl-Rohr', count: 1, source: 'Fabrik' }],
     desc: 'Hochdruckpumpe für doppelte Durchflussrate und verstärkte Schweißleistung.'
@@ -212,8 +212,8 @@ export const HANGAR_TIERS = [
   {
     tier: 3,
     name: 'Turbinen-Servicebrücke Mk.III',
-    fuelSpeed: 75,
-    repairSpeed: 180,
+    fuelSpeed: 20,
+    repairSpeed: 40,
     costCash: 3200,
     costComps: [{ key: 'microprocessor', name: 'Mikroprozessor', count: 1, source: 'Geologe' }],
     desc: 'Mikroprozessor-gesteuerter Injektor & automatisierter Doppel-Schweißarm.'
@@ -221,8 +221,8 @@ export const HANGAR_TIERS = [
   {
     tier: 4,
     name: 'Industrie-Hochdruckdock Mk.IV',
-    fuelSpeed: 130,
-    repairSpeed: 300,
+    fuelSpeed: 35,
+    repairSpeed: 68,
     costCash: 8000,
     costComps: [{ key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1, source: 'Fabrik' }, { key: 'capacitor', name: 'Druck-Kondensator', count: 1, source: 'Geologe' }],
     desc: 'Industrielle Getriebepumpen und Hochspannungs-Schweißkondensatoren.'
@@ -230,17 +230,17 @@ export const HANGAR_TIERS = [
   {
     tier: 5,
     name: 'Plasma-Kompressionstankstelle Mk.V',
-    fuelSpeed: 220,
-    repairSpeed: 500,
+    fuelSpeed: 55,
+    repairSpeed: 110,
     costCash: 19000,
     costComps: [{ key: 'silver_coil', name: 'Silber-Spule', count: 2, source: 'Fabrik' }],
-    desc: 'Plasmabeschleunigter Kerosinfluss füllt schwere Tanks in unter 2 Sekunden.'
+    desc: 'Plasmabeschleunigter Kerosinfluss füllt schwere Tanks zügig wieder auf.'
   },
   {
     tier: 6,
     name: 'Nanit-Instandsetzungsdock Mk.VI',
-    fuelSpeed: 360,
-    repairSpeed: 800,
+    fuelSpeed: 85,
+    repairSpeed: 170,
     costCash: 42000,
     costComps: [{ key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Geologe' }],
     desc: 'Autonomer Naniten-Schwarm rekonstruiert Hüllenschäden in Sekundenschnelle.'
@@ -248,8 +248,8 @@ export const HANGAR_TIERS = [
   {
     tier: 7,
     name: 'Kryo-Quantenservicestation Mk.VII',
-    fuelSpeed: 580,
-    repairSpeed: 1250,
+    fuelSpeed: 130,
+    repairSpeed: 260,
     costCash: 85000,
     costComps: [{ key: 'crystal_lens', name: 'Kristall-Linse', count: 1, source: 'Fabrik' }, { key: 'spectrometer', name: 'Sensor-Spektrometer', count: 1, source: 'Geologe' }],
     desc: 'Kryogenische Kompression und Spektrometer-gesteuerte Molekularreparatur.'
@@ -257,17 +257,17 @@ export const HANGAR_TIERS = [
   {
     tier: 8,
     name: 'Subraum-Resonanzdock Mk.VIII',
-    fuelSpeed: 950,
-    repairSpeed: 1800,
+    fuelSpeed: 190,
+    repairSpeed: 380,
     costCash: 175000,
     costComps: [{ key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Geologe' }, { key: 'titan_bolt', name: 'Titan-Bolzen', count: 1, source: 'Fabrik' }],
-    desc: 'Gravitationswellen-Transfer füllt auch riesige Tanks nahezu verzögerungsfrei.'
+    desc: 'Gravitationswellen-Transfer füllt auch riesige Tanks in kürzester Zeit.'
   },
   {
     tier: 9,
     name: 'Singularitäts-Dock Mk.IX',
-    fuelSpeed: 1500,
-    repairSpeed: 2700,
+    fuelSpeed: 280,
+    repairSpeed: 550,
     costCash: 340000,
     costComps: [{ key: 'titan_bolt', name: 'Titan-Bolzen', count: 2, source: 'Fabrik' }],
     desc: 'Hyperraum-Transfertankung und simultane Hüllen-Reparatur.'
@@ -275,11 +275,11 @@ export const HANGAR_TIERS = [
   {
     tier: 10,
     name: 'Chrono-Quanten-Zentraldock X',
-    fuelSpeed: 2500,
-    repairSpeed: 4000,
+    fuelSpeed: 420,
+    repairSpeed: 800,
     costCash: 650000,
     costComps: [{ key: 'quantum_core', name: 'Quanten-Kern', count: 1, source: 'Fabrik' }, { key: 'quantum_processor', name: 'Quanten-Prozessor', count: 1, source: 'Geologe' }],
-    desc: 'Ultimative Versorgungsmatrix: Nullzeit-Betankung und augenblickliche Reparatur.'
+    desc: 'Ultimative Versorgungsmatrix: Hochenergie-Betankung und augenblickliche Reparatur.'
   }
 ];
 
