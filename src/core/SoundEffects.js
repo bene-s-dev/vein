@@ -1493,7 +1493,7 @@ class SoundManager {
     const noteGain = this.ctx.createGain();
     const attack = isLead ? 0.7 : 1.2;
     const release = isLead ? 1.4 : 2.2;
-    const peakGain = velocity * (isLead ? 0.14 : 0.09);
+    const peakGain = velocity * (isLead ? 0.08 : 0.05);
 
     noteGain.gain.setValueAtTime(0.0001, now);
     noteGain.gain.linearRampToValueAtTime(peakGain, now + attack);
@@ -1685,7 +1685,7 @@ class SoundManager {
         noiseFilter.Q.setValueAtTime(3.8, now);
 
         const noiseGain = this.ctx.createGain();
-        const maxGain = (0.12 + Math.random() * 0.08) * Math.min(1.0, this._soundtrackDepth);
+        const maxGain = (0.06 + Math.random() * 0.04) * Math.min(1.0, this._soundtrackDepth);
         noiseGain.gain.setValueAtTime(0.0001, now);
         noiseGain.gain.linearRampToValueAtTime(maxGain, now + duration * 0.35);
         noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
@@ -1706,7 +1706,7 @@ class SoundManager {
       subOsc.frequency.exponentialRampToValueAtTime(22, now + duration);
 
       const subGain = this.ctx.createGain();
-      const maxSubGain = (0.15 + Math.random() * 0.08) * Math.min(1.0, this._soundtrackDepth);
+      const maxSubGain = (0.07 + Math.random() * 0.04) * Math.min(1.0, this._soundtrackDepth);
       subGain.gain.setValueAtTime(0.0001, now);
       subGain.gain.linearRampToValueAtTime(maxSubGain, now + duration * 0.3);
       subGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
@@ -1735,7 +1735,7 @@ class SoundManager {
 
   /**
    * Wird im Spielzyklus aufgerufen.
-   * Regelt den Übergang zwischen Oberfläche (ruhige, wohlklingende Atmosphäre) und Untertage (anschwellend & tief).
+   * Regelt den Übergang: An der Oberfläche stumm, unter Tage langsames atmosphärisches Einfaden.
    * @param {number} depthMeters - Aktuelle Tiefe in Metern
    */
   updateSoundtrack(depthMeters = 0) {
@@ -1752,17 +1752,25 @@ class SoundManager {
     }
     if (!this._ambientGain || !this.ctx) return;
 
-    // Tiefe normalisieren:
-    // An der Oberfläche (0m) ein sanfter, atmosphärischer Streicher-Grundteppich (0.35).
-    // Mit zunehmender Tiefe steigt die Intensität kontinuierlich bis auf 1.0 (ab ca. 25m Tiefe).
-    const targetIntensity = Math.min(1.0, 0.35 + (Math.max(0, depthMeters) / 25) * 0.65);
-    this._soundtrackDepth = targetIntensity;
-
-    // Angenehme, wohlklingende Lautstärke für Hintergrundmusik
-    const targetGain = 0.22 + targetIntensity * 0.22;
     const now = this.ctx.currentTime;
 
-    this._ambientGain.gain.setTargetAtTime(targetGain, now, 1.8);
+    // An der Oberfläche (Tiefe <= 0.5m) komplett stumm & weich ausblenden
+    if (depthMeters <= 0.5) {
+      this._ambientGain.gain.setTargetAtTime(0.0001, now, 1.2);
+      this._soundtrackDepth = 0;
+      return;
+    }
+
+    // Unter Tage: Sanftes und langsames Einfaden
+    // Erreicht ab ca. 22m Tiefe seine volle Tiefe
+    const depthProgress = Math.min(1.0, Math.max(0, depthMeters - 0.5) / 22);
+    this._soundtrackDepth = depthProgress;
+
+    // Angenehme, dezente Hintergrund-Lautstärke (deutlich leiser & unaufdringlich)
+    const targetGain = 0.03 + depthProgress * 0.11;
+
+    // Langsames, atmosphärisches Einfaden
+    this._ambientGain.gain.setTargetAtTime(targetGain, now, 2.5);
   }
 }
 
