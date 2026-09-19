@@ -232,8 +232,7 @@ export class MissionsProgressModal {
       return `
         <div style="
           background: rgba(15, 23, 42, 0.85);
-          border: 1px solid ${isDone ? 'rgba(16, 185, 129, 0.5)' : isUpcoming ? 'rgba(245, 158, 11, 0.35)' : 'rgba(56, 189, 248, 0.3)'};
-          border-left: 5px solid ${isDone ? '#10b981' : isUpcoming ? '#f59e0b' : '#38bdf8'};
+          border: 1px solid ${isDone ? 'rgba(16, 185, 129, 0.35)' : 'rgba(255, 255, 255, 0.1)'};
           border-radius: 12px;
           padding: 14px 16px;
           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
@@ -455,8 +454,7 @@ export class MissionsProgressModal {
         <!-- AKTUELLES LEVEL -->
         <div style="
           background: rgba(15, 23, 42, 0.85);
-          border: 1px solid rgba(56, 189, 248, 0.3);
-          border-left: 4px solid #38bdf8;
+          border: 1px solid rgba(255, 255, 255, 0.1);
           border-radius: 12px;
           padding: 14px 16px;
           box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
@@ -507,8 +505,7 @@ export class MissionsProgressModal {
         ${next ? `
           <div style="
             background: rgba(15, 23, 42, 0.6);
-            border: 1px dashed rgba(168, 85, 247, 0.35);
-            border-left: 4px solid #a855f7;
+            border: 1px dashed rgba(255, 255, 255, 0.15);
             border-radius: 12px;
             padding: 14px 16px;
           ">
