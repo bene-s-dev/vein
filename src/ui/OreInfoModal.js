@@ -545,11 +545,6 @@ export function showGoodsInfoModal(itemKey, scene) {
             ${icon('arrow-down-to-line', '', 13)} 1x Einlagern
           </button>
         ` : ''}
-        ${isDepotOpen && depotCount > 0 && value > 0 ? `
-          <button id="btn-goods-info-sell" class="btn-buy" style="height: 34px; padding: 0 14px; font-size: 12px; font-weight: 800; border-radius: 8px; background: #16a34a; display: inline-flex; align-items: center; gap: 5px;">
-            ${icon('banknote', '', 13)} 1x Verkaufen (+€${value.toLocaleString()})
-          </button>
-        ` : ''}
         <button id="btn-goods-info-ok" class="btn-buy" style="height: 34px; padding: 0 20px; font-size: 12px; font-weight: 800; border-radius: 8px;">
           OK
         </button>
@@ -616,19 +611,6 @@ export function showGoodsInfoModal(itemKey, scene) {
       };
     }
 
-    const btnSell = document.getElementById('btn-goods-info-sell');
-    if (btnSell) {
-      btnSell.onclick = (e) => {
-        e.stopPropagation();
-        if (scene.baseSystem && typeof scene.baseSystem.sellDepotProduct === 'function') {
-          scene.baseSystem.sellDepotProduct(itemKey, 1);
-          if (scene.baseSystem.renderDepotModal) {
-            scene.baseSystem.renderDepotModal();
-          }
-          showGoodsInfoModal(itemKey, scene);
-        }
-      };
-    }
 
     if (activeKeydownListener) {
       window.removeEventListener('keydown', activeKeydownListener);
