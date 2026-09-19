@@ -901,14 +901,6 @@ export class HUD {
           </div>
         </button>
 
-        <!-- 2. Neues Spiel -->
-        <button id="btn-menu-new-game" class="btn-action" style="height: 48px; width: 100%; font-size: 12.5px; font-weight: 700; justify-content: flex-start; padding: 0 16px; gap: 14px; border-radius: 12px; background: rgba(30, 41, 59, 0.65); border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
-          <span style="color: #22c55e; display: inline-flex;">${icon('plus-circle', '', 18)}</span>
-          <div style="display: flex; flex-direction: column; text-align: left; line-height: 1.2;">
-            <span style="color: #f8fafc; font-weight: 700;">Neues Spiel</span>
-            <span style="color: #cbd5e1; font-size: 10.5px; font-weight: 500;">Frische Expedition starten</span>
-          </div>
-        </button>
 
         <!-- 3. Bergmann-Buch -->
         <button id="btn-menu-book" class="btn-action" style="height: 48px; width: 100%; font-size: 12.5px; font-weight: 700; justify-content: flex-start; padding: 0 16px; gap: 14px; border-radius: 12px; background: rgba(30, 41, 59, 0.65); border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
@@ -938,20 +930,6 @@ export class HUD {
       settingsBtn.onclick = () => this.openSettingsView();
     }
 
-    const newGameBtn = document.getElementById('btn-menu-new-game');
-    if (newGameBtn) {
-      newGameBtn.onclick = () => {
-        if (confirm('Möchtest du wirklich ein neues Spiel starten? Der Fortschritt im aktuellen Spielstand wird zurückgesetzt.')) {
-          closeActiveModal(this.scene);
-          if (this.scene.startScreen) {
-            this.scene.startScreen.startSession(false);
-          } else {
-            SaveSystem.clear();
-            window.location.reload();
-          }
-        }
-      };
-    }
 
     const bookBtn = document.getElementById('btn-menu-book') || document.getElementById('btn-menu-guide');
     if (bookBtn) {
