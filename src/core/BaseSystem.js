@@ -2972,8 +2972,7 @@ export class BaseSystem {
         const have = this.player.components[mc.key] || 0;
         const isMet = have >= mc.count;
         const iconName = COMPONENT_ICONS[mc.key] || 'box';
-        const srcPrefix = mc.source ? `<span style="opacity: 0.8; font-size: 9.5px; margin-right: 2px;">[${mc.source}]</span>` : '';
-        return `<span style="background: ${isMet ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)'}; border: 1px solid ${isMet ? 'rgba(16,185,129,0.35)' : 'rgba(239,68,68,0.35)'}; color: ${isMet ? '#34d399' : '#f87171'}; font-weight: 700; font-size: 10.5px; padding: 2px 6px; border-radius: 5px; display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; flex-shrink: 0;">${icon(iconName, '', 11)} ${srcPrefix}${mc.count}x ${mc.name} <span style="font-size: 9.5px; opacity: 0.85;">(${have}/${mc.count})</span></span>`;
+        return `<span style="background: ${isMet ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)'}; border: 1px solid ${isMet ? 'rgba(16,185,129,0.35)' : 'rgba(239,68,68,0.35)'}; color: ${isMet ? '#34d399' : '#f87171'}; font-weight: 700; font-size: 10.5px; padding: 2px 6px; border-radius: 5px; display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; flex-shrink: 0;">${icon(iconName, '', 11)} ${mc.count}x ${mc.name} <span style="font-size: 9.5px; opacity: 0.85;">(${have}/${mc.count})</span></span>`;
       }).join(' ');
     };
 
@@ -3136,9 +3135,9 @@ export class BaseSystem {
             const compsNeeded = getRequiredComps(nextData);
             const missing = compsNeeded
               .filter(mc => (this.player.components[mc.key] || 0) < mc.count)
-              .map(mc => `${mc.count}x ${mc.name} [${mc.source || 'Werkstatt'}]`)
+              .map(mc => `${mc.count}x ${mc.name}`)
               .join(', ');
-            this.scene.events.emit('notify', `Fehlende Bauteile: ${missing}! Fabrik & Geologe nutzen.`);
+            this.scene.events.emit('notify', `Fehlende Bauteile: ${missing}!`);
             return;
           }
           consumeMountComp(nextData);
@@ -5101,13 +5100,13 @@ export class BaseSystem {
           const ok = count >= mc.count;
           if (!ok) {
             hasComps = false;
-            missingComps.push(`${mc.count}x ${mc.name} [${mc.source}]`);
+            missingComps.push(`${mc.count}x ${mc.name}`);
           }
           const cData = COMPONENT_DATA[mc.key];
           const iconStr = cData ? icon(cData.icon, '', 11) : '';
           return `
             <span style="background: rgba(16, 185, 129, 0.12); border: 1px solid ${ok ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'}; color: ${ok ? '#34d399' : '#f87171'}; font-weight: 700; font-size: 10.5px; padding: 2px 6px; border-radius: 6px; display: inline-flex; align-items: center; gap: 3px; white-space: nowrap;">
-              ${iconStr} ${mc.source ? `[${mc.source}] ` : ''}${mc.count}x ${mc.name} <span style="font-size: 9.5px; opacity: 0.85;">(${count}/${mc.count})</span>
+              ${iconStr} ${mc.count}x ${mc.name} <span style="font-size: 9.5px; opacity: 0.85;">(${count}/${mc.count})</span>
             </span>
           `;
         }).join(' ');
