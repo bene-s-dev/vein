@@ -3879,10 +3879,9 @@ export class BaseSystem {
 
     if (currentTab === 'storage') {
       this.setFloatingAction(`
-        <button id="btn-depot-all-ores" class="btn-buy btn-flyover" style="gap: 8px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1.5px solid rgba(56, 189, 248, 0.7); box-shadow: 0 4px 18px rgba(2, 132, 199, 0.6); font-weight: 800; padding: 0 18px; height: 40px; border-radius: 99px;" ${playerCargoOreLength > 0 && freeDepot > 0 ? '' : 'disabled'}>
-          ${icon('arrow-down-to-line', '', 16)}
-          <span>Alle Erze einlagern</span>
-          <span style="background: rgba(255,255,255,0.22); padding: 1px 7px; border-radius: 99px; font-size: 11px; font-weight: 800;">${playerCargoOreLength}</span>
+        <button id="btn-depot-all-ores" class="btn-buy btn-flyover" style="gap: 6px;" ${playerCargoOreLength > 0 && freeDepot > 0 ? '' : 'disabled'}>
+          ${icon('arrow-down-to-line', '', 14)}
+          <span>Alle Erze einlagern (${playerCargoOreLength})</span>
         </button>
       `, (container) => {
         const btn = container.querySelector('#btn-depot-all-ores');
