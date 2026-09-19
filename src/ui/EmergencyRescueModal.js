@@ -136,7 +136,7 @@ export class EmergencyRescueModal {
               </div>
               <div>
                 <strong style="color: #f8fafc;">Einsatzbefehl der Grubenwehr:</strong><br>
-                Bergefahrzeug rückt aus, schleppt deinen Crawler an die Oberfläche und betankt ihn mit Notreserve.
+                Bergefahrzeug rückt aus, schleppt dein Fahrzeug an die Oberfläche und betankt es mit Notreserve.
               </div>
             </div>
 
@@ -173,7 +173,7 @@ export class EmergencyRescueModal {
               cursor: pointer;
             ">
               ${icon('truck', '', 15)}
-              <span>Crawler bergen</span>
+              <span>Fahrzeug bergen</span>
             </button>
 
             ${canUseCanister ? `
@@ -286,7 +286,7 @@ export class EmergencyRescueModal {
               </div>
               <div>
                 <strong style="color: #f8fafc;">Einsatzbefehl der Grubenwehr:</strong><br>
-                Bergefahrzeug rückt aus, schleppt deinen Crawler an die Oberfläche und betankt ihn mit Notreserve.
+                Bergefahrzeug rückt aus, schleppt dein Fahrzeug an die Oberfläche und betankt es mit Notreserve.
               </div>
             </div>
           </div>
@@ -306,7 +306,7 @@ export class EmergencyRescueModal {
               cursor: pointer;
             ">
               ${icon('truck', '', 15)}
-              <span>Crawler bergen</span>
+              <span>Fahrzeug bergen</span>
             </button>
 
             ${canUseCanister ? `

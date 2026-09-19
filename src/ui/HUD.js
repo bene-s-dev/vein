@@ -1496,7 +1496,7 @@ export class HUD {
             <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">Verkaufe geförderte Rohstoffe und Fabrik-Erzeugnisse. Bietet freie Mengenauswahl und Sofort-Verkauf aller Erze.</div>
           </div>
           <div style="background: rgba(15, 23, 42, 0.65); border: none; border-radius: 10px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">
-            <div style="font-size: 12px; font-weight: 700; color: #34d399; margin-bottom: 2px; display: flex; align-items: center; gap: 5px;">${icon('wrench', '', 14)} Hangar (Crawler-Werkstatt)</div>
+            <div style="font-size: 12px; font-weight: 700; color: #34d399; margin-bottom: 2px; display: flex; align-items: center; gap: 5px;">${icon('wrench', '', 14)} Hangar (Fahrzeug-Werkstatt)</div>
             <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">Tuning deines Bohrers, Treibstoff-Tanks, Frachtraums, Antriebs und Gehäuseschutzes. Automatisches Auftanken per Tankkabel an der Plattform.</div>
           </div>
           <div style="background: rgba(15, 23, 42, 0.65); border: none; border-radius: 10px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">

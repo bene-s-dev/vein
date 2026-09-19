@@ -14,7 +14,7 @@ export const INSURANCE_PLANS = [
     maxDepth: 50,
     price: 280,
     color: '#d97706',
-    desc: 'Basis-Schutz für die oberste Schicht (0–50 m). Bergungsdrohnen schleppen deinen Crawler bei Treibstoffmangel sicher an die Oberfläche.'
+    desc: 'Basis-Schutz für die oberste Schicht (0–50 m). Bergungsdrohnen schleppen dein Fahrzeug bei Treibstoffmangel sicher an die Oberfläche.'
   },
   {
     id: 'schist',
@@ -50,7 +50,7 @@ export const INSURANCE_PLANS = [
     maxDepth: 99999,
     price: 22000,
     color: '#ef4444',
-    desc: 'Ultimative Subraum-Bergungsmatrix. Schützt deinen Crawler bis in tiefste Kernzonen.'
+    desc: 'Ultimative Subraum-Bergungsmatrix. Schützt dein Fahrzeug bis in tiefste Kernzonen.'
   }
 ];
 
@@ -734,7 +734,7 @@ export class MissionsProgressModal {
               </div>
               <div style="font-size: 11.5px; color: #94a3b8; line-height: 1.4;">
                 ${active 
-                  ? `Dein Crawler ist bis <strong>${active.maxDepth} m</strong> Tiefe gegen Treibstoffmangel versichert. (Wird bei Rettung eingelöst)` 
+                  ? `Dein Fahrzeug ist bis <strong>${active.maxDepth} m</strong> Tiefe gegen Treibstoffmangel versichert. (Wird bei Rettung eingelöst)` 
                   : (isFirstFree 
                     ? 'Deine allererste Rettung ist kostenlos. Für spätere Notfälle muss hier eine Versicherung gekauft werden.' 
                     : 'Achtung: Treibstoffmangel ohne gültige Versicherung führt zum sofortigen <strong style="color: #f87171;">GAME OVER</strong>!')}

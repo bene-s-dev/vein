@@ -939,7 +939,7 @@ export class MinerBookModal {
             <span>§ 3 HÜLLE & PANZERUNG</span>
           </div>
           <div style="font-size: 11px; color: #cbd5e1; line-height: 1.5;">
-            Stürze aus großer Höhe, herabstürzende <strong>Felsbrocken</strong> und der Kontakt mit glühenden <strong>Lava-Adern</strong> beschädigen die Panzerung deines Fahrzeugs. Parke an der Oberfläche am <strong>Hangar</strong>, um deinen Crawler automatisch reparieren und vollbetanken zu lassen. Unter Tage kannst du Reparatur-Kits aus deinem Inventar einsetzen.
+            Stürze aus großer Höhe, herabstürzende <strong>Felsbrocken</strong> und der Kontakt mit glühenden <strong>Lava-Adern</strong> beschädigen die Panzerung deines Fahrzeugs. Parke an der Oberfläche am <strong>Hangar</strong>, um dein Fahrzeug automatisch reparieren und vollbetanken zu lassen. Unter Tage kannst du Reparatur-Kits aus deinem Inventar einsetzen.
           </div>
         </div>
 
@@ -952,7 +952,7 @@ export class MinerBookModal {
             Sollte dein Tank unter Tage komplett leerlaufen, erscheint automatisch ein Notfall-Rettungsbutton:<br>
             • Deine <strong>erste Bergung ist kostenlos</strong> und bringt dich sicher an die Oberfläche zurück.<br>
             • Für jede weitere Rettung musst du an der Oberfläche im <strong>Büro</strong> (Reiter <em>Versicherung</em>) einen <strong>Bergungsschutz</strong> für deine Zielschicht abschließen.<br>
-            • Läuft dein Tank ohne aktive Versicherung leer, gilt der Crawler als verschollen – <strong>Game Over</strong>!
+            • Läuft dein Tank ohne aktive Versicherung leer, gilt das Fahrzeug als verschollen – <strong>Game Over</strong>!
           </div>
         </div>
 
