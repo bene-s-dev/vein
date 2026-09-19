@@ -5771,6 +5771,7 @@ export class BaseSystem {
     const pctCraft = currentCraft ? Math.min(100, Math.max(0, Math.round(((currentCraft.durationMs - currentCraft.remainingMs) / currentCraft.durationMs) * 100))) : 0;
 
     const hasSmeltFuel = loadedCoal >= 1;
+    const hasCraftFuel = loadedCoal >= 2;
 
     let html = `
       <div style="display: flex; flex-direction: column; gap: 10px;">
@@ -5792,6 +5793,7 @@ export class BaseSystem {
               ${itemDisplayIcon('coal', 15)}
             </span>
             <strong style="color: #f8fafc; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase;">Brennkammer</strong>
+            <span style="font-size: 10px; color: #94a3b8; font-weight: 600;">(Ofen: 1x &bull; Maschine: 2x)</span>
           </div>
 
           <div style="display: flex; align-items: center; gap: 8px;">
@@ -5993,7 +5995,7 @@ export class BaseSystem {
                 ${craftQueue.length > 1 ? `<span style="font-size: 9.5px; color: #94a3b8; background: rgba(0,0,0,0.35); padding: 1px 5px; border-radius: 4px;">+${craftQueue.length - 1}</span>` : ''}
               </span>
             ` : `
-              <span style="color: #64748b;">${currentTierData.name} &bull; Bereit zur Fertigung</span>
+              <span style="color: ${hasCraftFuel ? '#64748b' : '#f87171'};">${hasCraftFuel ? `${currentTierData.name} &bull; Verbraucht 2x Kohle aus Brennkammer pro Fertigung` : 'Keine Kohle in Brennkammer (2x nötig) &bull; Bitte oben Kohle laden'}</span>
             `}
           </div>
 
@@ -6019,7 +6021,7 @@ export class BaseSystem {
               let prodsHtml = '';
               for (const [prodId, prod] of visibleFactoryProducts) {
                 const isTierLocked = (prod.minTier || 1) > currentTier;
-                let canCraft = !isTierLocked;
+                let canCraft = !isTierLocked && hasCraftFuel;
                 const ingBadges = Object.entries(prod.recipe).map(([ore, need]) => {
                   const inCargo = cargoCounts[ore] || 0;
                   const inDepot = this.depot?.ores?.[ore] || 0;
@@ -6040,10 +6042,13 @@ export class BaseSystem {
                       <strong style="color: #f8fafc; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${prod.name}</strong>
                     </div>
 
-                    <!-- Spalte 2: Fertigungs-Dauer (68px) -->
-                    <div style="width: 68px; min-width: 68px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
-                      <span style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); padding: 2px 7px; border-radius: 6px; font-size: 10.5px; color: #94a3b8; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 4px; width: 100%; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
+                    <!-- Spalte 2: Fertigungs-Dauer & Brennkammer-Brennstoff -->
+                    <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+                      <span style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); padding: 2px 7px; border-radius: 6px; font-size: 10.5px; color: #94a3b8; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 4px; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
                         ${icon('clock', '', 10)} ${prod.durationSec}s
+                      </span>
+                      <span style="background: ${hasCraftFuel ? 'rgba(249, 115, 22, 0.12)' : 'rgba(239, 68, 68, 0.12)'}; border: 1px solid ${hasCraftFuel ? 'rgba(249, 115, 22, 0.3)' : 'rgba(239, 68, 68, 0.35)'}; padding: 2px 7px; border-radius: 6px; font-size: 10.5px; color: ${hasCraftFuel ? '#fb923c' : '#f87171'}; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 4px; box-sizing: border-box; white-space: nowrap;" title="Verbraucht 2x Kohle aus der Brennkammer">
+                        ${icon('flame', '', 10)} 2x Kohle
                       </span>
                     </div>
 
@@ -6059,7 +6064,7 @@ export class BaseSystem {
                           ${icon('lock', '', 11)} Stufe ${prod.minTier}
                         </span>
                       ` : `
-                        <button class="btn-craft-product btn-buy" data-prod="${prodId}" ${canCraft ? '' : 'disabled'} style="width: 100%; height: 32px; padding: 0 10px; font-size: 11.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 6px;" title="${canCraft ? 'Produkt herstellen' : 'Nicht genügend Materialien im Frachtraum oder Depot'}">
+                        <button class="btn-craft-product btn-buy" data-prod="${prodId}" ${canCraft ? '' : 'disabled'} style="width: 100%; height: 32px; padding: 0 10px; font-size: 11.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 6px;" title="${!hasCraftFuel ? 'Brennkammer benötigt 2x Kohle!' : (canCraft ? 'Produkt herstellen' : 'Nicht genügend Materialien im Frachtraum oder Depot')}">
                           ${icon('hammer', '', 13)} Herstellen
                         </button>
                       `}
@@ -6160,6 +6165,13 @@ export class BaseSystem {
       return;
     }
 
+    const fuelNeeded = 2;
+    const loadedFuel = this.refinery.fuelCoal || 0;
+    if (loadedFuel < fuelNeeded) {
+      this.scene.events.emit('notify', `⚠️ Brennkammer benötigt ${fuelNeeded}x Kohle! Bitte erst oben in die Brennkammer einfüllen.`);
+      return;
+    }
+
     const cargoCounts = {};
     this.player.cargo.forEach(ore => {
       cargoCounts[ore] = (cargoCounts[ore] || 0) + 1;
@@ -6180,6 +6192,9 @@ export class BaseSystem {
         this.consumeSingleOre(ore);
       }
     }
+
+    // 2. Brennkammer-Brennstoff verbrauchen
+    this.refinery.fuelCoal = Math.max(0, (this.refinery.fuelCoal || 0) - fuelNeeded);
 
     const durationMs = prod.durationSec * 1000;
     this.refinery.queue.push({
