@@ -382,6 +382,141 @@ export class Player {
     }).setDepth(9);
   }
 
+  resetToDefault() {
+    this.name = (typeof localStorage !== 'undefined' && localStorage.getItem('vein_player_name')) || 'Fahrer_01';
+    this.cargo = [];
+    this.cash = 0;
+    this.discoveredOres = new Set();
+    this.seenGeologistQuests = new Set();
+    this.discoveredSpecialTiles = new Set();
+    this.discoveredProducts = new Set();
+    this.level = 1;
+    this.xp = 0;
+    this.xpNeeded = 350;
+    this.highestDepthReached = 0;
+
+    // Fahrzeug-Tiers & Erforschter Status im Labor (sauber auf Stufe 1 zurücksetzen)
+    this.drillTier = 1;
+    this.researchedDrillTier = 1;
+    this.cargoTier = 1;
+    this.researchedCargoTier = 1;
+    this.hullTier = 1;
+    this.researchedHullTier = 1;
+    this.engineTier = 1;
+    this.researchedEngineTier = 1;
+    this.tankTier = 1;
+    this.researchedTankTier = 1;
+    this.sensorTier = 1;
+    this.researchedSensorTier = 1;
+    this.batteryTier = 1;
+
+    // Infrastruktur-Forschung (0 = noch nicht erforscht)
+    this.researchedTnt = 0;
+    this.researchedEmergency = 0;
+    this.researchedStationFuel = 0;
+    this.researchedStationTube = 0;
+
+    // Fahrzeug-Attribute
+    this.drillPower = 38;
+    this.maxCargo = 12;
+    this.maxHull = 50;
+    this.hull = 50;
+    this._hullBrokenToastShown = false;
+    this.maxFuel = 40;
+    this.fuel = 40;
+    this.fuelEfficiency = 1.0;
+    this.moveDuration = 230;
+    this.flightSpeed = 140;
+    this.moveSpeed = Math.max(80, TILE_SIZE / (this.moveDuration / 1000));
+    this.sensorRadius = 1.6;
+
+    // Sicherheit & Rettung
+    this.freeRescues = 1;
+    this.firstRescueUsed = false;
+    this.activeInsurance = null;
+    this.isGameOver = false;
+    this.hasPurchasedDynamite = false;
+
+    // Gadgets & Komponenten
+    this.gadgets = {
+      dynamite: 0,
+      fuel_canister: 0,
+      repair_kit: 0
+    };
+
+    this.components = {
+      hydraulic_part: 0,
+      titan_alloy: 0,
+      laser_lens: 0,
+      quantum_chip: 0,
+      iron_tube: 0,
+      bronze_gear: 0,
+      silver_coil: 0,
+      crystal_lens: 0,
+      titan_bolt: 0,
+      quantum_core: 0,
+      microprocessor: 0,
+      capacitor: 0,
+      spectrometer: 0,
+      plasma_regulator: 0,
+      graviton_core: 0,
+      quantum_processor: 0
+    };
+
+    this.factoryProducts = {
+      steel_beam: 0,
+      bronze_ingot: 0,
+      circuit_board: 0,
+      sapphire_glass: 0,
+      polished_gem: 0,
+      titan_plate: 0,
+      obsidian_matrix: 0,
+      fusion_rod: 0
+    };
+
+    this.stats = {
+      totalTilesMined: 0,
+      totalOresMined: {},
+      totalCashEarned: 0,
+      missionsCompleted: 0,
+      researchCompleted: 0
+    };
+
+    // Subsysteme & Texturen aktualisieren
+    this.upgradeDrill(1);
+    this.upgradeEngine(1);
+    this.upgradeHull(1);
+    this.upgradeCargo(1);
+    this.upgradeTank(1);
+    this.upgradeSensor(1, 1.6);
+
+    // Position an der Oberfläche
+    this.gx = 15;
+    this.gy = -1;
+    this.x = 15 * TILE_SIZE + TILE_SIZE / 2;
+    this.y = -1 * TILE_SIZE + TILE_SIZE / 2;
+    this.moveTargetGx = this.gx;
+    this.moveTargetGy = this.gy;
+    this.moveTargetX = this.x;
+    this.moveTargetY = this.y;
+    this.state = 'idle';
+    this._lastEmittedDepth = -1;
+
+    if (this.scene?.tweens && this.sprite) {
+      this.scene.tweens.killTweensOf(this.sprite);
+    }
+    if (this.sprite) {
+      this.sprite.setPosition(this.x, this.y);
+    }
+    if (this.headlight) {
+      this.headlight.setPosition(this.x, this.y).setVisible(false);
+    }
+    if (this.scannerRing) {
+      this.scannerRing.setPosition(this.x, this.y);
+    }
+    this.syncAttachments?.();
+  }
+
   get depthMeters() {
     return Math.max(0, Math.floor(this.gy));
   }

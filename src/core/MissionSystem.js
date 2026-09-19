@@ -780,6 +780,16 @@ export class MissionSystem {
     this.scene.events.emit('mission_updated', this.getMissionStatus());
   }
 
+  resetAll() {
+    this.availableMissions = [];
+    this.activeMission = null;
+    this.progress = 0;
+    this.isCompleted = false;
+    this.ensureAvailableMissions(3);
+    this.checkCurrentProgress();
+    this.scene.events.emit('mission_updated', this.getMissionStatus());
+  }
+
   getMissionStatus() {
     this.syncActiveMission();
     if (!this.activeMission) return null;

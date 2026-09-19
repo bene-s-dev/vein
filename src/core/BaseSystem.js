@@ -2042,6 +2042,56 @@ export class BaseSystem {
     this.updateSurfaceVisuals();
   }
 
+  resetToDefault() {
+    this.hangarTier = 1;
+    this.updateHangarBuildingLabel?.();
+
+    if (this.depot) {
+      this.depot.tier = 1;
+      this.depot.capacity = 10;
+      this.depot.ores = {};
+      this.depot.products = {};
+      this.depot.currentTab = 'ores';
+    }
+
+    if (this.refinery) {
+      this.refinery.fuelCoal = 0;
+      this.refinery.machineTier = 1;
+      this.refinery.queue = [];
+      this.refinery.finished = [];
+      this.refinery.activeProcesses = [];
+      this.refinery.completedItems = [];
+      this.refinery.lastTimestamp = Date.now();
+    }
+
+    if (this.purchasableBuildings) {
+      this.purchasableBuildings.forEach(pb => {
+        pb.isBuilt = false;
+        pb.storedOres = [];
+        pb.accumulatedCash = 0;
+        if (pb.sprite) {
+          pb.sprite.setTexture('building_plot');
+          pb.sprite.setAlpha(0.85);
+        }
+        if (pb.textLabel) {
+          pb.textLabel.setText(`BAUPLATZ: ${pb.label || pb.title}`);
+          pb.textLabel.setColor('#fb923c');
+        }
+      });
+    }
+
+    if (this.subsurfaceStations) {
+      this.subsurfaceStations.forEach(st => {
+        if (st.sprite) st.sprite.destroy();
+        if (st.textLabel) st.textLabel.destroy();
+      });
+    }
+    this.subsurfaceStations = [];
+
+    this.updateBuildingVisuals?.();
+    this.updateSurfaceVisuals?.();
+  }
+
   openModal(title, contentHtml, maxWidth = 760) {
     try {
       soundFx.stopAllLoops?.();

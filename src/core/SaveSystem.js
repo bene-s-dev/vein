@@ -732,6 +732,68 @@ export class SaveSystem {
     }
   }
 
+  static resetToNewGame(scene) {
+    if (!scene) return;
+    SaveSystem.isClearing = true;
+
+    // 1. Storage des aktiven Slots leeren
+    try {
+      const activeKey = SaveSystem.getSlotKey(SaveSystem.getActiveSlotId());
+      localStorage.removeItem(activeKey);
+    } catch (e) {
+      console.warn(e);
+    }
+
+    // 2. Spieler komplett auf saubere Standardwerte (alle Tiers 1, keine Forschungen) zurücksetzen
+    if (scene.player && typeof scene.player.resetToDefault === 'function') {
+      scene.player.resetToDefault();
+    }
+
+    // 3. GridSystem komplett leeren (frische unberührte Welt)
+    if (scene.gridSystem) {
+      const gs = scene.gridSystem;
+      gs.tiles.clear();
+      if (gs.destroyedTiles) gs.destroyedTiles.clear();
+      if (gs.exploredTiles) gs.exploredTiles.clear();
+      if (gs.exploredStamps) gs.exploredStamps = [];
+      if (gs.clearAllSprites) gs.clearAllSprites();
+      gs.fogDirty = true;
+      gs.fogBufferReady = false;
+      gs.lastCamX = null;
+      gs.lastCamY = null;
+    }
+
+    // 4. BaseSystem (Hangar, Depot, Fabrik, Gebäude, Stationen) zurücksetzen
+    if (scene.baseSystem && typeof scene.baseSystem.resetToDefault === 'function') {
+      scene.baseSystem.resetToDefault();
+    }
+
+    // 5. MissionSystem zurücksetzen
+    if (scene.missionSystem && typeof scene.missionSystem.resetAll === 'function') {
+      scene.missionSystem.resetAll();
+    }
+
+    // 6. Kamera, Rekordmarken & HUD zurücksetzen
+    scene._lastSubmittedLeaderboardDepth = 0;
+    if (typeof scene.setupCamera === 'function') {
+      scene.setupCamera();
+    }
+    if (scene.hud) {
+      scene.hud._lastDepth = -1;
+      if (typeof scene.hud.update === 'function') {
+        scene.hud.update();
+      }
+    }
+    if (scene.gridSystem && scene.cameras?.main && scene.player) {
+      scene.gridSystem.updateViewport(scene.cameras.main, scene.player);
+    }
+
+    SaveSystem.isClearing = false;
+
+    // 7. Sauberen Anfangsspielstand sofort abspeichern
+    SaveSystem.save(scene);
+  }
+
   // =========================================================
   // ENTWICKLERMODUS: PRESET GENERATOR
   // Erstellt fiktiven, detailgetreuen Spielfortschritt inklusive

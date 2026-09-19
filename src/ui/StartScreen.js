@@ -479,90 +479,18 @@ export class StartScreen {
     }
 
     if (!continueSave) {
-      // 1. Aktuellen Slot bereinigen
-      SaveSystem.clear();
-      SaveSystem.isClearing = false;
+      // Kompletten Spielzustand auf ein echtes, sauberes neues Spiel zurücksetzen
+      // (Alle Labor-Forschungen, Ausrüstungs-Tiers, Fabrik, Depot & Welt komplett auf Stufe 1/Leer)
+      SaveSystem.resetToNewGame(this.scene);
 
-      // 2. Spieler komplett auf sauberen Startzustand an die Oberfläche setzen
       if (this.scene && this.scene.player) {
-        const p = this.scene.player;
-        p.cargo = [];
-        p.cash = 0;
-        p.discoveredOres = new Set();
-        p.seenGeologistQuests = new Set();
-        p.level = 1;
-        p.xp = 0;
-        p.xpNeeded = 350;
-        p.highestDepthReached = 0;
-        p.drillTier = 1;
-        p.cargoTier = 1;
-        p.hullTier = 1;
-        p.engineTier = 1;
-        p.tankTier = 1;
-        p.sensorTier = 1;
-        p.maxCargo = 12;
-        p.maxHull = 50;
-        p.hull = 50;
-        p.maxFuel = 40;
-        p.fuel = 40;
-        p.freeRescues = 1;
-        p.firstRescueUsed = false;
-        p.activeInsurance = null;
-        p.isGameOver = false;
-        p.hasPurchasedDynamite = false;
-        p.researchedTnt = 0;
-        p.researchedEmergency = 0;
-        p.researchedStationFuel = 0;
-        p.researchedStationTube = 0;
-        p.gadgets = { dynamite: 0, fuel_canister: 0, repair_kit: 0 };
-        p.components = {
-          hydraulic_part: 0,
-          titan_alloy: 0,
-          laser_lens: 0,
-          quantum_chip: 0,
-          iron_tube: 0,
-          bronze_gear: 0,
-          silver_coil: 0,
-          crystal_lens: 0,
-          titan_bolt: 0,
-          quantum_core: 0,
-          microprocessor: 0,
-          capacitor: 0,
-          spectrometer: 0,
-          plasma_regulator: 0,
-          graviton_core: 0,
-          quantum_processor: 0
-        };
-        p.factoryProducts = {};
-        p.gx = 15;
-        p.gy = -1;
-        p.x = 15 * 32 + 16;
-        p.y = -1 * 32 + 16;
-        if (p.sprite) {
-          p.sprite.setPosition(p.x, p.y);
-        }
-      }
-
-      // 3. GridSystem komplett zurücksetzen (unberührte, saubere prozedurale Welt)
-      if (this.scene && this.scene.gridSystem) {
-        const gs = this.scene.gridSystem;
-        gs.tiles.clear();
-        if (gs.destroyedTiles) gs.destroyedTiles.clear();
-        if (gs.exploredTiles) gs.exploredTiles.clear();
-        if (gs.clearAllSprites) gs.clearAllSprites();
-        gs.fogDirty = true;
-        gs.fogBufferReady = false;
-      }
-
-      // 4. Rekord-Übermittlungsstatus zurücksetzen
-      if (this.scene) {
-        this.scene._lastSubmittedLeaderboardDepth = 0;
+        this.scene.player.name = finalName;
       }
       try {
         localStorage.removeItem('vein_last_submitted_depth');
       } catch (_) {}
 
-      // 5. Frischen Spielstand anlegen
+      // Sauberen neuen Spielstand sichern
       SaveSystem.save(this.scene);
     }
 
