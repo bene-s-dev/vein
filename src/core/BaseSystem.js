@@ -283,6 +283,80 @@ export const HANGAR_TIERS = [
   }
 ];
 
+// Kaufbare Zusatzgebäude: Ausbaustufen 1 bis 3
+export const PURCHASABLE_BUILDING_TIERS = {
+  drone_hangar: [
+    {
+      tier: 1,
+      name: 'Standard-Hangar',
+      drones: 1,
+      intervalSec: 18,
+      capacity: 12,
+      oresDesc: 'Kohle, Kupfer, Eisen, Zinn',
+      ores: ['coal', 'copper', 'iron', 'tin'],
+      costCash: 3800,
+      costComp: { iron_tube: 4, bronze_gear: 2, microprocessor: 1 },
+      desc: '1 autonome Bergbau-Drohne fördert periodisch Basis-Erze an die Oberfläche.'
+    },
+    {
+      tier: 2,
+      name: 'Drohnen-Geschwader Mk.II',
+      drones: 2,
+      intervalSec: 12,
+      capacity: 24,
+      oresDesc: '+ Silber, Gold',
+      ores: ['coal', 'copper', 'iron', 'tin', 'silver', 'gold'],
+      costCash: 12500,
+      costComp: { iron_tube: 6, bronze_gear: 4, microprocessor: 2, capacitor: 2 },
+      desc: '2 Drohnen im Dauerflug: Schnellere Schürfzyklen (12s), doppeltes Silo (24 Erze) und Silber & Gold im Suchraster.'
+    },
+    {
+      tier: 3,
+      name: 'Quanten-Drohnenmatrix Mk.III',
+      drones: 3,
+      intervalSec: 8,
+      capacity: 40,
+      oresDesc: '+ Smaragd, Rubin, Diamant, Titan',
+      ores: ['coal', 'copper', 'iron', 'tin', 'silver', 'gold', 'emerald', 'ruby', 'diamond', 'titanium'],
+      costCash: 38000,
+      costComp: { silver_coil: 4, crystal_lens: 3, spectrometer: 2, titan_bolt: 2 },
+      desc: '3 Quanten-Drohnen mit Tiefensensoren: Höchstgeschwindigkeit (8s), Großraumsilo (40 Erze) & Schürfen seltener Edelsteine und Titan.'
+    }
+  ],
+  powerplant: [
+    {
+      tier: 1,
+      name: 'Geothermie-Turbine I',
+      cashPerTick: 65,
+      fuelMult: 2.0,
+      repairMult: 1.5,
+      costCash: 18500,
+      costComp: { iron_tube: 4, silver_coil: 4, crystal_lens: 2, capacitor: 2 },
+      desc: 'Generiert +€65 alle 8s und versorgt den Hangar mit Starkstrom (2.0x Tank- & 1.5x Reparatur-Speed).'
+    },
+    {
+      tier: 2,
+      name: 'Magma-Konvektionsgenerator II',
+      cashPerTick: 150,
+      fuelMult: 2.5,
+      repairMult: 2.0,
+      costCash: 48000,
+      costComp: { silver_coil: 6, crystal_lens: 4, plasma_regulator: 2, titan_bolt: 3 },
+      desc: 'Mehr als verdoppelter Stromertrag (+€150 alle 8s) und beschleunigte Hangarversorgung (2.5x Tank- & 2.0x Reparatur-Speed).'
+    },
+    {
+      tier: 3,
+      name: 'Quanten-Fusionskraftwerk III',
+      cashPerTick: 320,
+      fuelMult: 3.5,
+      repairMult: 3.0,
+      costCash: 120000,
+      costComp: { titan_bolt: 4, quantum_core: 2, graviton_core: 2, spectrometer: 2 },
+      desc: 'Ultimative Fusionsenergie: +€320 alle 8s passiv und maximale Hangar-Ladeleistung (3.5x Tank- & 3.0x Reparatur-Speed).'
+    }
+  ]
+};
+
 // Expeditions-Ausrüstung, Untertage-Stationen & Notfall-Verbrauchsgüter
 export const EXPEDITION_ITEMS = [
   // 1. Erzförderung (Pneumatische Förderstationen) nach 5 Schichten in 3 Preisstufen
@@ -850,12 +924,10 @@ export class BaseSystem {
         spriteKey: 'building_drone_hangar',
         gx: -16,
         height: 70,
-        costCash: 3800,
-        costComp: {
-          iron_tube: 4,
-          bronze_gear: 2,
-          microprocessor: 1
-        },
+        tier: 1,
+        maxTier: 3,
+        costCash: PURCHASABLE_BUILDING_TIERS.drone_hangar[0].costCash,
+        costComp: PURCHASABLE_BUILDING_TIERS.drone_hangar[0].costComp,
         isBuilt: false,
         storedOres: ['coal', 'copper'],
         timer: 0,
@@ -871,13 +943,10 @@ export class BaseSystem {
         spriteKey: 'building_powerplant',
         gx: 42,
         height: 76,
-        costCash: 18500,
-        costComp: {
-          iron_tube: 4,
-          silver_coil: 4,
-          crystal_lens: 2,
-          capacitor: 2
-        },
+        tier: 1,
+        maxTier: 3,
+        costCash: PURCHASABLE_BUILDING_TIERS.powerplant[0].costCash,
+        costComp: PURCHASABLE_BUILDING_TIERS.powerplant[0].costComp,
         isBuilt: false,
         timer: 0,
         accumulatedCash: 0,
@@ -1145,7 +1214,8 @@ export class BaseSystem {
         .setOrigin(0.5, 1.0)
         .setInteractive({ useHandCursor: true });
 
-      const labelText = pb.isBuilt ? (pb.label || pb.title) : `BAUPLATZ: ${pb.label || pb.title}`;
+      const tierStr = (pb.isBuilt && (pb.tier || 1) > 1) ? ` Lvl ${pb.tier}` : '';
+      const labelText = pb.isBuilt ? `${pb.label || pb.title}${tierStr}` : `BAUPLATZ: ${pb.label || pb.title}`;
       const textColor = pb.isBuilt ? '#ffffff' : '#fb923c';
 
       const onTriggerPb = (pointer) => {
@@ -1290,27 +1360,36 @@ export class BaseSystem {
     this.purchasableBuildings.forEach((pb) => {
       if (!pb.isBuilt) return;
 
-      // 1. Drohnen-Hangar: Bringt alle 18 Sekunden Erze
+      // 1. Drohnen-Hangar: Bringt periodisch Erze je nach Ausbaustufe (Lvl 1-3)
       if (pb.id === 'drone_hangar') {
+        const curTier = Math.max(1, Math.min(3, pb.tier || 1));
+        const tierData = PURCHASABLE_BUILDING_TIERS.drone_hangar[curTier - 1];
+        const interval = tierData?.intervalSec || 18;
+        const maxCapacity = tierData?.capacity || 12;
+        const oreCandidates = tierData?.ores || ['coal', 'copper', 'iron', 'tin'];
+
         pb.timer = (pb.timer || 0) + dt;
-        if (pb.timer >= 18) {
+        if (pb.timer >= interval) {
           pb.timer = 0;
-          const randomOres = ['coal', 'copper', 'iron', 'tin'];
-          const picked = randomOres[Math.floor(Math.random() * randomOres.length)];
+          const picked = oreCandidates[Math.floor(Math.random() * oreCandidates.length)];
           pb.storedOres = pb.storedOres || [];
-          if (pb.storedOres.length < 12) {
+          if (pb.storedOres.length < maxCapacity) {
             pb.storedOres.push(picked);
           }
         }
       }
 
-      // 2. Geothermie-Kraftwerk: +€35 alle 8 Sekunden
+      // 2. Geothermie-Kraftwerk: Passiver Stromertrag je nach Ausbaustufe (Lvl 1-3)
       if (pb.id === 'powerplant') {
+        const curTier = Math.max(1, Math.min(3, pb.tier || 1));
+        const tierData = PURCHASABLE_BUILDING_TIERS.powerplant[curTier - 1];
+        const income = tierData?.cashPerTick || 65;
+
         pb.timer = (pb.timer || 0) + dt;
         if (pb.timer >= 8) {
           pb.timer = 0;
-          this.player.cash += 65;
-          pb.accumulatedCash = (pb.accumulatedCash || 0) + 65;
+          this.player.cash += income;
+          pb.accumulatedCash = (pb.accumulatedCash || 0) + income;
         }
       }
     });
@@ -5008,25 +5087,100 @@ export class BaseSystem {
   // 4a. Drohnen-Hangar Modal
   openDroneModal() {
     const pb = this.purchasableBuildings.find(b => b.id === 'drone_hangar');
+    const curTier = Math.max(1, Math.min(3, pb.tier || 1));
+    const tiers = PURCHASABLE_BUILDING_TIERS.drone_hangar;
+    const curData = tiers[curTier - 1];
+    const hasNext = curTier < 3;
+    const nextData = hasNext ? tiers[curTier] : null;
+
     const ores = pb.storedOres || [];
     let oreList = ores.map(o => `<span style="background: rgba(255,255,255,0.08); padding: 3px 8px; border-radius: 6px; font-size: 12px; display: inline-flex; align-items: center; gap: 5px;">${oreIcon(o, 13)} ${ORE_DATA[o]?.name || o}</span>`).join(' ');
-    if (ores.length === 0) oreList = '<span style="color: #94a3b8; font-style: italic;">Drohne schürft aktuell...</span>';
+    if (ores.length === 0) oreList = '<span style="color: #94a3b8; font-style: italic;">Drohnen schürfen aktuell unter Tage...</span>';
+
+    // Upgrade-Bedingungen prüfen
+    let canAffordUpgrade = false;
+    let upgradeCompsHtml = [];
+    if (nextData) {
+      const canAffordCash = this.player.cash >= nextData.costCash;
+      let canAffordComps = true;
+      for (const [key, count] of Object.entries(nextData.costComp)) {
+        const have = this.player.components[key] || 0;
+        if (have < count) canAffordComps = false;
+        const cName = COMPONENT_DATA[key]?.name || key;
+        const compIcon = COMPONENT_ICONS[key] || 'box';
+        const isMet = have >= count;
+        upgradeCompsHtml.push(`
+          <span style="background: ${isMet ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'}; border: 1px solid ${isMet ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'}; color: ${isMet ? '#34d399' : '#f87171'}; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+            ${icon(compIcon, '', 12)} ${cName}: <span style="font-variant-numeric: tabular-nums;">${have}/${count}</span>
+          </span>
+        `);
+      }
+      canAffordUpgrade = canAffordCash && canAffordComps;
+    }
 
     const content = `
       <div style="display: flex; flex-direction: column; gap: 14px;">
-        <p style="font-size: 12px; color: #94a3b8;">
-          Die automatisierte Drohne erkundet das Minengebiet und lagert gefundene Mineralien im Silo ein.
+        <!-- Aktueller Status & Stufen-Badge -->
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="font-size: 11px; color: #38bdf8; font-weight: 800; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); padding: 2px 8px; border-radius: 6px;">Stufe ${curTier}/3: ${curData.name}</span>
+          </div>
+          <span style="font-size: 11.5px; color: #94a3b8; font-weight: 600;">
+            ${curData.drones}x Drohne(n) &bull; Zyklus: ${curData.intervalSec}s &bull; Silo: ${curData.capacity}
+          </span>
+        </div>
+
+        <p style="font-size: 12.5px; color: var(--text-muted); line-height: 1.45; margin: 0;">
+          ${curData.desc}
         </p>
-        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px;">
-          <strong style="color: #f8fafc; font-size: 13px; display: block; margin-bottom: 6px;">Eingelagerte Drohnen-Funde (${ores.length}/12):</strong>
-          <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+
+        <!-- Silo & Funde -->
+        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <strong style="color: #f8fafc; font-size: 12px; text-transform: uppercase;">Eingelagerte Drohnen-Funde:</strong>
+            <span style="font-size: 11.5px; font-weight: 700; color: ${ores.length >= curData.capacity ? '#ef4444' : '#38bdf8'}; font-variant-numeric: tabular-nums;">
+              ${ores.length} / ${curData.capacity} Erze
+            </span>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px; min-height: 28px;">
             ${oreList}
           </div>
+          <button id="btn-collect-drone-ores" class="btn-buy btn-lg" ${ores.length === 0 ? 'disabled' : ''} style="width: 100%; margin-top: 4px;">
+            ${icon('container', '', 14)}
+            <span>${ores.length > 0 ? `ALLE FUNDE (${ores.length}) INS FAHRZEUG ÜBERTRAGEN` : 'SILO IST AKTUELL LEER'}</span>
+          </button>
         </div>
-        <button id="btn-collect-drone-ores" class="btn-buy btn-lg" ${ores.length === 0 ? 'disabled' : ''} style="width: 100%;">
-          ${icon('container', '', 14)}
-          <span>ALLE FUNDE INS FAHRZEUG ÜBERTRAGEN</span>
-        </button>
+
+        <!-- Ausbau-Sektion -->
+        ${hasNext ? `
+          <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <strong style="color: #38bdf8; font-size: 12px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 5px;">
+                ${icon('chevrons-up', '', 14)} Nächster Ausbau: Stufe ${nextData.tier} (${nextData.name})
+              </strong>
+            </div>
+            <p style="font-size: 11.5px; color: #94a3b8; line-height: 1.4; margin: 0;">
+              ${nextData.desc}
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <div style="font-size: 12.5px; display: flex; align-items: center; gap: 6px;">
+                <span style="color: #94a3b8;">Kosten:</span>
+                <strong style="color: ${this.player.cash >= nextData.costCash ? '#fbbf24' : '#f87171'};">€${nextData.costCash.toLocaleString('de-DE')}</strong>
+              </div>
+              <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                ${upgradeCompsHtml.join('')}
+              </div>
+            </div>
+            <button id="btn-upgrade-drone-hangar" class="btn-buy" ${canAffordUpgrade ? '' : 'disabled'} style="width: 100%; height: 34px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+              ${icon('arrow-up-circle', '', 14)}
+              <span>DROHNEN-HANGAR AUF STUFE ${nextData.tier} AUSBAUEN</span>
+            </button>
+          </div>
+        ` : `
+          <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 10px; text-align: center; font-size: 12px; color: #34d399; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+            ${icon('check-circle', '', 15)} Maximale Ausbaustufe 3 erreicht (Quanten-Drohnenmatrix aktiv)
+          </div>
+        `}
       </div>
     `;
 
@@ -5036,8 +5190,6 @@ export class BaseSystem {
         <span>DROHNEN-HANGAR</span>
       </div>
     `, content);
-
-
 
     const btnCollect = document.getElementById('btn-collect-drone-ores');
     if (btnCollect) {
@@ -5053,29 +5205,105 @@ export class BaseSystem {
         this.scene.events.emit('notify', `${moved} Erze aus dem Drohnen-Hangar übernommen!`);
       };
     }
+
+    const btnUpgrade = document.getElementById('btn-upgrade-drone-hangar');
+    if (btnUpgrade) {
+      btnUpgrade.onclick = () => this.upgradePurchasableBuilding('drone_hangar');
+    }
   }
 
-
-
-  // 4c. Geothermie-Kraftwerk Modal
+  // 4b. Geothermie-Kraftwerk Modal
   openPowerplantModal() {
     const pb = this.purchasableBuildings.find(b => b.id === 'powerplant');
+    const curTier = Math.max(1, Math.min(3, pb.tier || 1));
+    const tiers = PURCHASABLE_BUILDING_TIERS.powerplant;
+    const curData = tiers[curTier - 1];
+    const hasNext = curTier < 3;
+    const nextData = hasNext ? tiers[curTier] : null;
     const totalAcc = pb.accumulatedCash || 0;
+
+    // Upgrade-Bedingungen prüfen
+    let canAffordUpgrade = false;
+    let upgradeCompsHtml = [];
+    if (nextData) {
+      const canAffordCash = this.player.cash >= nextData.costCash;
+      let canAffordComps = true;
+      for (const [key, count] of Object.entries(nextData.costComp)) {
+        const have = this.player.components[key] || 0;
+        if (have < count) canAffordComps = false;
+        const cName = COMPONENT_DATA[key]?.name || key;
+        const compIcon = COMPONENT_ICONS[key] || 'box';
+        const isMet = have >= count;
+        upgradeCompsHtml.push(`
+          <span style="background: ${isMet ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'}; border: 1px solid ${isMet ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'}; color: ${isMet ? '#34d399' : '#f87171'}; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+            ${icon(compIcon, '', 12)} ${cName}: <span style="font-variant-numeric: tabular-nums;">${have}/${count}</span>
+          </span>
+        `);
+      }
+      canAffordUpgrade = canAffordCash && canAffordComps;
+    }
 
     const content = `
       <div style="display: flex; flex-direction: column; gap: 14px;">
-        <p style="font-size: 12px; color: #94a3b8;">
-          Das Geothermie-Kraftwerk nutzt vulkanische Wärme der Schächte und speist saubere Energie ins Basis-Netzwerk ein.
-        </p>
-        <div style="background: #141c2c; border: 1px solid #10b981; border-radius: 8px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
-          <div>
-            <strong style="color: #10b981; font-size: 13px; display: block;">PASSIVER STROMERTRAG: AKTIV</strong>
-            <span style="font-size: 11px; color: #94a3b8;">Generiert automatisch +€35 alle 8 Sekunden</span>
+        <!-- Aktueller Status & Stufen-Badge -->
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="font-size: 11px; color: #f59e0b; font-weight: 800; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); padding: 2px 8px; border-radius: 6px;">Stufe ${curTier}/3: ${curData.name}</span>
           </div>
-          <span style="font-size: 13px; font-weight: 800; color: #fbbf24;">Gesamt generiert: €${totalAcc}</span>
-        <div style="background: #141c2c; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px; font-size: 12px; color: #38bdf8;">
-          Bonus-Effekt: Das Kraftwerk versorgt die Docking-Station mit Starkstrom (Verdoppelte Tank- und Reparatur-Geschwindigkeit)!
+          <span style="font-size: 12px; color: #34d399; font-weight: 800;">
+            +€${curData.cashPerTick} alle 8s
+          </span>
         </div>
+
+        <p style="font-size: 12.5px; color: var(--text-muted); line-height: 1.45; margin: 0;">
+          ${curData.desc}
+        </p>
+
+        <!-- Energie & Ertrag Info-Card -->
+        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <strong style="color: #10b981; font-size: 12.5px; display: block;">STROMERZEUGUNG AKTIV</strong>
+              <span style="font-size: 11px; color: #94a3b8;">Einspeisung: +€${curData.cashPerTick} / 8s ins Basis-Netz</span>
+            </div>
+            <span style="font-size: 12px; font-weight: 800; color: #fbbf24;">Gesamt: €${totalAcc.toLocaleString('de-DE')}</span>
+          </div>
+          <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 6px; padding: 8px 10px; font-size: 11.5px; color: #38bdf8; display: flex; align-items: center; gap: 6px;">
+            ${icon('zap', '', 13)}
+            <span>Starkstrom-Booster: <strong>${curData.fuelMult}x</strong> Tank- & <strong>${curData.repairMult}x</strong> Reparatur-Geschwindigkeit im Hangar!</span>
+          </div>
+        </div>
+
+        <!-- Ausbau-Sektion -->
+        ${hasNext ? `
+          <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <strong style="color: #f59e0b; font-size: 12px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 5px;">
+                ${icon('chevrons-up', '', 14)} Nächster Ausbau: Stufe ${nextData.tier} (${nextData.name})
+              </strong>
+            </div>
+            <p style="font-size: 11.5px; color: #94a3b8; line-height: 1.4; margin: 0;">
+              ${nextData.desc}
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <div style="font-size: 12.5px; display: flex; align-items: center; gap: 6px;">
+                <span style="color: #94a3b8;">Kosten:</span>
+                <strong style="color: ${this.player.cash >= nextData.costCash ? '#fbbf24' : '#f87171'};">€${nextData.costCash.toLocaleString('de-DE')}</strong>
+              </div>
+              <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                ${upgradeCompsHtml.join('')}
+              </div>
+            </div>
+            <button id="btn-upgrade-powerplant" class="btn-buy" ${canAffordUpgrade ? '' : 'disabled'} style="width: 100%; height: 34px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+              ${icon('arrow-up-circle', '', 14)}
+              <span>KRAFTWERK AUF STUFE ${nextData.tier} AUSBAUEN</span>
+            </button>
+          </div>
+        ` : `
+          <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 10px; text-align: center; font-size: 12px; color: #34d399; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+            ${icon('check-circle', '', 15)} Maximale Ausbaustufe 3 erreicht (Quanten-Fusionskraftwerk aktiv)
+          </div>
+        `}
       </div>
     `;
 
@@ -5085,6 +5313,48 @@ export class BaseSystem {
         <span>KRAFTWERK</span>
       </div>
     `, content);
+
+    const btnUpgrade = document.getElementById('btn-upgrade-powerplant');
+    if (btnUpgrade) {
+      btnUpgrade.onclick = () => this.upgradePurchasableBuilding('powerplant');
+    }
+  }
+
+  upgradePurchasableBuilding(buildingId) {
+    const pb = this.purchasableBuildings.find(b => b.id === buildingId);
+    if (!pb || !pb.isBuilt) return;
+
+    const curTier = Math.max(1, Math.min(3, pb.tier || 1));
+    if (curTier >= 3) return;
+
+    const tiers = PURCHASABLE_BUILDING_TIERS[buildingId];
+    if (!tiers) return;
+    const nextTierData = tiers[curTier];
+    if (!nextTierData) return;
+
+    if (this.player.cash < nextTierData.costCash) return;
+    for (const [key, count] of Object.entries(nextTierData.costComp)) {
+      if ((this.player.components[key] || 0) < count) return;
+    }
+
+    this.player.cash -= nextTierData.costCash;
+    for (const [key, count] of Object.entries(nextTierData.costComp)) {
+      this.player.components[key] -= count;
+    }
+
+    pb.tier = curTier + 1;
+    if (pb.textLabel) {
+      pb.textLabel.setText(`${pb.label || pb.title} Lvl ${pb.tier}`);
+    }
+
+    soundFx.playPurchase();
+    this.scene.events.emit('notify', `⚡ ${pb.title} auf Stufe ${pb.tier} (${nextTierData.name}) ausgebaut!`);
+
+    if (buildingId === 'drone_hangar') {
+      this.openDroneModal();
+    } else if (buildingId === 'powerplant') {
+      this.openPowerplantModal();
+    }
   }
 
   // =========================================================
@@ -5135,9 +5405,13 @@ export class BaseSystem {
       else if (!hasComps) missingHangarReason = `Fehlende Bauteile: ${missingComps.join(', ')}`;
     }
 
-    const hasPowerplant = !!(this.purchasableBuildings?.find(b => b.id === 'powerplant')?.isBuilt);
-    const effFuelSpeed = curHangarData.fuelSpeed * (hasPowerplant ? 2 : 1);
-    const effRepairSpeed = Math.round(curHangarData.repairSpeed * (hasPowerplant ? 1.5 : 1));
+    const pp = this.purchasableBuildings?.find(b => b.id === 'powerplant');
+    const hasPowerplant = !!(pp?.isBuilt);
+    const ppTier = Math.max(1, Math.min(3, pp?.tier || 1));
+    const fuelMult = hasPowerplant ? (ppTier === 3 ? 3.5 : (ppTier === 2 ? 2.5 : 2.0)) : 1;
+    const repairMult = hasPowerplant ? (ppTier === 3 ? 3.0 : (ppTier === 2 ? 2.0 : 1.5)) : 1;
+    const effFuelSpeed = Math.round(curHangarData.fuelSpeed * fuelMult);
+    const effRepairSpeed = Math.round(curHangarData.repairSpeed * repairMult);
 
     // Register-Tabs wie im Depot
     const dockTabs = [
@@ -5148,12 +5422,12 @@ export class BaseSystem {
     const tabNavHtml = `
       <div class="register-tab-bar">
         ${dockTabs.map(t => {
-          const isActive = currentTab === t.id;
+          const isActive = t.id === currentTab;
           return `
-            <button class="register-tab dock-tab-btn ${isActive ? 'active' : ''}" data-tab="${t.id}">
+            <button class="register-tab-btn ${isActive ? 'active' : ''}" data-tab="${t.id}">
               ${icon(t.icon, '', 14)}
               <span>${t.label}</span>
-              ${t.badge ? `<span class="tab-badge">${t.badge}</span>` : ''}
+              ${t.badge ? `<span class="badge">${t.badge}</span>` : ''}
             </button>
           `;
         }).join('')}
@@ -5167,26 +5441,17 @@ export class BaseSystem {
       let hangarUpgradeBtnHtml = '';
       if (hasNextHangar && nextHangarData) {
         hangarUpgradeBtnHtml = `
-          <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-shrink: 0; margin-left: auto; flex-wrap: nowrap;">
-            <span style="background: rgba(251, 191, 36, 0.14); color: ${this.player.cash >= nextHangarData.costCash ? '#fbbf24' : '#ef4444'}; font-weight: 800; font-size: 11.5px; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; flex-shrink: 0;">
-              ${icon('coins', '', 12)} €${nextHangarData.costCash.toLocaleString()}
-            </span>
-            ${compsBadgeHtml}
-            <div style="width: 105px; min-width: 105px; flex-shrink: 0;">
-              <button id="btn-upgrade-hangar-dock" class="btn-buy" style="width: 100%; height: 30px; padding: 0 6px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap; box-sizing: border-box;" ${canAffordHangar ? '' : 'disabled'} title="${missingHangarReason}">
-                ${icon('wrench', '', 12)}
-                <span>Ausbauen</span>
-              </button>
-            </div>
-          </div>
+          <button id="btn-upgrade-hangar-dock" class="btn-buy btn-sm" ${canAffordHangar ? '' : 'disabled'} style="white-space: nowrap; flex-shrink: 0;" title="${!canAffordHangar ? missingHangarReason : `Auf Stufe ${nextHangarData.tier} (${nextHangarData.name}) ausbauen`}">
+            ${icon('chevrons-up', '', 12)}
+            <span>Lvl ${nextHangarData.tier} &bull; €${nextHangarData.costCash.toLocaleString('de-DE')}</span>
+          </button>
         `;
       } else {
         hangarUpgradeBtnHtml = `
-          <div style="width: 105px; min-width: 105px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end; margin-left: auto;">
-            <span style="color: #10b981; font-weight: 800; font-size: 11px; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); padding: 3px 8px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; white-space: nowrap;">
-              ${icon('award', '', 12)} MAX
-            </span>
-          </div>
+          <span style="font-size: 11px; font-weight: 800; color: #10b981; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 6px; padding: 4px 10px; white-space: nowrap; flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px;">
+            ${icon('check', '', 12)}
+            <span>MAX</span>
+          </span>
         `;
       }
 
@@ -5203,7 +5468,7 @@ export class BaseSystem {
               </div>
               <div style="font-size: 10.5px; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                 Tankrate: <strong style="color: #38bdf8;">${effFuelSpeed} L/s</strong> &bull; Reparatur: <strong style="color: #10b981;">${effRepairSpeed} HP/s</strong>
-                ${hasPowerplant ? ' &bull; <span style="color: #f59e0b; font-weight: 700;">⚡ Kraftwerk x2</span>' : ''}
+                ${hasPowerplant ? ` &bull; <span style="color: #f59e0b; font-weight: 700;">⚡ Kraftwerk Lvl ${ppTier} (${fuelMult}x)</span>` : ''}
               </div>
             </div>
           </div>

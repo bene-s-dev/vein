@@ -154,6 +154,7 @@ export class SaveSystem {
       bs.purchasableBuildings.forEach((pb) => {
         buildingsData.push({
           id: pb.id,
+          tier: pb.tier || 1,
           isBuilt: !!pb.isBuilt,
           storedOres: pb.storedOres || [],
           accumulatedCash: pb.accumulatedCash || 0
@@ -578,6 +579,7 @@ export class SaveSystem {
             const savedB = (data.buildings || []).find(b => b.id === pb.id);
             const isBuilt = savedB ? !!savedB.isBuilt : false;
             pb.isBuilt = isBuilt;
+            pb.tier = Math.max(1, Math.min(3, Number(savedB?.tier) || 1));
             pb.storedOres = savedB?.storedOres || [];
             pb.accumulatedCash = savedB?.accumulatedCash || 0;
             if (pb.sprite) {
@@ -585,7 +587,8 @@ export class SaveSystem {
               pb.sprite.setAlpha(isBuilt ? 1.0 : 0.85);
             }
             if (pb.textLabel) {
-              pb.textLabel.setText(isBuilt ? (pb.label || pb.title) : `BAUPLATZ: ${pb.label || pb.title}`);
+              const tierStr = isBuilt && pb.tier > 1 ? ` Lvl ${pb.tier}` : '';
+              pb.textLabel.setText(isBuilt ? `${pb.label || pb.title}${tierStr}` : `BAUPLATZ: ${pb.label || pb.title}`);
               pb.textLabel.setColor(isBuilt ? '#ffffff' : '#fb923c');
             }
           });

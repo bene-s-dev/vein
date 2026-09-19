@@ -700,7 +700,9 @@ export class Player {
 
     const pp = baseSys?.purchasableBuildings?.find(b => b.id === 'powerplant') || baseSys?.buildings?.find(b => b.id === 'powerplant');
     if (pp?.isBuilt) {
-      speed *= 2;
+      const ppTier = Math.max(1, Math.min(3, pp.tier || 1));
+      const mult = ppTier === 3 ? 3.5 : (ppTier === 2 ? 2.5 : 2.0);
+      speed *= mult;
     }
     return speed;
   }
@@ -713,7 +715,9 @@ export class Player {
 
     const pp = baseSys?.purchasableBuildings?.find(b => b.id === 'powerplant') || baseSys?.buildings?.find(b => b.id === 'powerplant');
     if (pp?.isBuilt) {
-      speed *= 1.5;
+      const ppTier = Math.max(1, Math.min(3, pp.tier || 1));
+      const mult = ppTier === 3 ? 3.0 : (ppTier === 2 ? 2.0 : 1.5);
+      speed *= mult;
     }
     return speed;
   }
