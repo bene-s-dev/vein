@@ -843,10 +843,12 @@ export class MissionsProgressModal {
       researchCompleted: 0
     };
 
-    // Zähle gebaute Gebäude
+    // Zähle Basis-Infrastruktur (7 Start-Gebäude + bis zu 2 Erweiterungsbauten = 9 Gebäude)
     const bs = this.baseSystem;
-    const builtCount = bs ? bs.purchasableBuildings.filter(b => b.isBuilt).length : 0;
-    const totalBuildings = bs ? bs.purchasableBuildings.length : 3;
+    const baseBuildingCount = 7; // Labor, Büro, Erzbörse, Depot, Hangar, Schachteinteig, Fabrik
+    const purchasedBuilt = (bs && bs.purchasableBuildings) ? bs.purchasableBuildings.filter(b => b.isBuilt).length : 0;
+    const builtCount = baseBuildingCount + purchasedBuilt;
+    const totalBuildings = 9;
 
     // Maximale Tiefe (stets sauberer positiver Meterwert)
     const maxDepth = Math.max(0, Math.round(p.highestDepthReached || p.depthMeters || 0));
