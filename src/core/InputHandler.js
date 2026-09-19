@@ -349,7 +349,6 @@ export class InputHandler {
         if (knob) {
           knob.style.transform = 'translate(0px, -40px)';
         }
-        this.scene.hud?.showToast?.('🚀 Steigflug eingerastet • Tippen zum Abbrechen', 'info', 1800);
         return;
       }
 
