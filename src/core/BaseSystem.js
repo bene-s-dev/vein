@@ -5771,7 +5771,6 @@ export class BaseSystem {
     const pctCraft = currentCraft ? Math.min(100, Math.max(0, Math.round(((currentCraft.durationMs - currentCraft.remainingMs) / currentCraft.durationMs) * 100))) : 0;
 
     const hasSmeltFuel = loadedCoal >= 1;
-    const hasCraftFuel = loadedCoal >= 2;
 
     let html = `
       <div style="display: flex; flex-direction: column; gap: 10px;">
@@ -5869,7 +5868,6 @@ export class BaseSystem {
               ${icon('flame', isSmelting ? 'flame-anim' : '', 14)} Schmelzofen
             </strong>
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 10.5px; color: #94a3b8;">1 Kohle / Barren</span>
               <span id="smelt-timer" style="font-family: monospace; font-size: 12px; font-weight: 800; color: ${isSmelting ? '#fbbf24' : '#64748b'}; font-variant-numeric: tabular-nums;">
                 ${isSmelting ? this.formatRefineryClock(currentSmelt.remainingMs) : '00:00'}
               </span>
@@ -5972,7 +5970,6 @@ export class BaseSystem {
               <span style="font-size: 10px; color: #38bdf8; font-weight: 700; background: rgba(56, 189, 248, 0.15); padding: 1px 5px; border-radius: 4px;">Lvl ${currentTier}</span>
             </div>
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 10.5px; color: #94a3b8;">2 Kohle / Bauteil</span>
               ${nextTierData ? `
                 <button id="btn-upgrade-machine" class="btn-buy" ${canAffordUpgrade ? '' : 'disabled'} style="height: 24px; font-size: 10.5px; font-weight: 700; padding: 0 8px; gap: 4px; border-radius: 5px;" title="Schaltet tiefere Erze & Bauteile frei: ${nextTierData.desc}">
                   ${icon('chevrons-up', '', 11)} Upgrade Lvl ${nextTierData.tier} &bull; €${nextTierData.costCash.toLocaleString('de-DE')}
@@ -5993,7 +5990,7 @@ export class BaseSystem {
                 ${craftQueue.length > 1 ? `<span style="font-size: 9.5px; color: #94a3b8; background: rgba(0,0,0,0.35); padding: 1px 5px; border-radius: 4px;">+${craftQueue.length - 1}</span>` : ''}
               </span>
             ` : `
-              <span style="color: ${hasCraftFuel ? '#64748b' : '#f87171'};">${hasCraftFuel ? currentTierData.name : 'Keine Kohle (2x nötig)'}</span>
+              <span style="color: #64748b;">${currentTierData.name} &bull; Bereit zur Fertigung</span>
             `}
           </div>
 
@@ -6019,10 +6016,7 @@ export class BaseSystem {
               let prodsHtml = '';
               for (const [prodId, prod] of visibleFactoryProducts) {
                 const isTierLocked = (prod.minTier || 1) > currentTier;
-                const fuelNeeded = prod.fuelCoal || 2;
-                const hasFuel = loadedCoal >= fuelNeeded;
-
-                let canCraft = !isTierLocked && hasFuel;
+                let canCraft = !isTierLocked;
                 const ingBadges = Object.entries(prod.recipe).map(([ore, need]) => {
                   const inCargo = cargoCounts[ore] || 0;
                   const inDepot = this.depot?.ores?.[ore] || 0;
@@ -6163,13 +6157,6 @@ export class BaseSystem {
       return;
     }
 
-    const fuelNeeded = prod.fuelCoal || 2;
-    const loadedFuel = this.refinery.fuelCoal || 0;
-    if (loadedFuel < fuelNeeded) {
-      this.scene.events.emit('notify', `⚠️ Brennkammer benötigt ${fuelNeeded}x Kohle! Bitte erst oben rechts Kohle einfüllen.`);
-      return;
-    }
-
     const cargoCounts = {};
     this.player.cargo.forEach(ore => {
       cargoCounts[ore] = (cargoCounts[ore] || 0) + 1;
@@ -6190,9 +6177,6 @@ export class BaseSystem {
         this.consumeSingleOre(ore);
       }
     }
-
-    // 2. Brennstoff ausschließlich aus Brennkammer verbrauchen (nicht automatisch aus Fracht/Depot)
-    this.refinery.fuelCoal = Math.max(0, (this.refinery.fuelCoal || 0) - fuelNeeded);
 
     const durationMs = prod.durationSec * 1000;
     this.refinery.queue.push({
