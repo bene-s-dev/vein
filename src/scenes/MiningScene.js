@@ -613,530 +613,569 @@ export class MiningScene extends Phaser.Scene {
       return;
     }
 
-    // 1. Spieler-Bewegung und Steuerung sofort sperren & bisherige Sounds anhalten
-    p.state = 'IDLE';
-    this.tweens.killTweensOf(p.sprite);
-    soundFx.stopAllLoops?.();
-    soundFx.stopJetpack?.();
-    soundFx.stopDrilling?.();
-    soundFx.stopDrive?.();
-    if (p.leftThrustParticles) p.leftThrustParticles.stop();
-    if (p.rightThrustParticles) p.rightThrustParticles.stop();
-    if (p.leftHoverParticles) p.leftHoverParticles.stop();
-    if (p.rightHoverParticles) p.rightHoverParticles.stop();
-    if (p.drillParticles) p.drillParticles.stop();
+    let crawlerTimer = null;
+    let thrusterParticles = null;
+    let rescueSprite = null;
+    let activeMoveStep = null;
+    let safetyWatchdog = null;
 
-    // Exakte Kachelkoordinaten des Spielers
-    const playerGx = Math.floor(p.sprite.x / TILE_SIZE);
-    const playerGy = Math.floor(p.sprite.y / TILE_SIZE);
-
-    const shaftGx = 20;
-    const startSurfaceGx = Math.max(shaftGx + 5, Math.min(32, playerGx + 6));
-    const surfaceGy = -1;
-    const surfaceY = -16;
-    const startX = startSurfaceGx * TILE_SIZE + TILE_SIZE / 2;
-    const startY = surfaceY;
-
-    // Sicherheits-Watchdog: Falls Wegfindung oder Animation hängenbleibt, garantiert nach max. 14s bergen
-    let safetyWatchdog = this.time.delayedCall(14000, () => {
-      if (this.isRescueCutsceneActive) {
-        console.warn('[RescueCutscene] Watchdog ausgelöst - Fallback Bergung');
-        try {
-          if (crawlerTimer) crawlerTimer.remove();
-          if (thrusterParticles) thrusterParticles.destroy();
-          if (rescueSprite) rescueSprite.destroy();
-        } catch (_) {}
-        this.tweens.killTweensOf(p.sprite);
-        p.teleportToSurface(message);
-        this.isRescueCutsceneActive = false;
+    const stopActivePathMovement = () => {
+      if (activeMoveStep) {
+        this.events.off('update', activeMoveStep);
+        activeMoveStep = null;
       }
-    });
+    };
 
-    // BFS-Wegfindung STRIKT durch nicht-solide Kacheln (gegrabene Tunnel & Schächte)
-    const findTunnelPath = (fromGx, fromGy, toGx, toGy) => {
-      if (toGy <= 0) {
-        return [{ gx: toGx, gy: toGy, x: toGx * TILE_SIZE + TILE_SIZE / 2, y: toGy < 0 ? -16 : toGy * TILE_SIZE + TILE_SIZE / 2 }];
-      }
+    try {
+      // 1. Spieler-Bewegung und Steuerung sofort sperren & bisherige Sounds anhalten
+      p.state = 'IDLE';
+      this.tweens.killTweensOf(p.sprite);
+      soundFx.stopAllLoops?.();
+      soundFx.stopJetpack?.();
+      soundFx.stopDrilling?.();
+      soundFx.stopDrive?.();
+      if (p.leftThrustParticles) p.leftThrustParticles.stop();
+      if (p.rightThrustParticles) p.rightThrustParticles.stop();
+      if (p.leftHoverParticles) p.leftHoverParticles.stop();
+      if (p.rightHoverParticles) p.rightHoverParticles.stop();
+      if (p.drillParticles) p.drillParticles.stop();
 
-      const queue = [[fromGx, fromGy]];
-      const visited = new Set();
-      const parent = new Map();
-      const startKey = `${fromGx},${fromGy}`;
-      visited.add(startKey);
+      // Exakte Kachelkoordinaten des Spielers
+      const playerGx = Math.floor(p.sprite.x / TILE_SIZE);
+      const playerGy = Math.floor(p.sprite.y / TILE_SIZE);
+      const isUnderground = (playerGy > 0) || (playerGy === 0 && p.sprite.y > -8);
 
-      const isWalkable = (gx, gy) => {
-        if (gy < 0) return true; // Über der Oberfläche immer frei
-        if (gy === 0 && (gx === 19 || gx === 20)) return true; // Schachteinstieg
-        if (this.gridSystem) {
-          return !this.gridSystem.isSolid(gx, gy);
+      const shaftGx = 20;
+      const startSurfaceGx = Math.max(shaftGx + 5, Math.min(32, playerGx + 6));
+      const surfaceGy = -1;
+      const surfaceY = -16;
+      const startX = startSurfaceGx * TILE_SIZE + TILE_SIZE / 2;
+      const startY = surfaceY;
+
+      // Sicherheits-Watchdog: Falls Wegfindung oder Animation hängenbleibt, garantiert nach max. 20s bergen
+      safetyWatchdog = this.time.delayedCall(20000, () => {
+        if (this.isRescueCutsceneActive) {
+          console.warn('[RescueCutscene] Watchdog ausgelöst - Fallback Bergung');
+          stopActivePathMovement();
+          try {
+            if (crawlerTimer) crawlerTimer.remove();
+            if (thrusterParticles) thrusterParticles.destroy();
+            if (rescueSprite) rescueSprite.destroy();
+          } catch (_) {}
+          this.tweens.killTweensOf(p.sprite);
+          this.isRescueCutsceneActive = false;
+          p.teleportToSurface(message);
         }
-        return true;
-      };
+      });
 
-      let reached = false;
-      const dirs = [
-        { dx: 0, dy: 1 },  // runter
-        { dx: 1, dy: 0 },  // rechts
-        { dx: -1, dy: 0 }, // links
-        { dx: 0, dy: -1 }  // hoch
-      ];
-
-      let iterations = 0;
-      while (queue.length > 0 && iterations < 15000) {
-        iterations++;
-        const [curGx, curGy] = queue.shift();
-        if (curGx === toGx && curGy === toGy) {
-          reached = true;
-          break;
+      // BFS-Wegfindung STRIKT durch nicht-solide Kacheln (gegrabene Tunnel & Schächte)
+      const findTunnelPath = (fromGx, fromGy, toGx, toGy) => {
+        if (toGy <= 0 && !isUnderground) {
+          return [{ gx: toGx, gy: toGy, x: toGx * TILE_SIZE + TILE_SIZE / 2, y: toGy < 0 ? -16 : toGy * TILE_SIZE + TILE_SIZE / 2 }];
         }
 
-        for (const d of dirs) {
-          const nGx = curGx + d.dx;
-          const nGy = curGy + d.dy;
-          const nKey = `${nGx},${nGy}`;
-          if (!visited.has(nKey) && isWalkable(nGx, nGy)) {
-            visited.add(nKey);
-            parent.set(nKey, [curGx, curGy]);
-            queue.push([nGx, nGy]);
+        const queue = [[fromGx, fromGy]];
+        let qHead = 0;
+        const visited = new Set();
+        const parent = new Map();
+        const startKey = `${fromGx},${fromGy}`;
+        visited.add(startKey);
+
+        const isWalkable = (gx, gy) => {
+          if (gx < 5 || gx > 45) return false;
+          if (gy < -1 || gy > toGy + 10) return false;
+          if (gy === -1) return true; // Über der Oberfläche
+          if (gy === 0 && (gx === 19 || gx === 20)) return true; // Schachteinstieg
+          if (this.gridSystem) {
+            return !this.gridSystem.isSolid(gx, gy);
           }
-        }
-      }
+          return true;
+        };
 
-      const path = [];
-      if (reached) {
-        let curr = [toGx, toGy];
-        while (curr) {
-          const [cgx, cgy] = curr;
-          path.unshift({
-            gx: cgx,
-            gy: cgy,
-            x: cgx * TILE_SIZE + TILE_SIZE / 2,
-            y: cgy < 0 ? -16 : cgy * TILE_SIZE + TILE_SIZE / 2
-          });
-          const pKey = `${cgx},${cgy}`;
-          curr = parent.get(pKey);
-        }
-      } else {
-        // Sollte nie eintreffen wenn der Spieler gegraben hat; Fallback:
-        // Exakt entlang des Schachts (gx 20) hinab und dann waagerecht
-        for (let gy = fromGy; gy <= toGy; gy++) {
-          path.push({
-            gx: fromGx,
-            gy,
-            x: fromGx * TILE_SIZE + TILE_SIZE / 2,
-            y: gy < 0 ? -16 : gy * TILE_SIZE + TILE_SIZE / 2
-          });
-        }
-        const stepX = toGx >= fromGx ? 1 : -1;
-        for (let gx = fromGx + stepX; stepX > 0 ? gx <= toGx : gx >= toGx; gx += stepX) {
-          path.push({
-            gx,
-            gy: toGy,
-            x: gx * TILE_SIZE + TILE_SIZE / 2,
-            y: toGy * TILE_SIZE + TILE_SIZE / 2
-          });
-        }
-      }
-      return path;
-    };
+        let reached = false;
+        const dirs = [
+          { dx: 0, dy: 1 },  // runter
+          { dx: 1, dy: 0 },  // rechts
+          { dx: -1, dy: 0 }, // links
+          { dx: 0, dy: -1 }  // hoch
+        ];
 
-    // Tunnelpfad von der Schachtmündung (gx: 20, gy: -1) bis zum havarierten Driller
-    const tunnelPath = findTunnelPath(shaftGx, surfaceGy, playerGx, playerGy);
+        let iterations = 0;
+        while (qHead < queue.length && iterations < 8000) {
+          iterations++;
+          const [curGx, curGy] = queue[qHead++];
+          if (curGx === toGx && curGy === toGy) {
+            reached = true;
+            break;
+          }
 
-    // Gesamter Anfahrtspfad: Startet auf der Erde rechts (gx: 48) und fährt zum Minenschacht (gx: 20)
-    const descentPath = [];
-    if (playerGy > 0) {
-      descentPath.push({
-        gx: startSurfaceGx,
-        gy: surfaceGy,
-        x: startX,
-        y: surfaceY
-      });
-      descentPath.push({
-        gx: shaftGx,
-        gy: surfaceGy,
-        x: shaftGx * TILE_SIZE + TILE_SIZE / 2,
-        y: surfaceY
-      });
-      for (const wp of tunnelPath) {
-        if (wp.gx === shaftGx && wp.gy === surfaceGy) continue;
-        descentPath.push(wp);
-      }
-    } else {
-      descentPath.push({
-        gx: startSurfaceGx,
-        gy: surfaceGy,
-        x: startX,
-        y: surfaceY
-      });
-      // Wenn der Spieler sich in der Luft oder auf einem Dach befindet
-      if (p.sprite.y < surfaceY - 10) {
-        descentPath.push({
-          gx: playerGx,
-          gy: surfaceGy,
-          x: p.sprite.x,
-          y: surfaceY
-        });
-        descentPath.push({
-          gx: playerGx,
-          gy: playerGy,
-          x: p.sprite.x,
-          y: p.sprite.y
-        });
-      } else {
-        descentPath.push({
-          gx: playerGx,
-          gy: surfaceGy,
-          x: p.sprite.x,
-          y: surfaceY
-        });
-      }
-    }
-
-    // Rotes Rettungsfahrzeug Sprite erzeugen - startet rechts auf der Erdoberfläche
-    const rescueSprite = this.add.sprite(startX, startY, 'rescue_crawler_left')
-      .setDepth(14)
-      .setOrigin(0.5, 0.5);
-
-    // Blaue Flugdüsen-Partikel für das Rettungsfahrzeug
-    const thrusterParticles = this.add.particles(0, 0, 'particle_thrust', {
-      speedY: { min: 80, max: 150 },
-      speedX: { min: -10, max: 10 },
-      scale: { start: 1.15, end: 0.1 },
-      alpha: { start: 0.95, end: 0 },
-      lifespan: 190,
-      frequency: 20,
-      emitting: false
-    }).setDepth(13);
-
-    const updateThrusterPos = () => {
-      if (!rescueSprite || !rescueSprite.active) return;
-      thrusterParticles.setPosition(rescueSprite.x, rescueSprite.y + 13);
-    };
-
-    // Kamera direkt und ruckelfrei auf das startende Bergungsfahrzeug ausrichten und mitnehmen
-    const cam = this.cameras.main;
-    cam.stopFollow();
-    cam.centerOn(startX, startY);
-    if (this.gridSystem) {
-      this.gridSystem.updateViewport(cam, p);
-    }
-    cam.startFollow(rescueSprite, false, 1, 1);
-
-    // Ketten-Lauf-Animation
-    let crawlerFacing = 'left';
-    let trackStep = 0;
-    const crawlerTimer = this.time.addEvent({
-      delay: 80,
-      loop: true,
-      callback: () => {
-        if (!rescueSprite || !rescueSprite.active) return;
-        trackStep = (trackStep + 1) % 4;
-        rescueSprite.setTexture(`rescue_crawler_${crawlerFacing}_track_${trackStep}`);
-      }
-    });
-
-    // Sound-Management während der Bewegung
-    let currentSoundState = null;
-    const setSoundMode = (mode) => {
-      if (currentSoundState === mode) return;
-      currentSoundState = mode;
-      if (mode === 'fly') {
-        soundFx.stopDrive?.();
-        soundFx.startJetpack?.();
-        thrusterParticles.start();
-      } else if (mode === 'drive') {
-        soundFx.stopJetpack?.();
-        soundFx.startDrive?.();
-        thrusterParticles.stop();
-      } else {
-        soundFx.stopJetpack?.();
-        soundFx.stopDrive?.();
-        thrusterParticles.stop();
-      }
-    };
-
-    // Pfad glätten: Alle kollinearen Zwischenpunkte auf geraden Strecken entfernen
-    const simplifyPath = (points) => {
-      if (!points || points.length <= 2) return points ? [...points] : [];
-      const result = [points[0]];
-      for (let i = 1; i < points.length - 1; i++) {
-        const prev = result[result.length - 1];
-        const curr = points[i];
-        const next = points[i + 1];
-        const dx1 = Math.sign(Math.round(curr.x - prev.x));
-        const dy1 = Math.sign(Math.round(curr.y - prev.y));
-        const dx2 = Math.sign(Math.round(next.x - curr.x));
-        const dy2 = Math.sign(Math.round(next.y - curr.y));
-        if (dx1 !== dx2 || dy1 !== dy2) {
-          result.push(curr);
-        }
-      }
-      result.push(points[points.length - 1]);
-      return result;
-    };
-
-    // Helfer für butterweiche, kontinuierliche Pfad-Bewegung pro Frame ohne Tween-Stopps
-    const followPathSmoothly = (spriteToMove, rawWaypoints, moveSpeedPxPerSec, onDirectionChange, onStep, onFinished) => {
-      const waypoints = simplifyPath(rawWaypoints);
-      let wpIndex = 0;
-
-      const updateDirectionForSegment = (fromX, fromY, toX, toY) => {
-        const dx = toX - fromX;
-        const dy = toY - fromY;
-        if (onDirectionChange) {
-          onDirectionChange(dx, dy);
-        }
-      };
-
-      if (waypoints.length > 0) {
-        updateDirectionForSegment(spriteToMove.x, spriteToMove.y, waypoints[0].x, waypoints[0].y);
-      }
-
-      const moveStep = (time, delta) => {
-        if (!spriteToMove || !spriteToMove.active) {
-          this.events.off('update', moveStep);
-          return;
-        }
-
-        const dtSec = Math.min(0.05, delta / 1000);
-        let remainingMove = moveSpeedPxPerSec * dtSec;
-
-        while (remainingMove > 0 && wpIndex < waypoints.length) {
-          const target = waypoints[wpIndex];
-          const curX = spriteToMove.x;
-          const curY = spriteToMove.y;
-          const dist = Phaser.Math.Distance.Between(curX, curY, target.x, target.y);
-
-          if (dist <= remainingMove) {
-            spriteToMove.setPosition(target.x, target.y);
-            remainingMove -= dist;
-            wpIndex++;
-            if (wpIndex < waypoints.length) {
-              updateDirectionForSegment(target.x, target.y, waypoints[wpIndex].x, waypoints[wpIndex].y);
+          for (const d of dirs) {
+            const nGx = curGx + d.dx;
+            const nGy = curGy + d.dy;
+            const nKey = `${nGx},${nGy}`;
+            if (!visited.has(nKey) && isWalkable(nGx, nGy)) {
+              visited.add(nKey);
+              parent.set(nKey, [curGx, curGy]);
+              queue.push([nGx, nGy]);
             }
-          } else {
-            const ratio = remainingMove / dist;
-            spriteToMove.setPosition(curX + (target.x - curX) * ratio, curY + (target.y - curY) * ratio);
-            remainingMove = 0;
           }
         }
 
-        updateThrusterPos();
-        if (onStep) {
-          onStep(spriteToMove.x, spriteToMove.y);
+        const path = [];
+        if (reached) {
+          let curr = [toGx, toGy];
+          while (curr) {
+            const [cgx, cgy] = curr;
+            path.unshift({
+              gx: cgx,
+              gy: cgy,
+              x: cgx * TILE_SIZE + TILE_SIZE / 2,
+              y: cgy < 0 ? -16 : cgy * TILE_SIZE + TILE_SIZE / 2
+            });
+            const pKey = `${cgx},${cgy}`;
+            curr = parent.get(pKey);
+          }
+        } else {
+          // Fallback: Entlang des Schachts (gx 20) hinab und dann waagerecht
+          for (let gy = fromGy; gy <= toGy; gy++) {
+            path.push({
+              gx: fromGx,
+              gy,
+              x: fromGx * TILE_SIZE + TILE_SIZE / 2,
+              y: gy < 0 ? -16 : gy * TILE_SIZE + TILE_SIZE / 2
+            });
+          }
+          const stepX = toGx >= fromGx ? 1 : -1;
+          for (let gx = fromGx + stepX; stepX > 0 ? gx <= toGx : gx >= toGx; gx += stepX) {
+            path.push({
+              gx,
+              gy: toGy,
+              x: gx * TILE_SIZE + TILE_SIZE / 2,
+              y: toGy * TILE_SIZE + TILE_SIZE / 2
+            });
+          }
         }
+        return path;
+      };
 
-        if (wpIndex >= waypoints.length) {
-          this.events.off('update', moveStep);
-          if (onFinished) onFinished();
+      // Tunnelpfad von der Schachtmündung (gx: 20, gy: -1) bis zum havarierten Driller
+      const tunnelPath = findTunnelPath(shaftGx, surfaceGy, playerGx, playerGy);
+
+      // Gesamter Anfahrtspfad
+      const descentPath = [];
+      if (isUnderground) {
+        descentPath.push({
+          gx: startSurfaceGx,
+          gy: surfaceGy,
+          x: startX,
+          y: surfaceY
+        });
+        descentPath.push({
+          gx: shaftGx,
+          gy: surfaceGy,
+          x: shaftGx * TILE_SIZE + TILE_SIZE / 2,
+          y: surfaceY
+        });
+        for (const wp of tunnelPath) {
+          if (wp.gx === shaftGx && wp.gy === surfaceGy) continue;
+          descentPath.push(wp);
+        }
+      } else {
+        descentPath.push({
+          gx: startSurfaceGx,
+          gy: surfaceGy,
+          x: startX,
+          y: surfaceY
+        });
+        if (p.sprite.y < surfaceY - 10) {
+          descentPath.push({
+            gx: playerGx,
+            gy: surfaceGy,
+            x: p.sprite.x,
+            y: surfaceY
+          });
+          descentPath.push({
+            gx: playerGx,
+            gy: playerGy,
+            x: p.sprite.x,
+            y: p.sprite.y
+          });
+        } else {
+          descentPath.push({
+            gx: playerGx,
+            gy: surfaceGy,
+            x: p.sprite.x,
+            y: surfaceY
+          });
+        }
+      }
+
+      // Rotes Rettungsfahrzeug Sprite erzeugen
+      rescueSprite = this.add.sprite(startX, startY, 'rescue_crawler_left')
+        .setDepth(14)
+        .setOrigin(0.5, 0.5);
+
+      // Blaue Flugdüsen-Partikel für das Rettungsfahrzeug
+      thrusterParticles = this.add.particles(0, 0, 'particle_thrust', {
+        speedY: { min: 80, max: 150 },
+        speedX: { min: -10, max: 10 },
+        scale: { start: 1.15, end: 0.1 },
+        alpha: { start: 0.95, end: 0 },
+        lifespan: 190,
+        frequency: 20,
+        emitting: false
+      }).setDepth(13);
+
+      const updateThrusterPos = () => {
+        if (!rescueSprite || !rescueSprite.active) return;
+        thrusterParticles.setPosition(rescueSprite.x, rescueSprite.y + 13);
+      };
+
+      // Kamera direkt und ruckelfrei auf das startende Bergungsfahrzeug ausrichten
+      const cam = this.cameras.main;
+      cam.stopFollow();
+      cam.centerOn(startX, startY);
+      if (this.gridSystem) {
+        this.gridSystem.updateViewport(cam, p);
+      }
+      cam.startFollow(rescueSprite, false, 1, 1);
+
+      // Ketten-Lauf-Animation
+      let crawlerFacing = 'left';
+      let trackStep = 0;
+      crawlerTimer = this.time.addEvent({
+        delay: 80,
+        loop: true,
+        callback: () => {
+          if (!rescueSprite || !rescueSprite.active) return;
+          trackStep = (trackStep + 1) % 4;
+          rescueSprite.setTexture(`rescue_crawler_${crawlerFacing}_track_${trackStep}`);
+        }
+      });
+
+      // Sound-Management während der Bewegung
+      let currentSoundState = null;
+      const setSoundMode = (mode) => {
+        if (currentSoundState === mode) return;
+        currentSoundState = mode;
+        if (mode === 'fly') {
+          soundFx.stopDrive?.();
+          soundFx.startJetpack?.();
+          thrusterParticles.start();
+        } else if (mode === 'drive') {
+          soundFx.stopJetpack?.();
+          soundFx.startDrive?.();
+          thrusterParticles.stop();
+        } else {
+          soundFx.stopJetpack?.();
+          soundFx.stopDrive?.();
+          thrusterParticles.stop();
         }
       };
 
-      this.events.on('update', moveStep);
-    };
-
-    const handleDirectionChange = (dx, dy) => {
-      if (Math.abs(dx) > Math.abs(dy)) {
-        crawlerFacing = dx > 0 ? 'right' : 'left';
-        setSoundMode('drive');
-      } else if (dy > 0) {
-        setSoundMode('drive');
-      } else {
-        setSoundMode('fly');
-      }
-      rescueSprite.setTexture(`rescue_crawler_${crawlerFacing}_track_${trackStep}`);
-    };
-
-    // Phase 1: Anfahrt zum Havaristen von rechts auf der Erdoberfläche
-    crawlerFacing = 'left';
-    setSoundMode('drive');
-
-    followPathSmoothly(
-      rescueSprite,
-      descentPath,
-      360, // Zügige Bergungsgeschwindigkeit
-      handleDirectionChange,
-      null,
-      () => {
-        // Phase 2: Ankunft & Einladen des Bohrers (Bohrer fährt hinten ins Rettungsfahrzeug rein)
-        setSoundMode(null);
-        soundFx.playPurchase?.();
-
-        // Rettungsfahrzeug dreht sich so, dass sein Heck zum Spieler zeigt
-        if (rescueSprite.x < p.sprite.x) {
-          crawlerFacing = 'left'; // Heck zeigt nach rechts zum Spieler
-        } else {
-          crawlerFacing = 'right'; // Heck zeigt nach links zum Spieler
+      // Pfad glätten: Alle kollinearen Zwischenpunkte auf geraden Strecken entfernen
+      const simplifyPath = (points) => {
+        if (!points || points.length <= 2) return points ? [...points] : [];
+        const result = [points[0]];
+        for (let i = 1; i < points.length - 1; i++) {
+          const prev = result[result.length - 1];
+          const curr = points[i];
+          const next = points[i + 1];
+          if (!prev || !curr || !next) continue;
+          const dx1 = Math.sign(Math.round(curr.x - prev.x));
+          const dy1 = Math.sign(Math.round(curr.y - prev.y));
+          const dx2 = Math.sign(Math.round(next.x - curr.x));
+          const dy2 = Math.sign(Math.round(next.y - curr.y));
+          if (dx1 !== dx2 || dy1 !== dy2) {
+            result.push(curr);
+          }
         }
-        rescueSprite.setTexture(`rescue_crawler_${crawlerFacing}_track_${trackStep}`);
+        result.push(points[points.length - 1]);
+        return result;
+      };
 
-        // Animation: Bohrer fährt ins Innere des Rettungsfahrzeugs und wird eingezogen
-        p.sprite.setDepth(13); // Zwischen Hintergrund und Rettungsfahrzeug
-        this.tweens.add({
-          targets: p.sprite,
-          x: rescueSprite.x,
-          y: rescueSprite.y,
-          scaleX: 0.3,
-          scaleY: 0.3,
-          alpha: 0,
-          duration: 650,
-          ease: 'Quad.easeIn',
-          onComplete: () => {
-            p.sprite.setVisible(false);
-            soundFx.playClick?.();
+      // Helfer für butterweiche, kontinuierliche Pfad-Bewegung pro Frame
+      const followPathSmoothly = (spriteToMove, rawWaypoints, moveSpeedPxPerSec, onDirectionChange, onStep, onFinished) => {
+        const waypoints = simplifyPath(rawWaypoints);
+        let wpIndex = 0;
 
-            // Phase 3 & 4: Rückfahrt an die Oberfläche / zum Hangar
-            const hangarGx = 15;
-            const hangarGy = -1;
-            const hangarX = hangarGx * TILE_SIZE + TILE_SIZE / 2; // 496
-            const hangarY = hangarGy * TILE_SIZE + TILE_SIZE / 2; // -16
+        const updateDirectionForSegment = (fromX, fromY, toX, toY) => {
+          const dx = toX - fromX;
+          const dy = toY - fromY;
+          if (onDirectionChange) {
+            onDirectionChange(dx, dy);
+          }
+        };
 
-            const arriveAtHangar = () => {
-              setSoundMode(null);
-              cam.stopFollow();
+        if (waypoints.length > 0) {
+          updateDirectionForSegment(spriteToMove.x, spriteToMove.y, waypoints[0].x, waypoints[0].y);
+        }
 
-              crawlerFacing = 'left';
-              rescueSprite.setTexture(`rescue_crawler_left_track_${trackStep}`);
-              setSoundMode('drive');
+        const moveStep = (time, delta) => {
+          if (!spriteToMove || !spriteToMove.active) {
+            stopActivePathMovement();
+            return;
+          }
 
-              cam.pan(hangarX, hangarY, 1000, 'Sine.easeInOut');
+          const dtSec = Math.min(0.05, delta / 1000);
+          let remainingMove = moveSpeedPxPerSec * dtSec;
 
-              this.tweens.add({
-                targets: rescueSprite,
-                x: hangarX + 36,
-                y: hangarY,
-                duration: 900,
-                ease: 'Linear',
-                onComplete: () => {
-                  setSoundMode(null);
+          while (remainingMove > 0 && wpIndex < waypoints.length) {
+            const target = waypoints[wpIndex];
+            const curX = spriteToMove.x;
+            const curY = spriteToMove.y;
+            const dist = Phaser.Math.Distance.Between(curX, curY, target.x, target.y);
 
-                  // Phase 5: Bohrer wird hinten aus dem Rettungsfahrzeug wieder herausgelassen
-                  p.sprite.setPosition(rescueSprite.x, rescueSprite.y);
-                  p.sprite.setVisible(true);
-                  p.sprite.setAlpha(0);
-                  p.sprite.setScale(0.3);
+            if (dist <= remainingMove) {
+              spriteToMove.setPosition(target.x, target.y);
+              remainingMove -= dist;
+              wpIndex++;
+              if (wpIndex < waypoints.length) {
+                updateDirectionForSegment(target.x, target.y, waypoints[wpIndex].x, waypoints[wpIndex].y);
+              }
+            } else {
+              const ratio = dist > 0 ? (remainingMove / dist) : 1;
+              spriteToMove.setPosition(curX + (target.x - curX) * ratio, curY + (target.y - curY) * ratio);
+              remainingMove = 0;
+            }
+          }
 
-                  soundFx.playPurchase?.();
+          updateThrusterPos();
+          if (onStep) {
+            onStep(spriteToMove.x, spriteToMove.y);
+          }
 
-                  this.tweens.add({
-                    targets: p.sprite,
-                    x: hangarX,
-                    y: hangarY,
-                    scaleX: 1,
-                    scaleY: 1,
-                    alpha: 1,
-                    duration: 700,
-                    ease: 'Quad.easeOut',
-                    onComplete: () => {
-                      p.sprite.setDepth(10);
-                      p.isGameOver = false;
-                      p.gx = hangarGx;
-                      p.gy = hangarGy;
-                      p.x = hangarX;
-                      p.y = hangarY;
-                      p.sprite.setPosition(hangarX, hangarY);
-                      p.setVisualDirection('RIGHT');
-                      p.state = 'IDLE';
+          if (wpIndex >= waypoints.length) {
+            stopActivePathMovement();
+            if (onFinished) onFinished();
+          }
+        };
 
-                      // Notfall-Auftankung bei komplett leerem Tank (mind. 20% oder 15L)
-                      const minReserve = Math.max(15, Math.round(p.maxFuel * 0.2));
-                      if (p.fuel < minReserve) {
-                        p.fuel = Math.min(minReserve, p.maxFuel);
-                      }
+        stopActivePathMovement();
+        activeMoveStep = moveStep;
+        this.events.on('update', moveStep);
+      };
 
-                      cam.startFollow(p.sprite, false, 1, 1);
-                      if (this.gridSystem) {
-                        this.gridSystem.updateViewport(cam, p);
-                      }
+      const handleDirectionChange = (dx, dy) => {
+        if (Math.abs(dx) > Math.abs(dy)) {
+          crawlerFacing = dx > 0 ? 'right' : 'left';
+          setSoundMode('drive');
+        } else if (dy > 0) {
+          setSoundMode('drive');
+        } else {
+          setSoundMode('fly');
+        }
+        if (rescueSprite && rescueSprite.active) {
+          rescueSprite.setTexture(`rescue_crawler_${crawlerFacing}_track_${trackStep}`);
+        }
+      };
 
-                      if (this.events) {
-                        this.events.emit('notify', message);
-                      }
+      // Phase 1: Anfahrt zum Havaristen von rechts auf der Erdoberfläche
+      crawlerFacing = 'left';
+      setSoundMode('drive');
 
-                      if (safetyWatchdog) {
-                        safetyWatchdog.remove();
-                        safetyWatchdog = null;
-                      }
+      followPathSmoothly(
+        rescueSprite,
+        descentPath,
+        360,
+        handleDirectionChange,
+        null,
+        () => {
+          // Phase 2: Ankunft & Einladen des Bohrers
+          setSoundMode(null);
+          soundFx.playPurchase?.();
 
-                      this.isRescueCutsceneActive = false;
-                    }
-                  });
+          if (rescueSprite.x < p.sprite.x) {
+            crawlerFacing = 'left';
+          } else {
+            crawlerFacing = 'right';
+          }
+          if (rescueSprite && rescueSprite.active) {
+            rescueSprite.setTexture(`rescue_crawler_${crawlerFacing}_track_${trackStep}`);
+          }
 
-                  // Rettungsfahrzeug fährt nach links aus dem Bildschirm
-                  this.time.delayedCall(400, () => {
-                    crawlerFacing = 'left';
-                    setSoundMode('drive');
+          p.sprite.setDepth(13);
+          this.tweens.add({
+            targets: p.sprite,
+            x: rescueSprite.x,
+            y: rescueSprite.y,
+            scaleX: 0.3,
+            scaleY: 0.3,
+            alpha: 0,
+            duration: 650,
+            ease: 'Quad.easeIn',
+            onComplete: () => {
+              p.sprite.setVisible(false);
+              soundFx.playClick?.();
+
+              // Phase 3 & 4: Rückfahrt an die Oberfläche / zum Hangar
+              const hangarGx = 15;
+              const hangarGy = -1;
+              const hangarX = hangarGx * TILE_SIZE + TILE_SIZE / 2; // 496
+              const hangarY = hangarGy * TILE_SIZE + TILE_SIZE / 2; // -16
+
+              const arriveAtHangar = () => {
+                setSoundMode(null);
+                cam.stopFollow();
+
+                crawlerFacing = 'left';
+                if (rescueSprite && rescueSprite.active) {
+                  rescueSprite.setTexture(`rescue_crawler_left_track_${trackStep}`);
+                }
+                setSoundMode('drive');
+
+                cam.pan(hangarX, hangarY, 1000, 'Sine.easeInOut');
+
+                this.tweens.add({
+                  targets: rescueSprite,
+                  x: hangarX + 36,
+                  y: hangarY,
+                  duration: 900,
+                  ease: 'Linear',
+                  onComplete: () => {
+                    setSoundMode(null);
+
+                    // Phase 5: Bohrer wird hinten aus dem Rettungsfahrzeug entlassen
+                    p.sprite.setPosition(rescueSprite.x, rescueSprite.y);
+                    p.sprite.setVisible(true);
+                    p.sprite.setAlpha(0);
+                    p.sprite.setScale(0.3);
+
+                    soundFx.playPurchase?.();
 
                     this.tweens.add({
-                      targets: rescueSprite,
-                      x: -350,
-                      duration: 3200,
-                      ease: 'Linear',
+                      targets: p.sprite,
+                      x: hangarX,
+                      y: hangarY,
+                      scaleX: 1,
+                      scaleY: 1,
+                      alpha: 1,
+                      duration: 700,
+                      ease: 'Quad.easeOut',
                       onComplete: () => {
-                        setSoundMode(null);
-                        crawlerTimer.remove();
-                        thrusterParticles.destroy();
-                        rescueSprite.destroy();
+                        p.sprite.setDepth(10);
+                        p.sprite.setVisible(true);
+                        p.sprite.setAlpha(1);
+                        p.sprite.setScale(1);
+                        p.isGameOver = false;
+                        p.gx = hangarGx;
+                        p.gy = hangarGy;
+                        p.x = hangarX;
+                        p.y = hangarY;
+                        p.sprite.setPosition(hangarX, hangarY);
+                        p.setVisualDirection('RIGHT');
+                        p.state = 'IDLE';
+
+                        // Notfall-Auftankung bei komplett leerem Tank (mind. 20% oder 15L)
+                        const minReserve = Math.max(15, Math.round(p.maxFuel * 0.2));
+                        if (p.fuel < minReserve) {
+                          p.fuel = Math.min(minReserve, p.maxFuel);
+                        }
+
+                        cam.startFollow(p.sprite, false, 1, 1);
+                        if (this.gridSystem) {
+                          this.gridSystem.updateViewport(cam, p);
+                        }
+
+                        if (this.events) {
+                          this.events.emit('notify', message);
+                        }
+
+                        stopActivePathMovement();
+                        if (safetyWatchdog) {
+                          safetyWatchdog.remove();
+                          safetyWatchdog = null;
+                        }
+
+                        this.isRescueCutsceneActive = false;
                       }
                     });
-                  });
-                }
-              });
-            };
 
-            if (playerGy <= 0) {
-              // Spieler war an/über der Oberfläche: Direkt zum Hangar fahren (kein unnötiger Schacht-Umweg)
-              const directPath = [
-                { gx: playerGx, gy: surfaceGy, x: rescueSprite.x, y: surfaceY },
-                { gx: hangarGx, gy: hangarGy, x: hangarX + 36, y: hangarY }
-              ];
-              followPathSmoothly(
-                rescueSprite,
-                directPath,
-                280,
-                handleDirectionChange,
-                (curX, curY) => {
-                  p.sprite.setPosition(curX, curY);
-                },
-                () => {
-                  arriveAtHangar();
-                }
-              );
-            } else {
-              // Unter Tage: Tunnelpfad hinauf bis zur Schachtmündung (gx: 20, gy: -1)
-              const ascentRaw = [...tunnelPath].reverse();
-              const surfaceWaypoint = {
-                gx: shaftGx,
-                gy: surfaceGy,
-                x: shaftGx * TILE_SIZE + TILE_SIZE / 2,
-                y: surfaceY
+                    // Rettungsfahrzeug fährt nach links aus dem Bildschirm
+                    this.time.delayedCall(400, () => {
+                      crawlerFacing = 'left';
+                      setSoundMode('drive');
+
+                      this.tweens.add({
+                        targets: rescueSprite,
+                        x: -350,
+                        duration: 3200,
+                        ease: 'Linear',
+                        onComplete: () => {
+                          setSoundMode(null);
+                          if (crawlerTimer) crawlerTimer.remove();
+                          if (thrusterParticles) thrusterParticles.destroy();
+                          if (rescueSprite) rescueSprite.destroy();
+                        }
+                      });
+                    });
+                  }
+                });
               };
-              const ascentPath = [];
-              for (const wp of ascentRaw) {
-                ascentPath.push(wp);
-              }
-              if (!ascentPath.some(w => w.gx === shaftGx && w.gy === surfaceGy)) {
-                ascentPath.push(surfaceWaypoint);
-              }
 
-              followPathSmoothly(
-                rescueSprite,
-                ascentPath,
-                260, // Rückfahrtgeschwindigkeit
-                handleDirectionChange,
-                (curX, curY) => {
-                  p.sprite.setPosition(curX, curY);
-                },
-                () => {
-                  arriveAtHangar();
+              if (!isUnderground) {
+                const directPath = [
+                  { gx: playerGx, gy: surfaceGy, x: rescueSprite.x, y: surfaceY },
+                  { gx: hangarGx, gy: hangarGy, x: hangarX + 36, y: hangarY }
+                ];
+                followPathSmoothly(
+                  rescueSprite,
+                  directPath,
+                  280,
+                  handleDirectionChange,
+                  (curX, curY) => {
+                    p.sprite.setPosition(curX, curY);
+                  },
+                  () => {
+                    arriveAtHangar();
+                  }
+                );
+              } else {
+                const ascentRaw = [...tunnelPath].reverse();
+                const surfaceWaypoint = {
+                  gx: shaftGx,
+                  gy: surfaceGy,
+                  x: shaftGx * TILE_SIZE + TILE_SIZE / 2,
+                  y: surfaceY
+                };
+                const ascentPath = [];
+                for (const wp of ascentRaw) {
+                  ascentPath.push(wp);
                 }
-              );
+                if (!ascentPath.some(w => w.gx === shaftGx && w.gy === surfaceGy)) {
+                  ascentPath.push(surfaceWaypoint);
+                }
+
+                followPathSmoothly(
+                  rescueSprite,
+                  ascentPath,
+                  260,
+                  handleDirectionChange,
+                  (curX, curY) => {
+                    p.sprite.setPosition(curX, curY);
+                  },
+                  () => {
+                    arriveAtHangar();
+                  }
+                );
+              }
             }
-          }
-        });
-      }
-    );
+          });
+        }
+      );
+    } catch (err) {
+      console.error('[RescueCutscene] Fehler bei Bergung:', err);
+      stopActivePathMovement();
+      try {
+        if (crawlerTimer) crawlerTimer.remove();
+        if (thrusterParticles) thrusterParticles.destroy();
+        if (rescueSprite) rescueSprite.destroy();
+        if (safetyWatchdog) safetyWatchdog.remove();
+      } catch (_) {}
+      this.tweens.killTweensOf(p.sprite);
+      this.isRescueCutsceneActive = false;
+      p.teleportToSurface(message);
+    }
   }
 }
 

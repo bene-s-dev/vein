@@ -64,6 +64,10 @@ export class EmergencyRescueModal {
 
   close() {
     this.isOpen = false;
+    if (this.autoRescueTimeout) {
+      clearTimeout(this.autoRescueTimeout);
+      this.autoRescueTimeout = null;
+    }
     if (this.pollInterval) {
       clearInterval(this.pollInterval);
       this.pollInterval = null;
@@ -473,7 +477,7 @@ export class EmergencyRescueModal {
 
         <div style="display: flex; flex-direction: column; gap: 8px;">
           <button id="btn-check-db-rescue" class="btn-action" style="
-            height: 42px;
+            height: 44px;
             width: 100%;
             font-size: 13px;
             font-weight: 800;
@@ -484,33 +488,34 @@ export class EmergencyRescueModal {
             border: 1px solid rgba(56, 189, 248, 0.4);
             color: #ffffff;
             cursor: pointer;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
           ">
-            ${icon('refresh-cw', '', 14)}
-            <span>Freigabe prüfen</span>
+            ${icon('truck', '', 15)}
+            <span>Sofort freigeben & bergen</span>
           </button>
 
-          <div id="gameover-status-msg" style="font-size: 11px; color: #94a3b8; min-height: 14px;"></div>
+          <div id="gameover-status-msg" style="font-size: 11px; color: #94a3b8; min-height: 14px;">
+            Automatische Bergung wird vorbereitet...
+          </div>
         </div>
       </div>
     `;
 
     refreshIcons(this.modalEl);
 
-    // DB-Check Handler: NUR bei Klick auf den Button (kein Auto-Poll)
     const btnCheck = this.modalEl.querySelector('#btn-check-db-rescue');
     const msgEl = this.modalEl.querySelector('#gameover-status-msg');
     const badgeEl = this.modalEl.querySelector('#gameover-db-badge');
 
-    const runCheck = async () => {
-      if (btnCheck) btnCheck.disabled = true;
-      if (msgEl) msgEl.textContent = 'Rettung wird freigegeben...';
-      
-      // Immer automatisch in Supabase freigeben
-      try {
-        await LeaderboardService.setGameOver(p.name, false, depth, p.level);
-      } catch (err) {
-        console.warn('[EmergencyRescue] DB-Update Fehler:', err);
+    let checkExecuted = false;
+    const runCheck = () => {
+      if (checkExecuted) return;
+      checkExecuted = true;
+      if (this.autoRescueTimeout) {
+        clearTimeout(this.autoRescueTimeout);
+        this.autoRescueTimeout = null;
       }
+      if (btnCheck) btnCheck.disabled = true;
 
       if (badgeEl) {
         badgeEl.textContent = 'Freigegeben!';
@@ -518,12 +523,17 @@ export class EmergencyRescueModal {
         badgeEl.style.color = '#34d399';
       }
       if (msgEl) {
-        msgEl.innerHTML = '<span style="color: #34d399; font-weight: 700;">Rettung freigegeben!</span>';
+        msgEl.innerHTML = '<span style="color: #34d399; font-weight: 700;">Rettung freigegeben! Bergung startet...</span>';
       }
       soundFx.playUpgrade?.();
       p.isGameOver = false;
       SaveSystem.save(this.scene);
-      
+
+      // Supabase asynchron im Hintergrund aktualisieren (blockiert niemals den Spielfluss!)
+      LeaderboardService.setGameOver(p.name, false, depth, p.level).catch((err) => {
+        console.warn('[EmergencyRescue] DB-Update Fehler:', err);
+      });
+
       setTimeout(() => {
         this.close();
         if (this.scene && this.scene.playRescueCutscene) {
@@ -531,11 +541,18 @@ export class EmergencyRescueModal {
         } else {
           p.teleportToSurface('Bergung erfolgreich');
         }
-      }, 400);
+      }, 300);
     };
 
     if (btnCheck) {
       btnCheck.onclick = () => runCheck();
     }
+
+    // Automatische Freigabe & Bergung nach 1,2 Sekunden, falls der Spieler nicht klickt
+    this.autoRescueTimeout = setTimeout(() => {
+      if (this.isOpen && !checkExecuted) {
+        runCheck();
+      }
+    }, 1200);
   }
 }

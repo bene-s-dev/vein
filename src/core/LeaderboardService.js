@@ -122,6 +122,23 @@ export const LeaderboardService = {
     const cleanLevel = Math.max(1, Math.round(level));
 
     try {
+      // 1. Erst via Update versuchen (sicherer bei fehlendem Unique Constraint)
+      const { data, error: updateError } = await supabase
+        .from('leaderboard')
+        .update({
+          is_game_over: !!isGameOver,
+          depth: cleanDepth,
+          level: cleanLevel,
+          updated_at: new Date().toISOString()
+        })
+        .eq('name', cleanName)
+        .select();
+
+      if (!updateError && data && data.length > 0) {
+        return true;
+      }
+
+      // 2. Falls kein Eintrag existierte oder Update fehlschlug, via Upsert versuchen
       const { error } = await supabase
         .from('leaderboard')
         .upsert({

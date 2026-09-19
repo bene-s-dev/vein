@@ -2514,10 +2514,19 @@ export class Player {
 
   teleportToSurface(message = 'Bergung erfolgreich') {
     this.isGameOver = false;
+    if (this.scene) {
+      this.scene.isRescueCutsceneActive = false;
+    }
 
-    // 1. Alle laufenden Tweens auf dem Sprite abbrechen
+    // 1. Alle laufenden Tweens auf dem Sprite abbrechen und Sichtbarkeit garantieren
     if (this.scene && this.scene.tweens) {
       this.scene.tweens.killTweensOf(this.sprite);
+    }
+    if (this.sprite) {
+      this.sprite.setVisible(true);
+      this.sprite.setAlpha(1);
+      this.sprite.setScale(1);
+      this.sprite.setDepth(10);
     }
 
     // 2. Partikel und Sounds stoppen
