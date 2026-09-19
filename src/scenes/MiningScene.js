@@ -728,39 +728,31 @@ export class MiningScene extends Phaser.Scene {
     // Gesamter Anfahrtspfad: Startet auf der Erde rechts (gx: 48) und fährt zum Minenschacht (gx: 20)
     const descentPath = [];
     if (playerGy > 0) {
-      for (let gx = startSurfaceGx; gx >= shaftGx; gx -= 2) {
-        descentPath.push({
-          gx,
-          gy: surfaceGy,
-          x: gx * TILE_SIZE + TILE_SIZE / 2,
-          y: surfaceY
-        });
-      }
-      if (descentPath[descentPath.length - 1].gx !== shaftGx) {
-        descentPath.push({
-          gx: shaftGx,
-          gy: surfaceGy,
-          x: shaftGx * TILE_SIZE + TILE_SIZE / 2,
-          y: surfaceY
-        });
-      }
+      descentPath.push({
+        gx: startSurfaceGx,
+        gy: surfaceGy,
+        x: startX,
+        y: surfaceY
+      });
+      descentPath.push({
+        gx: shaftGx,
+        gy: surfaceGy,
+        x: shaftGx * TILE_SIZE + TILE_SIZE / 2,
+        y: surfaceY
+      });
       for (const wp of tunnelPath) {
         if (wp.gx === shaftGx && wp.gy === surfaceGy) continue;
         descentPath.push(wp);
       }
     } else {
-      const targetGx = playerGx;
-      const step = targetGx < startSurfaceGx ? -2 : 2;
-      for (let gx = startSurfaceGx; step < 0 ? gx >= targetGx : gx <= targetGx; gx += step) {
-        descentPath.push({
-          gx,
-          gy: surfaceGy,
-          x: gx * TILE_SIZE + TILE_SIZE / 2,
-          y: surfaceY
-        });
-      }
       descentPath.push({
-        gx: targetGx,
+        gx: startSurfaceGx,
+        gy: surfaceGy,
+        x: startX,
+        y: surfaceY
+      });
+      descentPath.push({
+        gx: playerGx,
         gy: surfaceGy,
         x: p.sprite.x,
         y: surfaceY
@@ -788,25 +780,14 @@ export class MiningScene extends Phaser.Scene {
       thrusterParticles.setPosition(rescueSprite.x, rescueSprite.y + 13);
     };
 
-    // Kamera sofort auf die Oberfläche zum startenden Bergungsfahrzeug ausrichten
+    // Kamera direkt und ruckelfrei auf das startende Bergungsfahrzeug ausrichten und mitnehmen
     const cam = this.cameras.main;
     cam.stopFollow();
-    cam.centerOn(startX - 120, startY);
+    cam.centerOn(startX, startY);
     if (this.gridSystem) {
       this.gridSystem.updateViewport(cam, p);
     }
-
-    // Ticker für Partikelposition & Viewport-Aktualisierung
-    const thrusterTimer = this.time.addEvent({
-      delay: 16,
-      loop: true,
-      callback: () => {
-        updateThrusterPos();
-        if (this.gridSystem) {
-          this.gridSystem.updateViewport(cam, p);
-        }
-      }
-    });
+    cam.startFollow(rescueSprite, false, 1, 1);
 
     // Ketten-Lauf-Animation
     let crawlerFacing = 'left';
@@ -841,74 +822,108 @@ export class MiningScene extends Phaser.Scene {
       }
     };
 
-    // Helfer für Pfad-Bewegung (Wegpunkt nach Wegpunkt abfahren)
-    const followWaypointList = (spriteToMove, waypoints, moveSpeedPxPerSec, onWaypointReach, onFinished) => {
+    // Pfad glätten: Alle kollinearen Zwischenpunkte auf geraden Strecken entfernen
+    const simplifyPath = (points) => {
+      if (!points || points.length <= 2) return points ? [...points] : [];
+      const result = [points[0]];
+      for (let i = 1; i < points.length - 1; i++) {
+        const prev = result[result.length - 1];
+        const curr = points[i];
+        const next = points[i + 1];
+        const dx1 = Math.sign(Math.round(curr.x - prev.x));
+        const dy1 = Math.sign(Math.round(curr.y - prev.y));
+        const dx2 = Math.sign(Math.round(next.x - curr.x));
+        const dy2 = Math.sign(Math.round(next.y - curr.y));
+        if (dx1 !== dx2 || dy1 !== dy2) {
+          result.push(curr);
+        }
+      }
+      result.push(points[points.length - 1]);
+      return result;
+    };
+
+    // Helfer für butterweiche, kontinuierliche Pfad-Bewegung pro Frame ohne Tween-Stopps
+    const followPathSmoothly = (spriteToMove, rawWaypoints, moveSpeedPxPerSec, onDirectionChange, onStep, onFinished) => {
+      const waypoints = simplifyPath(rawWaypoints);
       let wpIndex = 0;
 
-      const moveToNext = () => {
-        if (wpIndex >= waypoints.length) {
-          if (onFinished) onFinished();
-          return;
+      const updateDirectionForSegment = (fromX, fromY, toX, toY) => {
+        const dx = toX - fromX;
+        const dy = toY - fromY;
+        if (onDirectionChange) {
+          onDirectionChange(dx, dy);
         }
-
-        const wp = waypoints[wpIndex];
-        const prevX = spriteToMove.x;
-        const prevY = spriteToMove.y;
-        const dist = Phaser.Math.Distance.Between(prevX, prevY, wp.x, wp.y);
-
-        if (dist < 2) {
-          wpIndex++;
-          moveToNext();
-          return;
-        }
-
-        const duration = Math.max(35, (dist / moveSpeedPxPerSec) * 1000);
-
-        if (onWaypointReach) {
-          onWaypointReach(wp, prevX, prevY);
-        }
-
-        this.tweens.add({
-          targets: spriteToMove,
-          x: wp.x,
-          y: wp.y,
-          duration: duration,
-          ease: 'Linear',
-          onComplete: () => {
-            wpIndex++;
-            moveToNext();
-          }
-        });
       };
 
-      moveToNext();
+      if (waypoints.length > 0) {
+        updateDirectionForSegment(spriteToMove.x, spriteToMove.y, waypoints[0].x, waypoints[0].y);
+      }
+
+      const moveStep = (time, delta) => {
+        if (!spriteToMove || !spriteToMove.active) {
+          this.events.off('update', moveStep);
+          return;
+        }
+
+        const dtSec = Math.min(0.05, delta / 1000);
+        let remainingMove = moveSpeedPxPerSec * dtSec;
+
+        while (remainingMove > 0 && wpIndex < waypoints.length) {
+          const target = waypoints[wpIndex];
+          const curX = spriteToMove.x;
+          const curY = spriteToMove.y;
+          const dist = Phaser.Math.Distance.Between(curX, curY, target.x, target.y);
+
+          if (dist <= remainingMove) {
+            spriteToMove.setPosition(target.x, target.y);
+            remainingMove -= dist;
+            wpIndex++;
+            if (wpIndex < waypoints.length) {
+              updateDirectionForSegment(target.x, target.y, waypoints[wpIndex].x, waypoints[wpIndex].y);
+            }
+          } else {
+            const ratio = remainingMove / dist;
+            spriteToMove.setPosition(curX + (target.x - curX) * ratio, curY + (target.y - curY) * ratio);
+            remainingMove = 0;
+          }
+        }
+
+        updateThrusterPos();
+        if (onStep) {
+          onStep(spriteToMove.x, spriteToMove.y);
+        }
+
+        if (wpIndex >= waypoints.length) {
+          this.events.off('update', moveStep);
+          if (onFinished) onFinished();
+        }
+      };
+
+      this.events.on('update', moveStep);
+    };
+
+    const handleDirectionChange = (dx, dy) => {
+      if (Math.abs(dx) > Math.abs(dy)) {
+        crawlerFacing = dx > 0 ? 'right' : 'left';
+        setSoundMode('drive');
+      } else if (dy > 0) {
+        setSoundMode('drive');
+      } else {
+        setSoundMode('fly');
+      }
+      rescueSprite.setTexture(`rescue_crawler_${crawlerFacing}_track_${trackStep}`);
     };
 
     // Phase 1: Anfahrt zum Havaristen von rechts auf der Erdoberfläche
     crawlerFacing = 'left';
     setSoundMode('drive');
-    cam.startFollow(rescueSprite, true, 0.08, 0.08);
 
-    followWaypointList(
+    followPathSmoothly(
       rescueSprite,
       descentPath,
       300, // Zügige Bergungsgeschwindigkeit
-      (wp, prevX, prevY) => {
-        const dx = wp.x - prevX;
-        const dy = wp.y - prevY;
-
-        if (Math.abs(dx) > Math.abs(dy)) {
-          // Horizontale Fahrt (z. B. auf der Erde oder in Stollen)
-          crawlerFacing = dx > 0 ? 'right' : 'left';
-          setSoundMode('drive');
-        } else if (dy > 0) {
-          // Schacht hinab
-          setSoundMode('drive');
-        } else {
-          // Steigflug
-          setSoundMode('fly');
-        }
-      },
+      handleDirectionChange,
+      null,
       () => {
         // Phase 2: Ankunft & Einladen des Bohrers (Bohrer fährt hinten ins Rettungsfahrzeug rein)
         setSoundMode(null);
@@ -939,36 +954,29 @@ export class MiningScene extends Phaser.Scene {
 
             // Phase 3: Rückfahrt an die Oberfläche (Bohrer ist im Rettungsfahrzeug sicher verstaut)
             // Fährt den gegrabenen Tunnelpfad wieder hinauf bis zur Schachtmündung (gx: 20, gy: -1)
-            const ascentPath = (playerGy > 0 ? [...tunnelPath] : [{ gx: playerGx, gy: surfaceGy, x: p.sprite.x, y: surfaceY }]).reverse();
+            const ascentRaw = (playerGy > 0 ? [...tunnelPath] : [{ gx: playerGx, gy: surfaceGy, x: p.sprite.x, y: surfaceY }]).reverse();
             const surfaceWaypoint = {
               gx: shaftGx,
               gy: surfaceGy,
               x: shaftGx * TILE_SIZE + TILE_SIZE / 2,
               y: surfaceY
             };
+            const ascentPath = [];
+            for (const wp of ascentRaw) {
+              ascentPath.push(wp);
+            }
             if (!ascentPath.some(w => w.gx === shaftGx && w.gy === surfaceGy)) {
               ascentPath.push(surfaceWaypoint);
             }
 
-            followWaypointList(
+            followPathSmoothly(
               rescueSprite,
               ascentPath,
               260, // Rückfahrtgeschwindigkeit
-              (wp, prevX, prevY) => {
-                const dx = wp.x - prevX;
-                const dy = wp.y - prevY;
-
-                if (Math.abs(dx) > Math.abs(dy)) {
-                  crawlerFacing = dx > 0 ? 'right' : 'left';
-                  setSoundMode('drive');
-                } else if (dy < 0) {
-                  setSoundMode('fly');
-                } else {
-                  setSoundMode('drive');
-                }
-
+              handleDirectionChange,
+              (curX, curY) => {
                 // Spieler-Position bleibt im Inneren des Rettungsfahrzeugs synchron
-                p.sprite.setPosition(rescueSprite.x, rescueSprite.y);
+                p.sprite.setPosition(curX, curY);
               },
               () => {
                 // Phase 4: Ankunft an der Oberfläche
@@ -1056,7 +1064,6 @@ export class MiningScene extends Phaser.Scene {
                         onComplete: () => {
                           setSoundMode(null);
                           crawlerTimer.remove();
-                          thrusterTimer.remove();
                           thrusterParticles.destroy();
                           rescueSprite.destroy();
                         }
