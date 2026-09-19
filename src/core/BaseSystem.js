@@ -3561,7 +3561,7 @@ export class BaseSystem {
     const depotTabs = [
       { id: 'storage', label: 'Lager', icon: 'warehouse', badge: `${totalStored}/${capacity}` },
       { id: 'upgrades', label: 'Ausbau', icon: 'arrow-up-circle', badge: null },
-      { id: 'shop', label: 'Ausrüstung', icon: 'shopping-bag', badge: null }
+      { id: 'shop', label: 'Ausrüstung', icon: 'backpack', badge: null }
     ];
 
     const tabNavHtml = `
@@ -5079,7 +5079,7 @@ export class BaseSystem {
     // Register-Tabs wie im Depot
     const dockTabs = [
       { id: 'workshop', label: 'Werkstatt', icon: 'wrench', badge: null },
-      { id: 'gear', label: 'Ausrüstung', icon: 'shopping-bag', badge: null }
+      { id: 'gear', label: 'Ausrüstung', icon: 'backpack', badge: null }
     ];
 
     const tabNavHtml = `
