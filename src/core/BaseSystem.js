@@ -4786,8 +4786,6 @@ export class BaseSystem {
         `;
       }
 
-      const showInstalledBadge = track.installedTier !== undefined && track.installedTier > 0 && track.installedTier < track.currentTier && activeLabTab === 'vehicle';
-
       cardsHtml += `
         <div class="tech-category-card" id="cat-block-${track.id}">
           <div class="cat-header-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -4797,7 +4795,6 @@ export class BaseSystem {
             </div>
             <div class="cat-status-pill" style="font-size: 11px; color: #94a3b8; display: flex; align-items: center; gap: 8px;">
               <span>Erforscht: Stufe ${track.currentTier}/${track.maxTier} • <strong style="color: ${track.currentTier > 0 ? '#10b981' : '#94a3b8'};">${currentTierData.stat}</strong></span>
-              ${showInstalledBadge ? `<span style="color: #f59e0b; font-weight: 700; background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); padding: 2px 6px; border-radius: 4px; white-space: nowrap;">Montiert: Stufe ${track.installedTier} – Hangar!</span>` : ''}
             </div>
           </div>
 
