@@ -152,14 +152,18 @@ export class SaveSystem {
       });
     }
 
-    // Missionsdaten speichern
+    // Missionsdaten speichern (max 3 Kontrakte auf dem Board)
     let missionData = null;
-    if (ms && ms.activeMission) {
+    if (ms) {
       missionData = {
-        id: ms.activeMission.id,
-        progress: ms.progress,
-        isCompleted: ms.isCompleted,
-        completedMissionIds: ms.completedMissionIds || []
+        availableMissions: (ms.availableMissions || []).map(m => ({
+          id: m.id,
+          progress: m.progress || 0,
+          isCompleted: !!m.isCompleted
+        })),
+        id: ms.activeMission ? ms.activeMission.id : null,
+        progress: ms.progress || 0,
+        isCompleted: !!ms.isCompleted
       };
     }
 
@@ -602,13 +606,16 @@ export class SaveSystem {
 
       // 4. Missionsfortschritt
       if (ms && data.mission) {
-        const found = MISSION_POOL.find(m => m.id === data.mission.id);
-        if (found) {
-          ms.activeMission = found;
-          ms.progress = data.mission.progress || 0;
-          ms.isCompleted = !!data.mission.isCompleted;
-          ms.completedMissionIds = data.mission.completedMissionIds || [];
-          scene.events.emit('mission_updated', ms.getMissionStatus());
+        if (typeof ms.restoreSavedMissions === 'function') {
+          ms.restoreSavedMissions(data.mission);
+        } else {
+          const found = MISSION_POOL.find(m => m.id === data.mission.id);
+          if (found) {
+            ms.activeMission = found;
+            ms.progress = data.mission.progress || 0;
+            ms.isCompleted = !!data.mission.isCompleted;
+            scene.events.emit('mission_updated', ms.getMissionStatus());
+          }
         }
       }
 

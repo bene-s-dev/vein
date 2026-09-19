@@ -138,9 +138,14 @@ export class MissionsProgressModal {
       ? `<span class="tab-badge" style="background: rgba(16, 185, 129, 0.25); color: #10b981;">Aktiv</span>` 
       : (!this.player.firstRescueUsed ? `<span class="tab-badge" style="background: rgba(245, 158, 11, 0.25); color: #fbbf24;">1x Frei</span>` : `<span class="tab-badge" style="background: rgba(239, 68, 68, 0.25); color: #f87171;">Keine</span>`);
 
+    const readyMissionsCount = (this.missionSystem.availableMissions || []).filter(m => m.isCompleted).length;
+    const missionBadge = readyMissionsCount > 0 
+      ? `<span class="tab-badge" style="background: rgba(16, 185, 129, 0.25); color: #10b981;">${readyMissionsCount}</span>` 
+      : '';
+
     // Tab Navigation Bar
     const tabs = [
-      { id: 'missions', label: 'Aufträge', icon: 'clipboard-list', badgeHtml: this.missionSystem.isCompleted ? '<span class="tab-badge" style="background: rgba(16, 185, 129, 0.25); color: #10b981;">Fertig</span>' : '' },
+      { id: 'missions', label: 'Aufträge', icon: 'clipboard-list', badgeHtml: missionBadge },
       { id: 'levels', label: 'Ränge', icon: 'award' },
       { id: 'geologist', label: 'Geologe', icon: 'microscope', badgeHtml: geologistBadge },
       { id: 'insurance', label: 'Versicherung', icon: 'shield-check', badgeHtml: insuranceBadge },
@@ -202,75 +207,75 @@ export class MissionsProgressModal {
   }
 
   // =========================================================================
-  // TAB 1: AUFTRÄGE (AKTIVER AUFTRAG + AUFTRAGS-POOL)
+  // TAB 1: AUFTRÄGE (3 GLEICHZEITIG AKTIVE AUFTRÄGE)
   // =========================================================================
   renderMissionsTab() {
-    const mission = this.missionSystem.activeMission;
-    const isDone = this.missionSystem.isCompleted;
+    if (this.missionSystem.ensureAvailableMissions) {
+      this.missionSystem.ensureAvailableMissions(3);
+    }
+    const available = this.missionSystem.availableMissions || [];
     const curLevel = this.player.level || 1;
-    const activeId = mission ? mission.id : null;
 
-    let activeBannerHtml = '';
-    if (!mission) {
-      activeBannerHtml = `
-        <div style="background: rgba(15, 23, 42, 0.75); border: 1.5px dashed rgba(56, 189, 248, 0.35); border-radius: 12px; padding: 16px; text-align: center; color: #94a3b8;">
-          <div style="color: #38bdf8; margin-bottom: 6px;">${icon('compass', '', 24)}</div>
-          <div style="font-weight: 700; color: #f8fafc; font-size: 13.5px; margin-bottom: 4px;">Kein Auftrag aktiv</div>
-          <p style="font-size: 11.5px; margin: 0; color: #cbd5e1;">Wähle unten einen der verfügbaren Bergbau-Aufträge aus, um Prämien und XP zu verdienen.</p>
-        </div>
-      `;
-    } else {
-      const maxProg = mission.targetCount || mission.targetDepth || 1;
-      const curProg = Math.min(maxProg, this.missionSystem.progress);
-      const pct = Math.round((curProg / maxProg) * 100);
+    const cardsHtml = available.length === 0 ? `
+      <div style="text-align: center; padding: 28px 16px; color: #94a3b8; font-size: 12.5px; background: rgba(15,23,42,0.6); border-radius: 12px; border: 1.5px dashed rgba(56,189,248,0.25);">
+        ${icon('check-circle', '', 28)}
+        <div style="font-weight: 700; color: #f8fafc; font-size: 14px; margin: 8px 0 4px 0;">Alle Aufträge erfüllt!</div>
+        <p style="margin: 0; color: #cbd5e1; font-size: 12px;">Aktuell stehen keine weiteren Aufträge an. Erkunde tiefere Schichten oder steigere dein Level für neue Verträge.</p>
+      </div>
+    ` : available.map(m => {
+      const isDone = !!m.isCompleted;
+      const isUpcoming = !isDone && curLevel < m.minLevel;
+      const maxProg = m.targetCount || m.targetDepth || 1;
+      const curProg = Math.min(maxProg, m.progress || 0);
+      const pct = Math.min(100, Math.round((curProg / maxProg) * 100));
 
-      activeBannerHtml = `
-        <!-- Card: Aktiver Auftrag Header -->
+      return `
         <div style="
           background: rgba(15, 23, 42, 0.85);
-          border: 1px solid ${isDone ? 'rgba(16, 185, 129, 0.5)' : 'rgba(56, 189, 248, 0.4)'};
-          border-left: 5px solid ${isDone ? '#10b981' : '#38bdf8'};
+          border: 1px solid ${isDone ? 'rgba(16, 185, 129, 0.5)' : isUpcoming ? 'rgba(245, 158, 11, 0.35)' : 'rgba(56, 189, 248, 0.3)'};
+          border-left: 5px solid ${isDone ? '#10b981' : isUpcoming ? '#f59e0b' : '#38bdf8'};
           border-radius: 12px;
           padding: 14px 16px;
           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+          transition: all 0.2s ease;
         ">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 8px;">
             <div>
               <span style="
                 font-size: 10px;
                 font-weight: 800;
-                color: ${isDone ? '#10b981' : '#38bdf8'};
+                color: ${isDone ? '#10b981' : isUpcoming ? '#fbbf24' : '#38bdf8'};
                 text-transform: uppercase;
                 letter-spacing: 0.8px;
-                background: ${isDone ? 'rgba(16, 185, 129, 0.15)' : 'rgba(56, 189, 248, 0.15)'};
+                background: ${isDone ? 'rgba(16, 185, 129, 0.15)' : isUpcoming ? 'rgba(245, 158, 11, 0.15)' : 'rgba(56, 189, 248, 0.15)'};
                 padding: 2px 8px;
                 border-radius: 4px;
                 display: inline-flex;
                 align-items: center;
                 gap: 5px;
               ">
-                ${icon(isDone ? 'check-circle' : 'crosshair', '', 12)}
-                ${isDone ? 'AUFTRAG ERFÜLLT' : 'AKTUELL IN ARBEIT'}
+                ${icon(isDone ? 'check-circle' : isUpcoming ? 'lock' : 'crosshair', '', 12)}
+                ${isDone ? 'AUFTRAG ERFÜLLT' : isUpcoming ? `DEMNÄCHST (AB LVL ${m.minLevel})` : 'IN ARBEIT'}
               </span>
-              <h3 style="color: #f8fafc; font-size: 16px; font-weight: 700; margin: 6px 0 2px 0;">${mission.title}</h3>
+              <h3 style="color: #f8fafc; font-size: 15px; font-weight: 700; margin: 6px 0 2px 0;">${m.title}</h3>
             </div>
-            <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
-              <span style="background: rgba(251, 191, 36, 0.15); color: #fbbf24; font-weight: 800; font-size: 11.5px; padding: 4px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
-                ${icon('coins', '', 12)} €${mission.rewardCash}
+            <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
+              <span style="background: rgba(251, 191, 36, 0.15); color: #fbbf24; font-weight: 800; font-size: 11.5px; padding: 3px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+                ${icon('coins', '', 12)} €${m.rewardCash.toLocaleString('de-DE')}
               </span>
-              <span style="background: rgba(168, 85, 247, 0.15); color: #c084fc; font-weight: 800; font-size: 11.5px; padding: 4px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
-                ${icon('award', '', 12)} ${mission.rewardXp} XP
+              <span style="background: rgba(168, 85, 247, 0.15); color: #c084fc; font-weight: 800; font-size: 11.5px; padding: 3px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+                ${icon('award', '', 12)} ${m.rewardXp} XP
               </span>
-              ${mission.rewardComp ? `
-                <span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-weight: 800; font-size: 11.5px; padding: 4px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
-                  ${icon('package', '', 12)} +${mission.rewardComp.count || 1}x ${mission.rewardComp.name || 'Bauteil'}
+              ${m.rewardComp ? `
+                <span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-weight: 800; font-size: 11.5px; padding: 3px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+                  ${icon('package', '', 12)} +${m.rewardComp.count || 1}x ${m.rewardComp.name || 'Bauteil'}
                 </span>
               ` : ''}
             </div>
           </div>
 
-          <p style="font-size: 12px; line-height: 1.45; color: #cbd5e1; margin-bottom: 12px;">
-            ${mission.desc}
+          <p style="font-size: 12px; line-height: 1.45; color: #cbd5e1; margin: 0 0 10px 0;">
+            ${m.desc}
           </p>
 
           <!-- Fortschrittsbalken -->
@@ -278,15 +283,15 @@ export class MissionsProgressModal {
             <div style="display: flex; justify-content: space-between; font-size: 11.5px; font-weight: 700; margin-bottom: 5px;">
               <span style="color: #cbd5e1; display: inline-flex; align-items: center; gap: 5px;">
                 ${icon('target', '', 13)}
-                ${mission.type === 'COLLECT_ORE' ? `Gefördert: ${curProg} von ${maxProg} <span style="display: inline-flex; align-items: center; gap: 4px;">${oreIcon(mission.targetOre, 13)} ${ORE_DATA[mission.targetOre]?.name || 'Erzen'}</span>` : `Ziel-Tiefe: ${curProg} von ${maxProg} Metern`}
+                ${m.type === 'COLLECT_ORE' ? `Gefördert: <strong style="color: #f8fafc; margin: 0 2px;">${curProg}/${maxProg}</strong> <span style="display: inline-flex; align-items: center; gap: 4px;">${oreIcon(m.targetOre, 13)} ${ORE_DATA[m.targetOre]?.name || 'Erzen'}</span>` : `Ziel-Tiefe: <strong style="color: #f8fafc; margin: 0 2px;">${curProg}/${maxProg}</strong> Meter`}
               </span>
-              <span style="color: ${isDone ? '#10b981' : '#38bdf8'};">${pct}%</span>
+              <span style="color: ${isDone ? '#10b981' : isUpcoming ? '#fbbf24' : '#38bdf8'}; font-weight: 800;">${pct}%</span>
             </div>
-            <div style="width: 100%; height: 8px; background: rgba(15, 23, 42, 0.9); border-radius: 99px; overflow: hidden;">
+            <div style="width: 100%; height: 7px; background: rgba(15, 23, 42, 0.9); border-radius: 99px; overflow: hidden;">
               <div style="
                 width: ${pct}%;
                 height: 100%;
-                background: ${isDone ? 'linear-gradient(90deg, #10b981, #34d399)' : 'linear-gradient(90deg, #2563eb, #38bdf8)'};
+                background: ${isDone ? 'linear-gradient(90deg, #10b981, #34d399)' : isUpcoming ? 'linear-gradient(90deg, #d97706, #fbbf24)' : 'linear-gradient(90deg, #2563eb, #38bdf8)'};
                 border-radius: 99px;
                 transition: width 0.3s ease;
               "></div>
@@ -294,115 +299,68 @@ export class MissionsProgressModal {
           </div>
 
           <!-- Aktions-Buttons -->
-          <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-            <button id="btn-reroll-mission" class="btn-3d-secondary" style="height: 34px; box-sizing: border-box; font-size: 11.5px; padding: 0 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 8px;">
-              ${icon('refresh-cw', '', 13)} Anderer Auftrag
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; padding-top: 6px; border-top: 1px solid rgba(255, 255, 255, 0.05);">
+            <button class="btn-reroll-single-mission btn-3d-secondary" data-mid="${m.id}" style="height: 32px; box-sizing: border-box; font-size: 11px; padding: 0 12px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; border-radius: 7px;">
+              ${icon('refresh-cw', '', 12)} Anderer Auftrag
             </button>
-            <button id="btn-claim-in-modal" class="btn-buy" style="
-              height: 34px;
-              box-sizing: border-box;
-              padding: 0 16px;
-              font-size: 12px;
-              font-weight: 800;
-              display: inline-flex;
-              align-items: center;
-              justify-content: center;
-              gap: 6px;
-              border-radius: 8px;
-              ${isDone ? 'background: linear-gradient(180deg, #10b981 0%, #059669 100%); border-color: #34d399; border-bottom: 3px solid #047857; color: #ffffff;' : ''}
-            " ${isDone ? '' : 'disabled'}>
-              ${icon('check-circle', '', 14)}
-              <span>${isDone ? 'Belohnung abholen' : 'In Arbeit'}</span>
-            </button>
+            <div>
+              ${isDone ? `
+                <button class="btn-claim-mission btn-buy" data-mid="${m.id}" style="
+                  height: 32px;
+                  box-sizing: border-box;
+                  padding: 0 16px;
+                  font-size: 11.5px;
+                  font-weight: 800;
+                  display: inline-flex;
+                  align-items: center;
+                  justify-content: center;
+                  gap: 6px;
+                  border-radius: 7px;
+                  background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+                  border-color: #34d399;
+                  border-bottom: 3px solid #047857;
+                  color: #ffffff;
+                ">
+                  ${icon('check-circle', '', 14)}
+                  <span>Belohnung abholen</span>
+                </button>
+              ` : `
+                <span style="font-size: 11px; color: #94a3b8; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; padding: 0 4px;">
+                  ${icon('clock', '', 12)}
+                  <span>${isUpcoming ? `Freischaltung ab Rang ${m.minLevel}` : 'Aktiv im Schacht'}</span>
+                </span>
+              `}
+            </div>
           </div>
         </div>
       `;
-    }
-
-    const visibleMissions = MISSION_POOL.filter(m => {
-      if (m.type === 'COLLECT_ORE' && !this.player.isOreDiscovered(m.targetOre)) {
-        return false;
-      }
-      return true;
-    });
+    }).join('');
 
     return `
-      <div style="display: flex; flex-direction: column; gap: 14px;">
-        ${activeBannerHtml}
-
-        <!-- Überschrift Auftrags-Pool -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; padding: 0 2px;">
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <!-- Header Info Bar -->
+        <div style="
+          background: rgba(15, 23, 42, 0.6);
+          border: 1px solid rgba(56, 189, 248, 0.2);
+          border-radius: 10px;
+          padding: 10px 14px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 8px;
+        ">
           <div style="font-size: 12px; font-weight: 800; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.6px; display: flex; align-items: center; gap: 6px;">
-            ${icon('clipboard-list', '', 14)} Verfügbare Bergbau-Aufträge
+            ${icon('clipboard-list', '', 14)} Auftragsbörse (3 aktive Verträge)
           </div>
           <span style="font-size: 11px; color: #94a3b8;">
             Schachttiefe: <strong style="color: #38bdf8;">${this.player.depthMeters > 0 ? `-${this.player.depthMeters}` : '0'}m</strong> · Fracht: <strong style="color: #f8fafc;">${this.player.cargoCount}/${this.player.maxCargo}</strong>
           </span>
         </div>
 
-        <!-- Auftrags-Karten Liste -->
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-          ${visibleMissions.length === 0 ? `
-            <div style="text-align: center; padding: 24px 16px; color: #94a3b8; font-size: 12px; background: rgba(15,23,42,0.5); border-radius: 10px; border: 1px dashed rgba(255,255,255,0.1);">
-              Keine weiteren Aufträge verfügbar. Erkunde tiefere Schichten, um neue Erze und Aufträge freizuschalten!
-            </div>
-          ` : visibleMissions.map(m => {
-            const isCurrent = activeId === m.id;
-            const isLocked = curLevel < m.minLevel;
-
-            return `
-              <div style="
-                background: ${isCurrent ? 'rgba(56, 189, 248, 0.12)' : 'rgba(15, 23, 42, 0.65)'};
-                border: 1px solid ${isCurrent ? '#38bdf8' : isLocked ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.08)'};
-                border-radius: 10px;
-                padding: 10px 14px;
-                opacity: ${isLocked ? '0.6' : '1'};
-              ">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
-                  <div>
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                      <strong style="color: #f8fafc; font-size: 13px;">${m.title}</strong>
-                      ${isCurrent ? `<span style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; font-size: 9px; font-weight: 800; padding: 1px 6px; border-radius: 4px;">Aktiv</span>` : ''}
-                    </div>
-                    <div style="font-size: 11px; color: #cbd5e1; margin-top: 2px;">${m.desc}</div>
-                  </div>
-                  <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
-                    <span style="color: #fbbf24; font-weight: 700; font-size: 11.5px; display: inline-flex; align-items: center; gap: 3px;">
-                      ${icon('coins', '', 12)} €${m.rewardCash}
-                    </span>
-                    <span style="color: #c084fc; font-weight: 700; font-size: 11.5px; display: inline-flex; align-items: center; gap: 3px;">
-                      ${icon('award', '', 12)} ${m.rewardXp} XP
-                    </span>
-                    ${m.rewardComp ? `
-                      <span style="color: #38bdf8; font-weight: 700; font-size: 11.5px; display: inline-flex; align-items: center; gap: 3px;">
-                        ${icon('package', '', 12)} +${m.rewardComp.count || 1} ${m.rewardComp.name || 'Bauteil'}
-                      </span>
-                    ` : ''}
-                  </div>
-                </div>
-
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.04);">
-                  <span style="font-size: 11px; color: #cbd5e1; font-weight: 600;">
-                    ${isLocked ? `<span style="color: #ef4444; font-weight: 700;">Benötigt Level ${m.minLevel}</span>` : `Ab Level ${m.minLevel}`}
-                  </span>
-                  <div>
-                    ${isCurrent ? `
-                      <span style="height: 30px; font-size: 11.5px; color: #38bdf8; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; padding: 0 8px;">
-                        ${icon('check', '', 14)} Ausgewählt
-                      </span>
-                    ` : isLocked ? `
-                      <button class="btn-3d-secondary" disabled style="height: 30px; box-sizing: border-box; padding: 0 12px; font-size: 11px;">Gesperrt</button>
-                    ` : `
-                      <button class="btn-select-mission btn-buy" data-mid="${m.id}" style="height: 30px; box-sizing: border-box; padding: 0 12px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">
-                        ${icon('check', '', 12)}
-                        <span>Annehmen</span>
-                      </button>
-                    `}
-                  </div>
-                </div>
-              </div>
-            `;
-          }).join('')}
+        <!-- 3 Auftrags-Karten -->
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          ${cardsHtml}
         </div>
       </div>
     `;
@@ -980,7 +938,27 @@ export class MissionsProgressModal {
   }
 
   attachTabListeners(bodyEl) {
-    // Belohnung einfordern (Tab 1)
+    // Belohnung für einzelnen Auftrag einfordern (Tab 1)
+    const claimBtns = bodyEl.querySelectorAll('.btn-claim-mission');
+    claimBtns.forEach(btn => {
+      btn.onclick = () => {
+        const mid = btn.getAttribute('data-mid');
+        this.missionSystem.claimReward(mid);
+        this.render();
+      };
+    });
+
+    // Einzelnen Auftrag neu auswürfeln / tauschen (Tab 1)
+    const rerollBtns = bodyEl.querySelectorAll('.btn-reroll-single-mission');
+    rerollBtns.forEach(btn => {
+      btn.onclick = () => {
+        const mid = btn.getAttribute('data-mid');
+        this.missionSystem.rerollMission(mid);
+        this.render();
+      };
+    });
+
+    // Fallbacks für alte Buttons
     const btnClaim = bodyEl.querySelector('#btn-claim-in-modal');
     if (btnClaim) {
       btnClaim.onclick = () => {
@@ -990,7 +968,6 @@ export class MissionsProgressModal {
       };
     }
 
-    // Neuer Auftrag / Reroll (Tab 1)
     const btnReroll = bodyEl.querySelector('#btn-reroll-mission');
     if (btnReroll) {
       btnReroll.onclick = () => {
@@ -1000,7 +977,7 @@ export class MissionsProgressModal {
       };
     }
 
-    // Auftrag aus Pool annehmen
+    // Auftrag aus Pool annehmen (Fallback)
     const selectBtns = bodyEl.querySelectorAll('.btn-select-mission');
     selectBtns.forEach(btn => {
       btn.onclick = () => {
