@@ -162,15 +162,15 @@ export function getRefinedOreNetValue(oreKey) {
 // Bohrkopf-Stufen & DPS (Entwicklung im Labor -> Montage im Hangar)
 export const DRILL_TIERS = [
   { tier: 1, name: 'Stahl-Bohrkopf', stat: '38 DPS', cost: 0, comp: null, mountComps: null, level: 1, desc: 'Solider Bohrkopf für Humus & lockere Erde (ca. 1.2s pro Block).' },
-  { tier: 2, name: 'Wolframkarbid-Spitze', stat: '52 DPS', cost: 280, comp: null, mountComps: [{ key: 'iron_tube', name: 'Stahl-Rohr', count: 1, source: 'Fabrik' }], level: 1, desc: 'Fräst spürbar flüssiger durch Erde (ca. 0.9s) und Schiefer.' },
-  { tier: 3, name: 'Gehärteter Meißel Mk.III', stat: '60 DPS', cost: 1750, comp: null, mountComps: [{ key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1, source: 'Fabrik' }, { key: 'capacitor', name: 'Druck-Kondensator', count: 1, source: 'Geologe' }], level: 1, desc: 'Schneidet zügig durch Stein und zerbröckelt Fels.' },
-  { tier: 4, name: 'Titan-Diamant-Kopf Mk.IV', stat: '82 DPS', cost: 4600, comp: null, mountComps: [{ key: 'silver_coil', name: 'Silber-Spule', count: 2, source: 'Fabrik' }], level: 2, desc: 'Hydraulisch verstärkte Fräse zermalmt harte Granitadern.' },
-  { tier: 5, name: 'Hochdruck-Fräse Mk.V', stat: '115 DPS', cost: 12000, comp: null, mountComps: [{ key: 'silver_coil', name: 'Silber-Spule', count: 1, source: 'Fabrik' }, { key: 'spectrometer', name: 'Sensor-Spektrometer', count: 1, source: 'Geologe' }], level: 3, desc: 'Panzerung und Zahnkränze fräsen mühelos durch Granit und Basalt.' },
-  { tier: 6, name: 'Plasma-Schneidbrenner Mk.VI', stat: '165 DPS', cost: 27000, comp: null, mountComps: [{ key: 'crystal_lens', name: 'Kristall-Linse', count: 1, source: 'Fabrik' }, { key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Geologe' }], level: 4, desc: 'Fokussierter Plasmastrahl schmilzt Obsidian-Gestein.' },
-  { tier: 7, name: 'Laser-Kavitationsmeißel Mk.VII', stat: '240 DPS', cost: 58000, comp: null, mountComps: [{ key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Geologe' }, { key: 'spectrometer', name: 'Sensor-Spektrometer', count: 1, source: 'Geologe' }], level: 5, desc: 'Höchste Schneidleistung für schwerste Tiefenerze.' },
-  { tier: 8, name: 'Antimaterie-Bohrer Mk.VIII', stat: '350 DPS', cost: 125000, comp: null, mountComps: [{ key: 'titan_bolt', name: 'Titan-Bolzen', count: 2, source: 'Fabrik' }], level: 6, desc: 'Fräst durch das härteste Urgestein wie Butter.' },
-  { tier: 9, name: 'Singularitäts-Fräse Mk.IX', stat: '500 DPS', cost: 245000, comp: null, mountComps: [{ key: 'titan_bolt', name: 'Titan-Bolzen', count: 1, source: 'Fabrik' }, { key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Geologe' }], level: 8, desc: 'Erzeugt Mikrogravitations-Kollapse vor dem Bohrkopf.' },
-  { tier: 10, name: 'Tachyonen-Disruptor X', stat: '700 DPS', cost: 480000, comp: null, mountComps: [{ key: 'quantum_core', name: 'Quanten-Kern', count: 1, source: 'Fabrik' }, { key: 'quantum_processor', name: 'Quanten-Prozessor', count: 1, source: 'Geologe' }], level: 10, desc: 'Zersetzt die Molekularstruktur des Erdkerns in Sekundenbruchteilen.' }
+  { tier: 2, name: 'Wolframkarbid-Spitze', stat: '52 DPS', cost: 920, comp: null, mountComps: [{ key: 'iron_tube', name: 'Stahl-Rohr', count: 1, source: 'Fabrik' }], level: 1, desc: 'Fräst spürbar flüssiger durch Erde (ca. 0.9s) und Schiefer.' },
+  { tier: 3, name: 'Gehärteter Meißel Mk.III', stat: '60 DPS', cost: 3400, comp: null, mountComps: [{ key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1, source: 'Fabrik' }, { key: 'capacitor', name: 'Druck-Kondensator', count: 1, source: 'Geologe' }], level: 1, desc: 'Schneidet zügig durch Stein und zerbröckelt Fels.' },
+  { tier: 4, name: 'Titan-Diamant-Kopf Mk.IV', stat: '82 DPS', cost: 8800, comp: null, mountComps: [{ key: 'silver_coil', name: 'Silber-Spule', count: 2, source: 'Fabrik' }], level: 2, desc: 'Hydraulisch verstärkte Fräse zermalmt harte Granitadern.' },
+  { tier: 5, name: 'Hochdruck-Fräse Mk.V', stat: '115 DPS', cost: 22000, comp: null, mountComps: [{ key: 'silver_coil', name: 'Silber-Spule', count: 1, source: 'Fabrik' }, { key: 'spectrometer', name: 'Sensor-Spektrometer', count: 1, source: 'Geologe' }], level: 3, desc: 'Panzerung und Zahnkränze fräsen mühelos durch Granit und Basalt.' },
+  { tier: 6, name: 'Plasma-Schneidbrenner Mk.VI', stat: '165 DPS', cost: 48000, comp: null, mountComps: [{ key: 'crystal_lens', name: 'Kristall-Linse', count: 1, source: 'Fabrik' }, { key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Geologe' }], level: 4, desc: 'Fokussierter Plasmastrahl schmilzt Obsidian-Gestein.' },
+  { tier: 7, name: 'Laser-Kavitationsmeißel Mk.VII', stat: '240 DPS', cost: 98000, comp: null, mountComps: [{ key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Geologe' }, { key: 'spectrometer', name: 'Sensor-Spektrometer', count: 1, source: 'Geologe' }], level: 5, desc: 'Höchste Schneidleistung für schwerste Tiefenerze.' },
+  { tier: 8, name: 'Antimaterie-Bohrer Mk.VIII', stat: '350 DPS', cost: 210000, comp: null, mountComps: [{ key: 'titan_bolt', name: 'Titan-Bolzen', count: 2, source: 'Fabrik' }], level: 6, desc: 'Fräst durch das härteste Urgestein wie Butter.' },
+  { tier: 9, name: 'Singularitäts-Fräse Mk.IX', stat: '500 DPS', cost: 415000, comp: null, mountComps: [{ key: 'titan_bolt', name: 'Titan-Bolzen', count: 1, source: 'Fabrik' }, { key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Geologe' }], level: 8, desc: 'Erzeugt Mikrogravitations-Kollapse vor dem Bohrkopf.' },
+  { tier: 10, name: 'Tachyonen-Disruptor X', stat: '700 DPS', cost: 820000, comp: null, mountComps: [{ key: 'quantum_core', name: 'Quanten-Kern', count: 1, source: 'Fabrik' }, { key: 'quantum_processor', name: 'Quanten-Prozessor', count: 1, source: 'Geologe' }], level: 10, desc: 'Zersetzt die Molekularstruktur des Erdkerns in Sekundenbruchteilen.' }
 ];
 export const DRILL_DPS = [38, 52, 60, 82, 115, 165, 240, 350, 500, 700];
 export const DRILL_DATA = DRILL_TIERS;
@@ -178,15 +178,15 @@ export const DRILL_DATA = DRILL_TIERS;
 // Zentrale Depot-Ausbaustufen (10 Tiers mit linear-exponentieller Kapazität)
 export const DEPOT_TIERS = [
   { tier: 1, capacity: 10, costCash: 0, label: 'Kompaktes Lagerfach' },
-  { tier: 2, capacity: 25, costCash: 450, label: 'Erweitertes Regallager' },
-  { tier: 3, capacity: 60, costCash: 1600, costComp: { iron_tube: 1 }, compName: '1x Stahl-Rohr', label: 'Automatisierte Förderbrücke' },
-  { tier: 4, capacity: 150, costCash: 4200, costComp: { bronze_gear: 1 }, compName: '1x Bronze-Getriebe', label: 'Schwergut-Containerterminal' },
-  { tier: 5, capacity: 350, costCash: 11000, costComp: { bronze_gear: 2 }, compName: '2x Bronze-Getriebe', label: 'Industrie-Großlager' },
-  { tier: 6, capacity: 650, costCash: 24000, costComp: { silver_coil: 2 }, compName: '2x Silber-Spule', label: 'Logistik-Zentralverteiler' },
-  { tier: 7, capacity: 1000, costCash: 52000, costComp: { crystal_lens: 1 }, compName: '1x Kristall-Linse', label: 'Quanten-Kompressionslager' },
-  { tier: 8, capacity: 1500, costCash: 115000, costComp: { crystal_lens: 2 }, compName: '2x Kristall-Linse', label: 'Subraum-Speicherkomplex' },
-  { tier: 9, capacity: 2200, costCash: 230000, costComp: { titan_bolt: 2 }, compName: '2x Titan-Bolzen', label: 'Megaspeicher-Matrix' },
-  { tier: 10, capacity: 3000, costCash: 450000, costComp: { quantum_core: 2 }, compName: '2x Quanten-Kern', label: 'Interdimensionales Zentrallager' }
+  { tier: 2, capacity: 25, costCash: 850, label: 'Erweitertes Regallager' },
+  { tier: 3, capacity: 60, costCash: 2600, costComp: { iron_tube: 1 }, compName: '1x Stahl-Rohr', label: 'Automatisierte Förderbrücke' },
+  { tier: 4, capacity: 150, costCash: 6800, costComp: { bronze_gear: 1 }, compName: '1x Bronze-Getriebe', label: 'Schwergut-Containerterminal' },
+  { tier: 5, capacity: 350, costCash: 16500, costComp: { bronze_gear: 2 }, compName: '2x Bronze-Getriebe', label: 'Industrie-Großlager' },
+  { tier: 6, capacity: 650, costCash: 36000, costComp: { silver_coil: 2 }, compName: '2x Silber-Spule', label: 'Logistik-Zentralverteiler' },
+  { tier: 7, capacity: 1000, costCash: 75000, costComp: { crystal_lens: 1 }, compName: '1x Kristall-Linse', label: 'Quanten-Kompressionslager' },
+  { tier: 8, capacity: 1500, costCash: 160000, costComp: { crystal_lens: 2 }, compName: '2x Kristall-Linse', label: 'Subraum-Speicherkomplex' },
+  { tier: 9, capacity: 2200, costCash: 320000, costComp: { titan_bolt: 2 }, compName: '2x Titan-Bolzen', label: 'Megaspeicher-Matrix' },
+  { tier: 10, capacity: 3000, costCash: 620000, costComp: { quantum_core: 2 }, compName: '2x Quanten-Kern', label: 'Interdimensionales Zentrallager' }
 ];
 
 // Zentrale Hangar-Ausbaustufen (Tank- und Reparaturrate am Oberflächen-Dock)
@@ -205,7 +205,7 @@ export const HANGAR_TIERS = [
     name: 'Druckluft-Schnellbetankung Mk.II',
     fuelSpeed: 40,
     repairSpeed: 100,
-    costCash: 600,
+    costCash: 1100,
     costComps: [{ key: 'iron_tube', name: 'Stahl-Rohr', count: 1, source: 'Fabrik' }],
     desc: 'Hochdruckpumpe für doppelte Durchflussrate und verstärkte Schweißleistung.'
   },
@@ -214,7 +214,7 @@ export const HANGAR_TIERS = [
     name: 'Turbinen-Servicebrücke Mk.III',
     fuelSpeed: 75,
     repairSpeed: 180,
-    costCash: 1800,
+    costCash: 3200,
     costComps: [{ key: 'microprocessor', name: 'Mikroprozessor', count: 1, source: 'Geologe' }],
     desc: 'Mikroprozessor-gesteuerter Injektor & automatisierter Doppel-Schweißarm.'
   },
@@ -223,7 +223,7 @@ export const HANGAR_TIERS = [
     name: 'Industrie-Hochdruckdock Mk.IV',
     fuelSpeed: 130,
     repairSpeed: 300,
-    costCash: 4500,
+    costCash: 8000,
     costComps: [{ key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1, source: 'Fabrik' }, { key: 'capacitor', name: 'Druck-Kondensator', count: 1, source: 'Geologe' }],
     desc: 'Industrielle Getriebepumpen und Hochspannungs-Schweißkondensatoren.'
   },
@@ -232,7 +232,7 @@ export const HANGAR_TIERS = [
     name: 'Plasma-Kompressionstankstelle Mk.V',
     fuelSpeed: 220,
     repairSpeed: 500,
-    costCash: 12000,
+    costCash: 19000,
     costComps: [{ key: 'silver_coil', name: 'Silber-Spule', count: 2, source: 'Fabrik' }],
     desc: 'Plasmabeschleunigter Kerosinfluss füllt schwere Tanks in unter 2 Sekunden.'
   },
@@ -241,7 +241,7 @@ export const HANGAR_TIERS = [
     name: 'Nanit-Instandsetzungsdock Mk.VI',
     fuelSpeed: 360,
     repairSpeed: 800,
-    costCash: 28000,
+    costCash: 42000,
     costComps: [{ key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Geologe' }],
     desc: 'Autonomer Naniten-Schwarm rekonstruiert Hüllenschäden in Sekundenschnelle.'
   },
@@ -250,7 +250,7 @@ export const HANGAR_TIERS = [
     name: 'Kryo-Quantenservicestation Mk.VII',
     fuelSpeed: 580,
     repairSpeed: 1250,
-    costCash: 60000,
+    costCash: 85000,
     costComps: [{ key: 'crystal_lens', name: 'Kristall-Linse', count: 1, source: 'Fabrik' }, { key: 'spectrometer', name: 'Sensor-Spektrometer', count: 1, source: 'Geologe' }],
     desc: 'Kryogenische Kompression und Spektrometer-gesteuerte Molekularreparatur.'
   },
@@ -259,7 +259,7 @@ export const HANGAR_TIERS = [
     name: 'Subraum-Resonanzdock Mk.VIII',
     fuelSpeed: 950,
     repairSpeed: 1800,
-    costCash: 130000,
+    costCash: 175000,
     costComps: [{ key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Geologe' }, { key: 'titan_bolt', name: 'Titan-Bolzen', count: 1, source: 'Fabrik' }],
     desc: 'Gravitationswellen-Transfer füllt auch riesige Tanks nahezu verzögerungsfrei.'
   },
@@ -268,7 +268,7 @@ export const HANGAR_TIERS = [
     name: 'Singularitäts-Dock Mk.IX',
     fuelSpeed: 1500,
     repairSpeed: 2700,
-    costCash: 250000,
+    costCash: 340000,
     costComps: [{ key: 'titan_bolt', name: 'Titan-Bolzen', count: 2, source: 'Fabrik' }],
     desc: 'Hyperraum-Transfertankung und simultane Hüllen-Reparatur.'
   },
@@ -277,7 +277,7 @@ export const HANGAR_TIERS = [
     name: 'Chrono-Quanten-Zentraldock X',
     fuelSpeed: 2500,
     repairSpeed: 4000,
-    costCash: 480000,
+    costCash: 650000,
     costComps: [{ key: 'quantum_core', name: 'Quanten-Kern', count: 1, source: 'Fabrik' }, { key: 'quantum_processor', name: 'Quanten-Prozessor', count: 1, source: 'Geologe' }],
     desc: 'Ultimative Versorgungsmatrix: Nullzeit-Betankung und augenblickliche Reparatur.'
   }
@@ -293,7 +293,7 @@ export const EXPEDITION_ITEMS = [
     name: 'Erzförderung (Schicht 1 & 2)',
     badge: '0–180m',
     desc: 'Förderschacht für Humus & Schiefer (bis 180m). Saugt Erze direkt ins Depot ab.',
-    price: 350,
+    price: 650,
     icon: 'conveyor-belt',
     minDepth: 5,
     maxDepth: 180,
@@ -306,7 +306,7 @@ export const EXPEDITION_ITEMS = [
     name: 'Erzförderung (Schicht 3 & 4)',
     badge: '180–950m',
     desc: 'Verstärkter Förderschacht für Granit & Obsidian (180–950m). Druckfeste Rohre.',
-    price: 1800,
+    price: 2600,
     icon: 'conveyor-belt',
     minDepth: 5,
     maxDepth: 950,
@@ -319,7 +319,7 @@ export const EXPEDITION_ITEMS = [
     name: 'Erzförderung (Schicht 5)',
     badge: '>950m',
     desc: 'Titan-Kernbohr-Förderschacht für Urgestein (>950m). Höchste Tiefenbeständigkeit.',
-    price: 7500,
+    price: 11500,
     icon: 'conveyor-belt',
     minDepth: 5,
     maxDepth: 99999,
@@ -334,7 +334,7 @@ export const EXPEDITION_ITEMS = [
     name: 'Tankanlage (Schicht 1 & 2)',
     badge: '0–180m',
     desc: 'Untertage-Tankanlage für Humus & Schiefer (bis 180m). Roboter-Betankungsarm.',
-    price: 500,
+    price: 650,
     icon: 'fuel',
     minDepth: 5,
     maxDepth: 180,
@@ -347,7 +347,7 @@ export const EXPEDITION_ITEMS = [
     name: 'Tankanlage (Schicht 3 & 4)',
     badge: '180–950m',
     desc: 'Hochdruck-Tankanlage für Granit & Obsidian (180–950m). Schnelles Tiefenbetanken.',
-    price: 2600,
+    price: 3500,
     icon: 'fuel',
     minDepth: 5,
     maxDepth: 950,
@@ -360,7 +360,7 @@ export const EXPEDITION_ITEMS = [
     name: 'Tankanlage (Schicht 5)',
     badge: '>950m',
     desc: 'Thermo-resistente Tiefen-Tankanlage für Urgestein (>950m). Für extremste Tiefen.',
-    price: 11000,
+    price: 14000,
     icon: 'fuel',
     minDepth: 5,
     maxDepth: 99999,
@@ -375,7 +375,7 @@ export const EXPEDITION_ITEMS = [
     badge: 'Sprengladung',
     desc: 'Platziert TNT im Fels. Kann mehrfach gelegt und per Touch-Aktionsbutton gezündet werden.',
     reqResearch: { track: 'tnt', tier: 1, label: 'Sprengtechnik Stufe 1' },
-    price: 250,
+    price: 350,
     icon: 'bomb'
   },
   {
@@ -385,7 +385,7 @@ export const EXPEDITION_ITEMS = [
     badge: '+20L Tank',
     desc: 'Füllt unter Tage sofort +20L Treibstoff nach (per Touch-Aktion im Cockpit).',
     reqResearch: { track: 'emergency_gear', tier: 1, label: 'Notfallset Stufe 1' },
-    price: 120,
+    price: 160,
     icon: 'fuel'
   },
   {
@@ -395,7 +395,7 @@ export const EXPEDITION_ITEMS = [
     badge: '+40 HP Hülle',
     desc: 'Repariert im Notfall sofort +40 HP Panzerung (per Touch-Aktion im Cockpit).',
     reqResearch: { track: 'emergency_gear', tier: 1, label: 'Notfallset Stufe 1' },
-    price: 180,
+    price: 240,
     icon: 'wrench'
   }
 ];
@@ -850,7 +850,7 @@ export class BaseSystem {
         spriteKey: 'building_drone_hangar',
         gx: -16,
         height: 70,
-        costCash: 2400,
+        costCash: 3800,
         costComp: { iron_tube: 1 },
         isBuilt: false,
         storedOres: ['coal', 'copper'],
@@ -867,7 +867,7 @@ export class BaseSystem {
         spriteKey: 'building_powerplant',
         gx: 42,
         height: 76,
-        costCash: 14500,
+        costCash: 18500,
         costComp: { silver_coil: 2, crystal_lens: 1 },
         isBuilt: false,
         timer: 0,
@@ -4507,7 +4507,7 @@ export class BaseSystem {
             tier: 1,
             name: 'Dynamit-Sprengsatz Stufe 1',
             stat: '3x3 Feld',
-            cost: 350,
+            cost: 850,
             level: 1,
             comp: { key: 'iron_tube', name: 'Stahl-Rohr', count: 1 },
             desc: 'Erforscht die kontrollierte Gesteinssprengung per Fernzünder. Schaltet Dynamit im Depot-Shop frei.'
@@ -4516,7 +4516,7 @@ export class BaseSystem {
             tier: 2,
             name: 'Verstärkte Ladung Stufe 2',
             stat: '4x4 Feld',
-            cost: 1200,
+            cost: 2800,
             level: 2,
             comp: { key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1 },
             desc: 'Kompaktierter Sprengstoff vergrößert den Explosionsradius auf ein 4x4-Feld.'
@@ -4525,7 +4525,7 @@ export class BaseSystem {
             tier: 3,
             name: 'Hohlladungs-Sprengstoff Stufe 3',
             stat: '5x5 Feld',
-            cost: 3200,
+            cost: 7500,
             level: 3,
             comp: { key: 'silver_coil', name: 'Silber-Spule', count: 1 },
             desc: 'Gerichtete Detonationswellen sprengen gigantische 5x5-Kavernen in den Fels.'
@@ -4534,7 +4534,7 @@ export class BaseSystem {
             tier: 4,
             name: 'Seismische Megaladung Stufe 4',
             stat: '6x6 Feld',
-            cost: 7500,
+            cost: 18000,
             level: 4,
             comp: { key: 'crystal_lens', name: 'Kristall-Linse', count: 1 },
             desc: 'Maximale seismische Sprengkraft bis 6x6 Kacheln für massive Durchbrüche im tiefsten Gestein.'
@@ -4543,7 +4543,7 @@ export class BaseSystem {
             tier: 5,
             name: 'Thermo-Kavitationsladung Stufe 5',
             stat: '7x7 Feld',
-            cost: 18000,
+            cost: 42000,
             level: 5,
             comp: { key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1 },
             desc: 'Hochenergetische Implosions-Kavitation sprengt ein gewaltiges 7x7-Feld im Gestein frei.'
@@ -4552,7 +4552,7 @@ export class BaseSystem {
             tier: 6,
             name: 'Subatomare Schockwelle Stufe 6',
             stat: '8x8 Feld',
-            cost: 45000,
+            cost: 95000,
             level: 6,
             comp: { key: 'titan_bolt', name: 'Titan-Bolzen', count: 2 },
             desc: 'Verdichtete Schockwellen pulverisieren selbst härtestes Basaltgestein in einem 8x8-Feld.'
@@ -4561,7 +4561,7 @@ export class BaseSystem {
             tier: 7,
             name: 'Gravitations-Kollapsor Stufe 7',
             stat: '9x9 Feld',
-            cost: 95000,
+            cost: 220000,
             level: 8,
             comp: { key: 'graviton_core', name: 'Gravitations-Modulator', count: 1 },
             desc: 'Ultimative Detonations-Matrix erzeugt einen gewaltigen 9x9-Durchbruch in tiefsten Urgesteinschichten.'
@@ -4583,7 +4583,7 @@ export class BaseSystem {
             tier: 1,
             name: 'Notfall-Expeditionsset',
             stat: '+20L / +40HP',
-            cost: 200,
+            cost: 550,
             level: 1,
             comp: null,
             desc: 'Schaltet Notfall-Treibstoffkanister und Feld-Reparatur-Kits im Depot-Shop frei.'
@@ -4605,7 +4605,7 @@ export class BaseSystem {
             tier: 1,
             name: 'Förderschacht (Schicht 1 & 2)',
             stat: '0–180m',
-            cost: 350,
+            cost: 850,
             level: 1,
             comp: { key: 'iron_tube', name: 'Stahl-Rohr', count: 1 },
             desc: 'Schaltet pneumatische Förderschächte für Schicht 1 & 2 im Depot-Shop frei.'
@@ -4614,7 +4614,7 @@ export class BaseSystem {
             tier: 2,
             name: 'Förderschacht (Schicht 3 & 4)',
             stat: '180–950m',
-            cost: 1600,
+            cost: 3600,
             level: 2,
             comp: { key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1 },
             desc: 'Schaltet druckfeste Förderschächte für Schicht 3 & 4 im Depot-Shop frei.'
@@ -4623,7 +4623,7 @@ export class BaseSystem {
             tier: 3,
             name: 'Förderschacht (Schicht 5)',
             stat: '>950m',
-            cost: 6500,
+            cost: 15000,
             level: 4,
             comp: { key: 'titan_bolt', name: 'Titan-Bolzen', count: 1 },
             desc: 'Schaltet Tiefen-Förderschächte für Urgestein (>950m) im Depot-Shop frei.'
@@ -4645,7 +4645,7 @@ export class BaseSystem {
             tier: 1,
             name: 'Tankanlage (Schicht 1 & 2)',
             stat: '0–180m',
-            cost: 450,
+            cost: 950,
             level: 1,
             comp: { key: 'iron_tube', name: 'Stahl-Rohr', count: 1 },
             desc: 'Schaltet Untertage-Tankanlagen für Schicht 1 & 2 im Depot-Shop frei.'
@@ -4654,7 +4654,7 @@ export class BaseSystem {
             tier: 2,
             name: 'Tankanlage (Schicht 3 & 4)',
             stat: '180–950m',
-            cost: 2200,
+            cost: 4800,
             level: 2,
             comp: { key: 'silver_coil', name: 'Silber-Spule', count: 1 },
             desc: 'Schaltet Hochdruck-Tankanlagen für Schicht 3 & 4 im Depot-Shop frei.'
@@ -4663,7 +4663,7 @@ export class BaseSystem {
             tier: 3,
             name: 'Tankanlage (Schicht 5)',
             stat: '>950m',
-            cost: 8500,
+            cost: 18500,
             level: 4,
             comp: { key: 'crystal_lens', name: 'Kristall-Linse', count: 1 },
             desc: 'Schaltet thermo-resistente Tankanlagen für Urgestein (>950m) im Depot-Shop frei.'

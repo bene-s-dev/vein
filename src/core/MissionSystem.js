@@ -17,7 +17,7 @@ export const MISSION_POOL = [
     type: 'COLLECT_ORE',
     targetOre: 'coal',
     targetCount: 5,
-    rewardCash: 220,
+    rewardCash: 140,
     rewardXp: 100,
     minLevel: 1
   },
@@ -28,7 +28,7 @@ export const MISSION_POOL = [
     type: 'COLLECT_ORE',
     targetOre: 'copper',
     targetCount: 4,
-    rewardCash: 320,
+    rewardCash: 190,
     rewardXp: 140,
     minLevel: 1
   },
@@ -38,7 +38,7 @@ export const MISSION_POOL = [
     desc: 'Dringe durch die Humusschicht bis auf eine Tiefe von 25 Metern vor.',
     type: 'REACH_DEPTH',
     targetDepth: 25,
-    rewardCash: 450,
+    rewardCash: 260,
     rewardXp: 180,
     rewardComp: { key: 'iron_tube', name: 'Stahl-Rohr', count: 1 },
     minLevel: 1
@@ -50,7 +50,7 @@ export const MISSION_POOL = [
     type: 'COLLECT_ORE',
     targetOre: 'iron',
     targetCount: 4,
-    rewardCash: 650,
+    rewardCash: 360,
     rewardXp: 260,
     rewardComp: { key: 'iron_tube', name: 'Stahl-Rohr', count: 1 },
     minLevel: 1
@@ -62,7 +62,7 @@ export const MISSION_POOL = [
     type: 'COLLECT_ORE',
     targetOre: 'coal',
     targetCount: 8,
-    rewardCash: 380,
+    rewardCash: 220,
     rewardXp: 160,
     minLevel: 1
   },
@@ -73,7 +73,7 @@ export const MISSION_POOL = [
     type: 'COLLECT_ORE',
     targetOre: 'copper',
     targetCount: 6,
-    rewardCash: 480,
+    rewardCash: 280,
     rewardXp: 200,
     minLevel: 1
   },
@@ -83,7 +83,7 @@ export const MISSION_POOL = [
     desc: 'Erkunde die tiefsten Schichten des Humus und erreiche 45 Meter Tiefe.',
     type: 'REACH_DEPTH',
     targetDepth: 45,
-    rewardCash: 580,
+    rewardCash: 340,
     rewardXp: 240,
     rewardComp: { key: 'iron_tube', name: 'Stahl-Rohr', count: 1 },
     minLevel: 1
@@ -96,7 +96,7 @@ export const MISSION_POOL = [
     desc: 'Stoße in die Schieferschichten vor und erreiche eine Tiefe von 65 Metern.',
     type: 'REACH_DEPTH',
     targetDepth: 65,
-    rewardCash: 850,
+    rewardCash: 520,
     rewardXp: 350,
     rewardComp: { key: 'iron_tube', name: 'Stahl-Rohr', count: 1 },
     minLevel: 2
@@ -108,7 +108,7 @@ export const MISSION_POOL = [
     type: 'COLLECT_ORE',
     targetOre: 'tin',
     targetCount: 4,
-    rewardCash: 950,
+    rewardCash: 580,
     rewardXp: 400,
     rewardComp: { key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1 },
     minLevel: 2
@@ -120,7 +120,7 @@ export const MISSION_POOL = [
     type: 'COLLECT_ORE',
     targetOre: 'iron',
     targetCount: 6,
-    rewardCash: 1100,
+    rewardCash: 680,
     rewardXp: 450,
     rewardComp: { key: 'iron_tube', name: 'Stahl-Rohr', count: 1 },
     minLevel: 2
@@ -131,7 +131,7 @@ export const MISSION_POOL = [
     desc: 'Dringe tief in das Schiefergestein vor und erreiche 110 Meter Schachttiefe.',
     type: 'REACH_DEPTH',
     targetDepth: 110,
-    rewardCash: 1250,
+    rewardCash: 780,
     rewardXp: 480,
     rewardComp: { key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1 },
     minLevel: 2
@@ -143,7 +143,7 @@ export const MISSION_POOL = [
     type: 'COLLECT_ORE',
     targetOre: 'tin',
     targetCount: 6,
-    rewardCash: 1400,
+    rewardCash: 850,
     rewardXp: 520,
     minLevel: 2
   },

@@ -12,7 +12,7 @@ export const INSURANCE_PLANS = [
     layerName: 'Humus',
     depthRange: '0 – 50 m',
     maxDepth: 50,
-    price: 150,
+    price: 280,
     color: '#d97706',
     desc: 'Basis-Schutz für die oberste Schicht (0–50 m). Bergungsdrohnen schleppen deinen Crawler bei Treibstoffmangel sicher an die Oberfläche.'
   },
@@ -21,7 +21,7 @@ export const INSURANCE_PLANS = [
     layerName: 'Schiefer',
     depthRange: '0 – 180 m',
     maxDepth: 180,
-    price: 450,
+    price: 750,
     color: '#64748b',
     desc: 'Erweiterte Bergung bis 180 m Tiefe. Deckt Humus und Schiefergestein zuverlässig ab.'
   },
@@ -30,7 +30,7 @@ export const INSURANCE_PLANS = [
     layerName: 'Granit',
     depthRange: '0 – 480 m',
     maxDepth: 480,
-    price: 1500,
+    price: 2400,
     color: '#38bdf8',
     desc: 'Schwerer Drohnen-Schutz bis 480 m Tiefe für Expeditionen in zähen Tiefengranit.'
   },
@@ -39,7 +39,7 @@ export const INSURANCE_PLANS = [
     layerName: 'Obsidian',
     depthRange: '0 – 950 m',
     maxDepth: 950,
-    price: 5000,
+    price: 7500,
     color: '#a855f7',
     desc: 'Hitzebeständige Tiefen-Bergungsdrohnen für vulkanische Schichten bis 950 m.'
   },
@@ -48,7 +48,7 @@ export const INSURANCE_PLANS = [
     layerName: 'Urgestein',
     depthRange: 'Alle Schichten (> 950 m)',
     maxDepth: 99999,
-    price: 15000,
+    price: 22000,
     color: '#ef4444',
     desc: 'Ultimative Subraum-Bergungsmatrix. Schützt deinen Crawler bis in tiefste Kernzonen.'
   }
