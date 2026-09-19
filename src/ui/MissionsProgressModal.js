@@ -923,19 +923,43 @@ export class MissionsProgressModal {
         </div>
 
         <!-- Fahrzeug-Spezifikationen & Tech-Stufen -->
-        <div style="background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 10px; padding: 12px;">
-          <div style="font-size: 12px; font-weight: 800; color: #38bdf8; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+        <div style="background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 10px; padding: 14px 16px;">
+          <div style="font-size: 12px; font-weight: 800; color: #38bdf8; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
             ${icon('wrench', '', 13)} Installierte Tech-Komponenten & Missionen
           </div>
-          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; font-size: 11.5px;">
-            <span style="color: #cbd5e1; font-weight: 600;">Treibstoff-Tank: <strong style="color: #f8fafc; font-weight: 800;">Stufe ${p.tankTier || 1} (${p.maxFuel}L)</strong></span>
-            <span style="color: #cbd5e1; font-weight: 600;">Bohrkopf: <strong style="color: #f8fafc; font-weight: 800;">Stufe ${p.drillTier || 1} (${p.drillPower} DPS)</strong></span>
-            <span style="color: #cbd5e1; font-weight: 600;">Frachtraum: <strong style="color: #f8fafc; font-weight: 800;">Stufe ${p.cargoTier || 1} (${p.maxCargo} Erze)</strong></span>
-            <span style="color: #cbd5e1; font-weight: 600;">Rumpfpanzerung: <strong style="color: #f8fafc; font-weight: 800;">Stufe ${p.hullTier || 1} (${p.maxHull} HP)</strong></span>
-            <span style="color: #cbd5e1; font-weight: 600;">Sensor-Radar: <strong style="color: #f8fafc; font-weight: 800;">Stufe ${p.sensorTier || 1} (${p.sensorRadius} Kacheln)</strong></span>
-            <span style="color: #cbd5e1; font-weight: 600;">Bergbau-Aufträge: <strong style="color: #f8fafc; font-weight: 800;">${stats.missionsCompleted || 0} erfüllt</strong></span>
-            <span style="color: #cbd5e1; font-weight: 600;">Geologie-Forschung: <strong style="color: #f8fafc; font-weight: 800;">${stats.researchCompleted || 0} Proben eingereicht</strong></span>
-            <span style="color: #cbd5e1; font-weight: 600;">Bodenschätze gesamt: <strong style="color: #f8fafc; font-weight: 800;">${totalOresCount} gefördert</strong></span>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 24px; font-size: 11.5px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 3px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.06);">
+              <span style="color: #94a3b8; font-weight: 600;">Treibstoff-Tank:</span>
+              <strong style="color: #f8fafc; font-weight: 800; text-align: right;">Stufe ${p.tankTier || 1} (${p.maxFuel}L)</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 3px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.06);">
+              <span style="color: #94a3b8; font-weight: 600;">Bohrkopf:</span>
+              <strong style="color: #f8fafc; font-weight: 800; text-align: right;">Stufe ${p.drillTier || 1} (${p.drillPower} DPS)</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 3px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.06);">
+              <span style="color: #94a3b8; font-weight: 600;">Frachtraum:</span>
+              <strong style="color: #f8fafc; font-weight: 800; text-align: right;">Stufe ${p.cargoTier || 1} (${p.maxCargo} Erze)</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 3px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.06);">
+              <span style="color: #94a3b8; font-weight: 600;">Rumpfpanzerung:</span>
+              <strong style="color: #f8fafc; font-weight: 800; text-align: right;">Stufe ${p.hullTier || 1} (${p.maxHull} HP)</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 3px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.06);">
+              <span style="color: #94a3b8; font-weight: 600;">Sensor-Radar:</span>
+              <strong style="color: #f8fafc; font-weight: 800; text-align: right;">Stufe ${p.sensorTier || 1} (${p.sensorRadius} Kacheln)</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 3px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.06);">
+              <span style="color: #94a3b8; font-weight: 600;">Bergbau-Aufträge:</span>
+              <strong style="color: #f8fafc; font-weight: 800; text-align: right;">${stats.missionsCompleted || 0} erfüllt</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 3px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.06);">
+              <span style="color: #94a3b8; font-weight: 600;">Geologie-Forschung:</span>
+              <strong style="color: #f8fafc; font-weight: 800; text-align: right;">${stats.researchCompleted || 0} Proben eingereicht</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 3px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.06);">
+              <span style="color: #94a3b8; font-weight: 600;">Bodenschätze gesamt:</span>
+              <strong style="color: #f8fafc; font-weight: 800; text-align: right;">${totalOresCount} gefördert</strong>
+            </div>
           </div>
         </div>
 
