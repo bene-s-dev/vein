@@ -1,0 +1,76 @@
+{
+  "frames": {
+    "item_dynamite": {
+      "frame": {
+        "x": 1,
+        "y": 1,
+        "w": 32,
+        "h": 32
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 32,
+        "h": 32
+      },
+      "sourceSize": {
+        "w": 32,
+        "h": 32
+      }
+    },
+    "item_fuel_canister": {
+      "frame": {
+        "x": 34,
+        "y": 1,
+        "w": 32,
+        "h": 32
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 32,
+        "h": 32
+      },
+      "sourceSize": {
+        "w": 32,
+        "h": 32
+      }
+    },
+    "item_repair_kit": {
+      "frame": {
+        "x": 67,
+        "y": 1,
+        "w": 32,
+        "h": 32
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 32,
+        "h": 32
+      },
+      "sourceSize": {
+        "w": 32,
+        "h": 32
+      }
+    }
+  },
+  "meta": {
+    "app": "build-atlases.mjs",
+    "version": "1.0",
+    "image": "atlas_items.webp",
+    "format": "RGBA8888",
+    "size": {
+      "w": 100,
+      "h": 34
+    },
+    "scale": 1,
+    "generated": "2026-09-19T18:06:11.619Z"
+  }
+}

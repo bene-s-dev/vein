@@ -1,0 +1,276 @@
+{
+  "frames": {
+    "surface_crane": {
+      "frame": {
+        "x": 1,
+        "y": 1,
+        "w": 64,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 64,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 64,
+        "h": 80
+      }
+    },
+    "station_fuel": {
+      "frame": {
+        "x": 66,
+        "y": 1,
+        "w": 36,
+        "h": 48
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 36,
+        "h": 48
+      },
+      "sourceSize": {
+        "w": 36,
+        "h": 48
+      }
+    },
+    "station_geothermal": {
+      "frame": {
+        "x": 103,
+        "y": 1,
+        "w": 36,
+        "h": 48
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 36,
+        "h": 48
+      },
+      "sourceSize": {
+        "w": 36,
+        "h": 48
+      }
+    },
+    "station_pneumatic_tube": {
+      "frame": {
+        "x": 140,
+        "y": 1,
+        "w": 36,
+        "h": 48
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 36,
+        "h": 48
+      },
+      "sourceSize": {
+        "w": 36,
+        "h": 48
+      }
+    },
+    "surface_lantern": {
+      "frame": {
+        "x": 177,
+        "y": 1,
+        "w": 16,
+        "h": 48
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 48
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 48
+      }
+    },
+    "npc_geologist": {
+      "frame": {
+        "x": 194,
+        "y": 1,
+        "w": 16,
+        "h": 22
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 22
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 22
+      }
+    },
+    "particle_smoke": {
+      "frame": {
+        "x": 211,
+        "y": 1,
+        "w": 8,
+        "h": 8
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 8,
+        "h": 8
+      },
+      "sourceSize": {
+        "w": 8,
+        "h": 8
+      }
+    },
+    "particle_thrust": {
+      "frame": {
+        "x": 220,
+        "y": 1,
+        "w": 6,
+        "h": 6
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 6
+      },
+      "sourceSize": {
+        "w": 6,
+        "h": 6
+      }
+    },
+    "particle_rock": {
+      "frame": {
+        "x": 227,
+        "y": 1,
+        "w": 5,
+        "h": 5
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 5,
+        "h": 5
+      },
+      "sourceSize": {
+        "w": 5,
+        "h": 5
+      }
+    },
+    "particle_dust_brown": {
+      "frame": {
+        "x": 233,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "sourceSize": {
+        "w": 4,
+        "h": 4
+      }
+    },
+    "particle_dust_grey": {
+      "frame": {
+        "x": 238,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "sourceSize": {
+        "w": 4,
+        "h": 4
+      }
+    },
+    "particle_dust_dark": {
+      "frame": {
+        "x": 243,
+        "y": 1,
+        "w": 3,
+        "h": 3
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 3,
+        "h": 3
+      },
+      "sourceSize": {
+        "w": 3,
+        "h": 3
+      }
+    },
+    "particle_spark": {
+      "frame": {
+        "x": 247,
+        "y": 1,
+        "w": 3,
+        "h": 3
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 3,
+        "h": 3
+      },
+      "sourceSize": {
+        "w": 3,
+        "h": 3
+      }
+    }
+  },
+  "meta": {
+    "app": "build-atlases.mjs",
+    "version": "1.0",
+    "image": "atlas_misc.webp",
+    "format": "RGBA8888",
+    "size": {
+      "w": 251,
+      "h": 82
+    },
+    "scale": 1,
+    "generated": "2026-09-19T18:06:11.619Z"
+  }
+}

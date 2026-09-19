@@ -1,0 +1,516 @@
+{
+  "frames": {
+    "building_powerplant": {
+      "frame": {
+        "x": 1,
+        "y": 1,
+        "w": 96,
+        "h": 76
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 96,
+        "h": 76
+      },
+      "sourceSize": {
+        "w": 96,
+        "h": 76
+      }
+    },
+    "building_dock": {
+      "frame": {
+        "x": 98,
+        "y": 1,
+        "w": 112,
+        "h": 72
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 72
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 72
+      }
+    },
+    "building_factory": {
+      "frame": {
+        "x": 211,
+        "y": 1,
+        "w": 104,
+        "h": 72
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 104,
+        "h": 72
+      },
+      "sourceSize": {
+        "w": 104,
+        "h": 72
+      }
+    },
+    "building_lab": {
+      "frame": {
+        "x": 316,
+        "y": 1,
+        "w": 108,
+        "h": 72
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 108,
+        "h": 72
+      },
+      "sourceSize": {
+        "w": 108,
+        "h": 72
+      }
+    },
+    "building_refinery": {
+      "frame": {
+        "x": 425,
+        "y": 1,
+        "w": 104,
+        "h": 72
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 104,
+        "h": 72
+      },
+      "sourceSize": {
+        "w": 104,
+        "h": 72
+      }
+    },
+    "building_depot": {
+      "frame": {
+        "x": 530,
+        "y": 1,
+        "w": 92,
+        "h": 70
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 92,
+        "h": 70
+      },
+      "sourceSize": {
+        "w": 92,
+        "h": 70
+      }
+    },
+    "building_drone_hangar": {
+      "frame": {
+        "x": 623,
+        "y": 1,
+        "w": 84,
+        "h": 70
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 84,
+        "h": 70
+      },
+      "sourceSize": {
+        "w": 84,
+        "h": 70
+      }
+    },
+    "building_office": {
+      "frame": {
+        "x": 708,
+        "y": 1,
+        "w": 100,
+        "h": 70
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 100,
+        "h": 70
+      },
+      "sourceSize": {
+        "w": 100,
+        "h": 70
+      }
+    },
+    "building_market": {
+      "frame": {
+        "x": 809,
+        "y": 1,
+        "w": 100,
+        "h": 68
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 100,
+        "h": 68
+      },
+      "sourceSize": {
+        "w": 100,
+        "h": 68
+      }
+    },
+    "building_factory_t3": {
+      "frame": {
+        "x": 910,
+        "y": 1,
+        "w": 92,
+        "h": 64
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 92,
+        "h": 64
+      },
+      "sourceSize": {
+        "w": 92,
+        "h": 64
+      }
+    },
+    "building_depot_t3": {
+      "frame": {
+        "x": 1,
+        "y": 78,
+        "w": 84,
+        "h": 62
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 84,
+        "h": 62
+      },
+      "sourceSize": {
+        "w": 84,
+        "h": 62
+      }
+    },
+    "building_dock_t2": {
+      "frame": {
+        "x": 86,
+        "y": 78,
+        "w": 88,
+        "h": 56
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 88,
+        "h": 56
+      },
+      "sourceSize": {
+        "w": 88,
+        "h": 56
+      }
+    },
+    "building_factory_t2": {
+      "frame": {
+        "x": 175,
+        "y": 78,
+        "w": 78,
+        "h": 56
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 78,
+        "h": 56
+      },
+      "sourceSize": {
+        "w": 78,
+        "h": 56
+      }
+    },
+    "building_lab_t2": {
+      "frame": {
+        "x": 254,
+        "y": 78,
+        "w": 80,
+        "h": 56
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 56
+      },
+      "sourceSize": {
+        "w": 80,
+        "h": 56
+      }
+    },
+    "building_depot_t2": {
+      "frame": {
+        "x": 335,
+        "y": 78,
+        "w": 74,
+        "h": 54
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 74,
+        "h": 54
+      },
+      "sourceSize": {
+        "w": 74,
+        "h": 54
+      }
+    },
+    "building_market_t2": {
+      "frame": {
+        "x": 410,
+        "y": 78,
+        "w": 78,
+        "h": 54
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 78,
+        "h": 54
+      },
+      "sourceSize": {
+        "w": 78,
+        "h": 54
+      }
+    },
+    "building_mine_entrance": {
+      "frame": {
+        "x": 489,
+        "y": 78,
+        "w": 76,
+        "h": 52
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 76,
+        "h": 52
+      },
+      "sourceSize": {
+        "w": 76,
+        "h": 52
+      }
+    },
+    "building_plot": {
+      "frame": {
+        "x": 566,
+        "y": 78,
+        "w": 76,
+        "h": 44
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 76,
+        "h": 44
+      },
+      "sourceSize": {
+        "w": 76,
+        "h": 44
+      }
+    },
+    "building_dock_t1": {
+      "frame": {
+        "x": 643,
+        "y": 78,
+        "w": 64,
+        "h": 42
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 64,
+        "h": 42
+      },
+      "sourceSize": {
+        "w": 64,
+        "h": 42
+      }
+    },
+    "building_factory_t1": {
+      "frame": {
+        "x": 708,
+        "y": 78,
+        "w": 58,
+        "h": 42
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 58,
+        "h": 42
+      },
+      "sourceSize": {
+        "w": 58,
+        "h": 42
+      }
+    },
+    "building_depot_t1": {
+      "frame": {
+        "x": 767,
+        "y": 78,
+        "w": 56,
+        "h": 40
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 56,
+        "h": 40
+      },
+      "sourceSize": {
+        "w": 56,
+        "h": 40
+      }
+    },
+    "building_lab_t1": {
+      "frame": {
+        "x": 824,
+        "y": 78,
+        "w": 54,
+        "h": 40
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 54,
+        "h": 40
+      },
+      "sourceSize": {
+        "w": 54,
+        "h": 40
+      }
+    },
+    "building_market_t1": {
+      "frame": {
+        "x": 879,
+        "y": 78,
+        "w": 56,
+        "h": 40
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 56,
+        "h": 40
+      },
+      "sourceSize": {
+        "w": 56,
+        "h": 40
+      }
+    },
+    "building_office_t1": {
+      "frame": {
+        "x": 936,
+        "y": 78,
+        "w": 52,
+        "h": 40
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 52,
+        "h": 40
+      },
+      "sourceSize": {
+        "w": 52,
+        "h": 40
+      }
+    },
+    "speech_bubble": {
+      "frame": {
+        "x": 989,
+        "y": 78,
+        "w": 18,
+        "h": 14
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 18,
+        "h": 14
+      },
+      "sourceSize": {
+        "w": 18,
+        "h": 14
+      }
+    }
+  },
+  "meta": {
+    "app": "build-atlases.mjs",
+    "version": "1.0",
+    "image": "atlas_buildings.webp",
+    "format": "RGBA8888",
+    "size": {
+      "w": 1008,
+      "h": 141
+    },
+    "scale": 1,
+    "generated": "2026-09-19T18:06:11.619Z"
+  }
+}
