@@ -86,21 +86,21 @@ export class EmergencyRescueModal {
           border: 1px solid rgba(239, 68, 68, 0.35);
           box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
           border-radius: 16px;
-          max-width: 360px;
+          max-width: 380px;
           width: 92%;
-          padding: 22px 20px;
+          padding: 20px;
           box-sizing: border-box;
           color: #f8fafc;
           text-align: center;
         ">
-          <div style="width: 46px; height: 46px; border-radius: 12px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.25); color: #f87171; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+          <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.25); color: #f87171; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 10px;">
             ${icon('fuel', '', 22)}
           </div>
 
-          <h2 style="margin: 0 0 6px 0; font-size: 18px; font-weight: 800; color: #ffffff;">
+          <h2 style="margin: 0 0 4px 0; font-size: 18px; font-weight: 800; color: #ffffff;">
             Treibstoff leer
           </h2>
-          <div style="font-size: 13px; color: #94a3b8; margin-bottom: 12px;">
+          <div style="font-size: 12.5px; color: #94a3b8; margin-bottom: 12px;">
             ${depth} m Tiefe (${layer.name})
           </div>
 
@@ -109,13 +109,53 @@ export class EmergencyRescueModal {
             background: rgba(56, 189, 248, 0.08);
             border: 1px solid rgba(56, 189, 248, 0.2);
             color: #38bdf8;
-            font-size: 12px;
-            font-weight: 600;
-            padding: 6px 12px;
-            border-radius: 8px;
-            margin-bottom: 18px;
+            font-size: 11.5px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 6px;
+            margin-bottom: 12px;
           ">
             Kostenlose Erstbergung verfügbar
+          </div>
+
+          <!-- Einsatzbefehl & Versicherungshinweis -->
+          <div style="
+            background: rgba(15, 23, 42, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin-bottom: 15px;
+            text-align: left;
+            font-size: 11px;
+            line-height: 1.4;
+            color: #cbd5e1;
+          ">
+            <div style="display: flex; gap: 8px; align-items: flex-start; margin-bottom: 7px;">
+              <div style="color: #38bdf8; flex-shrink: 0; margin-top: 1px;">
+                ${icon('radio', '', 14)}
+              </div>
+              <div>
+                <strong style="color: #f8fafc;">Einsatzbefehl der Grubenwehr:</strong><br>
+                Bergefahrzeug rückt aus, schleppt deinen Crawler an die Oberfläche und betankt ihn mit Notreserve.
+              </div>
+            </div>
+
+            <div style="
+              background: rgba(245, 158, 11, 0.1);
+              border: 1px solid rgba(245, 158, 11, 0.25);
+              border-radius: 6px;
+              padding: 6px 8px;
+              font-size: 10.5px;
+              color: #fde68a;
+              display: flex;
+              gap: 6px;
+              align-items: flex-start;
+            ">
+              <span style="color: #fbbf24; flex-shrink: 0; margin-top: 1px;">${icon('shield-alert', '', 13)}</span>
+              <span>
+                <strong>Versicherung:</strong> Dies ist deine einmalige Kulanz-Bergung. Für künftige Fahrten musst du im Büro (Tab „Versicherung“) eine Police abschließen.
+              </span>
+            </div>
           </div>
 
           <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -219,13 +259,36 @@ export class EmergencyRescueModal {
             background: rgba(16, 185, 129, 0.08);
             border: 1px solid rgba(16, 185, 129, 0.2);
             color: #34d399;
-            font-size: 12px;
-            font-weight: 600;
-            padding: 6px 12px;
-            border-radius: 8px;
-            margin-bottom: 18px;
+            font-size: 11.5px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 6px;
+            margin-bottom: 12px;
           ">
             Versichert (${ins.layerName})
+          </div>
+
+          <!-- Einsatzbefehl -->
+          <div style="
+            background: rgba(15, 23, 42, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin-bottom: 15px;
+            text-align: left;
+            font-size: 11px;
+            line-height: 1.4;
+            color: #cbd5e1;
+          ">
+            <div style="display: flex; gap: 8px; align-items: flex-start;">
+              <div style="color: #34d399; flex-shrink: 0; margin-top: 1px;">
+                ${icon('radio', '', 14)}
+              </div>
+              <div>
+                <strong style="color: #f8fafc;">Einsatzbefehl der Grubenwehr:</strong><br>
+                Bergefahrzeug rückt aus, schleppt deinen Crawler an die Oberfläche und betankt ihn mit Notreserve.
+              </div>
+            </div>
           </div>
 
           <div style="display: flex; flex-direction: column; gap: 8px;">
