@@ -43,16 +43,16 @@ export const LEVEL_BONUS_REWARDS = {
 };
 
 export const TANK_TIERS = [
-  { tier: 1, name: 'Standard-Tank', maxFuel: 40, stat: '40 L', cost: 0, comp: null, mountComps: null, level: 1, desc: 'Kompakter Basis-Treibstofftank für kurze Schacht-Expeditionen.' },
-  { tier: 2, name: 'Kerosin-Tank Mk.II', maxFuel: 70, stat: '70 L', cost: 850, comp: null, mountComps: [{ key: 'iron_tube', name: 'Stahl-Rohr', count: 2, source: 'Fabrik' }], level: 1, desc: 'Erhöht Treibstoff auf 70 Liter und senkt Verbrauch um 12%.' },
-  { tier: 3, name: 'Spartriebwerk Mk.III', maxFuel: 110, stat: '110 L', cost: 3000, comp: null, mountComps: [{ key: 'microprocessor', name: 'Mikroprozessor', count: 1, source: 'Geologe' }], level: 1, desc: 'Erhöht Treibstoff auf 110 Liter und spart 20% Kerosin.' },
-  { tier: 4, name: 'Dual-Injektor Mk.IV', maxFuel: 165, stat: '165 L', cost: 8200, comp: null, mountComps: [{ key: 'silver_coil', name: 'Silber-Spule', count: 1, source: 'Fabrik' }, { key: 'capacitor', name: 'Druck-Kondensator', count: 1, source: 'Geologe' }], level: 2, desc: 'Verbessert Steigflug-Effizienz mit Hochdruck-Injektoren (165 L).' },
-  { tier: 5, name: 'Kompressions-Tank Mk.V', maxFuel: 235, stat: '235 L', cost: 20000, comp: null, mountComps: [{ key: 'iron_tube', name: 'Stahl-Rohr', count: 2, source: 'Fabrik' }, { key: 'capacitor', name: 'Druck-Kondensator', count: 1, source: 'Geologe' }], level: 3, desc: 'Hochfeste Legierung erlaubt 235 Liter Treibstoffkapazität.' },
-  { tier: 6, name: 'Turbo-Booster Mk.VI', maxFuel: 330, stat: '330 L', cost: 45000, comp: null, mountComps: [{ key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Geologe' }], level: 4, desc: 'Großer 330L Tank für tiefe Expeditionen.' },
-  { tier: 7, name: 'Fusions-Zelle Mk.VII', maxFuel: 460, stat: '460 L', cost: 92000, comp: null, mountComps: [{ key: 'crystal_lens', name: 'Kristall-Linse', count: 1, source: 'Fabrik' }, { key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Geologe' }], level: 5, desc: 'Hocheffizienter Fusions-Antrieb mit 460 Litern Kapazität.' },
-  { tier: 8, name: 'Plasma-Injektor Mk.VIII', maxFuel: 630, stat: '630 L', cost: 195000, comp: null, mountComps: [{ key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Geologe' }, { key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Geologe' }], level: 6, desc: 'Plasmagespeister 630L Tank mit geringstem Kerosinverbrauch.' },
-  { tier: 9, name: 'Dunkelfeld-Speicher Mk.IX', maxFuel: 850, stat: '850 L', cost: 380000, comp: null, mountComps: [{ key: 'titan_bolt', name: 'Titan-Bolzen', count: 2, source: 'Fabrik' }], level: 8, desc: 'Hochenergie-Tank für ausgedehnte Tiefen-Expeditionen.' },
-  { tier: 10, name: 'Quanten-Ionen-Matrix X', maxFuel: 1200, stat: '1200 L', cost: 760000, comp: null, mountComps: [{ key: 'quantum_core', name: 'Quanten-Kern', count: 1, source: 'Fabrik' }, { key: 'quantum_processor', name: 'Quanten-Prozessor', count: 1, source: 'Geologe' }], level: 10, desc: 'Ultimative 1200L Quantenmatrix mit nahezu unschöpflichem Schub.' }
+  { tier: 1, name: 'Standard-Tank', maxFuel: 60, stat: '60 L', cost: 0, comp: null, mountComps: null, level: 1, desc: 'Solider Basis-Treibstofftank für die ersten Schacht-Expeditionen.' },
+  { tier: 2, name: 'Kerosin-Tank Mk.II', maxFuel: 95, stat: '95 L', cost: 450, comp: null, mountComps: null, level: 1, desc: 'Erhöht Treibstoff auf 95 Liter und senkt Verbrauch um 12%.' },
+  { tier: 3, name: 'Spartriebwerk Mk.III', maxFuel: 140, stat: '140 L', cost: 2200, comp: null, mountComps: [{ key: 'iron_tube', name: 'Stahl-Rohr', count: 1, source: 'Fabrik' }], level: 1, desc: 'Erhöht Treibstoff auf 140 Liter und spart 20% Kerosin.' },
+  { tier: 4, name: 'Dual-Injektor Mk.IV', maxFuel: 195, stat: '195 L', cost: 7200, comp: null, mountComps: [{ key: 'silver_coil', name: 'Silber-Spule', count: 1, source: 'Fabrik' }, { key: 'capacitor', name: 'Druck-Kondensator', count: 1, source: 'Geologe' }], level: 2, desc: 'Verbessert Steigflug-Effizienz mit Hochdruck-Injektoren (195 L).' },
+  { tier: 5, name: 'Kompressions-Tank Mk.V', maxFuel: 260, stat: '260 L', cost: 18000, comp: null, mountComps: [{ key: 'iron_tube', name: 'Stahl-Rohr', count: 2, source: 'Fabrik' }, { key: 'capacitor', name: 'Druck-Kondensator', count: 1, source: 'Geologe' }], level: 3, desc: 'Hochfeste Legierung erlaubt 260 Liter Treibstoffkapazität.' },
+  { tier: 6, name: 'Turbo-Booster Mk.VI', maxFuel: 350, stat: '350 L', cost: 42000, comp: null, mountComps: [{ key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Geologe' }], level: 4, desc: 'Großer 350L Tank für tiefe Expeditionen.' },
+  { tier: 7, name: 'Fusions-Zelle Mk.VII', maxFuel: 480, stat: '480 L', cost: 88000, comp: null, mountComps: [{ key: 'crystal_lens', name: 'Kristall-Linse', count: 1, source: 'Fabrik' }, { key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Geologe' }], level: 5, desc: 'Hocheffizienter Fusions-Antrieb mit 480 Litern Kapazität.' },
+  { tier: 8, name: 'Plasma-Injektor Mk.VIII', maxFuel: 650, stat: '650 L', cost: 185000, comp: null, mountComps: [{ key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Geologe' }, { key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Geologe' }], level: 6, desc: 'Plasmagespeister 650L Tank mit geringstem Kerosinverbrauch.' },
+  { tier: 9, name: 'Dunkelfeld-Speicher Mk.IX', maxFuel: 880, stat: '880 L', cost: 360000, comp: null, mountComps: [{ key: 'titan_bolt', name: 'Titan-Bolzen', count: 2, source: 'Fabrik' }], level: 8, desc: 'Hochenergie-Tank für ausgedehnte Tiefen-Expeditionen.' },
+  { tier: 10, name: 'Quanten-Ionen-Matrix X', maxFuel: 1250, stat: '1250 L', cost: 740000, comp: null, mountComps: [{ key: 'quantum_core', name: 'Quanten-Kern', count: 1, source: 'Fabrik' }, { key: 'quantum_processor', name: 'Quanten-Prozessor', count: 1, source: 'Geologe' }], level: 10, desc: 'Ultimative 1250L Quantenmatrix mit nahezu unschöpflichem Schub.' }
 ];
 
 export const HULL_TIERS = [
@@ -177,8 +177,8 @@ export class Player {
       .setVisible(false);
 
     // Fahrzeug-Werte & Stats (ausbalancierte Wirtschaft)
-    this.maxFuel = 40;
-    this.fuel = 40;
+    this.maxFuel = 60;
+    this.fuel = 60;
     this.fuelEfficiency = 1.0;
     this.tankTier = 1;
     this.researchedTankTier = 1; // Im Labor erforschter Bauplan (Montage im Hangar erforderlich)
@@ -422,8 +422,8 @@ export class Player {
     this.maxHull = 50;
     this.hull = 50;
     this._hullBrokenToastShown = false;
-    this.maxFuel = 40;
-    this.fuel = 40;
+    this.maxFuel = 60;
+    this.fuel = 60;
     this.fuelEfficiency = 1.0;
     this.moveDuration = 230;
     this.flightSpeed = 140;
@@ -730,7 +730,7 @@ export class Player {
   upgradeTank(tier) {
     this.tankTier = tier;
     const data = TANK_TIERS[tier - 1] || TANK_TIERS[0];
-    const prevMax = this.maxFuel || 40;
+    const prevMax = this.maxFuel || 60;
     this.maxFuel = data.maxFuel;
     const effs = [1.0, 1.12, 1.22, 1.34, 1.48, 1.64, 1.82, 2.05, 2.35, 2.80];
     this.fuelEfficiency = effs[tier - 1] || 1.0;
@@ -2371,7 +2371,7 @@ export class Player {
 
   getReturnFuelPercent() {
     const cost = this.getReturnFuelCost();
-    const max = Math.max(1, this.maxFuel || 40);
+    const max = Math.max(1, this.maxFuel || 60);
     return Math.min(100, Math.max(0, (cost / max) * 100));
   }
 

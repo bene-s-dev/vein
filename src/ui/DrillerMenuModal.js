@@ -48,7 +48,7 @@ export class DrillerMenuModal {
 
     // 1. Oben: Drei Balken und Prozentanzeige für Tank, Hülle und Fracht
     const fuel = Math.max(0, this.player.fuel || 0);
-    const maxFuel = this.player.maxFuel || 40;
+    const maxFuel = this.player.maxFuel || 60;
     const fuelPct = Math.max(0, Math.min(100, Math.round((fuel / maxFuel) * 100)));
 
     const hull = Math.max(0, this.player.hull || 0);

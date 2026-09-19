@@ -385,7 +385,8 @@ export class SaveSystem {
       if (p.upgradeTank) {
         p.upgradeTank(p.tankTier);
       }
-      p.fuel = Math.min(p.maxFuel, typeof data.player.fuel === 'number' ? data.player.fuel : p.maxFuel);
+      const rawSavedFuel = typeof data.player.fuel === 'number' ? data.player.fuel : p.maxFuel;
+      p.fuel = (p.tankTier === 1 && rawSavedFuel >= 39.5) ? p.maxFuel : Math.min(p.maxFuel, rawSavedFuel);
       p.batteryTier = data.player.batteryTier || 1;
 
       p.hullTier = data.player.hullTier || 1;
