@@ -590,8 +590,8 @@ export class Player {
 
     this.lastInputDir = inputDir;
 
-    // Automatischer Steigflug stoppen wenn Oberfläche erreicht oder kein Sprit mehr
-    if ((this.gy <= 0 || this.fuel <= 0) && this.scene.inputHandler?.isAutoAscending) {
+    // Automatischer Steigflug stoppen wenn Oberfläche erreicht (gy <= -1 bzw. y <= -16) oder kein Sprit mehr
+    if ((this.gy <= -1 || this.sprite?.y <= -16 || this.fuel <= 0) && this.scene.inputHandler?.isAutoAscending) {
       this.scene.inputHandler.cancelAutoAscend();
     }
 

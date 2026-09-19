@@ -335,8 +335,9 @@ export class InputHandler {
 
       // Prüfen, ob der Spieler gerade nach oben geflogen ist (Untertage im offenen Schacht)
       const player = this.scene.player;
-      const isFlyingUp = (this.touchDirection === 'UP') && player && (player.state === 'flying' || (player.gy > 0 && !this.scene.gridSystem?.isSolid(player.gx, Math.floor(player.gy - 0.5))));
-      const canLockAscent = isFlyingUp && player && player.fuel > 0 && player.gy > 0;
+      const isBelowSurface = player && (player.gy >= 0 || (player.sprite && player.sprite.y > -16));
+      const isFlyingUp = (this.touchDirection === 'UP') && player && (player.state === 'flying' || (isBelowSurface && !this.scene.gridSystem?.isSolid(player.gx, Math.floor(player.gy - 0.5))));
+      const canLockAscent = isFlyingUp && player && player.fuel > 0 && isBelowSurface;
 
       if (canLockAscent) {
         // Joystick rastet oben ein -> selbstständiger Steigflug!
