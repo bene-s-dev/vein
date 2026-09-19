@@ -42,7 +42,7 @@ export const ORE_DATA = {
     name: 'Kohle',
     color: '#222222',
     sprite: 'ore_coal',
-    value: 5,
+    value: 25,
     hardness: 1.0,
     minDepth: 0,
     rarityWeight: 18.0
@@ -52,7 +52,7 @@ export const ORE_DATA = {
     name: 'Kupfer',
     color: '#b87333',
     sprite: 'ore_copper',
-    value: 12,
+    value: 55,
     hardness: 1.3,
     minDepth: 5,
     rarityWeight: 14.0
@@ -62,7 +62,7 @@ export const ORE_DATA = {
     name: 'Eisen',
     color: '#8b9bb4',
     sprite: 'ore_iron',
-    value: 28,
+    value: 120,
     hardness: 1.7,
     minDepth: 18,
     rarityWeight: 10.0
@@ -72,7 +72,7 @@ export const ORE_DATA = {
     name: 'Zinn',
     color: '#cbd5e1',
     sprite: 'ore_tin',
-    value: 45,
+    value: 210,
     hardness: 2.0,
     minDepth: 65,
     rarityWeight: 7.5
@@ -82,7 +82,7 @@ export const ORE_DATA = {
     name: 'Silber',
     color: '#e2e8f0',
     sprite: 'ore_silver',
-    value: 75,
+    value: 380,
     hardness: 2.3,
     minDepth: 130,
     rarityWeight: 5.5
@@ -92,7 +92,7 @@ export const ORE_DATA = {
     name: 'Gold',
     color: '#fbbf24',
     sprite: 'ore_gold',
-    value: 120,
+    value: 650,
     hardness: 2.6,
     minDepth: 220,
     rarityWeight: 4.2
@@ -102,7 +102,7 @@ export const ORE_DATA = {
     name: 'Smaragd',
     color: '#10b981',
     sprite: 'ore_emerald',
-    value: 200,
+    value: 1100,
     hardness: 3.0,
     minDepth: 340,
     rarityWeight: 3.0
@@ -112,7 +112,7 @@ export const ORE_DATA = {
     name: 'Saphir',
     color: '#3b82f6',
     sprite: 'ore_sapphire',
-    value: 320,
+    value: 1800,
     hardness: 3.3,
     minDepth: 490,
     rarityWeight: 2.4
@@ -122,7 +122,7 @@ export const ORE_DATA = {
     name: 'Rubin',
     color: '#ef4444',
     sprite: 'ore_ruby',
-    value: 500,
+    value: 2900,
     hardness: 3.6,
     minDepth: 680,
     rarityWeight: 1.9
@@ -132,7 +132,7 @@ export const ORE_DATA = {
     name: 'Diamant',
     color: '#38bdf8',
     sprite: 'ore_diamond',
-    value: 800,
+    value: 4800,
     hardness: 4.0,
     minDepth: 890,
     rarityWeight: 1.5
@@ -142,7 +142,7 @@ export const ORE_DATA = {
     name: 'Titan',
     color: '#94a3b8',
     sprite: 'ore_titanium',
-    value: 1250,
+    value: 7500,
     hardness: 4.3,
     minDepth: 1100,
     rarityWeight: 1.3
@@ -152,7 +152,7 @@ export const ORE_DATA = {
     name: 'Platin',
     color: '#f1f5f9',
     sprite: 'ore_platinum',
-    value: 1800,
+    value: 11500,
     hardness: 4.6,
     minDepth: 1300,
     rarityWeight: 1.2
@@ -162,7 +162,7 @@ export const ORE_DATA = {
     name: 'Uran',
     color: '#4ade80',
     sprite: 'ore_uranium',
-    value: 2600,
+    value: 17000,
     hardness: 4.9,
     minDepth: 1450,
     rarityWeight: 1.1
@@ -172,7 +172,7 @@ export const ORE_DATA = {
     name: 'Obsidian-Kern',
     color: '#818cf8',
     sprite: 'ore_obsidian_gem',
-    value: 3800,
+    value: 25000,
     hardness: 5.2,
     minDepth: 1600,
     rarityWeight: 1.0
@@ -182,7 +182,7 @@ export const ORE_DATA = {
     name: 'Dunkle Materie',
     color: '#c084fc',
     sprite: 'ore_dark_matter',
-    value: 6000,
+    value: 42000,
     hardness: 5.5,
     minDepth: 1700,
     rarityWeight: 1.0

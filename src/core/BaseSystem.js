@@ -575,11 +575,11 @@ export const COMPONENT_DATA = {
 export const GEOLOGIST_QUESTS = [
   {
     id: 'geologist_microprocessor',
-    title: 'Humus- & Sedimentforschung I',
-    depthHint: 'Tiefe 0-50m (Humus)',
+    title: 'Humus-Mineralogie I',
+    depthHint: 'Tiefe 0-45m (Humus)',
     reqs: { coal: 3, iron: 2 },
     rewardComp: { key: 'microprocessor', name: 'Mikroprozessor', iconName: 'cpu' },
-    rewardCash: 180,
+    rewardCash: 550,
     rewardXp: 140,
     minLevel: 1
   },
@@ -589,7 +589,7 @@ export const GEOLOGIST_QUESTS = [
     depthHint: 'Tiefe 30-150m (Schiefer)',
     reqs: { copper: 3, tin: 3 },
     rewardComp: { key: 'capacitor', name: 'Druck-Kondensator', iconName: 'battery-charging' },
-    rewardCash: 420,
+    rewardCash: 1400,
     rewardXp: 300,
     minLevel: 1
   },
@@ -599,7 +599,7 @@ export const GEOLOGIST_QUESTS = [
     depthHint: 'Tiefe 130-350m (Granit)',
     reqs: { silver: 3, gold: 2 },
     rewardComp: { key: 'spectrometer', name: 'Sensor-Spektrometer', iconName: 'activity' },
-    rewardCash: 950,
+    rewardCash: 3800,
     rewardXp: 650,
     minLevel: 2
   },
@@ -609,7 +609,7 @@ export const GEOLOGIST_QUESTS = [
     depthHint: 'Tiefe 340-800m (Obsidian)',
     reqs: { emerald: 2, sapphire: 2 },
     rewardComp: { key: 'plasma_regulator', name: 'Plasma-Injektor', iconName: 'flame' },
-    rewardCash: 2200,
+    rewardCash: 9000,
     rewardXp: 1300,
     minLevel: 3
   },
@@ -619,7 +619,7 @@ export const GEOLOGIST_QUESTS = [
     depthHint: 'Tiefe 850m+ (Urgestein)',
     reqs: { titanium: 2, diamond: 1 },
     rewardComp: { key: 'graviton_core', name: 'Gravitations-Modulator', iconName: 'compass' },
-    rewardCash: 4200,
+    rewardCash: 30000,
     rewardXp: 2200,
     minLevel: 5
   },
@@ -629,7 +629,7 @@ export const GEOLOGIST_QUESTS = [
     depthHint: 'Tiefe 1.500m+ (Erdkern)',
     reqs: { uranium: 2, platinum: 1 },
     rewardComp: { key: 'quantum_processor', name: 'Quanten-Prozessor', iconName: 'atom' },
-    rewardCash: 8500,
+    rewardCash: 65000,
     rewardXp: 4200,
     minLevel: 7
   },
@@ -639,7 +639,7 @@ export const GEOLOGIST_QUESTS = [
     depthHint: 'Tiefe 1.000-1.500m (Urgestein)',
     reqs: { obsidian_gem: 2, sapphire: 2 },
     rewardComp: { key: 'graviton_core', name: 'Gravitations-Modulator', iconName: 'compass' },
-    rewardCash: 6000,
+    rewardCash: 75000,
     rewardXp: 3200,
     minLevel: 6
   },
@@ -649,7 +649,7 @@ export const GEOLOGIST_QUESTS = [
     depthHint: 'Tiefe 2.000m+ (Erdkern)',
     reqs: { dark_matter: 1, platinum: 2 },
     rewardComp: { key: 'quantum_processor', name: 'Quanten-Prozessor', iconName: 'atom' },
-    rewardCash: 16000,
+    rewardCash: 95000,
     rewardXp: 8000,
     minLevel: 9
   }
@@ -677,7 +677,7 @@ export const FACTORY_PRODUCTS = {
     fuelCoal: 2,
     minTier: 1,
     durationSec: 45,
-    value: 280
+    value: 650
   },
   bronze_ingot: {
     id: 'bronze_ingot',
@@ -688,7 +688,7 @@ export const FACTORY_PRODUCTS = {
     fuelCoal: 2,
     minTier: 1,
     durationSec: 55,
-    value: 360
+    value: 750
   },
   circuit_board: {
     id: 'circuit_board',
@@ -699,7 +699,7 @@ export const FACTORY_PRODUCTS = {
     fuelCoal: 2,
     minTier: 2,
     durationSec: 110,
-    value: 1150
+    value: 2200
   },
   sapphire_glass: {
     id: 'sapphire_glass',
@@ -710,7 +710,7 @@ export const FACTORY_PRODUCTS = {
     fuelCoal: 2,
     minTier: 3,
     durationSec: 160,
-    value: 2300
+    value: 7500
   },
   polished_gem: {
     id: 'polished_gem',
@@ -721,7 +721,7 @@ export const FACTORY_PRODUCTS = {
     fuelCoal: 2,
     minTier: 3,
     durationSec: 200,
-    value: 4400
+    value: 16000
   },
   titan_plate: {
     id: 'titan_plate',
@@ -732,7 +732,7 @@ export const FACTORY_PRODUCTS = {
     fuelCoal: 2,
     minTier: 4,
     durationSec: 300,
-    value: 9800
+    value: 34000
   },
   obsidian_matrix: {
     id: 'obsidian_matrix',
@@ -743,7 +743,7 @@ export const FACTORY_PRODUCTS = {
     fuelCoal: 2,
     minTier: 5,
     durationSec: 400,
-    value: 19500
+    value: 80000
   },
   fusion_rod: {
     id: 'fusion_rod',
@@ -754,7 +754,7 @@ export const FACTORY_PRODUCTS = {
     fuelCoal: 2,
     minTier: 5,
     durationSec: 480,
-    value: 32000
+    value: 135000
   },
 
   // ── 2. Montage-Bauteile (für Hangar-Fahrzeug-Upgrades) ──
