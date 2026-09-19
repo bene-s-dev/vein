@@ -255,6 +255,10 @@ export class SaveSystem {
     return SaveSystem.saveToSlot(scene, activeId);
   }
 
+  static saveGame(scene) {
+    return SaveSystem.save(scene);
+  }
+
   static saveToSlot(scene, slotId) {
     if (SaveSystem.isClearing) return false;
     if (!scene || !scene.player || !scene.gridSystem) return false;

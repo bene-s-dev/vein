@@ -1004,7 +1004,7 @@ export class HUD {
     if (startscreenBtn) {
       startscreenBtn.onclick = () => {
         soundFx.playClick();
-        SaveSystem.saveGame(this.scene);
+        SaveSystem.save(this.scene);
         closeActiveModal(this.scene);
         if (this.scene?.startScreen) {
           this.scene.startScreen.show();
@@ -1306,10 +1306,10 @@ export class HUD {
       btn.onclick = () => {
         const slotId = parseInt(btn.getAttribute('data-slot'), 10);
         if (confirm(`Neues Spiel in Slot ${slotId} starten? Dein aktueller Spielfortschritt wird zuvor gesichert.`)) {
-          SaveSystem.saveGame(this.scene);
+          SaveSystem.save(this.scene);
           SaveSystem.setActiveSlotId(slotId);
           SaveSystem.resetToNewGame(this.scene);
-          SaveSystem.saveGame(this.scene);
+          SaveSystem.save(this.scene);
           soundFx.playPurchase();
           closeActiveModal(this.scene);
           if (this.scene) {
@@ -1323,7 +1323,7 @@ export class HUD {
     bodyEl.querySelectorAll('.btn-slot-load').forEach(btn => {
       btn.onclick = () => {
         const slotId = parseInt(btn.getAttribute('data-slot'), 10);
-        SaveSystem.saveGame(this.scene);
+        SaveSystem.save(this.scene);
         if (SaveSystem.loadSlot(this.scene, slotId)) {
           soundFx.playPurchase();
           closeActiveModal(this.scene);

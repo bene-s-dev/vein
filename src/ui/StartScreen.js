@@ -173,8 +173,47 @@ export class StartScreen {
   async render() {
     const slots = SaveSystem.listSlots();
     const hasSave = slots.some(s => s.exists);
+    const activeSlot = slots.find(s => s.isCurrent && s.exists) || slots.find(s => s.exists);
 
     const showcasePng = generateShowcasePng(this.scene);
+
+    let expeditionButtonsHtml = '';
+    if (hasSave && activeSlot) {
+      expeditionButtonsHtml = `
+        <button id="btn-start-resume-game" class="btn-buy start-screen-btn" style="height: 38px; width: 100%; border-radius: 9px; font-size: 12.5px; font-weight: 900; justify-content: center; gap: 7px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1.5px solid rgba(56, 189, 248, 0.6); box-shadow: 0 4px 14px rgba(2, 132, 199, 0.5); color: #ffffff; cursor: pointer; letter-spacing: 0.5px;">
+          ${icon('play', '', 14)}
+          <span>WEITERSPIELEN</span>
+        </button>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+          <button id="btn-start-open-slots" class="btn-action start-screen-btn" style="height: 32px; width: 100%; border-radius: 8px; font-size: 11px; font-weight: 800; justify-content: center; gap: 5px; background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(255, 255, 255, 0.15); color: #f8fafc; cursor: pointer; letter-spacing: 0.3px;">
+            ${icon('folder-open', '', 12)}
+            <span>SLOTS</span>
+          </button>
+
+          <button id="btn-start-new-game" class="btn-action start-screen-btn" style="height: 32px; width: 100%; border-radius: 8px; font-size: 11px; font-weight: 800; justify-content: center; gap: 5px; background: rgba(30, 41, 59, 0.65); border: 1px solid rgba(255, 255, 255, 0.1); color: #cbd5e1; cursor: pointer; letter-spacing: 0.3px;">
+            ${icon('plus', '', 12)}
+            <span>NEU</span>
+          </button>
+        </div>
+
+        <div style="font-size: 10px; color: #94a3b8; text-align: center; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+          ${activeSlot.label}: <strong style="color: #38bdf8;">Lv.${activeSlot.level}</strong> · <strong style="color: #38bdf8;">${activeSlot.highestDepth > 0 ? `-${activeSlot.highestDepth}m` : '0m'}</strong>
+        </div>
+      `;
+    } else {
+      expeditionButtonsHtml = `
+        <button id="btn-start-new-game" class="btn-buy start-screen-btn" style="height: 38px; width: 100%; border-radius: 9px; font-size: 12.5px; font-weight: 900; justify-content: center; gap: 7px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1.5px solid rgba(56, 189, 248, 0.6); box-shadow: 0 4px 14px rgba(2, 132, 199, 0.5); color: #ffffff; cursor: pointer; letter-spacing: 0.5px;">
+          ${icon('play', '', 14)}
+          <span>NEUES SPIEL</span>
+        </button>
+
+        <button id="btn-start-open-slots" class="btn-action start-screen-btn" style="height: 32px; width: 100%; border-radius: 8px; font-size: 11px; font-weight: 800; justify-content: center; gap: 5px; background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(255, 255, 255, 0.15); color: #f8fafc; cursor: pointer; letter-spacing: 0.3px;">
+          ${icon('folder-open', '', 12)}
+          <span>SLOT WÄHLEN</span>
+        </button>
+      `;
+    }
 
     this.container.innerHTML = `
       <!-- PNG Hintergrundbild (echte Spieltexturen, genau wie im Referenz-Screenshot) -->
@@ -196,17 +235,7 @@ export class StartScreen {
               ${icon('compass', '', 13)} EXPEDITION
             </div>
 
-            <button id="btn-start-new-game" class="btn-buy start-screen-btn" style="height: 38px; width: 100%; border-radius: 9px; font-size: 12.5px; font-weight: 900; justify-content: center; gap: 7px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1.5px solid rgba(56, 189, 248, 0.6); box-shadow: 0 4px 14px rgba(2, 132, 199, 0.5); color: #ffffff; cursor: pointer; letter-spacing: 0.5px;">
-              ${icon('play', '', 14)}
-              <span>NEUES SPIEL</span>
-            </button>
-
-            ${hasSave ? `
-              <button id="btn-start-continue-game" class="btn-action start-screen-btn" style="height: 32px; width: 100%; border-radius: 8px; font-size: 11.5px; font-weight: 800; justify-content: center; gap: 6px; background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(255, 255, 255, 0.15); color: #f8fafc; cursor: pointer; letter-spacing: 0.5px;">
-                ${icon('rotate-ccw', '', 12)}
-                <span>LADEN</span>
-              </button>
-            ` : ''}
+            ${expeditionButtonsHtml}
           </div>
 
           <!-- Rechter Bereich: Bestenliste -->
@@ -337,21 +366,37 @@ export class StartScreen {
   }
 
   bindEvents() {
+    // 1. Direkt Weiterspielen
+    const btnResume = document.getElementById('btn-start-resume-game');
+    if (btnResume) {
+      btnResume.onclick = () => {
+        enableFullscreenLandscape();
+        soundFx.playClick();
+        const activeId = SaveSystem.getActiveSlotId();
+        if (this.scene) {
+          SaveSystem.loadSlot(this.scene, activeId);
+        }
+        this.startSession(true);
+      };
+    }
+
+    // 2. Slot-Auswahl Dialog öffnen
+    const btnSlots = document.getElementById('btn-start-open-slots') || document.getElementById('btn-start-continue-game');
+    if (btnSlots) {
+      btnSlots.onclick = () => {
+        enableFullscreenLandscape();
+        soundFx.playClick();
+        this.openSlotsModal();
+      };
+    }
+
+    // 3. Neues Spiel starten
     const btnNew = document.getElementById('btn-start-new-game');
     if (btnNew) {
       btnNew.onclick = () => {
         enableFullscreenLandscape();
         soundFx.playClick();
-        this.openNameModal(false);
-      };
-    }
-
-    const btnContinue = document.getElementById('btn-start-continue-game');
-    if (btnContinue) {
-      btnContinue.onclick = () => {
-        enableFullscreenLandscape();
-        soundFx.playClick();
-        this.openSlotsModal();
+        this.openNameModal(false, null);
       };
     }
 
@@ -394,6 +439,9 @@ export class StartScreen {
         try {
           localStorage.setItem('vein_player_name', chosen);
         } catch (_) {}
+        if (this._targetSlotId) {
+          SaveSystem.setActiveSlotId(this._targetSlotId);
+        }
         const modal = document.getElementById('start-name-modal');
         if (modal) modal.style.display = 'none';
         this.startSession(this._pendingContinue || false);
@@ -410,36 +458,61 @@ export class StartScreen {
     listEl.innerHTML = slots.map(s => {
       if (!s.exists) {
         return `
-          <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.6); border: 1px dashed rgba(255, 255, 255, 0.15); border-radius: 10px; padding: 10px 12px; opacity: 0.65;">
-            <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.7); border: 1px dashed rgba(255, 255, 255, 0.15); border-radius: 10px; padding: 10px 12px; gap: 8px;">
+            <div style="display: flex; flex-direction: column; gap: 2px;">
               <div style="color: #cbd5e1; font-weight: 700; font-size: 12.5px;">${s.label}</div>
-              <div style="color: #64748b; font-size: 10.5px;">Leer / Kein Spielstand</div>
+              <div style="color: #64748b; font-size: 10.5px;">Freier Speicherplatz (Leer)</div>
             </div>
-            <span style="font-size: 10.5px; color: #64748b; font-weight: 600;">Leer</span>
+            <button class="btn-buy btn-start-slot" data-slot="${s.slotId}" style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 800; border-radius: 7px; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; pointer-events: auto;">
+              ${icon('play', '', 12)}
+              <span>Neu starten</span>
+            </button>
           </div>
         `;
       }
 
       return `
-        <div class="start-slot-item" style="display: flex; justify-content: space-between; align-items: center; background: rgba(30, 41, 59, 0.75); border: 1.5px solid ${s.isCurrent ? 'rgba(56, 189, 248, 0.6)' : 'rgba(255, 255, 255, 0.1)'}; border-radius: 10px; padding: 10px 12px; cursor: pointer; transition: all 0.2s;" data-slot="${s.slotId}">
-          <div style="display: flex; flex-direction: column; gap: 2px;">
+        <div class="start-slot-item" style="display: flex; justify-content: space-between; align-items: center; background: rgba(30, 41, 59, 0.8); border: 1.5px solid ${s.isCurrent ? 'rgba(56, 189, 248, 0.7)' : 'rgba(255, 255, 255, 0.12)'}; border-radius: 10px; padding: 10px 12px; gap: 8px; cursor: pointer; transition: all 0.2s;" data-slot="${s.slotId}">
+          <div style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0;">
             <div style="display: flex; align-items: center; gap: 6px;">
               <span style="color: #f8fafc; font-weight: 800; font-size: 13px;">${s.label}</span>
               ${s.isCurrent ? `<span style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; font-size: 9px; font-weight: 800; padding: 1px 6px; border-radius: 99px;">Aktiv</span>` : ''}
             </div>
-            <div style="color: #94a3b8; font-size: 11px;">
-              Tiefe: <strong style="color: #38bdf8; font-variant-numeric: tabular-nums;">${s.highestDepth > 0 ? `-${s.highestDepth}` : '0'}m</strong> · Lv.${s.level} · ${s.dateFormatted}
+            <div style="color: #94a3b8; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              Tiefe: <strong style="color: #38bdf8; font-variant-numeric: tabular-nums;">${s.highestDepth > 0 ? `-${s.highestDepth}` : '0'}m</strong> · Lv.${s.level} · €${s.cash.toLocaleString()} · ${s.dateFormatted}
             </div>
           </div>
-          <button class="btn-buy" style="height: 32px; padding: 0 12px; font-size: 11.5px; font-weight: 800; border-radius: 7px; pointer-events: none;">
-            Laden
-          </button>
+          <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+            <button class="btn-buy btn-load-slot" data-slot="${s.slotId}" style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 800; border-radius: 7px; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; pointer-events: auto;">
+              ${icon('play', '', 12)}
+              <span>Spiel laden</span>
+            </button>
+            <button class="btn-3d-danger btn-delete-slot" data-slot="${s.slotId}" style="height: 30px; width: 30px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 7px; cursor: pointer; pointer-events: auto;" title="Diesen Slot löschen">
+              ${icon('trash-2', '', 12)}
+            </button>
+          </div>
         </div>
       `;
     }).join('');
 
     refreshIcons(listEl);
 
+    // Klick auf "Spiel laden"
+    listEl.querySelectorAll('.btn-load-slot').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const slotId = parseInt(btn.getAttribute('data-slot'), 10);
+        soundFx.playClick();
+        SaveSystem.setActiveSlotId(slotId);
+        if (this.scene) {
+          SaveSystem.loadSlot(this.scene, slotId);
+        }
+        modal.style.display = 'none';
+        this.startSession(true);
+      };
+    });
+
+    // Klick auf ganze Zeile für bestehenden Slot
     listEl.querySelectorAll('.start-slot-item').forEach(el => {
       el.onclick = () => {
         const slotId = parseInt(el.getAttribute('data-slot'), 10);
@@ -453,11 +526,38 @@ export class StartScreen {
       };
     });
 
+    // Klick auf "Neu starten" bei leerem Slot
+    listEl.querySelectorAll('.btn-start-slot').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const slotId = parseInt(btn.getAttribute('data-slot'), 10);
+        soundFx.playClick();
+        SaveSystem.setActiveSlotId(slotId);
+        modal.style.display = 'none';
+        this.openNameModal(false, slotId);
+      };
+    });
+
+    // Klick auf "Löschen"
+    listEl.querySelectorAll('.btn-delete-slot').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const slotId = parseInt(btn.getAttribute('data-slot'), 10);
+        if (confirm(`Möchtest du Slot ${slotId} wirklich leeren?`)) {
+          SaveSystem.deleteSlot(slotId);
+          soundFx.playClick();
+          this.openSlotsModal();
+          this.render();
+        }
+      };
+    });
+
     modal.style.display = 'flex';
   }
 
-  openNameModal(continueSave = false) {
+  openNameModal(continueSave = false, targetSlotId = null) {
     this._pendingContinue = continueSave;
+    this._targetSlotId = targetSlotId;
     const modal = document.getElementById('start-name-modal');
     if (modal) {
       modal.style.display = 'flex';
@@ -480,18 +580,13 @@ export class StartScreen {
       this.refreshInterval = null;
     }
 
-    const finalName = this.playerName.trim() || 'Fahrer_01';
-    try {
-      localStorage.setItem('vein_player_name', finalName);
-    } catch (_) {}
-
-    if (this.scene && this.scene.player) {
-      this.scene.player.name = finalName;
-    }
-
     if (!continueSave) {
+      const finalName = this.playerName.trim() || 'Fahrer_01';
+      try {
+        localStorage.setItem('vein_player_name', finalName);
+      } catch (_) {}
+
       // Kompletten Spielzustand auf ein echtes, sauberes neues Spiel zurücksetzen
-      // (Alle Labor-Forschungen, Ausrüstungs-Tiers, Fabrik, Depot & Welt komplett auf Stufe 1/Leer)
       SaveSystem.resetToNewGame(this.scene);
 
       if (this.scene && this.scene.player) {
@@ -503,6 +598,14 @@ export class StartScreen {
 
       // Sauberen neuen Spielstand sichern
       SaveSystem.save(this.scene);
+    } else {
+      // Beim Fortsetzen/Laden den im Save hinterlegten Spielernamen übernehmen
+      if (this.scene?.player?.name) {
+        this.playerName = this.scene.player.name;
+        try {
+          localStorage.setItem('vein_player_name', this.playerName);
+        } catch (_) {}
+      }
     }
 
     this.hide();
@@ -535,6 +638,9 @@ export class StartScreen {
       if (this.scene.setupCamera) {
         this.scene.setupCamera();
       }
+      if (this.scene.player?.sprite) {
+        this.scene.cameras.main?.centerOn(this.scene.player.sprite.x, this.scene.player.sprite.y);
+      }
       if (this.scene.gridSystem) {
         this.scene.gridSystem.fogDirty = true;
         this.scene.gridSystem.fogBufferReady = false;
@@ -544,6 +650,10 @@ export class StartScreen {
       }
       if (this.scene.baseSystem && this.scene.baseSystem.updateWorldLabels) {
         this.scene.baseSystem.updateWorldLabels();
+      }
+      if (this.scene.hud) {
+        this.scene.hud._lastDepth = -1;
+        this.scene.hud.update(true);
       }
 
       // Tutorial für neue Spieler anzeigen (nur einmalig, gemerkt in localStorage)

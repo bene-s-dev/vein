@@ -47,6 +47,7 @@ export function notifyModalClosed() {
 
 export function closeActiveModal(scene) {
   notifyModalClosed();
+  const sc = scene || (window.__game && window.__game.scene && window.__game.scene.getScene('MiningScene'));
 
   const modalEl = document.getElementById('building-modal');
   if (modalEl) {
@@ -65,7 +66,7 @@ export function closeActiveModal(scene) {
   // Emergency Rescue Modal schließen (sofern nicht Game Over)
   const rescueModal = document.getElementById('emergency-rescue-modal');
   if (rescueModal && rescueModal.style.display !== 'none') {
-    const scPlayer = (scene && scene.player) || (window.__game?.scene?.getScene('MiningScene')?.player);
+    const scPlayer = (sc && sc.player) || (window.__game?.scene?.getScene('MiningScene')?.player);
     if (!scPlayer || !scPlayer.isGameOver) {
       if (sc && sc.emergencyRescueModal && sc.emergencyRescueModal.close) {
         sc.emergencyRescueModal.close();
@@ -95,7 +96,6 @@ export function closeActiveModal(scene) {
     soundFx.stopAllLoops?.();
   } catch (_) {}
 
-  const sc = scene || (window.__game && window.__game.scene && window.__game.scene.getScene('MiningScene'));
   if (sc) {
     sc.isPaused = false;
     if (sc.hud) {
