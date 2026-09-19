@@ -943,35 +943,35 @@ export class MissionsProgressModal {
             ${icon('wrench', '', 13)} Installierte Tech-Komponenten & Missionen
           </div>
           <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 24px; font-size: 11.5px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 3px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.06);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 3px 0;">
               <span style="color: #94a3b8; font-weight: 600;">Treibstoff-Tank:</span>
               <strong style="color: #f8fafc; font-weight: 800; text-align: right;">Stufe ${p.tankTier || 1} (${p.maxFuel}L)</strong>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 3px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.06);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 3px 0;">
               <span style="color: #94a3b8; font-weight: 600;">Bohrkopf:</span>
               <strong style="color: #f8fafc; font-weight: 800; text-align: right;">Stufe ${p.drillTier || 1} (${p.drillPower} DPS)</strong>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 3px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.06);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 3px 0;">
               <span style="color: #94a3b8; font-weight: 600;">Frachtraum:</span>
               <strong style="color: #f8fafc; font-weight: 800; text-align: right;">Stufe ${p.cargoTier || 1} (${p.maxCargo} Erze)</strong>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 3px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.06);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 3px 0;">
               <span style="color: #94a3b8; font-weight: 600;">Rumpfpanzerung:</span>
               <strong style="color: #f8fafc; font-weight: 800; text-align: right;">Stufe ${p.hullTier || 1} (${p.maxHull} HP)</strong>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 3px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.06);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 3px 0;">
               <span style="color: #94a3b8; font-weight: 600;">Sensor-Radar:</span>
               <strong style="color: #f8fafc; font-weight: 800; text-align: right;">Stufe ${p.sensorTier || 1} (${p.sensorRadius} Kacheln)</strong>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 3px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.06);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 3px 0;">
               <span style="color: #94a3b8; font-weight: 600;">Bergbau-Aufträge:</span>
               <strong style="color: #f8fafc; font-weight: 800; text-align: right;">${stats.missionsCompleted || 0} erfüllt</strong>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 3px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.06);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 3px 0;">
               <span style="color: #94a3b8; font-weight: 600;">Geologie-Forschung:</span>
               <strong style="color: #f8fafc; font-weight: 800; text-align: right;">${stats.researchCompleted || 0} Proben eingereicht</strong>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 3px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.06);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 3px 0;">
               <span style="color: #94a3b8; font-weight: 600;">Bodenschätze gesamt:</span>
               <strong style="color: #f8fafc; font-weight: 800; text-align: right;">${totalOresCount} gefördert</strong>
             </div>
