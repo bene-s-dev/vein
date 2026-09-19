@@ -123,12 +123,21 @@ export class SaveSystem {
     const bs = scene.baseSystem;
     const ms = scene.missionSystem;
 
-    // Abgebaute Kacheln ermitteln: Kombination aus gs.destroyedTiles und allen leeren Kacheln in gs.tiles
-    const destroyedSet = new Set(gs.destroyedTiles || []);
+    // Abgebaute Kacheln ermitteln: Kombination aus gs.destroyedTiles und allen leeren Kacheln in gs.tiles (nur gy > 0)
+    const destroyedSet = new Set();
+    if (gs.destroyedTiles) {
+      gs.destroyedTiles.forEach((key) => {
+        const parts = key.split(',');
+        const gy = parseInt(parts[1], 10);
+        if (gy > 0) destroyedSet.add(key);
+      });
+    }
     if (gs.tiles) {
       gs.tiles.forEach((tile, key) => {
         if (tile && tile.type === TILE_TYPES.EMPTY) {
-          destroyedSet.add(key);
+          const parts = key.split(',');
+          const gy = parseInt(parts[1], 10);
+          if (gy > 0) destroyedSet.add(key);
         }
       });
     }
@@ -485,14 +494,24 @@ export class SaveSystem {
         fuel_s3: data.player.gadgets?.fuel_s3 ?? 0
       };
 
-      const destroyedCount = (data.grid?.destroyedTiles?.length || 0);
+      // Abgebaute Kacheln unter Tage zählen (ohne Oberflächenkacheln gy <= 0)
+      const destroyedCount = Array.isArray(data.grid?.destroyedTiles)
+        ? data.grid.destroyedTiles.filter(k => {
+            const gy = parseInt(k.split(',')[1], 10);
+            return gy > 0;
+          }).length
+        : 0;
       const savedTilesMined = typeof data.player.stats?.totalTilesMined === 'number'
         ? data.player.stats.totalTilesMined
         : 0;
-      const highestDepth = Math.round(p.highestDepthReached || 0);
 
-      // Falls stats aus Altlasten (z.B. nur 4 Kacheln trotz 65m Tiefe) unterzählt war, mit zerstörten Kacheln & Tiefe abgleichen
-      const resolvedTilesMined = Math.max(savedTilesMined, destroyedCount, highestDepth);
+      // Kacheln abgebaut ermitteln: Niemals Schachttiefe hineinmischen!
+      // Wenn der Wert durch den alten Tiefen-Bug künstlich auf 500 aufgebläht war,
+      // mit den tatsächlich in der Welt zerstörten Kacheln korrigieren.
+      let resolvedTilesMined = destroyedCount;
+      if (destroyedCount === 0 && savedTilesMined > 0 && (!data.grid || !Array.isArray(data.grid.destroyedTiles))) {
+        resolvedTilesMined = savedTilesMined;
+      }
 
       const resolvedOresMined = { ...(data.player.stats?.totalOresMined || {}) };
       // Plausibilitäts-Abgleich mit vorhandenem Cargo & Depot

@@ -852,8 +852,23 @@ export class MissionsProgressModal {
 
     // Maximale Tiefe (stets sauberer positiver Meterwert)
     const maxDepth = Math.max(0, Math.round(p.highestDepthReached || p.depthMeters || 0));
-    const actualDestroyed = this.scene?.gridSystem?.destroyedTiles?.size || 0;
-    const tilesMined = Math.max(stats.totalTilesMined || 0, actualDestroyed, maxDepth);
+
+    // Tatsächlich unter Tage abgebaute Kacheln ermitteln (ohne Oberflächenkacheln gy <= 0)
+    let actualDestroyed = 0;
+    if (this.scene?.gridSystem?.destroyedTiles) {
+      this.scene.gridSystem.destroyedTiles.forEach(key => {
+        const parts = key.split(',');
+        const gy = parseInt(parts[1], 10);
+        if (gy > 0) actualDestroyed++;
+      });
+    }
+
+    // Niemals Schachttiefe hineinrechnen! Wenn stats.totalTilesMined durch alten Tiefen-Bug
+    // fälschlicherweise auf 500 aufgebläht war, mit den tatsächlich zerstörten Untertage-Kacheln synchronisieren:
+    let tilesMined = actualDestroyed;
+    if (actualDestroyed === 0 && (!this.scene?.gridSystem?.destroyedTiles || this.scene.gridSystem.destroyedTiles.size === 0)) {
+      tilesMined = stats.totalTilesMined || 0;
+    }
     stats.totalTilesMined = tilesMined;
 
     const totalOresCount = Object.values(stats.totalOresMined || {}).reduce((sum, n) => sum + (n || 0), 0);
