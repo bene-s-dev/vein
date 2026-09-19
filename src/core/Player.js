@@ -69,16 +69,16 @@ export const HULL_TIERS = [
 ];
 
 export const ENGINE_TIERS = [
-  { tier: 1, name: 'Standard-Raupenfahrwerk', stat: '20 km/h', moveDuration: 160, flightSpeed: 175, cost: 0, comp: null, mountComps: null, level: 1, desc: 'Sicheres Basis-Fahrwerk für solide Schachtmanöver.' },
-  { tier: 2, name: 'Verstärkte Getriebe Mk.II', stat: '22 km/h', moveDuration: 145, flightSpeed: 195, cost: 260, comp: null, mountComps: [{ key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1, source: 'Fabrik' }], level: 1, desc: 'Kürzere Schaltzeiten beschleunigen Kriechgang und Steigflug.' },
-  { tier: 3, name: 'Hydraulik-Raupen Mk.III', stat: '25 km/h', moveDuration: 130, flightSpeed: 220, cost: 1600, comp: null, mountComps: [{ key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1, source: 'Fabrik' }, { key: 'capacitor', name: 'Druck-Kondensator', count: 1, source: 'Geologe' }], level: 1, desc: 'Flüssigere Kettenbewegungen und mehr Schubdüsengeschwindigkeit.' },
-  { tier: 4, name: 'Hochdruck-Turbine Mk.IV', stat: '28 km/h', moveDuration: 115, flightSpeed: 250, cost: 4400, comp: null, mountComps: [{ key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1, source: 'Fabrik' }, { key: 'silver_coil', name: 'Silber-Spule', count: 1, source: 'Fabrik' }], level: 2, desc: 'Kraftvoller Vortrieb im Schacht und schnellerer Aufstieg.' },
-  { tier: 5, name: 'Titan-Kettenantrieb Mk.V', stat: '32 km/h', moveDuration: 100, flightSpeed: 285, cost: 11500, comp: null, mountComps: [{ key: 'silver_coil', name: 'Silber-Spule', count: 1, source: 'Fabrik' }, { key: 'spectrometer', name: 'Sensor-Spektrometer', count: 1, source: 'Geologe' }], level: 3, desc: 'Geringerer Rollwiderstand und kräftige Schwebetriebwerke.' },
-  { tier: 6, name: 'Vektor-Booster Mk.VI', stat: '37 km/h', moveDuration: 88, flightSpeed: 325, cost: 26000, comp: null, mountComps: [{ key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Geologe' }], level: 4, desc: 'Schnelle Manövrierfähigkeit im Gestein und hoher Schwebespeed.' },
-  { tier: 7, name: 'Magnet-Levitation Mk.VII', stat: '42 km/h', moveDuration: 76, flightSpeed: 370, cost: 56000, comp: null, mountComps: [{ key: 'silver_coil', name: 'Silber-Spule', count: 2, source: 'Fabrik' }, { key: 'crystal_lens', name: 'Kristall-Linse', count: 1, source: 'Fabrik' }], level: 5, desc: 'Magnetschwebende Fahrwerkssegmente für rasantes Gleiten.' },
-  { tier: 8, name: 'Quanten-Gravitationsantrieb Mk.VIII', stat: '47 km/h', moveDuration: 65, flightSpeed: 420, cost: 120000, comp: null, mountComps: [{ key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Geologe' }], level: 6, desc: 'Krümmt das Schwerefeld für blitzschnelle Fortbewegung.' },
-  { tier: 9, name: 'Impuls-Vortex-Schub Mk.IX', stat: '53 km/h', moveDuration: 55, flightSpeed: 475, cost: 235000, comp: null, mountComps: [{ key: 'titan_bolt', name: 'Titan-Bolzen', count: 1, source: 'Fabrik' }, { key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Geologe' }], level: 8, desc: 'Subatomare Schubdüsen für unvergleichliche Wendigkeit.' },
-  { tier: 10, name: 'Chrono-Tachyonen-Antrieb X', stat: '60 km/h', moveDuration: 45, flightSpeed: 540, cost: 460000, comp: null, mountComps: [{ key: 'quantum_core', name: 'Quanten-Kern', count: 1, source: 'Fabrik' }, { key: 'quantum_processor', name: 'Quanten-Prozessor', count: 1, source: 'Geologe' }], level: 10, desc: 'Höchstgeschwindigkeit im Erdreich und schwebende Schwerelosigkeit.' }
+  { tier: 1, name: 'Standard-Raupenfahrwerk', stat: '14 km/h', moveDuration: 230, flightSpeed: 140, cost: 0, comp: null, mountComps: null, level: 1, desc: 'Sicheres Basis-Fahrwerk für solide Schachtmanöver.' },
+  { tier: 2, name: 'Verstärkte Getriebe Mk.II', stat: '16 km/h', moveDuration: 205, flightSpeed: 155, cost: 260, comp: null, mountComps: [{ key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1, source: 'Fabrik' }], level: 1, desc: 'Kürzere Schaltzeiten beschleunigen Kriechgang und Steigflug.' },
+  { tier: 3, name: 'Hydraulik-Raupen Mk.III', stat: '19 km/h', moveDuration: 180, flightSpeed: 175, cost: 1600, comp: null, mountComps: [{ key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1, source: 'Fabrik' }, { key: 'capacitor', name: 'Druck-Kondensator', count: 1, source: 'Geologe' }], level: 1, desc: 'Flüssigere Kettenbewegungen und mehr Schubdüsengeschwindigkeit.' },
+  { tier: 4, name: 'Hochdruck-Turbine Mk.IV', stat: '22 km/h', moveDuration: 155, flightSpeed: 200, cost: 4400, comp: null, mountComps: [{ key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1, source: 'Fabrik' }, { key: 'silver_coil', name: 'Silber-Spule', count: 1, source: 'Fabrik' }], level: 2, desc: 'Kraftvoller Vortrieb im Schacht und schnellerer Aufstieg.' },
+  { tier: 5, name: 'Titan-Kettenantrieb Mk.V', stat: '26 km/h', moveDuration: 135, flightSpeed: 230, cost: 11500, comp: null, mountComps: [{ key: 'silver_coil', name: 'Silber-Spule', count: 1, source: 'Fabrik' }, { key: 'spectrometer', name: 'Sensor-Spektrometer', count: 1, source: 'Geologe' }], level: 3, desc: 'Geringerer Rollwiderstand und kräftige Schwebetriebwerke.' },
+  { tier: 6, name: 'Vektor-Booster Mk.VI', stat: '30 km/h', moveDuration: 115, flightSpeed: 265, cost: 26000, comp: null, mountComps: [{ key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1, source: 'Geologe' }], level: 4, desc: 'Schnelle Manövrierfähigkeit im Gestein und hoher Schwebespeed.' },
+  { tier: 7, name: 'Magnet-Levitation Mk.VII', stat: '35 km/h', moveDuration: 98, flightSpeed: 305, cost: 56000, comp: null, mountComps: [{ key: 'silver_coil', name: 'Silber-Spule', count: 2, source: 'Fabrik' }, { key: 'crystal_lens', name: 'Kristall-Linse', count: 1, source: 'Fabrik' }], level: 5, desc: 'Magnetschwebende Fahrwerkssegmente für rasantes Gleiten.' },
+  { tier: 8, name: 'Quanten-Gravitationsantrieb Mk.VIII', stat: '40 km/h', moveDuration: 82, flightSpeed: 350, cost: 120000, comp: null, mountComps: [{ key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Geologe' }], level: 6, desc: 'Krümmt das Schwerefeld für blitzschnelle Fortbewegung.' },
+  { tier: 9, name: 'Impuls-Vortex-Schub Mk.IX', stat: '46 km/h', moveDuration: 68, flightSpeed: 400, cost: 235000, comp: null, mountComps: [{ key: 'titan_bolt', name: 'Titan-Bolzen', count: 1, source: 'Fabrik' }, { key: 'graviton_core', name: 'Gravitations-Modulator', count: 1, source: 'Geologe' }], level: 8, desc: 'Subatomare Schubdüsen für unvergleichliche Wendigkeit.' },
+  { tier: 10, name: 'Chrono-Tachyonen-Antrieb X', stat: '52 km/h', moveDuration: 55, flightSpeed: 460, cost: 460000, comp: null, mountComps: [{ key: 'quantum_core', name: 'Quanten-Kern', count: 1, source: 'Fabrik' }, { key: 'quantum_processor', name: 'Quanten-Prozessor', count: 1, source: 'Geologe' }], level: 10, desc: 'Höchstgeschwindigkeit im Erdreich und schwebende Schwerelosigkeit.' }
 ];
 
 export const CARGO_TIERS = [
@@ -187,13 +187,13 @@ export class Player {
     // Antrieb & Geschwindigkeit (am Anfang dynamisch & beherrschbar, upgradebar)
     this.engineTier = 1;
     this.researchedEngineTier = 1; // Im Labor erforschter Bauplan (Montage im Hangar erforderlich)
-    this.moveDuration = 160; // 160ms pro Kachel (synchronisiert mit Stufe 1)
-    this.flightSpeed = 175;  // 175 px/s Steigflug (ca. 5.5 Kacheln/s)
+    this.moveDuration = 230; // 230ms pro Kachel (synchronisiert mit Stufe 1, ruhigeres & präzises Manövrieren)
+    this.flightSpeed = 140;  // 140 px/s Steigflug (ca. 4.4 Kacheln/s)
     this.moveTargetGx = this.gx;
     this.moveTargetGy = this.gy;
     this.moveTargetX = this.x;
     this.moveTargetY = this.y;
-    this.moveSpeed = Math.max(80, TILE_SIZE / ((this.moveDuration || 160) / 1000));
+    this.moveSpeed = Math.max(80, TILE_SIZE / ((this.moveDuration || 230) / 1000));
 
     this.maxCargo = 12;
     this.cargo = [];
@@ -409,8 +409,8 @@ export class Player {
   upgradeEngine(tier) {
     this.engineTier = tier;
     const data = ENGINE_TIERS[tier - 1] || ENGINE_TIERS[0];
-    this.moveDuration = data.moveDuration || 160;
-    this.flightSpeed = data.flightSpeed || 175;
+    this.moveDuration = data.moveDuration || 230;
+    this.flightSpeed = data.flightSpeed || 140;
     this.moveSpeed = Math.max(80, TILE_SIZE / (this.moveDuration / 1000));
   }
 
@@ -1564,7 +1564,7 @@ export class Player {
     }
 
     // Flüssiger, stabiler Aufstieg mit kontinuierlicher Geschwindigkeit
-    const flightSpeed = this.flightSpeed || 175;
+    const flightSpeed = this.flightSpeed || 140;
     const dy = flightSpeed * dt;
     const nextY = this.sprite.y - dy;
 
@@ -1762,7 +1762,7 @@ export class Player {
       this.x = this.moveTargetX;
     }
 
-    const moveDur = duration !== null ? duration : (this.moveDuration || 160);
+    const moveDur = duration !== null ? duration : (this.moveDuration || 230);
     this.moveSpeed = Math.max(80, TILE_SIZE / (moveDur / 1000));
   }
 
@@ -1832,7 +1832,7 @@ export class Player {
             this.moveTargetGy = nextGy;
             this.moveTargetX = nextGx * TILE_SIZE + TILE_SIZE / 2;
             this.moveTargetY = nextGy * TILE_SIZE + TILE_SIZE / 2;
-            const moveDur = this.moveDuration || 160;
+            const moveDur = this.moveDuration || 230;
             this.moveSpeed = Math.max(80, TILE_SIZE / (moveDur / 1000));
             this.consumeFuel(0.3);
             soundFx.startDrive();
