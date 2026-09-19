@@ -629,12 +629,27 @@ export class MiningScene extends Phaser.Scene {
     const playerGx = Math.floor(p.sprite.x / TILE_SIZE);
     const playerGy = Math.floor(p.sprite.y / TILE_SIZE);
 
-    const startSurfaceGx = 48;
+    const shaftGx = 20;
+    const startSurfaceGx = Math.max(shaftGx + 5, Math.min(32, playerGx + 6));
     const surfaceGy = -1;
     const surfaceY = -16;
-    const shaftGx = 20;
     const startX = startSurfaceGx * TILE_SIZE + TILE_SIZE / 2;
     const startY = surfaceY;
+
+    // Sicherheits-Watchdog: Falls Wegfindung oder Animation hängenbleibt, garantiert nach max. 14s bergen
+    let safetyWatchdog = this.time.delayedCall(14000, () => {
+      if (this.isRescueCutsceneActive) {
+        console.warn('[RescueCutscene] Watchdog ausgelöst - Fallback Bergung');
+        try {
+          if (crawlerTimer) crawlerTimer.remove();
+          if (thrusterParticles) thrusterParticles.destroy();
+          if (rescueSprite) rescueSprite.destroy();
+        } catch (_) {}
+        this.tweens.killTweensOf(p.sprite);
+        p.teleportToSurface(message);
+        this.isRescueCutsceneActive = false;
+      }
+    });
 
     // BFS-Wegfindung STRIKT durch nicht-solide Kacheln (gegrabene Tunnel & Schächte)
     const findTunnelPath = (fromGx, fromGy, toGx, toGy) => {
@@ -939,7 +954,7 @@ export class MiningScene extends Phaser.Scene {
     followPathSmoothly(
       rescueSprite,
       descentPath,
-      300, // Zügige Bergungsgeschwindigkeit
+      360, // Zügige Bergungsgeschwindigkeit
       handleDirectionChange,
       null,
       () => {
@@ -1036,6 +1051,11 @@ export class MiningScene extends Phaser.Scene {
 
                       if (this.events) {
                         this.events.emit('notify', message);
+                      }
+
+                      if (safetyWatchdog) {
+                        safetyWatchdog.remove();
+                        safetyWatchdog = null;
                       }
 
                       this.isRescueCutsceneActive = false;

@@ -53,10 +53,12 @@ export class EmergencyRescueModal {
   }
 
   open() {
-    if (this.isOpen) return;
+    if (this.isOpen && this.modalEl && this.modalEl.style.display === 'flex') return;
     this.isOpen = true;
     document.body.classList.add('modal-open');
-    this.modalEl.style.display = 'flex';
+    if (this.modalEl) {
+      this.modalEl.style.display = 'flex';
+    }
     this.render();
   }
 
@@ -66,7 +68,9 @@ export class EmergencyRescueModal {
       clearInterval(this.pollInterval);
       this.pollInterval = null;
     }
-    this.modalEl.style.display = 'none';
+    if (this.modalEl) {
+      this.modalEl.style.display = 'none';
+    }
     document.body.classList.remove('modal-open');
   }
 

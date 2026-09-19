@@ -443,7 +443,7 @@ export class SaveSystem {
       p.name = data.player.name || (typeof localStorage !== 'undefined' && localStorage.getItem('vein_player_name')) || 'Fahrer';
       p.firstRescueUsed = typeof data.player.firstRescueUsed === 'boolean'
         ? data.player.firstRescueUsed
-        : (typeof data.player.freeRescues === 'number' ? data.player.freeRescues < 3 : false);
+        : (typeof data.player.freeRescues === 'number' ? data.player.freeRescues <= 0 : false);
       p.freeRescues = p.firstRescueUsed ? 0 : 1;
       p.activeInsurance = data.player.activeInsurance || null;
       p.isGameOver = !!data.player.isGameOver;
@@ -961,7 +961,8 @@ export class SaveSystem {
           sensorTier: 5,
           researchedSensorTier: 5,
           sensorRadius: 4.5,
-          freeRescues: 2,
+          freeRescues: 1,
+          firstRescueUsed: false,
           researchedTnt: 3,
           gadgets: { dynamite: 12, fuel_canister: 6, repair_kit: 6 },
           discoveredSpecialTiles: ['tile_boulder', 'tile_cache', 'tile_lava']

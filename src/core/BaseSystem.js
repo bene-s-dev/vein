@@ -68,10 +68,13 @@ export function closeActiveModal(scene) {
   if (rescueModal && rescueModal.style.display !== 'none') {
     const scPlayer = (sc && sc.player) || (window.__game?.scene?.getScene('MiningScene')?.player);
     if (!scPlayer || !scPlayer.isGameOver) {
-      if (sc && sc.emergencyRescueModal && sc.emergencyRescueModal.close) {
+      if (sc && sc.rescueModal && sc.rescueModal.close) {
+        sc.rescueModal.close();
+      } else if (sc && sc.emergencyRescueModal && sc.emergencyRescueModal.close) {
         sc.emergencyRescueModal.close();
       } else {
         rescueModal.style.display = 'none';
+        if (sc && sc.rescueModal) sc.rescueModal.isOpen = false;
       }
     }
   }
