@@ -200,9 +200,11 @@ for (let y = 0; y <= MAX_DEPTH_LUT; y++) {
     ORE_DEPTH_TINT_LUT[y] = 0xffffff;
   } else {
     const t = Math.min(1.0, y / 1500);
-    const r = Math.round(250 * Math.pow(1 - t, 1.15));
-    const g = Math.round(220 * Math.pow(1 - t, 1.30));
-    const b = Math.round(190 * Math.pow(1 - t, 1.45));
+    // Behalte eine gut erkennbare Mindestgrundhelligkeit, damit tiefe Schichten nicht in absoluter Dunkelheit versinken
+    const base = Math.max(0.14, 1.0 - t);
+    const r = Math.round(250 * Math.pow(base, 1.15));
+    const g = Math.round(220 * Math.pow(base, 1.30));
+    const b = Math.round(190 * Math.pow(base, 1.45));
     DEPTH_TINT_LUT[y] = (r << 16) | (g << 8) | b;
 
     const factor = Math.max(0.40, 1.0 - t * 0.60);

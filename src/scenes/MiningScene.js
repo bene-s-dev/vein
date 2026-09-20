@@ -599,13 +599,18 @@ export class MiningScene extends Phaser.Scene {
       const bombX = centerGx * TILE_SIZE + TILE_SIZE / 2;
       const bombY = centerGy * TILE_SIZE + TILE_SIZE / 2;
 
+      // Immer ungerade Kachel-Dimension sicherstellen (3x3, 5x5, 7x7, ...)
+      let size = Math.max(3, Math.round(blastSize));
+      if (size % 2 === 0) size += 1;
+      const radius = Math.floor(size / 2);
+
       // Sound & Erschütterung (skaliert dynamisch mit Sprengkraft)
       soundFx.playExplosion();
-      const shakeIntensity = 0.024 + (blastSize - 3) * 0.006;
-      this.cameras.main.shake(380 + (blastSize - 3) * 60, Math.min(0.045, shakeIntensity));
+      const shakeIntensity = 0.024 + (size - 3) * 0.003;
+      this.cameras.main.shake(380 + (size - 3) * 30, Math.min(0.05, shakeIntensity));
 
       // Explosions-Flash (visuell skaliert mit Feldgröße)
-      const flashRadius = blastSize * 18;
+      const flashRadius = size * 18;
       const blast = this.add.circle(bombX, bombY, flashRadius, 0xfef08a, 0.95).setDepth(20);
       this.tweens.add({
         targets: blast,
@@ -627,12 +632,9 @@ export class MiningScene extends Phaser.Scene {
 
       let oresCollected = 0;
 
-      // Kacheln im Radius der erforschten Stufe (3x3 bis 9x9) sprengen
-      const minOffset = -Math.floor((blastSize - 1) / 2);
-      const maxOffset = Math.ceil((blastSize - 1) / 2);
-
-      for (let dy = minOffset; dy <= maxOffset; dy++) {
-        for (let dx = minOffset; dx <= maxOffset; dx++) {
+      // Kacheln im symmetrischen Radius um die Bombe (3x3, 5x5, 7x7 etc.) sprengen
+      for (let dy = -radius; dy <= radius; dy++) {
+        for (let dx = -radius; dx <= radius; dx++) {
           const tgx = centerGx + dx;
           const tgy = centerGy + dy;
 
@@ -673,14 +675,14 @@ export class MiningScene extends Phaser.Scene {
       const curGx = Math.round((curPx - TILE_SIZE / 2) / TILE_SIZE);
       const curGy = Math.round((curPy - TILE_SIZE / 2) / TILE_SIZE);
 
-      if (Math.abs(curGx - centerGx) <= Math.abs(maxOffset) && Math.abs(curGy - centerGy) <= Math.abs(maxOffset)) {
-        this.player.takeDamage(20 + (blastSize - 3) * 5);
+      if (Math.abs(curGx - centerGx) <= radius && Math.abs(curGy - centerGy) <= radius) {
+        this.player.takeDamage(20 + radius * 5);
       }
       this.events.emit('player_updated');
 
       // Geröll über dem Krater prüfen
-      for (let dx = minOffset; dx <= maxOffset; dx++) {
-        this.gridSystem.checkBoulderFall(centerGx + dx, centerGy + minOffset - 1);
+      for (let dx = -radius; dx <= radius; dx++) {
+        this.gridSystem.checkBoulderFall(centerGx + dx, centerGy - radius - 1);
       }
     } catch (err) {
       console.error('Dynamite explosion error:', err);

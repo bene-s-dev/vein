@@ -229,6 +229,7 @@ export class SaveSystem {
         activeInsurance: p.activeInsurance ? { ...p.activeInsurance } : null,
         isGameOver: !!p.isGameOver,
         hasPurchasedDynamite: !!p.hasPurchasedDynamite,
+        headlightsEnabled: p.headlightsEnabled !== undefined ? !!p.headlightsEnabled : true,
         stats: {
           totalTilesMined: p.stats?.totalTilesMined || 0,
           totalOresMined: { ...(p.stats?.totalOresMined || {}) },
@@ -581,7 +582,13 @@ export class SaveSystem {
       p.syncAttachments?.();
       p._lastEmittedDepth = -1;
       p.highestDepthReached = Math.max(p.highestDepthReached || 0, Math.floor(targetGy));
+      if (typeof data.player.headlightsEnabled === 'boolean') {
+        p.setHeadlights?.(data.player.headlightsEnabled);
+      } else {
+        p.setHeadlights?.(true);
+      }
       if (p.headlight) p.headlight.setPosition(p.x, p.y);
+      p.updateHeadlightVisibility?.();
       if (p.scannerRing) p.scannerRing.setPosition(p.x, p.y);
 
       if (scene.cameras && scene.cameras.main && p.sprite) {

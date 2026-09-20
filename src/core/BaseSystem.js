@@ -32,11 +32,23 @@ export const REFINERY_DURATIONS_SEC = {
   dark_matter: 1400  // 23m 20s (vorher 10m 50s)
 };
 
-export function getRefinerySmeltDurationMs(oreKey) {
+export function getFactorySpeedMultiplier(machineTier = 1) {
+  const tier = Math.max(1, Math.min(5, Number(machineTier) || 1));
+  const mults = { 1: 1.0, 2: 0.85, 3: 0.70, 4: 0.55, 5: 0.40 };
+  return mults[tier] || 1.0;
+}
+
+export function getRefinerySmeltDurationMs(oreKey, machineTier = 1) {
   const sec = REFINERY_DURATIONS_SEC[oreKey];
-  if (sec) return sec * 1000;
-  const val = ORE_DATA[oreKey]?.value || 25;
-  return Math.max(20, Math.round(val * 0.70)) * 1000;
+  const baseSec = sec || Math.max(20, Math.round((ORE_DATA[oreKey]?.value || 25) * 0.70));
+  const mult = getFactorySpeedMultiplier(machineTier);
+  return Math.max(5, Math.round(baseSec * mult)) * 1000;
+}
+
+export function getFactoryProductDurationMs(prodId, machineTier = 1) {
+  const baseSec = FACTORY_PRODUCTS[prodId]?.durationSec || 60;
+  const mult = getFactorySpeedMultiplier(machineTier);
+  return Math.max(5, Math.round(baseSec * mult)) * 1000;
 }
 
 let lastModalCloseTimestamp = 0;
@@ -678,13 +690,13 @@ export const GEOLOGIST_QUESTS = [
   }
 ];
 
-// Fabrik-Maschinen Ausbaustufen (Schaltet Fertigung mit tieferen Erzen frei)
+// Fabrik-Maschinen Ausbaustufen (Schaltet Fertigung mit tieferen Erzen frei & beschleunigt die Herstellungszeit)
 export const REFINERY_MACHINE_TIERS = [
-  { tier: 1, name: 'Standard-Maschine', costCash: 0, desc: 'Einfache Bauteile aus Eisen, Kupfer und Zinn.' },
-  { tier: 2, name: 'Präzisions-Werkbank Mk.II', costCash: 1500, desc: 'Elektronik-Platinen & Silber-Spulen (Silber, Gold).' },
-  { tier: 3, name: 'Kristall-Schleifer Mk.III', costCash: 5000, desc: 'Saphir-Panzerglas, Schmuck-Diamanten & Kristall-Linsen (Saphir, Smaragd, Rubin).' },
-  { tier: 4, name: 'Tiefsee-Schmiede Mk.IV', costCash: 15000, desc: 'Titan-Panzerungen & Titan-Bolzen (Titan, Diamant, Platin).' },
-  { tier: 5, name: 'Quanten-Assembler V', costCash: 45000, desc: 'Obsidian-Superleiter, Quanten-Brennstäbe & Quanten-Kerne (Obsidian, Uran, Dunkelmaterie).' }
+  { tier: 1, name: 'Standard-Maschine', costCash: 0, speedBonus: 0, desc: 'Einfache Bauteile aus Eisen, Kupfer und Zinn (Standard-Herstellungszeit).' },
+  { tier: 2, name: 'Präzisions-Werkbank Mk.II', costCash: 1500, speedBonus: 15, desc: '-15% Herstellungszeit. Schaltet Elektronik-Platinen & Silber-Spulen frei.' },
+  { tier: 3, name: 'Kristall-Schleifer Mk.III', costCash: 5000, speedBonus: 30, desc: '-30% Herstellungszeit. Schaltet Saphir-Panzerglas & Kristall-Linsen frei.' },
+  { tier: 4, name: 'Tiefsee-Schmiede Mk.IV', costCash: 15000, speedBonus: 45, desc: '-45% Herstellungszeit. Schaltet Titan-Panzerungen & Titan-Bolzen frei.' },
+  { tier: 5, name: 'Quanten-Assembler V', costCash: 45000, speedBonus: 60, desc: '-60% Herstellungszeit (2.5× schneller!). Schaltet Obsidian-Superleiter & Quanten-Kerne frei.' }
 ];
 
 // Fabrik-Produkte (Industrielle Werkstoffe mit hohem Börsenwert & Montagebauteile)
@@ -4717,56 +4729,56 @@ export class BaseSystem {
           {
             tier: 2,
             name: 'Verstärkte Ladung Stufe 2',
-            stat: '4x4 Feld',
+            stat: '5x5 Feld',
             cost: 2800,
             level: 2,
             comp: { key: 'bronze_gear', name: 'Bronze-Getriebe', count: 1 },
-            desc: 'Kompaktierter Sprengstoff vergrößert den Explosionsradius auf ein 4x4-Feld.'
+            desc: 'Kompaktierter Sprengstoff vergrößert den zentrierten Explosionsradius auf ein 5x5-Feld.'
           },
           {
             tier: 3,
             name: 'Hohlladungs-Sprengstoff Stufe 3',
-            stat: '5x5 Feld',
+            stat: '7x7 Feld',
             cost: 7500,
             level: 3,
             comp: { key: 'silver_coil', name: 'Silber-Spule', count: 1 },
-            desc: 'Gerichtete Detonationswellen sprengen gigantische 5x5-Kavernen in den Fels.'
+            desc: 'Gerichtete Detonationswellen sprengen gigantische 7x7-Kavernen in den Fels.'
           },
           {
             tier: 4,
             name: 'Seismische Megaladung Stufe 4',
-            stat: '6x6 Feld',
+            stat: '9x9 Feld',
             cost: 18000,
             level: 4,
             comp: { key: 'crystal_lens', name: 'Kristall-Linse', count: 1 },
-            desc: 'Maximale seismische Sprengkraft bis 6x6 Kacheln für massive Durchbrüche im tiefsten Gestein.'
+            desc: 'Maximale seismische Sprengkraft bis 9x9 Kacheln für massive Durchbrüche im tiefsten Gestein.'
           },
           {
             tier: 5,
             name: 'Thermo-Kavitationsladung Stufe 5',
-            stat: '7x7 Feld',
+            stat: '11x11 Feld',
             cost: 42000,
             level: 5,
             comp: { key: 'plasma_regulator', name: 'Plasma-Injektor', count: 1 },
-            desc: 'Hochenergetische Implosions-Kavitation sprengt ein gewaltiges 7x7-Feld im Gestein frei.'
+            desc: 'Hochenergetische Implosions-Kavitation sprengt ein gewaltiges 11x11-Feld im Gestein frei.'
           },
           {
             tier: 6,
             name: 'Subatomare Schockwelle Stufe 6',
-            stat: '8x8 Feld',
+            stat: '13x13 Feld',
             cost: 95000,
             level: 6,
             comp: { key: 'titan_bolt', name: 'Titan-Bolzen', count: 2 },
-            desc: 'Verdichtete Schockwellen pulverisieren selbst härtestes Basaltgestein in einem 8x8-Feld.'
+            desc: 'Verdichtete Schockwellen pulverisieren selbst härtestes Basaltgestein in einem 13x13-Feld.'
           },
           {
             tier: 7,
             name: 'Gravitations-Kollapsor Stufe 7',
-            stat: '9x9 Feld',
+            stat: '15x15 Feld',
             cost: 220000,
             level: 8,
             comp: { key: 'graviton_core', name: 'Gravitations-Modulator', count: 1 },
-            desc: 'Ultimative Detonations-Matrix erzeugt einen gewaltigen 9x9-Durchbruch in tiefsten Urgesteinschichten.'
+            desc: 'Ultimative Detonations-Matrix erzeugt einen gewaltigen 15x15-Durchbruch in tiefsten Urgesteinschichten.'
           }
         ],
         apply: (tier) => {
@@ -5990,7 +6002,7 @@ export class BaseSystem {
       productId: item.productId || null,
       ore: item.ore,
       name: item.name || (item.productId ? FACTORY_PRODUCTS[item.productId]?.name : ORE_DATA[item.ore]?.name) || 'Produkt',
-      durationMs: item.durationMs || (item.isProduct && item.productId ? (FACTORY_PRODUCTS[item.productId]?.durationSec * 1000) : getRefinerySmeltDurationMs(item.ore)),
+      durationMs: item.durationMs || (item.isProduct && item.productId ? getFactoryProductDurationMs(item.productId, this.refinery.machineTier) : getRefinerySmeltDurationMs(item.ore, this.refinery.machineTier)),
       remainingMs: Math.max(0, item.remainingMs !== undefined ? item.remainingMs : (item.durationMs || 10000)),
       value: item.value || (item.isProduct && item.productId ? FACTORY_PRODUCTS[item.productId]?.value : getRefinedOreNetValue(item.ore))
     }));
@@ -6121,17 +6133,29 @@ export class BaseSystem {
     }
 
     if (this.player.cash < nextTierData.costCash) {
-      this.scene.events.emit('notify', `Nicht genug Geld! Benötigt: €${nextTierData.costCash.toLocaleString()}`);
+      this.scene.events.emit('notify', `Nicht genug Geld! Benötigt: €${nextTierData.costCash.toLocaleString('de-DE')}`);
       return;
     }
 
     this.player.cash -= nextTierData.costCash;
+    const oldMult = getFactorySpeedMultiplier(currentTier);
     this.refinery.machineTier = currentTier + 1;
+    const newMult = getFactorySpeedMultiplier(this.refinery.machineTier);
+    const speedRatio = newMult / oldMult;
+
+    // Laufende Warteschlange sofort proportional verkürzen
+    if (this.refinery.queue && this.refinery.queue.length > 0) {
+      this.refinery.queue.forEach(item => {
+        item.durationMs = Math.max(2000, Math.round(item.durationMs * speedRatio));
+        item.remainingMs = Math.max(1000, Math.round(item.remainingMs * speedRatio));
+      });
+    }
+
     this.updateBuildingVisuals();
     soundFx.playPurchase();
     this.renderRefineryModalBody();
     if (this.scene.hud) this.scene.hud.update();
-    this.scene.events.emit('notify', `⚙️ Industrie-Maschine auf Stufe ${this.refinery.machineTier} aufgerüstet (${nextTierData.name})!`);
+    this.scene.events.emit('notify', `⚙️ Fabrik auf Stufe ${this.refinery.machineTier} aufgerüstet (${nextTierData.name})! Herstellungszeit um ${nextTierData.speedBonus}% verkürzt.`);
   }
 
   renderRefineryModalBody() {
@@ -6322,7 +6346,7 @@ export class BaseSystem {
             for (const oreKey of allOreKeys) {
               const oreName = ORE_DATA[oreKey]?.name || oreKey;
               const refinedName = getRefinedOreName(oreKey);
-              const durSec = REFINERY_DURATIONS_SEC[oreKey] || Math.max(20, Math.round((ORE_DATA[oreKey]?.value || 25) * 0.70));
+              const effectiveDurSec = Math.round(getRefinerySmeltDurationMs(oreKey, currentTier) / 1000);
               const inCargo = cargoCounts[oreKey] || 0;
               const inDepot = this.depot?.ores?.[oreKey] || 0;
               const totalThisOre = inCargo + inDepot;
@@ -6347,7 +6371,7 @@ export class BaseSystem {
                   <!-- Spalte 2: Dauer -->
                   <div style="display: flex; align-items: center; flex-shrink: 0;">
                     <span style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); padding: 2px 7px; border-radius: 6px; font-size: 10.5px; color: #94a3b8; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 4px; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
-                      ${icon('clock', '', 10)} ${durSec}s
+                      ${icon('clock', '', 10)} ${effectiveDurSec}s${currentTierData.speedBonus > 0 ? ` <span style="color: #34d399; font-size: 9.5px; font-weight: 700;">(-${currentTierData.speedBonus}%)</span>` : ''}
                     </span>
                   </div>
 
@@ -6373,12 +6397,17 @@ export class BaseSystem {
                 ${icon('anvil', isCrafting ? 'craft-icon-active' : '', 14)} Industriemaschine
               </strong>
               <span style="font-size: 10px; color: #38bdf8; font-weight: 700; background: rgba(56, 189, 248, 0.15); padding: 1px 5px; border-radius: 4px;">Lvl ${currentTier}</span>
+              ${currentTierData.speedBonus > 0 ? `
+                <span style="font-size: 10px; color: #34d399; font-weight: 700; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); padding: 1px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;" title="Aktuelles Tempo: -${currentTierData.speedBonus}% Herstellungszeit">
+                  ${icon('zap', '', 10)} -${currentTierData.speedBonus}% Zeit
+                </span>
+              ` : ''}
               ${nextTierData ? `
-                <button id="btn-upgrade-machine" class="btn-buy" ${canAffordUpgrade ? '' : 'disabled'} style="height: 24px; font-size: 10.5px; font-weight: 700; padding: 0 8px; gap: 4px; border-radius: 5px;" title="Schaltet tiefere Erze & Bauteile frei: ${nextTierData.desc}">
-                  ${icon('chevrons-up', '', 11)} Upgrade Lvl ${nextTierData.tier} &bull; €${nextTierData.costCash.toLocaleString('de-DE')}
+                <button id="btn-upgrade-machine" class="btn-buy" ${canAffordUpgrade ? '' : 'disabled'} style="height: 24px; font-size: 10.5px; font-weight: 700; padding: 0 8px; gap: 4px; border-radius: 5px;" title="Schnellere Herstellungszeit & tiefere Erze: ${nextTierData.desc}">
+                  ${icon('chevrons-up', '', 11)} Upgrade Lvl ${nextTierData.tier} (-${nextTierData.speedBonus}%) &bull; €${nextTierData.costCash.toLocaleString('de-DE')}
                 </button>
               ` : `
-                <span style="font-size: 10px; font-weight: 700; color: #34d399; background: rgba(16, 185, 129, 0.12); padding: 2px 6px; border-radius: 4px;">Max Lvl</span>
+                <span style="font-size: 10px; font-weight: 700; color: #34d399; background: rgba(16, 185, 129, 0.12); padding: 2px 6px; border-radius: 4px;">Max Lvl (-${currentTierData.speedBonus}%)</span>
               `}
             </div>
             <div style="display: flex; align-items: center; gap: 8px;">
@@ -6453,9 +6482,14 @@ export class BaseSystem {
 
                     <!-- Spalte 2: Fertigungs-Dauer -->
                     <div style="display: flex; align-items: center; flex-shrink: 0;">
-                      <span style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); padding: 2px 7px; border-radius: 6px; font-size: 10.5px; color: #94a3b8; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 4px; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
-                        ${icon('clock', '', 10)} ${prod.durationSec}s
-                      </span>
+                      ${(() => {
+                        const effectiveProdSec = Math.round(getFactoryProductDurationMs(prodId, currentTier) / 1000);
+                        return `
+                          <span style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); padding: 2px 7px; border-radius: 6px; font-size: 10.5px; color: #94a3b8; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 4px; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
+                            ${icon('clock', '', 10)} ${effectiveProdSec}s${currentTierData.speedBonus > 0 ? ` <span style="color: #34d399; font-size: 9.5px; font-weight: 700;">(-${currentTierData.speedBonus}%)</span>` : ''}
+                          </span>
+                        `;
+                      })()}
                     </div>
 
                     <!-- Spalte 3: Zutaten / Bauplan-Rezepte (flex: 1) -->
@@ -6629,7 +6663,7 @@ export class BaseSystem {
     // 2. Brennkammer-Brennstoff verbrauchen
     this.refinery.fuelCoal = Math.max(0, (this.refinery.fuelCoal || 0) - fuelNeeded);
 
-    const durationMs = prod.durationSec * 1000;
+    const durationMs = getFactoryProductDurationMs(prod.id, this.refinery?.machineTier || 1);
     this.refinery.queue.push({
       id: `q_${Date.now()}_${Math.random().toString(36).substr(2, 7)}`,
       isProduct: true,
@@ -6716,7 +6750,7 @@ export class BaseSystem {
     for (let i = 0; i < toSmelt; i++) {
       this.consumeSingleOre(oreKey);
       this.refinery.fuelCoal--;
-      const durationMs = getRefinerySmeltDurationMs(oreKey);
+      const durationMs = getRefinerySmeltDurationMs(oreKey, this.refinery?.machineTier || 1);
       const netVal = getRefinedOreNetValue(oreKey);
       this.refinery.queue.push({
         id: `q_${Date.now()}_${Math.random().toString(36).substr(2, 7)}`,
@@ -6765,7 +6799,7 @@ export class BaseSystem {
 
       this.refinery.fuelCoal--;
 
-      const durationMs = getRefinerySmeltDurationMs(oreKey);
+      const durationMs = getRefinerySmeltDurationMs(oreKey, this.refinery?.machineTier || 1);
       const netVal = getRefinedOreNetValue(oreKey);
       this.refinery.queue.push({
         id: `q_${Date.now()}_${Math.random().toString(36).substr(2, 7)}`,

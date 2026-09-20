@@ -171,10 +171,14 @@ export class Player {
     // Set aller bisher im Büro eingesehenen Steinforscher-Aufträge
     this.seenGeologistQuests = new Set();
 
-    // Dynamischer Scheinwerfer (Über der Erde komplett unsichtbar)
-    this.headlight = scene.add.circle(this.x, this.y, 64, 0xfffbeb, 0.08)
-      .setDepth(9)
+    // Dynamischer Dual-Scheinwerfer (Weiche Kanten, leuchtet nach links & rechts)
+    this.headlightsEnabled = true;
+    this.headlightSprite = scene.add.image(this.x, this.y, 'headlight_dual')
+      .setDepth(8)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setAlpha(0.85)
       .setVisible(false);
+    this.headlight = this.headlightSprite;
 
     // Fahrzeug-Werte & Stats (ausbalancierte Wirtschaft)
     this.maxFuel = 60;
@@ -267,7 +271,7 @@ export class Player {
     };
 
     // Im Labor erforschte Technologien für Ausrüstung & Infrastruktur
-    this.researchedTnt = 0; // Sprengtechnik & TNT (Stufe 0..7: 3x3 bis 9x9)
+    this.researchedTnt = 0; // Sprengtechnik & TNT (Stufe 0..7: 3x3 bis 15x15)
     this.researchedEmergency = 0; // Notfallausrüstung (Kanister & Rep.-Kit, Stufe 0..1)
     this.researchedStationFuel = 0; // Untertage-Tankanlagen (Stufe 0..3)
     this.researchedStationTube = 0; // Untertage-Förderschächte (Stufe 0..3)
@@ -508,13 +512,29 @@ export class Player {
     if (this.sprite) {
       this.sprite.setPosition(this.x, this.y);
     }
-    if (this.headlight) {
-      this.headlight.setPosition(this.x, this.y).setVisible(false);
+    if (this.headlightSprite) {
+      this.headlightSprite.setPosition(this.x, this.y);
+      this.updateHeadlightVisibility();
     }
     if (this.scannerRing) {
       this.scannerRing.setPosition(this.x, this.y);
     }
     this.syncAttachments?.();
+  }
+
+  setHeadlights(enabled) {
+    this.headlightsEnabled = !!enabled;
+    this.updateHeadlightVisibility();
+    soundFx.play?.('click');
+  }
+
+  updateHeadlightVisibility() {
+    if (!this.headlightSprite) return;
+    const atSurface = this.gy <= -1 || (this.sprite && this.sprite.y <= -16);
+    const visible = !!this.headlightsEnabled && !atSurface;
+    if (this.headlightSprite.visible !== visible) {
+      this.headlightSprite.setVisible(visible);
+    }
   }
 
   get depthMeters() {
@@ -561,11 +581,14 @@ export class Player {
     this.x = curX;
     this.y = curY;
 
+    if (this.headlightSprite) {
+      this.headlightSprite.setPosition(curX, curY);
+      this.updateHeadlightVisibility();
+    }
+
     if (this._lastSyncX !== curX || this._lastSyncY !== curY) {
       this._lastSyncX = curX;
       this._lastSyncY = curY;
-
-      if (this.headlight) this.headlight.setPosition(curX, curY);
 
       const n1X = curX - 7;
       const n1Y = curY + 15;
@@ -828,7 +851,7 @@ export class Player {
 
   getTntBlastSize() {
     const tier = Math.max(1, Math.min(7, this.researchedTnt || 1));
-    return 2 + tier; // Tier 1 -> 3x3, Tier 2 -> 4x4, Tier 3 -> 5x5, Tier 4 -> 6x6, Tier 5 -> 7x7, Tier 6 -> 8x8, Tier 7 -> 9x9
+    return 1 + 2 * tier; // Tier 1 -> 3x3, Tier 2 -> 5x5, Tier 3 -> 7x7, Tier 4 -> 9x9, Tier 5 -> 11x11, Tier 6 -> 13x13, Tier 7 -> 15x15
   }
 
   useDynamite() {
@@ -1616,6 +1639,9 @@ export class Player {
       // kann es nicht in die Luft / den Himmel fliegen!
       if (this.sprite.y <= -16 || this.gy <= -1) {
         soundFx.stopDrive();
+        if (this.scene.inputHandler?.lockedDirection === 'UP') {
+          this.scene.inputHandler.cancelLock();
+        }
         return false;
       }
 
@@ -1626,6 +1652,9 @@ export class Player {
         const tile = this.gridSystem.getTile(this.gx, checkGy);
         if (!tile || tile.indestructible || checkGy === 0) {
           soundFx.stopDrive();
+          if (this.scene.inputHandler?.lockedDirection === 'UP') {
+            this.scene.inputHandler.cancelLock();
+          }
           return false;
         }
 
@@ -1651,15 +1680,14 @@ export class Player {
     const maxGx = targetGy <= 0 ? 70 : 1000;
     if (targetGx < minGx || targetGx > maxGx) {
       soundFx.stopDrive();
+      if (this.scene.inputHandler?.lockedDirection) {
+        this.scene.inputHandler.cancelLock();
+      }
       return false;
     }
 
     // Prüfen ob Zielfeld solid ist (für LINKS, RECHTS, UNTEN)
     const isTargetSolid = this.gridSystem.isSolid(targetGx, targetGy);
-
-    if (isTargetSolid && dir === 'DOWN' && this.scene.inputHandler?.isAutoDescending) {
-      this.scene.inputHandler.cancelAutoDescend();
-    }
 
     if (!isTargetSolid) {
       // Freies Feld: normale Fahrt
@@ -1674,6 +1702,9 @@ export class Player {
       if (!tile || tile.indestructible || targetGy === 0) {
         if (targetGy === 0) {
           this.scene.events.emit('notify', 'Oberfläche unzerstörbar! Nutze den überdachten Schachteinstieg.');
+        }
+        if (this.scene.inputHandler?.lockedDirection === dir) {
+          this.scene.inputHandler.cancelLock();
         }
         return false;
       }
@@ -1796,14 +1827,29 @@ export class Player {
         this.sprite.y = clampedY;
         this.y = clampedY;
         this.gy = Math.round((this.y - TILE_SIZE / 2) / TILE_SIZE);
-        this.stopFlying();
 
         // Wenn Spieler weiter nach oben steuert: nahtlos Deckenbohren einleiten!
-        if (isUpActive && this.gridSystem.isSolid(this.gx, checkGy)) {
-          const tile = this.gridSystem.getTile(this.gx, checkGy);
-          if (tile && !tile.indestructible && checkGy > 0) {
-            this.setVisualDirection('UP');
-            this.startDrilling(this.gx, checkGy);
+        const tile = this.gridSystem.getTile(this.gx, checkGy);
+        const canDrill = isUpActive && this.gridSystem.isSolid(this.gx, checkGy) && tile && !tile.indestructible && checkGy > 0;
+
+        if (canDrill) {
+          this.flySoundTimer = 0;
+          soundFx.stopJetpack();
+          if (soundFx && soundFx.stopRefuel) {
+            soundFx.stopRefuel();
+          }
+          if (this.leftThrustParticles) {
+            this.leftThrustParticles.stop();
+          }
+          if (this.rightThrustParticles) {
+            this.rightThrustParticles.stop();
+          }
+          this.setVisualDirection('UP');
+          this.startDrilling(this.gx, checkGy);
+        } else {
+          this.stopFlying();
+          if (this.scene?.inputHandler?.lockedDirection === 'UP') {
+            this.scene.inputHandler.cancelLock();
           }
         }
         return;
@@ -1862,12 +1908,9 @@ export class Player {
       this.rightThrustParticles.stop();
     }
 
-    // Wenn automatischer Steigflug oder Sinkflug aktiv war, sauber lösen
+    // Wenn automatischer Steigflug aktiv war, sauber lösen
     if (this.scene?.inputHandler?.isAutoAscending) {
       this.scene.inputHandler.cancelAutoAscend();
-    }
-    if (this.scene?.inputHandler?.isAutoDescending) {
-      this.scene.inputHandler.cancelAutoDescend();
     }
 
     // Präzise Kachel-Zentrierung beim Beenden des Flugs oder Sinkflugs (stets sauber auf Kachelzentrum einrasten)
@@ -1983,6 +2026,9 @@ export class Player {
           if (nextGx < minGx || nextGx > maxGx) {
             this.state = PLAYER_STATES.IDLE;
             soundFx.stopDrive();
+            if (this.scene.inputHandler?.lockedDirection) {
+              this.scene.inputHandler.cancelLock();
+            }
             break;
           }
 
@@ -2000,9 +2046,6 @@ export class Player {
             soundFx.startDrive();
           } else {
             // Feste Wand / Gestein: Anhalten oder Bohren starten
-            if (this.scene.inputHandler?.isAutoDescending) {
-              this.scene.inputHandler.cancelAutoDescend();
-            }
             this.state = PLAYER_STATES.IDLE;
             soundFx.stopDrive();
             this.handleInput(nextDir);
@@ -2060,16 +2103,29 @@ export class Player {
   }
 
   startDrilling(targetGx, targetGy) {
-    if (targetGy === 0) return;
+    if (targetGy === 0) {
+      if (this.scene?.inputHandler?.lockedDirection) {
+        this.scene.inputHandler.cancelLock();
+      }
+      return;
+    }
     if (this.hull <= 0) {
       if (!this._hullBrokenToastShown) {
         this._hullBrokenToastShown = true;
         this.scene.hud?.showToast('⚠️ Karosserie kritisch beschädigt (0 HP)! Bohrer blockiert – zur Basis zurückkehren oder Reparatur-Kit nutzen!', 'danger');
       }
+      if (this.scene?.inputHandler?.lockedDirection) {
+        this.scene.inputHandler.cancelLock();
+      }
       return;
     }
     const tile = this.gridSystem.getTile(targetGx, targetGy);
-    if (!tile || tile.indestructible) return;
+    if (!tile || tile.indestructible) {
+      if (this.scene?.inputHandler?.lockedDirection) {
+        this.scene.inputHandler.cancelLock();
+      }
+      return;
+    }
     // Sicherheit: nicht bohren wenn der Block schon leer ist (bereits abgebaut)!
     if (!this.gridSystem.isSolid(targetGx, targetGy)) return;
 

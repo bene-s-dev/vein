@@ -245,7 +245,68 @@ export class DrillerMenuModal {
       </div>
     `;
 
-    // 3. Darunter: Grid-Style-Inventar mit Steinen und Anzahl
+    // 3. Fahrzeug-Scheinwerfer (Beidseitiges Weichlicht für tiefe Schichten)
+    const headlightsActive = !!this.player.headlightsEnabled;
+    const headlightsHtml = `
+      <div style="
+        background: rgba(15, 23, 42, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        padding: 8px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      ">
+        <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+          <div style="
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: ${headlightsActive ? 'rgba(245, 158, 11, 0.18)' : 'rgba(71, 85, 105, 0.2)'};
+            border-radius: 8px;
+            color: ${headlightsActive ? '#f59e0b' : '#64748b'};
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+          ">
+            ${icon('sun', '', 18)}
+          </div>
+          <div style="min-width: 0;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 11.5px; font-weight: 700; color: #f8fafc; white-space: nowrap;">Scheinwerfer</span>
+              <span style="font-size: 9px; font-weight: 800; padding: 1px 5px; border-radius: 4px; background: ${headlightsActive ? 'rgba(16, 185, 129, 0.2)' : 'rgba(100, 116, 139, 0.2)'}; color: ${headlightsActive ? '#10b981' : '#94a3b8'};">
+                ${headlightsActive ? 'AN (BEIDSEITIG)' : 'AUS'}
+              </span>
+            </div>
+            <div style="font-size: 10px; color: #94a3b8; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              Weicher Lichtkegel nach links & rechts (Taste L)
+            </div>
+          </div>
+        </div>
+        <button id="btn-driller-headlights" class="btn-buy" style="
+          height: 28px;
+          padding: 0 12px;
+          font-size: 10.5px;
+          font-weight: 800;
+          background: ${headlightsActive ? 'linear-gradient(135deg, #10b981, #059669)' : '#334155'};
+          color: ${headlightsActive ? '#ffffff' : '#cbd5e1'};
+          border: none;
+          border-radius: 6px;
+          white-space: nowrap;
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        ">
+          ${headlightsActive ? 'Ausschalten' : 'Einschalten'}
+        </button>
+      </div>
+    `;
+
+    // 4. Darunter: Grid-Style-Inventar mit Steinen und Anzahl
     const oreCounts = {};
     cargo.forEach(oreKey => {
       oreCounts[oreKey] = (oreCounts[oreKey] || 0) + 1;
@@ -360,6 +421,7 @@ export class DrillerMenuModal {
       <div style="display: flex; flex-direction: column; max-width: 620px; margin: 0 auto; width: 100%; box-sizing: border-box; padding: 0 4px 36px 4px; gap: 14px;">
         ${statusBarsHtml}
         ${emergencyActionsHtml}
+        ${headlightsHtml}
         ${inventoryHtml}
       </div>
     `;
@@ -367,6 +429,16 @@ export class DrillerMenuModal {
     document.body.classList.add('modal-open');
     modalEl.style.display = 'flex';
     refreshIcons(modalEl);
+
+    // Klick auf Scheinwerfer-Umschalter
+    const headlightsBtn = bodyEl.querySelector('#btn-driller-headlights');
+    if (headlightsBtn) {
+      headlightsBtn.onclick = (e) => {
+        e.stopPropagation();
+        this.player?.setHeadlights(!this.player.headlightsEnabled);
+        this.render();
+      };
+    }
 
     // Klick auf Notfall-Ausrüstung im Driller-Menü
     const refuelBtn = bodyEl.querySelector('#btn-driller-refuel');

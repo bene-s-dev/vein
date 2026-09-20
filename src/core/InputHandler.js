@@ -42,6 +42,7 @@ export class InputHandler {
     this.keyE = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E, false);
     this.keyZ = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z, false);
     this.keySpace = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE, false);
+    this.keyL = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.L, false);
 
     // Tastatur-Capture für Buchstaben und Ziffern freigeben, damit Texteingaben überall funktionieren
     if (scene.input.keyboard.removeCapture) {
@@ -61,7 +62,8 @@ export class InputHandler {
         Phaser.Input.Keyboard.KeyCodes.R,
         Phaser.Input.Keyboard.KeyCodes.E,
         Phaser.Input.Keyboard.KeyCodes.Z,
-        Phaser.Input.Keyboard.KeyCodes.SPACE
+        Phaser.Input.Keyboard.KeyCodes.SPACE,
+        Phaser.Input.Keyboard.KeyCodes.L
       ]);
     }
 
@@ -127,6 +129,15 @@ export class InputHandler {
 
     this.keyZ.on('down', triggerDetonate);
     this.keySpace.on('down', triggerDetonate);
+
+    const triggerToggleHeadlights = () => {
+      if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
+      if (isModalActive()) return;
+      if (this.scene.player) {
+        this.scene.player.setHeadlights(!this.scene.player.headlightsEnabled);
+      }
+    };
+    this.keyL.on('down', triggerToggleHeadlights);
 
     this.setupControls();
   }

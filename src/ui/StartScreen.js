@@ -234,17 +234,17 @@ export class StartScreen {
             ${expeditionButtonsHtml}
           </div>
 
-          <!-- Rechter Bereich: Bestenliste -->
+          <!-- Rechter Bereich: Lowscore -->
           <div style="display: flex; flex-direction: column; gap: 6px;">
             <div style="display: flex; align-items: center; justify-content: center;">
               <div style="font-size: 10.5px; font-weight: 800; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.8px; display: flex; align-items: center; gap: 6px;">
-                ${icon('trophy', '', 13)} BESTENLISTE
+                ${icon('trophy', '', 13)} LOWSCORE
               </div>
             </div>
 
             <div id="start-leaderboard-list" class="start-leaderboard-scroll">
               <div style="color: #94a3b8; font-size: 10.5px; text-align: center; padding: 12px 0;">
-                Lade Bestenliste...
+                Lade Lowscore...
               </div>
             </div>
           </div>
@@ -282,7 +282,7 @@ export class StartScreen {
             </button>
           </div>
           <div style="font-size: 12px; color: #cbd5e1; line-height: 1.4;">
-            Gib deinen Rufnamen für das Bergbaufahrzeug <strong>VEIN-01</strong> ein (für die Bestenliste):
+            Gib deinen Rufnamen für das Bergbaufahrzeug <strong>VEIN-01</strong> ein (für den Lowscore):
           </div>
           <input type="text" id="modal-player-name" placeholder="Fahrername..." value="${this.playerName}" maxlength="20" autofocus style="width: 100%; height: 42px; box-sizing: border-box; background: rgba(2, 6, 23, 0.85); border: 1.5px solid rgba(249, 115, 22, 0.5); border-radius: 8px; color: #ffffff; padding: 0 12px; font-size: 14px; font-weight: 700; outline: none; pointer-events: auto !important; user-select: text !important; -webkit-user-select: text !important; cursor: text;" />
           <div style="display: flex; gap: 8px; justify-content: flex-end;">
@@ -357,7 +357,7 @@ export class StartScreen {
         `;
       }).join('');
     } catch (e) {
-      listEl.innerHTML = `<div style="color: #f87171; font-size: 10.5px; text-align: center; padding: 10px 0;">Konnte Bestenliste nicht laden</div>`;
+      listEl.innerHTML = `<div style="color: #f87171; font-size: 10.5px; text-align: center; padding: 10px 0;">Konnte Lowscore nicht laden</div>`;
     }
   }
 
