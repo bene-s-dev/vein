@@ -188,17 +188,13 @@ export class StartScreen {
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
           <button id="btn-start-open-slots" class="btn-action start-screen-btn" style="height: 32px; width: 100%; border-radius: 8px; font-size: 11px; font-weight: 800; justify-content: center; gap: 5px; background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(255, 255, 255, 0.15); color: #f8fafc; cursor: pointer; letter-spacing: 0.3px;">
             ${icon('folder-open', '', 12)}
-            <span>SLOTS</span>
+            <span>SPIELSTÄNDE</span>
           </button>
 
           <button id="btn-start-new-game" class="btn-action start-screen-btn" style="height: 32px; width: 100%; border-radius: 8px; font-size: 11px; font-weight: 800; justify-content: center; gap: 5px; background: rgba(30, 41, 59, 0.65); border: 1px solid rgba(255, 255, 255, 0.1); color: #cbd5e1; cursor: pointer; letter-spacing: 0.3px;">
             ${icon('plus', '', 12)}
             <span>NEU</span>
           </button>
-        </div>
-
-        <div style="font-size: 10px; color: #94a3b8; text-align: center; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-          ${activeSlot.label}: <strong style="color: #38bdf8;">Lv.${activeSlot.level}</strong> · <strong style="color: #38bdf8;">${activeSlot.highestDepth > 0 ? `-${activeSlot.highestDepth}m` : '0m'}</strong>
         </div>
       `;
     } else {
@@ -210,7 +206,7 @@ export class StartScreen {
 
         <button id="btn-start-open-slots" class="btn-action start-screen-btn" style="height: 32px; width: 100%; border-radius: 8px; font-size: 11px; font-weight: 800; justify-content: center; gap: 5px; background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(255, 255, 255, 0.15); color: #f8fafc; cursor: pointer; letter-spacing: 0.3px;">
           ${icon('folder-open', '', 12)}
-          <span>SLOT WÄHLEN</span>
+          <span>SPIELSTÄNDE</span>
         </button>
       `;
     }

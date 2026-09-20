@@ -1434,7 +1434,13 @@ export class BaseSystem {
       this.boomTimer = (this.boomTimer || 0) + delta;
       if (this.boomTimer >= 300000) { // 5 Minuten
         this.boomTimer = 0;
-        const candidates = ['coal', 'copper', 'iron', 'tin', 'silver', 'gold', 'emerald'];
+        // Spoiler-Schutz: Nur Erze auswählen, die der Spieler bereits entdeckt hat
+        let candidates = Object.keys(ORE_DATA).filter(oreKey => {
+          return this.player?.isOreDiscovered ? this.player.isOreDiscovered(oreKey) : false;
+        });
+        if (candidates.length === 0) {
+          candidates = ['coal'];
+        }
         const picked = candidates[Math.floor(Math.random() * candidates.length)];
         this.activeBoom = {
           oreKey: picked,
