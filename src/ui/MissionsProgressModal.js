@@ -214,17 +214,16 @@ export class MissionsProgressModal {
       this.missionSystem.ensureAvailableMissions(3);
     }
     const available = this.missionSystem.availableMissions || [];
-    const curLevel = this.player.level || 1;
+    const completedCount = this.missionSystem.completedMissionIds ? this.missionSystem.completedMissionIds.size : (this.player.stats?.missionsCompleted || 0);
 
     const cardsHtml = available.length === 0 ? `
       <div style="text-align: center; padding: 28px 16px; color: #94a3b8; font-size: 12.5px; background: rgba(15,23,42,0.6); border-radius: 12px; border: 1.5px dashed rgba(56,189,248,0.25);">
         ${icon('check-circle', '', 28)}
-        <div style="font-weight: 700; color: #f8fafc; font-size: 14px; margin: 8px 0 4px 0;">Alle Aufträge erfüllt!</div>
-        <p style="margin: 0; color: #cbd5e1; font-size: 12px;">Aktuell stehen keine weiteren Aufträge an. Erkunde tiefere Schichten oder steigere dein Level für neue Verträge.</p>
+        <div style="font-weight: 700; color: #f8fafc; font-size: 14px; margin: 8px 0 4px 0;">Alle aktuellen Aufträge erfüllt!</div>
+        <p style="margin: 0; color: #cbd5e1; font-size: 12px;">Aktuell stehen keine weiteren Aufträge in dieser Schicht an. Dringe tiefer in den Schacht vor oder steige im Level auf, um neue Verträge freizuschalten.</p>
       </div>
     ` : available.map(m => {
       const isDone = !!m.isCompleted;
-      const isUpcoming = !isDone && curLevel < m.minLevel;
       const maxProg = m.targetCount || m.targetDepth || 1;
       const curProg = Math.min(maxProg, m.progress || 0);
       const pct = Math.min(100, Math.round((curProg / maxProg) * 100));
@@ -243,18 +242,18 @@ export class MissionsProgressModal {
               <span style="
                 font-size: 10px;
                 font-weight: 800;
-                color: ${isDone ? '#10b981' : isUpcoming ? '#fbbf24' : '#38bdf8'};
+                color: ${isDone ? '#10b981' : '#38bdf8'};
                 text-transform: uppercase;
                 letter-spacing: 0.8px;
-                background: ${isDone ? 'rgba(16, 185, 129, 0.15)' : isUpcoming ? 'rgba(245, 158, 11, 0.15)' : 'rgba(56, 189, 248, 0.15)'};
+                background: ${isDone ? 'rgba(16, 185, 129, 0.15)' : 'rgba(56, 189, 248, 0.15)'};
                 padding: 2px 8px;
                 border-radius: 4px;
                 display: inline-flex;
                 align-items: center;
                 gap: 5px;
               ">
-                ${icon(isDone ? 'check-circle' : isUpcoming ? 'lock' : 'crosshair', '', 12)}
-                ${isDone ? 'AUFTRAG ERFÜLLT' : isUpcoming ? `DEMNÄCHST (AB LVL ${m.minLevel})` : 'IN ARBEIT'}
+                ${icon(isDone ? 'check-circle' : 'crosshair', '', 12)}
+                ${isDone ? 'AUFTRAG ERFÜLLT' : 'IN ARBEIT'}
               </span>
               <h3 style="color: #f8fafc; font-size: 15px; font-weight: 700; margin: 6px 0 2px 0;">${m.title}</h3>
             </div>
@@ -284,13 +283,13 @@ export class MissionsProgressModal {
                 ${icon('target', '', 13)}
                 ${m.type === 'COLLECT_ORE' ? `Gefördert: <strong style="color: #f8fafc; margin: 0 2px;">${curProg}/${maxProg}</strong> <span style="display: inline-flex; align-items: center; gap: 4px;">${oreIcon(m.targetOre, 13)} ${ORE_DATA[m.targetOre]?.name || 'Erzen'}</span>` : `Ziel-Tiefe: <strong style="color: #f8fafc; margin: 0 2px;">${curProg}/${maxProg}</strong> Meter`}
               </span>
-              <span style="color: ${isDone ? '#10b981' : isUpcoming ? '#fbbf24' : '#38bdf8'}; font-weight: 800;">${pct}%</span>
+              <span style="color: ${isDone ? '#10b981' : '#38bdf8'}; font-weight: 800;">${pct}%</span>
             </div>
             <div style="width: 100%; height: 7px; background: rgba(15, 23, 42, 0.9); border-radius: 99px; overflow: hidden;">
               <div style="
                 width: ${pct}%;
                 height: 100%;
-                background: ${isDone ? 'linear-gradient(90deg, #10b981, #34d399)' : isUpcoming ? 'linear-gradient(90deg, #d97706, #fbbf24)' : 'linear-gradient(90deg, #2563eb, #38bdf8)'};
+                background: ${isDone ? 'linear-gradient(90deg, #10b981, #34d399)' : 'linear-gradient(90deg, #2563eb, #38bdf8)'};
                 border-radius: 99px;
                 transition: width 0.3s ease;
               "></div>
@@ -299,9 +298,15 @@ export class MissionsProgressModal {
 
           <!-- Aktions-Buttons -->
           <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; padding-top: 6px; border-top: 1px solid rgba(255, 255, 255, 0.05);">
-            <button class="btn-reroll-single-mission btn-3d-secondary" data-mid="${m.id}" style="height: 32px; box-sizing: border-box; font-size: 11px; padding: 0 12px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; border-radius: 7px;">
-              ${icon('refresh-cw', '', 12)} Anderer Auftrag
-            </button>
+            ${isDone ? `<span></span>` : ((this.missionSystem.canRerollMission ? this.missionSystem.canRerollMission(m) : !m.isRerolled) ? `
+              <button class="btn-reroll-single-mission btn-3d-secondary" data-mid="${m.id}" title="Einmalig gegen einen anderen erreichbaren Auftrag tauschen" style="height: 32px; box-sizing: border-box; font-size: 11px; padding: 0 12px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; border-radius: 7px;">
+                ${icon('refresh-cw', '', 12)} Anderer Auftrag (1x)
+              </button>
+            ` : `
+              <span style="font-size: 11px; color: #64748b; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 7px;">
+                ${icon('check', '', 12)} Bereits ersetzt
+              </span>
+            `)}
             <div>
               ${isDone ? `
                 <button class="btn-claim-mission btn-buy" data-mid="${m.id}" style="
@@ -326,7 +331,7 @@ export class MissionsProgressModal {
               ` : `
                 <span style="font-size: 11px; color: #94a3b8; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; padding: 0 4px;">
                   ${icon('clock', '', 12)}
-                  <span>${isUpcoming ? `Freischaltung ab Level ${m.minLevel}` : 'Aktiv im Schacht'}</span>
+                  <span>Aktiv im Schacht</span>
                 </span>
               `}
             </div>
@@ -334,6 +339,41 @@ export class MissionsProgressModal {
         </div>
       `;
     }).join('');
+
+    // Falls weniger als 3 Aufträge verfügbar sind, dezente Platzhalter anzeigen
+    let lockedSlotsHtml = '';
+    if (available.length > 0 && available.length < 3) {
+      const remainingSlots = 3 - available.length;
+      lockedSlotsHtml = Array.from({ length: remainingSlots }).map((_, idx) => `
+        <div style="
+          background: rgba(15, 23, 42, 0.45);
+          border: 1px dashed rgba(255, 255, 255, 0.12);
+          border-radius: 12px;
+          padding: 12px 16px;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        ">
+          <div style="
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.04);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            flex-shrink: 0;
+          ">
+            ${icon('lock', '', 16)}
+          </div>
+          <div>
+            <div style="font-size: 12px; font-weight: 700; color: #cbd5e1;">Auftragsplatz ${available.length + idx + 1} gesperrt</div>
+            <div style="font-size: 11px; color: #64748b;">Wird bei tieferem Schachtvortrieb oder Levelaufstieg freigeschaltet.</div>
+          </div>
+        </div>
+      `).join('');
+    }
 
     return `
       <div style="display: flex; flex-direction: column; gap: 12px;">
@@ -350,16 +390,17 @@ export class MissionsProgressModal {
           gap: 8px;
         ">
           <div style="font-size: 12px; font-weight: 800; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.6px; display: flex; align-items: center; gap: 6px;">
-            ${icon('clipboard-list', '', 14)} Auftragsbörse (3 aktive Verträge)
+            ${icon('clipboard-list', '', 14)} Auftragsbörse (${available.length}/3 aktiv · ${completedCount} abgeschlossen)
           </div>
           <span style="font-size: 11px; color: #94a3b8;">
             Schachttiefe: <strong style="color: #38bdf8;">${this.player.depthMeters > 0 ? `-${this.player.depthMeters}` : '0'}m</strong> · Fracht: <strong style="color: #f8fafc;">${this.player.cargoCount}/${this.player.maxCargo}</strong>
           </span>
         </div>
 
-        <!-- 3 Auftrags-Karten -->
+        <!-- 3 Auftrags-Karten & begrenzte Slots -->
         <div style="display: flex; flex-direction: column; gap: 10px;">
           ${cardsHtml}
+          ${lockedSlotsHtml}
         </div>
       </div>
     `;

@@ -112,6 +112,9 @@ export function closeActiveModal(scene) {
         sc.baseSystem.refineryUiInterval = null;
       }
     }
+    if (sc.autoSaveNow) {
+      sc.autoSaveNow();
+    }
   }
 
   try {
@@ -155,11 +158,31 @@ export function isModalActive() {
   return false;
 }
 
+export const REFINED_ORE_VALUES = {
+  coal: 65,
+  copper: 110,
+  iron: 240,
+  tin: 400,
+  silver: 720,
+  gold: 1250,
+  emerald: 2100,
+  sapphire: 3400,
+  ruby: 5500,
+  diamond: 9000,
+  titanium: 14000,
+  platinum: 21500,
+  uranium: 31500,
+  obsidian_gem: 46000,
+  dark_matter: 78000
+};
+
 export function getRefinedOreNetValue(oreKey) {
-  const val = ORE_DATA[oreKey]?.value || 10;
-  const refinedVal = Math.round(val * 1.5);
-  const fee = Math.round(refinedVal * 0.12);
-  return refinedVal - fee;
+  const cleanKey = typeof oreKey === 'string' && oreKey.startsWith('bar_') ? oreKey.replace('bar_', '') : oreKey;
+  if (REFINED_ORE_VALUES[cleanKey]) {
+    return REFINED_ORE_VALUES[cleanKey];
+  }
+  const val = ORE_DATA[cleanKey]?.value || 10;
+  return Math.round(val * 1.85);
 }
 
 // Bohrkopf-Stufen & DPS (Entwicklung im Labor -> Montage im Hangar)
@@ -671,99 +694,99 @@ export const FACTORY_PRODUCTS = {
   steel_beam: {
     id: 'steel_beam',
     name: 'Stahlträger',
-    desc: 'Schwerer Baustahl für Schachtgerüste und Industrie. Aus 2x Eisen + 2x Kohle geschmiedet.',
+    desc: 'Schwerer Baustahl für Schachtgerüste und Industrie. Aus 2x Eisen-Barren + 2x Kohle-Briketts geschmiedet.',
     iconName: 'circle-pile',
-    recipe: { iron: 2, coal: 2 },
+    recipe: { bar_iron: 2, bar_coal: 2 },
     fuelCoal: 2,
     minTier: 1,
     durationSec: 45,
-    value: 650
+    value: 950
   },
   bronze_ingot: {
     id: 'bronze_ingot',
     name: 'Bronze-Barren',
-    desc: 'Korrosionsfreie Legierung für Schiffbau und Maschinenbau. Gegossen aus 2x Kupfer + 1x Zinn.',
+    desc: 'Korrosionsfreie Legierung für Schiffbau und Maschinenbau. Gegossen aus 2x Kupfer-Barren + 1x Zinn-Barren.',
     iconName: 'layers',
-    recipe: { copper: 2, tin: 1 },
+    recipe: { bar_copper: 2, bar_tin: 1 },
     fuelCoal: 2,
     minTier: 1,
     durationSec: 55,
-    value: 750
+    value: 1050
   },
   circuit_board: {
     id: 'circuit_board',
     name: 'Elektronik-Platine',
     desc: 'Hochintegrierte Leiterplatte mit Zinn-Lötbahnen und Gold-Kontakten.',
     iconName: 'cpu',
-    recipe: { copper: 2, tin: 1, gold: 1 },
+    recipe: { bar_copper: 2, bar_tin: 1, bar_gold: 1 },
     fuelCoal: 2,
     minTier: 2,
     durationSec: 110,
-    value: 2200
+    value: 2950
   },
   sapphire_glass: {
     id: 'sapphire_glass',
     name: 'Saphir-Panzerglas',
     desc: 'Kratzfestes und hochdruckstabiles Panzerglas aus Saphirkristallen und Feinsilber.',
     iconName: 'shield',
-    recipe: { sapphire: 2, silver: 1 },
+    recipe: { bar_sapphire: 2, bar_silver: 1 },
     fuelCoal: 2,
     minTier: 3,
     durationSec: 160,
-    value: 7500
+    value: 11800
   },
   polished_gem: {
     id: 'polished_gem',
     name: 'Schmuck-Diamant',
     desc: 'Präzisionsgeschliffener Dreifach-Edelstein aus Smaragd, Rubin und Diamant.',
     iconName: 'gem',
-    recipe: { emerald: 1, ruby: 1, diamond: 1 },
+    recipe: { bar_emerald: 1, bar_ruby: 1, bar_diamond: 1 },
     fuelCoal: 2,
     minTier: 3,
     durationSec: 200,
-    value: 16000
+    value: 25500
   },
   titan_plate: {
     id: 'titan_plate',
     name: 'Titan-Panzerung',
     desc: 'Hitzebeständige Panzerplatte mit Diamant-Partikelbeschichtung für Tiefsee- und Hochdruckrümpfe.',
     iconName: 'shield-check',
-    recipe: { titanium: 2, diamond: 1 },
+    recipe: { bar_titanium: 2, bar_diamond: 1 },
     fuelCoal: 2,
     minTier: 4,
     durationSec: 300,
-    value: 34000
+    value: 56000
   },
   obsidian_matrix: {
     id: 'obsidian_matrix',
     name: 'Obsidian-Superleiter',
     desc: 'Hochdichte vulkanische Kristallmatrix mit Platin-Leiterbahnen für extremste Energiedichten.',
     iconName: 'disc',
-    recipe: { obsidian_gem: 1, platinum: 2 },
+    recipe: { bar_obsidian_gem: 1, bar_platinum: 2 },
     fuelCoal: 2,
     minTier: 5,
     durationSec: 400,
-    value: 80000
+    value: 135000
   },
   fusion_rod: {
     id: 'fusion_rod',
     name: 'Quanten-Brennstab',
     desc: 'Hochenergetischer Nuklear-Brennstab aus radioaktivem Uran und stabilisierter Dunkelmaterie.',
     iconName: 'zap',
-    recipe: { uranium: 2, dark_matter: 1 },
+    recipe: { bar_uranium: 2, bar_dark_matter: 1 },
     fuelCoal: 2,
     minTier: 5,
     durationSec: 480,
-    value: 135000
+    value: 215000
   },
 
   // ── 2. Montage-Bauteile (für Hangar-Fahrzeug-Upgrades) ──
   iron_tube: {
     id: 'iron_tube',
     name: 'Stahl-Rohr',
-    desc: 'Nahtlos gezogenes Hochdruckrohr für Tier-2-Module. Aus 2x Eisen + 1x Kupfer gefertigt.',
+    desc: 'Nahtlos gezogenes Hochdruckrohr für Tier-2-Module. Aus 2x Eisen-Barren + 1x Kupfer-Barren gefertigt.',
     iconName: 'pipe',
-    recipe: { iron: 2, copper: 1 },
+    recipe: { bar_iron: 2, bar_copper: 1 },
     fuelCoal: 0,
     minTier: 1,
     durationSec: 40,
@@ -774,9 +797,9 @@ export const FACTORY_PRODUCTS = {
   bronze_gear: {
     id: 'bronze_gear',
     name: 'Bronze-Getriebe',
-    desc: 'Präzisionszahnrad für Tier-3-Mechanik. Gefertigt aus 2x Zinn + 1x Eisen (Zahnkranz & Achse).',
+    desc: 'Präzisionszahnrad für Tier-3-Mechanik. Gefertigt aus 2x Zinn-Barren + 1x Eisen-Barren.',
     iconName: 'settings',
-    recipe: { tin: 2, iron: 1 },
+    recipe: { bar_tin: 2, bar_iron: 1 },
     fuelCoal: 0,
     minTier: 1,
     durationSec: 50,
@@ -789,7 +812,7 @@ export const FACTORY_PRODUCTS = {
     name: 'Silber-Spule',
     desc: 'Induktionsspule für Tier-4-5-Elektronik. Feines Silber mit isolierendem Feingold gewickelt.',
     iconName: 'rotate-ccw',
-    recipe: { silver: 2, gold: 1 },
+    recipe: { bar_silver: 2, bar_gold: 1 },
     fuelCoal: 0,
     minTier: 2,
     durationSec: 90,
@@ -802,7 +825,7 @@ export const FACTORY_PRODUCTS = {
     name: 'Kristall-Linse',
     desc: 'Prismatische Zweifarben-Linse für Tier-6-7-Sensorik. Aus 1x Saphir + 1x Smaragd geschliffen.',
     iconName: 'aperture',
-    recipe: { sapphire: 1, emerald: 1 },
+    recipe: { bar_sapphire: 1, bar_emerald: 1 },
     fuelCoal: 0,
     minTier: 3,
     durationSec: 160,
@@ -813,9 +836,9 @@ export const FACTORY_PRODUCTS = {
   titan_bolt: {
     id: 'titan_bolt',
     name: 'Titan-Bolzen',
-    desc: 'Extrem zugfester Gewindebolzen für Tier-8-9-Chassis. Aus 2x Titan + 1x Platin legiert.',
+    desc: 'Extrem zugfester Gewindebolzen für Tier-8-9-Chassis. Aus 2x Titan-Barren + 1x Platin-Barren legiert.',
     iconName: 'bolt',
-    recipe: { titanium: 2, platinum: 1 },
+    recipe: { bar_titanium: 2, bar_platinum: 1 },
     fuelCoal: 0,
     minTier: 4,
     durationSec: 240,
@@ -826,9 +849,9 @@ export const FACTORY_PRODUCTS = {
   quantum_core: {
     id: 'quantum_core',
     name: 'Quanten-Kern',
-    desc: 'Subatomarer Gravitationskern für Tier-10-Technologie. Aus 1x Uran + 1x Obsidian-Kern synthetisiert.',
+    desc: 'Subatomarer Gravitationskern für Tier-10-Technologie. Aus 1x Uran-Brennstab + 1x Obsidian-Kristall synthetisiert.',
     iconName: 'orbit',
-    recipe: { uranium: 1, obsidian_gem: 1 },
+    recipe: { bar_uranium: 1, bar_obsidian_gem: 1 },
     fuelCoal: 0,
     minTier: 5,
     durationSec: 360,
@@ -6384,13 +6407,16 @@ export class BaseSystem {
           <div style="display: flex; flex-direction: column; gap: 8px;">
             ${(() => {
               const visibleFactoryProducts = Object.entries(FACTORY_PRODUCTS).filter(([prodId, prod]) => {
-                return Object.keys(prod.recipe).every(ore => this.player.isOreDiscovered(ore));
+                return Object.keys(prod.recipe).every(matKey => {
+                  const rawKey = matKey.startsWith('bar_') ? matKey.replace('bar_', '') : matKey;
+                  return this.player.isOreDiscovered(rawKey);
+                });
               });
 
               if (visibleFactoryProducts.length === 0) {
                 return `
                   <div style="text-align: center; padding: 16px; color: #94a3b8; font-size: 11.5px; background: rgba(0,0,0,0.25); border-radius: 8px;">
-                    Keine Industrie-Rezepte verfügbar. Entdecke neue Erzadern im Schacht, um Fertigungspläne freizuschalten!
+                    Keine Industrie-Rezepte verfügbar. Entdecke neue Erzadern im Schacht und verarbeite sie im Schmelzofen, um Fertigungspläne freizuschalten!
                   </div>
                 `;
               }
@@ -6399,14 +6425,14 @@ export class BaseSystem {
               for (const [prodId, prod] of visibleFactoryProducts) {
                 const isTierLocked = (prod.minTier || 1) > currentTier;
                 let canCraft = !isTierLocked && hasCraftFuel;
-                const ingBadges = Object.entries(prod.recipe).map(([ore, need]) => {
-                  const inCargo = cargoCounts[ore] || 0;
-                  const inDepot = this.depot?.ores?.[ore] || 0;
-                  const have = inCargo + inDepot;
+                const ingBadges = Object.entries(prod.recipe).map(([matKey, need]) => {
+                  const have = this.getAvailableMaterialCount(matKey);
                   if (have < need) canCraft = false;
-                  const oreName = ORE_DATA[ore]?.name || ore;
+                  const isBar = matKey.startsWith('bar_');
+                  const rawKey = isBar ? matKey.replace('bar_', '') : matKey;
+                  const ingName = isBar ? getRefinedOreName(rawKey) : (ORE_DATA[rawKey]?.name || matKey);
                   const isMet = have >= need;
-                  return `<span style="background: ${isMet ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'}; border: 1px solid ${isMet ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'}; color: ${isMet ? '#34d399' : '#f87171'}; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">${itemDisplayIcon(ore, 13)} ${need}x ${oreName} <span style="font-size: 9.5px; opacity: 0.85; font-variant-numeric: tabular-nums;">(${have}/${need})</span></span>`;
+                  return `<span style="background: ${isMet ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'}; border: 1px solid ${isMet ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'}; color: ${isMet ? '#34d399' : '#f87171'}; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">${itemDisplayIcon(matKey, 13)} ${need}x ${ingName} <span style="font-size: 9.5px; opacity: 0.85; font-variant-numeric: tabular-nums;">(${have}/${need})</span></span>`;
                 }).join('');
 
                 prodsHtml += `
@@ -6438,7 +6464,7 @@ export class BaseSystem {
                           ${icon('lock', '', 11)} Stufe ${prod.minTier}
                         </span>
                       ` : `
-                        <button class="btn-craft-product btn-buy" data-prod="${prodId}" ${canCraft ? '' : 'disabled'} style="width: 100%; height: 32px; padding: 0 10px; font-size: 11.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 6px;" title="${!hasCraftFuel ? 'Brennkammer benötigt 2x Kohle!' : (canCraft ? 'Produkt herstellen' : 'Nicht genügend Materialien im Frachtraum oder Depot')}">
+                        <button class="btn-craft-product btn-buy" data-prod="${prodId}" ${canCraft ? '' : 'disabled'} style="width: 100%; height: 32px; padding: 0 10px; font-size: 11.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 6px;" title="${!hasCraftFuel ? 'Brennkammer benötigt 2x Kohle!' : (canCraft ? 'Produkt herstellen' : 'Nicht genügend Schmelzofen-Barren im Depot oder Frachtraum')}">
                           ${icon('hammer', '', 13)} Herstellen
                         </button>
                       `}
@@ -6516,17 +6542,47 @@ export class BaseSystem {
     });
   }
 
-  consumeSingleOre(oreKey) {
-    const cargoIdx = this.player.cargo.indexOf(oreKey);
+  getAvailableMaterialCount(matKey) {
+    const inCargo = (this.player.cargo || []).filter(item => item === matKey).length;
+    const inDepotProducts = this.depot?.products?.[matKey] || 0;
+    const inPlayerProducts = this.player?.factoryProducts?.[matKey] || 0;
+    const inDepotBars = this.depot?.bars?.[matKey] || 0;
+    const inDepotOres = this.depot?.ores?.[matKey] || 0;
+    return inCargo + inDepotProducts + inPlayerProducts + inDepotBars + inDepotOres;
+  }
+
+  consumeSingleMaterial(matKey) {
+    // 1. Aus player.cargo
+    const cargoIdx = this.player.cargo.indexOf(matKey);
     if (cargoIdx !== -1) {
       this.player.cargo.splice(cargoIdx, 1);
       return true;
     }
-    if (this.depot?.ores?.[oreKey] > 0) {
-      this.depot.ores[oreKey]--;
+    // 2. Aus depot.products (Standard-Lagerort für Schmelzofen-Barren)
+    if (this.depot?.products?.[matKey] > 0) {
+      this.depot.products[matKey]--;
+      return true;
+    }
+    // 3. Aus player.factoryProducts
+    if (this.player.factoryProducts?.[matKey] > 0) {
+      this.player.factoryProducts[matKey]--;
+      return true;
+    }
+    // 4. Aus depot.bars (falls vorhanden)
+    if (this.depot?.bars?.[matKey] > 0) {
+      this.depot.bars[matKey]--;
+      return true;
+    }
+    // 5. Aus depot.ores (Fallback)
+    if (this.depot?.ores?.[matKey] > 0) {
+      this.depot.ores[matKey]--;
       return true;
     }
     return false;
+  }
+
+  consumeSingleOre(oreKey) {
+    return this.consumeSingleMaterial(oreKey);
   }
 
   craftFactoryProduct(productId) {
@@ -6546,24 +6602,21 @@ export class BaseSystem {
       return;
     }
 
-    const cargoCounts = {};
-    this.player.cargo.forEach(ore => {
-      cargoCounts[ore] = (cargoCounts[ore] || 0) + 1;
-    });
-
-    for (const [ore, needed] of Object.entries(prod.recipe)) {
-      const inCargo = cargoCounts[ore] || 0;
-      const inDepot = this.depot?.ores?.[ore] || 0;
-      if (inCargo + inDepot < needed) {
-        this.scene.events.emit('notify', `Nicht genug ${ORE_DATA[ore]?.name || ore}!`);
+    for (const [matKey, needed] of Object.entries(prod.recipe)) {
+      const have = this.getAvailableMaterialCount(matKey);
+      if (have < needed) {
+        const isBar = matKey.startsWith('bar_');
+        const rawKey = isBar ? matKey.replace('bar_', '') : matKey;
+        const matName = isBar ? getRefinedOreName(rawKey) : (ORE_DATA[rawKey]?.name || matKey);
+        this.scene.events.emit('notify', `Nicht genug ${matName}! Erze müssen erst im Schmelzofen zu Barren verarbeitet werden.`);
         return;
       }
     }
 
     // 1. Rezept-Materialien verbrauchen
-    for (const [ore, needed] of Object.entries(prod.recipe)) {
+    for (const [matKey, needed] of Object.entries(prod.recipe)) {
       for (let i = 0; i < needed; i++) {
-        this.consumeSingleOre(ore);
+        this.consumeSingleMaterial(matKey);
       }
     }
 

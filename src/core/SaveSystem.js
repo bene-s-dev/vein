@@ -169,8 +169,11 @@ export class SaveSystem {
         availableMissions: (ms.availableMissions || []).map(m => ({
           id: m.id,
           progress: m.progress || 0,
-          isCompleted: !!m.isCompleted
+          isCompleted: !!m.isCompleted,
+          isRerolled: !!m.isRerolled
         })),
+        completedMissionIds: ms.completedMissionIds ? Array.from(ms.completedMissionIds) : [],
+        rerolledMissionIds: ms.rerolledMissionIds ? Array.from(ms.rerolledMissionIds) : [],
         id: ms.activeMission ? ms.activeMission.id : null,
         progress: ms.progress || 0,
         isCompleted: !!ms.isCompleted
@@ -263,8 +266,9 @@ export class SaveSystem {
     if (SaveSystem.isClearing) return false;
     if (!scene || !scene.player || !scene.gridSystem) return false;
 
+    let saveData = null;
     try {
-      const saveData = SaveSystem.buildSaveDataObject(scene);
+      saveData = SaveSystem.buildSaveDataObject(scene);
       if (!saveData) return false;
 
       const key = SaveSystem.getSlotKey(slotId);
@@ -272,6 +276,18 @@ export class SaveSystem {
       return true;
     } catch (err) {
       console.warn('Fehler beim Speichern auf Slot ' + slotId + ':', err);
+      // Spezieller iOS Safari Schutz vor QuotaExceededError (5MB Limit)
+      try {
+        if (saveData && saveData.grid) {
+          saveData.grid.exploredStamps = [];
+          const key = SaveSystem.getSlotKey(slotId);
+          localStorage.setItem(key, JSON.stringify(saveData));
+          console.info('Speichern nach Quota-Bereinigung erfolgreich!');
+          return true;
+        }
+      } catch (retryErr) {
+        console.error('Speicherfehler trotz Reduzierung:', retryErr);
+      }
       return false;
     }
   }

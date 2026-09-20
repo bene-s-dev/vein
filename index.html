@@ -1318,6 +1318,78 @@
       height: auto;
     }
 
+    /* Eingerasteter Joystick für automatische Fahrt nach links */
+    #floating-joystick.locked-left {
+      display: block !important;
+      opacity: 1 !important;
+    }
+
+    #floating-joystick.locked-left #joystick-base {
+      border-color: rgba(56, 189, 248, 0.75);
+      background: rgba(15, 23, 42, 0.65);
+      box-shadow: 0 0 24px rgba(56, 189, 248, 0.45);
+    }
+
+    #floating-joystick.locked-left #joystick-knob {
+      transform: translate(-40px, 0px) !important;
+      background: rgba(2, 132, 199, 0.85);
+      border-color: #38bdf8;
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.8);
+      animation: pulse-joystick-lock 1.2s infinite ease-in-out;
+    }
+
+    #floating-joystick.locked-left #joystick-knob::after {
+      content: '◀';
+      font-size: 11px;
+      font-weight: 800;
+      color: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: none;
+      width: auto;
+      height: auto;
+    }
+
+    /* Eingerasteter Joystick für automatische Fahrt nach rechts */
+    #floating-joystick.locked-right {
+      display: block !important;
+      opacity: 1 !important;
+    }
+
+    #floating-joystick.locked-right #joystick-base {
+      border-color: rgba(56, 189, 248, 0.75);
+      background: rgba(15, 23, 42, 0.65);
+      box-shadow: 0 0 24px rgba(56, 189, 248, 0.45);
+    }
+
+    #floating-joystick.locked-right #joystick-knob {
+      transform: translate(40px, 0px) !important;
+      background: rgba(2, 132, 199, 0.85);
+      border-color: #38bdf8;
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.8);
+      animation: pulse-joystick-lock 1.2s infinite ease-in-out;
+    }
+
+    #floating-joystick.locked-right #joystick-knob::after {
+      content: '▶';
+      font-size: 11px;
+      font-weight: 800;
+      color: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: none;
+      width: auto;
+      height: auto;
+    }
+
+    /* Visuelles Feedback kurz vor dem Loslassen/Einrasten */
+    #floating-joystick.ready-to-lock #joystick-base {
+      border-color: #38bdf8;
+      box-shadow: 0 0 18px rgba(56, 189, 248, 0.6);
+    }
+
     @keyframes pulse-joystick-lock {
       0%, 100% {
         box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);

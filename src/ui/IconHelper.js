@@ -96,7 +96,7 @@ export const BUILDING_ICONS = {
  * Individuelle Farbpalette für alle 15 Erze im Spiel
  */
 export const ORE_COLORS = {
-  coal: '#475569',         // Kohle (Dunkles Anthrazit / Kohleschwarz-Kontur)
+  coal: '#27272a',         // Kohle (Tiefes Anthrazit-Schwarz, kein Grau!)
   copper: '#ea580c',       // Kupfer (Kupferrot / Echtes Kupfer, kein Gelb)
   iron: '#94a3b8',         // Eisen (Stahlgrau)
   tin: '#cbd5e1',          // Zinn (Hellgrau/Silber)
@@ -117,7 +117,7 @@ export const ORE_COLORS = {
  * Harmonische Innenfüllfarben für die Roherz-Steine (Stone-Icon)
  */
 export const ORE_FILL_COLORS = {
-  coal: '#090d16',         // Kohle (Tiefschwarz / Pechkohle)
+  coal: '#09090b',         // Kohle (Tiefschwarz / Pechkohle)
   copper: '#7c2d12',       // Kupfer (Tiefes Kupferrotbraun)
   iron: '#475569',         // Eisen (Industrielles Stahlgrau)
   tin: '#64748b',          // Zinn (Hellgraues Zinn)

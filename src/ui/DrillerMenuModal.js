@@ -81,14 +81,14 @@ export class DrillerMenuModal {
             <span style="font-size: 11px; font-weight: 700; color: #cbd5e1; display: inline-flex; align-items: center; gap: 4px;">
               ${icon('fuel', '', 12)} Tank
             </span>
-            <span style="font-size: 13px; font-weight: 800; color: #f59e0b; width: 44px; min-width: 44px; text-align: right; font-variant-numeric: tabular-nums; display: inline-block;">
+            <span id="driller-menu-fuel-pct" style="font-size: 13px; font-weight: 800; color: #f59e0b; width: 44px; min-width: 44px; text-align: right; font-variant-numeric: tabular-nums; display: inline-block;">
               ${fuelPct}%
             </span>
           </div>
           <div style="height: 6px; background: rgba(0, 0, 0, 0.5); border-radius: 99px; overflow: hidden;">
-            <div style="width: ${fuelPct}%; height: 100%; background: #f59e0b; border-radius: 99px; transition: width 0.2s ease;"></div>
+            <div id="driller-menu-fuel-fill" style="width: ${fuelPct}%; height: 100%; background: #f59e0b; border-radius: 99px; transition: width 0.2s ease;"></div>
           </div>
-          <div style="font-size: 10px; color: #cbd5e1; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600;">
+          <div id="driller-menu-fuel-text" style="font-size: 10px; color: #cbd5e1; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600;">
             ${Math.round(fuel)} / ${maxFuel} L
           </div>
         </div>
@@ -107,14 +107,14 @@ export class DrillerMenuModal {
             <span style="font-size: 11px; font-weight: 700; color: #cbd5e1; display: inline-flex; align-items: center; gap: 4px;">
               ${icon('shield-cog', '', 12)} Hülle
             </span>
-            <span style="font-size: 13px; font-weight: 800; color: ${hullPct <= 25 ? '#ef4444' : hullPct <= 50 ? '#f59e0b' : '#10b981'}; width: 44px; min-width: 44px; text-align: right; font-variant-numeric: tabular-nums; display: inline-block;">
+            <span id="driller-menu-hull-pct" style="font-size: 13px; font-weight: 800; color: ${hullPct <= 25 ? '#ef4444' : hullPct <= 50 ? '#f59e0b' : '#10b981'}; width: 44px; min-width: 44px; text-align: right; font-variant-numeric: tabular-nums; display: inline-block;">
               ${hullPct}%
             </span>
           </div>
           <div style="height: 6px; background: rgba(0, 0, 0, 0.5); border-radius: 99px; overflow: hidden;">
-            <div style="width: ${hullPct}%; height: 100%; background: ${hullPct <= 25 ? '#ef4444' : hullPct <= 50 ? '#f59e0b' : '#10b981'}; border-radius: 99px; transition: width 0.2s ease;"></div>
+            <div id="driller-menu-hull-fill" style="width: ${hullPct}%; height: 100%; background: ${hullPct <= 25 ? '#ef4444' : hullPct <= 50 ? '#f59e0b' : '#10b981'}; border-radius: 99px; transition: width 0.2s ease;"></div>
           </div>
-          <div style="font-size: 10px; color: #cbd5e1; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600;">
+          <div id="driller-menu-hull-text" style="font-size: 10px; color: #cbd5e1; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600;">
             ${Math.round(hull)} / ${maxHull} HP
           </div>
         </div>
@@ -399,5 +399,37 @@ export class DrillerMenuModal {
         }
       };
     });
+  }
+
+  syncLiveStats() {
+    if (!this.isOpen || !this.player) return;
+    const fuel = Math.max(0, this.player.fuel || 0);
+    const maxFuel = this.player.maxFuel || 60;
+    const fuelPct = Math.max(0, Math.min(100, Math.round((fuel / maxFuel) * 100)));
+
+    const fuelPctEl = document.getElementById('driller-menu-fuel-pct');
+    if (fuelPctEl) fuelPctEl.textContent = `${fuelPct}%`;
+    const fuelFillEl = document.getElementById('driller-menu-fuel-fill');
+    if (fuelFillEl) fuelFillEl.style.width = `${fuelPct}%`;
+    const fuelTxtEl = document.getElementById('driller-menu-fuel-text');
+    if (fuelTxtEl) fuelTxtEl.textContent = `${Math.round(fuel)} / ${maxFuel} L`;
+
+    const hull = Math.max(0, this.player.hull || 0);
+    const maxHull = this.player.maxHull || 100;
+    const hullPct = Math.max(0, Math.min(100, Math.round((hull / maxHull) * 100)));
+    const hullColor = hullPct <= 25 ? '#ef4444' : hullPct <= 50 ? '#f59e0b' : '#10b981';
+
+    const hullPctEl = document.getElementById('driller-menu-hull-pct');
+    if (hullPctEl) {
+      hullPctEl.textContent = `${hullPct}%`;
+      hullPctEl.style.color = hullColor;
+    }
+    const hullFillEl = document.getElementById('driller-menu-hull-fill');
+    if (hullFillEl) {
+      hullFillEl.style.width = `${hullPct}%`;
+      hullFillEl.style.background = hullColor;
+    }
+    const hullTxtEl = document.getElementById('driller-menu-hull-text');
+    if (hullTxtEl) hullTxtEl.textContent = `${Math.round(hull)} / ${maxHull} HP`;
   }
 }

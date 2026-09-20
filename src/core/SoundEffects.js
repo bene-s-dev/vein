@@ -144,11 +144,13 @@ class SoundManager {
    * Stoppt alle kontinuierlichen Soundeffekte (Fahren, Fliegen, Bohren, Betanken)
    * sofort und ohne Knacken.
    */
-  stopAllLoops() {
+  stopAllLoops(keepRefuel = false) {
     this.stopDrive();
     this.stopJetpack();
     this.stopDrill();
-    this.stopRefuel();
+    if (!keepRefuel) {
+      this.stopRefuel();
+    }
   }
 
   _setupMenuWatchers() {
@@ -156,7 +158,7 @@ class SoundManager {
 
     const checkAndStop = () => {
       if (this.isMenuOpen()) {
-        this.stopAllLoops();
+        this.stopAllLoops(true);
       }
     };
 

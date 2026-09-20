@@ -20,7 +20,9 @@ export class MiningScene extends Phaser.Scene {
     // 1. GridSystem initialisieren (endlose Welt nach unten & in beide Richtungen)
     this.gridSystem = new GridSystem(this);
 
-    // 2. Himmel & Sternenhintergrund (endlose Weite)
+    // 2. Himmel & Sternenhintergrund (endlose Weite mit Tag-/Nacht-Unterstützung)
+    this.surfaceTheme = (typeof localStorage !== 'undefined' && localStorage.getItem('vein_surface_theme')) || 'day';
+    this.skyElements = [];
     this.createSkyAndSurface();
 
     // 3. Spieler-Fahrzeug platzieren (auf der Basis an der Oberfläche gx: 15, gy: -1)
@@ -92,18 +94,89 @@ export class MiningScene extends Phaser.Scene {
     this._lastSubmittedLeaderboardDepth = parseInt(localStorage.getItem('vein_last_submitted_depth') || '0', 10);
   }
 
+  autoSaveNow() {
+    if (!SaveSystem.isClearing) {
+      SaveSystem.save(this);
+    }
+  }
+
+  toggleSurfaceTheme() {
+    const nextTheme = this.surfaceTheme === 'night' ? 'day' : 'night';
+    this.setSurfaceTheme(nextTheme);
+    return nextTheme;
+  }
+
+  setSurfaceTheme(theme) {
+    this.surfaceTheme = theme;
+    try {
+      localStorage.setItem('vein_surface_theme', theme);
+    } catch (_) {}
+    this.createSkyAndSurface();
+  }
+
   createSkyAndSurface() {
     const spanW = 200000;
     const skyHeight = 360;
+    const isNight = this.surfaceTheme === 'night';
 
-    // 1. Strahlender, satter Tages-Himmel (Azurblau nach hellem Horizont-Cyan)
+    // Bisherige Oberflächen-Elemente sauber aufräumen
+    if (this.skyElements && this.skyElements.length) {
+      this.skyElements.forEach(el => {
+        try {
+          if (el && el.destroy) el.destroy();
+        } catch (_) {}
+      });
+    }
+    this.skyElements = [];
+    this.clouds = [];
+
+    // 1. Himmel (Tag: Azurblau -> Horizont-Cyan / Nacht: Tiefes Obsidian-Nachtblau -> Midnight-Navy)
     const sky = this.add.graphics().setDepth(1);
-    sky.fillGradientStyle(0x0284c7, 0x0284c7, 0xbae6fd, 0xe0f2fe, 1);
+    this.skyElements.push(sky);
+    if (isNight) {
+      sky.fillGradientStyle(0x020617, 0x020617, 0x0b1329, 0x172554, 1);
+    } else {
+      sky.fillGradientStyle(0x0284c7, 0x0284c7, 0xbae6fd, 0xe0f2fe, 1);
+    }
     sky.fillRect(-spanW / 2, -skyHeight, spanW, skyHeight);
 
-    // 2. Weit entfernte Dunst-Bergkette im Hintergrund (Tiefe 1.2)
+    // 1b. Funkelnder Sternenhimmel bei Nacht
+    if (isNight) {
+      const starGraphics = this.add.graphics().setDepth(1.1);
+      this.skyElements.push(starGraphics);
+
+      // Deterministische Sternenverteilung (saubere funkelnde Lichtpunkte ohne harte Nebelscheiben)
+      const starColors = [0xffffff, 0xf8fafc, 0xbae6fd, 0xfef3c7];
+      for (let i = 0; i < 220; i++) {
+        const sx = ((i * 997 + 1337) % 7600) - 3800;
+        const sy = -340 + ((i * 353 + 71) % 300);
+        const color = starColors[i % starColors.length];
+        const alpha = 0.30 + ((i % 7) / 10);
+        const r = (i % 13 === 0) ? 1.8 : ((i % 5 === 0) ? 1.2 : 0.8);
+        starGraphics.fillStyle(color, alpha);
+        starGraphics.fillCircle(sx, sy, r);
+        if (i % 23 === 0) {
+          // Nur wenige funkelnde Sterne mit feinem Fadenkreuz
+          starGraphics.lineStyle(1, color, alpha * 0.40);
+          starGraphics.beginPath();
+          starGraphics.moveTo(sx - 3, sy);
+          starGraphics.lineTo(sx + 3, sy);
+          starGraphics.moveTo(sx, sy - 3);
+          starGraphics.lineTo(sx, sy + 3);
+          starGraphics.strokePath();
+        }
+      }
+    }
+
+    // 2. Weit entfernte Bergkette im Hintergrund (Tiefe 1.2)
     const mountains = this.add.graphics().setDepth(1.2);
-    mountains.fillStyle(0x38bdf8, 0.28);
+    this.skyElements.push(mountains);
+    if (isNight) {
+      mountains.fillStyle(0x080e18, 0.95);
+      mountains.lineStyle(1, 0x1e293b, 0.40);
+    } else {
+      mountains.fillStyle(0x38bdf8, 0.28);
+    }
     mountains.beginPath();
     mountains.moveTo(-4000, 0);
     const mPeaks = [
@@ -119,10 +192,18 @@ export class MiningScene extends Phaser.Scene {
     mountains.lineTo(4000, 0);
     mountains.closePath();
     mountains.fillPath();
+    if (isNight) {
+      mountains.strokePath();
+    }
 
-    // 3. Mittlere sanfte Hügelkette mit Naturgrün (Tiefe 1.3)
+    // 3. Mittlere sanfte Hügelkette (Tiefe 1.3)
     const hills = this.add.graphics().setDepth(1.3);
-    hills.fillStyle(0x166534, 0.40);
+    this.skyElements.push(hills);
+    if (isNight) {
+      hills.fillStyle(0x064e3b, 0.45);
+    } else {
+      hills.fillStyle(0x166534, 0.40);
+    }
     hills.beginPath();
     hills.moveTo(-4000, 0);
     const hPeaks = [
@@ -139,81 +220,128 @@ export class MiningScene extends Phaser.Scene {
     hills.closePath();
     hills.fillPath();
 
-    // 4. Strahlende Sonne mit warmem Glow über dem Basis-Areal (Tiefe 1.4)
-    const sunX = 620;
-    const sunY = -215;
-    const sun = this.add.graphics().setDepth(1.4);
-    // Äußerer atmosphärischer Schein
-    sun.fillStyle(0xfef08a, 0.12);
-    sun.fillCircle(sunX, sunY, 68);
-    // Mittlerer warmer Kranz
-    sun.fillStyle(0xfde047, 0.28);
-    sun.fillCircle(sunX, sunY, 38);
-    // Zarte Sonnenstrahlen
-    sun.lineStyle(1.5, 0xfef08a, 0.25);
-    for (let r = 0; r < 8; r++) {
-      const angle = (r * Math.PI) / 4;
-      sun.beginPath();
-      sun.moveTo(sunX + Math.cos(angle) * 22, sunY + Math.sin(angle) * 22);
-      sun.lineTo(sunX + Math.cos(angle) * 48, sunY + Math.sin(angle) * 48);
-      sun.strokePath();
+    // 4. Himmelskörper (Tag: Strahlende Sonne / Nacht: Realistischer Mond mit Mondschein & Kratern) (Tiefe 1.4)
+    const celestialX = 620;
+    const celestialY = -215;
+    const celestial = this.add.graphics().setDepth(1.4);
+    this.skyElements.push(celestial);
+
+    if (isNight) {
+      // 🌙 Authentischer Mond (keine Sonnenstrahlen, stattdessen weicher diffuser Mondschein)
+      // Zarter atmosphärischer Glow
+      celestial.fillStyle(0x38bdf8, 0.03);
+      celestial.fillCircle(celestialX, celestialY, 56);
+      celestial.fillStyle(0x93c5fd, 0.06);
+      celestial.fillCircle(celestialX, celestialY, 38);
+      celestial.fillStyle(0xe2e8f0, 0.10);
+      celestial.fillCircle(celestialX, celestialY, 26);
+
+      // Mondscheibe (sanftes Mondsilber)
+      celestial.fillStyle(0xf1f5f9, 0.98);
+      celestial.fillCircle(celestialX, celestialY, 20);
+
+      // Sphärische 3D-Tiefenschattierung am Rand
+      celestial.fillStyle(0x94a3b8, 0.18);
+      celestial.fillCircle(celestialX - 4, celestialY + 3, 17);
+
+      // Mondmeere (Maria / dunkle Basaltebenen)
+      celestial.fillStyle(0x94a3b8, 0.38);
+      celestial.fillCircle(celestialX - 6, celestialY - 4, 5.5);
+      celestial.fillCircle(celestialX - 10, celestialY - 2, 3.8);
+      celestial.fillCircle(celestialX - 3, celestialY - 9, 3.2);
+      celestial.fillCircle(celestialX + 5, celestialY + 2, 5.0);
+      celestial.fillCircle(celestialX + 8, celestialY - 3, 3.5);
+      celestial.fillCircle(celestialX + 4, celestialY + 7, 3.8);
+
+      // Krater mit 3D-Lichtkante und Schattenbecken
+      // Krater 1 (Tycho-artig unten)
+      celestial.fillStyle(0xffffff, 0.75);
+      celestial.fillCircle(celestialX - 2.5, celestialY + 6.5, 3.2);
+      celestial.fillStyle(0x64748b, 0.55);
+      celestial.fillCircle(celestialX - 2.0, celestialY + 7.0, 2.4);
+
+      // Krater 2 (Copernicus-artig rechts oben)
+      celestial.fillStyle(0xffffff, 0.70);
+      celestial.fillCircle(celestialX + 6.5, celestialY - 6.5, 2.5);
+      celestial.fillStyle(0x64748b, 0.50);
+      celestial.fillCircle(celestialX + 7.0, celestialY - 6.0, 1.8);
+    } else {
+      // ☀️ Strahlende Sonne mit warmem Glow
+      celestial.fillStyle(0xfef08a, 0.12);
+      celestial.fillCircle(celestialX, celestialY, 68);
+      celestial.fillStyle(0xfde047, 0.28);
+      celestial.fillCircle(celestialX, celestialY, 38);
+
+      celestial.lineStyle(1.5, 0xfef08a, 0.25);
+      for (let r = 0; r < 8; r++) {
+        const angle = (r * Math.PI) / 4;
+        celestial.beginPath();
+        celestial.moveTo(celestialX + Math.cos(angle) * 22, celestialY + Math.sin(angle) * 22);
+        celestial.lineTo(celestialX + Math.cos(angle) * 48, celestialY + Math.sin(angle) * 48);
+        celestial.strokePath();
+      }
+
+      celestial.fillStyle(0xfffbeb, 0.98);
+      celestial.fillCircle(celestialX, celestialY, 18);
     }
-    // Strahlend weiß-goldener Sonnenkern
-    sun.fillStyle(0xfffbeb, 0.98);
-    sun.fillCircle(sunX, sunY, 18);
 
-    // 5. Lebendige Tages-Wolken mit leichter Drift (Tiefe 1.5)
+    // 5. Wolken (nur am Tag aktiv, nachts klarer Sternenhimmel) (Tiefe 1.5)
     this.clouds = [];
-    const cloudConfigs = [
-      { x: -1400, y: -190, scale: 1.1, speed: 2.8 },
-      { x: -1000, y: -140, scale: 0.85, speed: 3.5 },
-      { x: -650,  y: -230, scale: 1.25, speed: 2.2 },
-      { x: -280,  y: -170, scale: 0.9,  speed: 3.1 },
-      { x: 120,   y: -220, scale: 1.15, speed: 2.6 },
-      { x: 480,   y: -150, scale: 0.8,  speed: 3.8 },
-      { x: 880,   y: -240, scale: 1.3,  speed: 2.0 },
-      { x: 1250,  y: -180, scale: 1.0,  speed: 3.0 },
-      { x: 1650,  y: -145, scale: 0.85, speed: 3.4 },
-      { x: 2100,  y: -225, scale: 1.2,  speed: 2.4 },
-      { x: 2550,  y: -160, scale: 0.95, speed: 3.2 }
-    ];
+    if (!isNight) {
+      const cloudConfigs = [
+        { x: -1400, y: -190, scale: 1.1, speed: 2.8 },
+        { x: -1000, y: -140, scale: 0.85, speed: 3.5 },
+        { x: -650,  y: -230, scale: 1.25, speed: 2.2 },
+        { x: -280,  y: -170, scale: 0.9,  speed: 3.1 },
+        { x: 120,   y: -220, scale: 1.15, speed: 2.6 },
+        { x: 480,   y: -150, scale: 0.8,  speed: 3.8 },
+        { x: 880,   y: -240, scale: 1.3,  speed: 2.0 },
+        { x: 1250,  y: -180, scale: 1.0,  speed: 3.0 },
+        { x: 1650,  y: -145, scale: 0.85, speed: 3.4 },
+        { x: 2100,  y: -225, scale: 1.2,  speed: 2.4 },
+        { x: 2550,  y: -160, scale: 0.95, speed: 3.2 }
+      ];
 
-    cloudConfigs.forEach(cfg => {
-      const container = this.add.container(cfg.x, cfg.y).setDepth(1.5);
-      const g = this.add.graphics();
+      cloudConfigs.forEach(cfg => {
+        const container = this.add.container(cfg.x, cfg.y).setDepth(1.5);
+        this.skyElements.push(container);
+        const g = this.add.graphics();
 
-      // Wolkenschatten (sanftes Hellgrau)
-      g.fillStyle(0xe2e8f0, 0.45);
-      g.fillCircle(-22 * cfg.scale, 5 * cfg.scale, 16 * cfg.scale);
-      g.fillCircle(0, 7 * cfg.scale, 20 * cfg.scale);
-      g.fillCircle(24 * cfg.scale, 5 * cfg.scale, 15 * cfg.scale);
+        g.fillStyle(0xe2e8f0, 0.45);
+        g.fillCircle(-22 * cfg.scale, 5 * cfg.scale, 16 * cfg.scale);
+        g.fillCircle(0, 7 * cfg.scale, 20 * cfg.scale);
+        g.fillCircle(24 * cfg.scale, 5 * cfg.scale, 15 * cfg.scale);
 
-      // Wolkenkörper (reines Weiß)
-      g.fillStyle(0xffffff, 0.88);
-      g.fillCircle(-24 * cfg.scale, 0, 16 * cfg.scale);
-      g.fillCircle(-10 * cfg.scale, -8 * cfg.scale, 20 * cfg.scale);
-      g.fillCircle(12 * cfg.scale, -6 * cfg.scale, 22 * cfg.scale);
-      g.fillCircle(26 * cfg.scale, 2 * cfg.scale, 15 * cfg.scale);
-      g.fillRoundedRect(-32 * cfg.scale, 0, 64 * cfg.scale, 14 * cfg.scale, 7 * cfg.scale);
+        g.fillStyle(0xffffff, 0.88);
+        g.fillCircle(-24 * cfg.scale, 0, 16 * cfg.scale);
+        g.fillCircle(-10 * cfg.scale, -8 * cfg.scale, 20 * cfg.scale);
+        g.fillCircle(12 * cfg.scale, -6 * cfg.scale, 22 * cfg.scale);
+        g.fillCircle(26 * cfg.scale, 2 * cfg.scale, 15 * cfg.scale);
+        g.fillRoundedRect(-32 * cfg.scale, 0, 64 * cfg.scale, 14 * cfg.scale, 7 * cfg.scale);
 
-      container.add(g);
-      container.speed = cfg.speed;
-      this.clouds.push(container);
-    });
+        container.add(g);
+        container.speed = cfg.speed;
+        this.clouds.push(container);
+      });
+    }
 
-    // 6. Frische, grüne Gras- und Bodenkante an der Oberfläche (Tiefe 2)
-    // Untere Erdschicht (dunkelbraun)
-    this.add.rectangle(0, 2, spanW, 4, 0x3f2e1e).setDepth(2);
-    // Saftige grüne Graslinie
-    this.add.rectangle(0, 0, spanW, 3, 0x16a34a).setDepth(2.1);
-    // Helle Gras-Lichtkante
-    this.add.rectangle(0, -1, spanW, 1.2, 0x4ade80).setDepth(2.2);
+
+    // 6. Gras- und Bodenkante an der Oberfläche (Tiefe 2)
+    const earthColor = isNight ? 0x1c1917 : 0x3f2e1e;
+    const grassColor = isNight ? 0x064e3b : 0x16a34a;
+    const grassEdgeColor = isNight ? 0x10b981 : 0x4ade80;
+    const bladeColor = isNight ? 0x059669 : 0x22c55e;
+
+    const r1 = this.add.rectangle(0, 2, spanW, 4, earthColor).setDepth(2);
+    const r2 = this.add.rectangle(0, 0, spanW, 3, grassColor).setDepth(2.1);
+    const r3 = this.add.rectangle(0, -1, spanW, 1.2, grassEdgeColor).setDepth(2.2);
+    this.skyElements.push(r1, r2, r3);
 
     // Kleine Grashalme & Akzente entlang der Oberfläche
     const grassDetails = this.add.graphics().setDepth(2.3);
-    grassDetails.lineStyle(1.4, 0x22c55e, 0.9);
+    this.skyElements.push(grassDetails);
+    grassDetails.lineStyle(1.4, bladeColor, 0.9);
     for (let gx = -2000; gx <= 2000; gx += 28) {
-      // Nicht direkt in der Hangar-Schacht-Einfahrt
       if (gx >= 18 * 32 && gx <= 21 * 32) continue;
       const h = Phaser.Math.Between(2, 4);
       grassDetails.beginPath();
@@ -282,7 +410,7 @@ export class MiningScene extends Phaser.Scene {
     const currentDepth = this.player ? (this.player.depthMeters || 0) : 0;
     soundFx.updateSoundtrack?.(currentDepth);
 
-    if (this.isPaused || this.inStartScreen) {
+    if (this.inStartScreen) {
       soundFx.stopAllLoops?.();
       return;
     }
@@ -291,7 +419,7 @@ export class MiningScene extends Phaser.Scene {
       document.body.classList.contains('modal-open') ||
       document.body.classList.contains('tutorial-open') ||
       document.body.classList.contains('discovery-modal-open')
-    )) || !!this.isRescueCutsceneActive;
+    )) || !!this.isRescueCutsceneActive || this.isPaused;
 
     // Notfall-Bergung / Game Over prüfen
     if (this.player && !this.isRescueCutsceneActive) {
@@ -302,10 +430,10 @@ export class MiningScene extends Phaser.Scene {
       const inputDir = this.inputHandler.getDirection();
       this.player.update(delta, inputDir);
     } else if (!this.isRescueCutsceneActive) {
-      soundFx.stopAllLoops?.();
-      // Tanken & Reparatur weiterlaufen lassen, auch wenn Bewegung blockiert ist
+      soundFx.stopAllLoops?.(true);
+      // Tanken & Reparatur weiterlaufen lassen, auch wenn Bewegung blockiert oder Menüs offen sind
       if (this.player && !this.player.isGameOver) {
-        this.player.update(delta, null);
+        this.player.checkDocking(delta);
       }
     }
 
@@ -314,14 +442,23 @@ export class MiningScene extends Phaser.Scene {
       this.baseSystem.update(delta);
     }
 
-    // Automatisches Speichern alle 30 Sekunden (überschreibt alten Stand)
+    // Automatisches Speichern alle 10 Sekunden (mobilfreundlich für kurze Sessions)
     this.autoSaveTimer = (this.autoSaveTimer || 0) + delta;
-    if (this.autoSaveTimer >= 30000) {
+    if (this.autoSaveTimer >= 10000) {
       this.autoSaveTimer = 0;
       if (!SaveSystem.isClearing) {
         SaveSystem.save(this);
         this.checkAndSubmitLeaderboard();
       }
+    }
+
+    // Sofort-Speichern beim Wiederauftauchen an die Oberfläche
+    const isAtSurface = this.player && (this.player.gy <= 0 || (this.player.sprite && this.player.sprite.y <= -8));
+    if (isAtSurface && this._wasDeepUnderground) {
+      this._wasDeepUnderground = false;
+      this.autoSaveNow();
+    } else if (!isAtSurface && this.player && this.player.gy >= 2) {
+      this._wasDeepUnderground = true;
     }
 
     // Viewport Culling & Sensor-Erz-Scanner (bei geöffnetem Vollbild-Modal pausiert, im Tutorial aktiv)

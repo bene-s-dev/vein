@@ -87,7 +87,7 @@ export const BOOK_PRODUCTS = [
     name: 'Kohle-Brikett',
     category: 'bar',
     categoryLabel: 'Schmelzofen',
-    value: 29,
+    value: 65,
     req: '1x Kohle (im Schmelzofen)',
     desc: 'Gepresster, hochreiner Kohlenstoff mit maximaler Brenndauer für Prozesshitze.'
   },
@@ -96,7 +96,7 @@ export const BOOK_PRODUCTS = [
     name: 'Kupfer-Barren',
     category: 'bar',
     categoryLabel: 'Schmelzofen',
-    value: 53,
+    value: 110,
     req: '1x Kupfer (im Schmelzofen)',
     desc: 'Feingegossenes Elektrokupfer für Schaltkreise, Spulen und Legierungen.'
   },
@@ -105,7 +105,7 @@ export const BOOK_PRODUCTS = [
     name: 'Eisen-Barren',
     category: 'bar',
     categoryLabel: 'Schmelzofen',
-    value: 88,
+    value: 240,
     req: '1x Eisen (im Schmelzofen)',
     desc: 'Veredeltes Schmiedeeisen für Gerüste, Werkstatt-Umbauten und Träger.'
   },
@@ -114,7 +114,7 @@ export const BOOK_PRODUCTS = [
     name: 'Zinn-Barren',
     category: 'bar',
     categoryLabel: 'Schmelzofen',
-    value: 122,
+    value: 400,
     req: '1x Zinn (im Schmelzofen)',
     desc: 'Weiches Glanzmetall zur Veredelung robuster Bronze-Legierungen.'
   },
@@ -123,7 +123,7 @@ export const BOOK_PRODUCTS = [
     name: 'Silber-Barren',
     category: 'bar',
     categoryLabel: 'Schmelzofen',
-    value: 200,
+    value: 720,
     req: '1x Silber (im Schmelzofen)',
     desc: 'Sterlingsilber für Sensorik und hochleitende Induktionsspulen.'
   },
@@ -132,16 +132,52 @@ export const BOOK_PRODUCTS = [
     name: 'Gold-Barren',
     category: 'bar',
     categoryLabel: 'Schmelzofen',
-    value: 345,
+    value: 1250,
     req: '1x Gold (im Schmelzofen)',
     desc: '999er Feingoldbarren. Höchst geschätzt an der Erzbörse und für Kontakte.'
+  },
+  {
+    id: 'bar_emerald',
+    name: 'Geschliffener Smaragd',
+    category: 'bar',
+    categoryLabel: 'Schmelzofen',
+    value: 2100,
+    req: '1x Smaragd (im Schmelzofen)',
+    desc: 'Präzise facettierter Edelstein von tiefer grüner Farbe.'
+  },
+  {
+    id: 'bar_sapphire',
+    name: 'Geschliffener Saphir',
+    category: 'bar',
+    categoryLabel: 'Schmelzofen',
+    value: 3400,
+    req: '1x Saphir (im Schmelzofen)',
+    desc: 'Hochreiner Saphir-Kristall für optische Scanner und Panzerglas.'
+  },
+  {
+    id: 'bar_ruby',
+    name: 'Geschliffener Rubin',
+    category: 'bar',
+    categoryLabel: 'Schmelzofen',
+    value: 5500,
+    req: '1x Rubin (im Schmelzofen)',
+    desc: 'Laser-fokussierter Rubinkristall mit enormer Härte.'
+  },
+  {
+    id: 'bar_diamond',
+    name: 'Brillant-Diamant',
+    category: 'bar',
+    categoryLabel: 'Schmelzofen',
+    value: 9000,
+    req: '1x Diamant (im Schmelzofen)',
+    desc: 'Perfekt geschliffener Diamant mit maximaler Brillanz und Härte.'
   },
   {
     id: 'bar_titanium',
     name: 'Titan-Barren',
     category: 'bar',
     categoryLabel: 'Schmelzofen',
-    value: 3200,
+    value: 14000,
     req: '1x Titan (im Schmelzofen)',
     desc: 'Raumfahrt-zertifizierter Titanblock für schwerste Tiefenrümpfe.'
   },
@@ -150,9 +186,36 @@ export const BOOK_PRODUCTS = [
     name: 'Platin-Barren',
     category: 'bar',
     categoryLabel: 'Schmelzofen',
-    value: 5100,
+    value: 21500,
     req: '1x Platin (im Schmelzofen)',
     desc: 'Das edelste aller Metalle. Korrosionsfrei und extrem wertvoll an der Börse.'
+  },
+  {
+    id: 'bar_uranium',
+    name: 'Uran-Brennstab',
+    category: 'bar',
+    categoryLabel: 'Schmelzofen',
+    value: 31500,
+    req: '1x Uran (im Schmelzofen)',
+    desc: 'Angereicherter Nuklearbrennstab für Reaktoren und Quanten-Brennstäbe.'
+  },
+  {
+    id: 'bar_obsidian_gem',
+    name: 'Obsidian-Kristall',
+    category: 'bar',
+    categoryLabel: 'Schmelzofen',
+    value: 46000,
+    req: '1x Obsidian-Kern (im Schmelzofen)',
+    desc: 'Gehärtetes vulkanisches Tiefenglas von enormer Dichte.'
+  },
+  {
+    id: 'bar_dark_matter',
+    name: 'Dunkelmaterie-Matrix',
+    category: 'bar',
+    categoryLabel: 'Schmelzofen',
+    value: 78000,
+    req: '1x Dunkle Materie (im Schmelzofen)',
+    desc: 'Stabilisierte Nullpunkt-Energie aus der tiefsten Erdschicht.'
   },
 
   // ── 2. Industrielle Handelsgüter (Fabrik: hoher Börsenverkauf) ──
@@ -161,8 +224,8 @@ export const BOOK_PRODUCTS = [
     name: 'Stahlträger',
     category: 'goods',
     categoryLabel: 'Fabrik · Handelsgut',
-    value: 280,
-    req: '2x Eisen + 2x Kohle (Fabrik)',
+    value: 950,
+    req: '2x Eisen-Barren + 2x Kohle-Brikett (Fabrik)',
     desc: 'Schwerer Industriestahl für Schachtgerüste und Maschinensockel.'
   },
   {
@@ -170,8 +233,8 @@ export const BOOK_PRODUCTS = [
     name: 'Bronze-Barren',
     category: 'goods',
     categoryLabel: 'Fabrik · Handelsgut',
-    value: 360,
-    req: '2x Kupfer + 1x Zinn (Fabrik)',
+    value: 1050,
+    req: '2x Kupfer-Barren + 1x Zinn-Barren (Fabrik)',
     desc: 'Korrosionsfreie Legierung für Antriebszahnräder und Motoren.'
   },
   {
@@ -179,8 +242,8 @@ export const BOOK_PRODUCTS = [
     name: 'Elektronik-Platine',
     category: 'goods',
     categoryLabel: 'Fabrik · Handelsgut',
-    value: 1150,
-    req: '2x Kupfer + 1x Zinn + 1x Gold (Fabrik)',
+    value: 2950,
+    req: '2x Kupfer-Barren + 1x Zinn-Barren + 1x Gold-Barren (Fabrik)',
     desc: 'Präzisions-Leiterplatte mit Zinn-Lötbahnen und Gold-Kontakten.'
   },
   {
@@ -188,8 +251,8 @@ export const BOOK_PRODUCTS = [
     name: 'Saphir-Panzerglas',
     category: 'goods',
     categoryLabel: 'Fabrik · Handelsgut',
-    value: 2300,
-    req: '2x Saphir + 1x Silber (Fabrik)',
+    value: 11800,
+    req: '2x Geschliffener Saphir + 1x Silber-Barren (Fabrik)',
     desc: 'Kratzfestes und hochdruckstabiles Panzerglas aus Saphirkristallen.'
   },
   {
@@ -197,8 +260,8 @@ export const BOOK_PRODUCTS = [
     name: 'Schmuck-Diamant',
     category: 'goods',
     categoryLabel: 'Fabrik · Handelsgut',
-    value: 4400,
-    req: '1x Smaragd + 1x Rubin + 1x Diamant (Fabrik)',
+    value: 25500,
+    req: '1x Geschliffener Smaragd + 1x Geschliffener Rubin + 1x Brillant-Diamant (Fabrik)',
     desc: 'Präzisionsgeschliffener Dreifach-Edelstein für Luxus und Hochleistungs-Laser.'
   },
   {
@@ -206,8 +269,8 @@ export const BOOK_PRODUCTS = [
     name: 'Titan-Panzerung',
     category: 'goods',
     categoryLabel: 'Fabrik · Handelsgut',
-    value: 9800,
-    req: '2x Titan + 1x Diamant (Fabrik)',
+    value: 56000,
+    req: '2x Titan-Barren + 1x Brillant-Diamant (Fabrik)',
     desc: 'Verbundpanzerung für den Vorstoß in tiefste Basaltzonen.'
   },
   {
@@ -215,8 +278,8 @@ export const BOOK_PRODUCTS = [
     name: 'Obsidian-Superleiter',
     category: 'goods',
     categoryLabel: 'Fabrik · Handelsgut',
-    value: 19500,
-    req: '1x Obsidian-Kern + 2x Platin (Fabrik)',
+    value: 135000,
+    req: '1x Obsidian-Kristall + 2x Platin-Barren (Fabrik)',
     desc: 'Hochdichte vulkanische Kristallmatrix für extremste Energiedichten.'
   },
   {
@@ -224,8 +287,8 @@ export const BOOK_PRODUCTS = [
     name: 'Quanten-Brennstab',
     category: 'goods',
     categoryLabel: 'Fabrik · Handelsgut',
-    value: 32000,
-    req: '2x Uran + 1x Dunkelmaterie (Fabrik)',
+    value: 215000,
+    req: '2x Uran-Brennstab + 1x Dunkelmaterie-Matrix (Fabrik)',
     desc: 'Ultimative Fusions-Energiequelle mit astronomischem Erlös an der Börse.'
   },
 
@@ -237,7 +300,7 @@ export const BOOK_PRODUCTS = [
     categoryLabel: 'Fabrik · Bauteil',
     value: 0,
     usage: 'Tier-2-Fahrzeugmodule (Hangar)',
-    req: '2x Eisen + 1x Kupfer (Fabrik)',
+    req: '2x Eisen-Barren + 1x Kupfer-Barren (Fabrik)',
     desc: 'Nahtlos gezogenes Hochdruckrohr für Tank- und Triebwerksleitungen.'
   },
   {
@@ -247,7 +310,7 @@ export const BOOK_PRODUCTS = [
     categoryLabel: 'Fabrik · Bauteil',
     value: 0,
     usage: 'Tier-3-Fahrzeugmodule (Hangar)',
-    req: '2x Zinn + 1x Eisen (Fabrik)',
+    req: '2x Zinn-Barren + 1x Eisen-Barren (Fabrik)',
     desc: 'Präzisionszahnrad für Schaltung und Antriebsübersetzung.'
   },
   {
@@ -257,7 +320,7 @@ export const BOOK_PRODUCTS = [
     categoryLabel: 'Fabrik · Bauteil',
     value: 0,
     usage: 'Tier-4-5-Fahrzeugmodule (Hangar)',
-    req: '2x Silber + 1x Gold (Fabrik)',
+    req: '2x Silber-Barren + 1x Gold-Barren (Fabrik)',
     desc: 'Induktionsspule mit hoher Leitfähigkeit für Scanner und Bordcomputer.'
   },
   {
@@ -267,7 +330,7 @@ export const BOOK_PRODUCTS = [
     categoryLabel: 'Fabrik · Bauteil',
     value: 0,
     usage: 'Tier-6-7-Fahrzeugmodule (Hangar)',
-    req: '1x Saphir + 1x Smaragd (Fabrik)',
+    req: '1x Geschliffener Saphir + 1x Geschliffener Smaragd (Fabrik)',
     desc: 'Prismatisch geschliffene Linse für Tiefenscanner und Laseroptik.'
   },
   {
@@ -277,7 +340,7 @@ export const BOOK_PRODUCTS = [
     categoryLabel: 'Fabrik · Bauteil',
     value: 0,
     usage: 'Tier-8-9-Fahrzeugmodule (Hangar)',
-    req: '2x Titan + 1x Platin (Fabrik)',
+    req: '2x Titan-Barren + 1x Platin-Barren (Fabrik)',
     desc: 'Zugfeste Schwerlast-Gewindebolzen für gigantische Druckrümpfe.'
   },
   {
@@ -287,7 +350,7 @@ export const BOOK_PRODUCTS = [
     categoryLabel: 'Fabrik · Bauteil',
     value: 0,
     usage: 'Tier-10-Fahrzeugmodule (Hangar)',
-    req: '1x Uran + 1x Obsidian-Kern (Fabrik)',
+    req: '1x Uran-Brennstab + 1x Obsidian-Kristall (Fabrik)',
     desc: 'Subatomarer Magnetfeld-Kern für ultimative Tiefseebohrungen.'
   },
 

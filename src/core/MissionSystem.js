@@ -218,7 +218,7 @@ export const MISSION_POOL = [
     minLevel: 3
   },
 
-  // --- STUFE 4 (Basalt-Zone: 300 - 600m) ---
+  // --- STUFE 4 (Granit-Tiefen & Übergang: 300 - 500m) ---
   {
     id: 'emerald_optics',
     title: 'Smaragd-Laserlinsen',
@@ -232,20 +232,8 @@ export const MISSION_POOL = [
     minLevel: 4
   },
   {
-    id: 'titan_armor_plates',
-    title: 'Titan für die Hülle',
-    desc: 'Fördere 3 Einheiten Titanerz zur Verstärkung des Bohrers gegen Gebirgsdruck.',
-    type: 'COLLECT_ORE',
-    targetOre: 'titanium',
-    targetCount: 3,
-    rewardCash: 3800,
-    rewardXp: 1350,
-    rewardComp: { key: 'crystal_lens', name: 'Kristall-Linse', count: 1 },
-    minLevel: 4
-  },
-  {
     id: 'depth_basalt_ridge',
-    title: 'Basalt-Grat: 450 Meter',
+    title: 'Granit-Kluft: 450 Meter',
     desc: 'Meistere den enormen Gesteinsdruck und erreiche 450 Meter Tiefe.',
     type: 'REACH_DEPTH',
     targetDepth: 450,
@@ -255,21 +243,9 @@ export const MISSION_POOL = [
     minLevel: 4
   },
   {
-    id: 'diamond_core',
-    title: 'Der Diamant-Fund',
-    desc: 'Bringe mindestens 2 Rohdiamanten aus den Tiefen an die Oberfläche.',
-    type: 'COLLECT_ORE',
-    targetOre: 'diamond',
-    targetCount: 2,
-    rewardCash: 6000,
-    rewardXp: 2200,
-    rewardComp: { key: 'crystal_lens', name: 'Kristall-Linse', count: 1 },
-    minLevel: 4
-  },
-  {
     id: 'depth_pioneer_5',
     title: 'Tiefenbohrung V: 550 Meter',
-    desc: 'Dringe bis an den Übergang zur Obsidian-Zone auf 550 Meter vor.',
+    desc: 'Dringe bis in die Obsidian-Schichten auf 550 Meter vor.',
     type: 'REACH_DEPTH',
     targetDepth: 550,
     rewardCash: 4500,
@@ -278,16 +254,28 @@ export const MISSION_POOL = [
     minLevel: 4
   },
 
-  // --- STUFE 5 (Obsidian-Zone: 500 - 850m) ---
+  // --- STUFE 5 (Obsidian-Zone: 480 - 950m) ---
   {
-    id: 'obsidian_harvest',
-    title: 'Vulkanisches Glas',
-    desc: 'Fördere 4 seltene Obsidian-Kristalle aus erstarrten Lavakanälen.',
+    id: 'sapphire_crystals',
+    title: 'Tiefblaue Saphire',
+    desc: 'Fördere 3 seltene Saphire aus den vulkanischen Schichten.',
     type: 'COLLECT_ORE',
-    targetOre: 'obsidian_gem',
-    targetCount: 4,
+    targetOre: 'sapphire',
+    targetCount: 3,
+    rewardCash: 5200,
+    rewardXp: 1800,
+    rewardComp: { key: 'titan_bolt', name: 'Titan-Bolzen', count: 1 },
+    minLevel: 5
+  },
+  {
+    id: 'ruby_thermals',
+    title: 'Glutrote Rubine',
+    desc: 'Berge 3 flammende Rubine zur Hitzeschild-Reflexion.',
+    type: 'COLLECT_ORE',
+    targetOre: 'ruby',
+    targetCount: 3,
     rewardCash: 6500,
-    rewardXp: 2400,
+    rewardXp: 2200,
     rewardComp: { key: 'titan_bolt', name: 'Titan-Bolzen', count: 1 },
     minLevel: 5
   },
@@ -303,14 +291,14 @@ export const MISSION_POOL = [
     minLevel: 5
   },
   {
-    id: 'diamond_drillhead',
-    title: 'Diamantbesetzte Fräsen',
-    desc: 'Gewinne 4 Rohdiamanten für ultra-robuste Bohrkopf-Legierungen.',
+    id: 'diamond_core',
+    title: 'Der Diamant-Fund',
+    desc: 'Bringe mindestens 2 Rohdiamanten aus den Tiefen an die Oberfläche.',
     type: 'COLLECT_ORE',
     targetOre: 'diamond',
-    targetCount: 4,
-    rewardCash: 8500,
-    rewardXp: 2800,
+    targetCount: 2,
+    rewardCash: 7500,
+    rewardXp: 2600,
     rewardComp: { key: 'titan_bolt', name: 'Titan-Bolzen', count: 1 },
     minLevel: 5
   },
@@ -326,19 +314,7 @@ export const MISSION_POOL = [
     minLevel: 5
   },
 
-  // --- STUFE 6 (Magma-Zone: 800 - 1300m) ---
-  {
-    id: 'sapphire_crystals',
-    title: 'Tiefblaue Saphire',
-    desc: 'Fördere 3 seltene Saphire aus den magmatischen Schichten.',
-    type: 'COLLECT_ORE',
-    targetOre: 'sapphire',
-    targetCount: 3,
-    rewardCash: 12000,
-    rewardXp: 4000,
-    rewardComp: { key: 'titan_bolt', name: 'Titan-Bolzen', count: 1 },
-    minLevel: 6
-  },
+  // --- STUFE 6 (Magma-Zone: 950 - 1300m) ---
   {
     id: 'depth_magma_sea',
     title: 'Magma-Schwelle: 1.000 Meter',
@@ -351,14 +327,14 @@ export const MISSION_POOL = [
     minLevel: 6
   },
   {
-    id: 'ruby_thermals',
-    title: 'Glutrote Rubine',
-    desc: 'Berge 3 flammende Rubine zur Hitzeschild-Reflexion.',
+    id: 'titan_armor_plates',
+    title: 'Titan für die Hülle',
+    desc: 'Fördere 3 Einheiten Titanerz zur Verstärkung des Bohrers gegen Gebirgsdruck.',
     type: 'COLLECT_ORE',
-    targetOre: 'ruby',
+    targetOre: 'titanium',
     targetCount: 3,
-    rewardCash: 13500,
-    rewardXp: 4200,
+    rewardCash: 11000,
+    rewardXp: 3800,
     rewardComp: { key: 'quantum_core', name: 'Quanten-Kern', count: 1 },
     minLevel: 6
   },
@@ -376,14 +352,14 @@ export const MISSION_POOL = [
 
   // --- STUFE 7 (Kavitations-Zone: 1200 - 1700m) ---
   {
-    id: 'amethyst_resonance',
-    title: 'Amethyst-Geoden',
-    desc: 'Berge 3 edle Amethyste aus den tiefen Kristallkavitationen.',
+    id: 'platinum_vein',
+    title: 'Platin-Konduktoren',
+    desc: 'Fördere 3 Einheiten Platin für supraleitende Triebwerksspulen.',
     type: 'COLLECT_ORE',
-    targetOre: 'amethyst',
+    targetOre: 'platinum',
     targetCount: 3,
-    rewardCash: 16000,
-    rewardXp: 5500,
+    rewardCash: 15000,
+    rewardXp: 5000,
     rewardComp: { key: 'quantum_core', name: 'Quanten-Kern', count: 1 },
     minLevel: 7
   },
@@ -410,6 +386,18 @@ export const MISSION_POOL = [
     rewardComp: { key: 'quantum_core', name: 'Quanten-Kern', count: 1 },
     minLevel: 7
   },
+  {
+    id: 'obsidian_harvest',
+    title: 'Vulkanisches Glas',
+    desc: 'Fördere 4 seltene Obsidian-Kerne aus erstarrten Lavakanälen.',
+    type: 'COLLECT_ORE',
+    targetOre: 'obsidian_gem',
+    targetCount: 4,
+    rewardCash: 21000,
+    rewardXp: 7000,
+    rewardComp: { key: 'quantum_core', name: 'Quanten-Kern', count: 1 },
+    minLevel: 7
+  },
 
   // --- STUFE 8 (Urgestein-Zone: 1600 - 2100m) ---
   {
@@ -420,18 +408,6 @@ export const MISSION_POOL = [
     targetDepth: 1800,
     rewardCash: 24000,
     rewardXp: 8000,
-    rewardComp: { key: 'quantum_core', name: 'Quanten-Kern', count: 2 },
-    minLevel: 8
-  },
-  {
-    id: 'platinum_vein',
-    title: 'Platin-Konduktoren',
-    desc: 'Fördere 3 Einheiten Platin für supraleitende Triebwerksspulen.',
-    type: 'COLLECT_ORE',
-    targetOre: 'platinum',
-    targetCount: 3,
-    rewardCash: 26000,
-    rewardXp: 8800,
     rewardComp: { key: 'quantum_core', name: 'Quanten-Kern', count: 2 },
     minLevel: 8
   },
@@ -489,75 +465,132 @@ export class MissionSystem {
     this.scene = scene;
     this.player = player;
 
+    // Dauerhafter Speicher für bereits abgeschlossene Aufträge (jeder Auftrag darf nur 1x gemacht werden)
+    this.completedMissionIds = new Set();
+
+    // Aufträge, die bereits einmal ersetzt wurden (jeder Auftrag darf nur 1x ersetzt werden)
+    this.rerolledMissionIds = new Set();
+
     // Max 3 gleichzeitig verfügbare Aufträge auf dem Kontrakt-Board
     this.availableMissions = [];
     this.activeMission = null;
     this.progress = 0;
     this.isCompleted = false;
 
-    // Initial 3 passende Aufträge zuweisen
+    // Initial passende Aufträge zuweisen (begrenzt auf erreichbare Ziele)
     this.ensureAvailableMissions(3);
 
-    // Event-Listener für Erz-Sammeln und Schachttiefe
+    // Event-Listener für Erz-Sammeln, Tiefe, Level-Up und Erz-Entdeckung
     this.scene.events.on('ore_collected', (oreType) => this.onOreCollected(oreType));
     this.scene.events.on('depth_changed', (depth) => this.onDepthChanged(depth));
+    this.scene.events.on('level_up', () => this.onLevelUp());
+    this.scene.events.on('ore_discovered', () => this.onOreDiscovered());
 
     // Sofortige Überprüfung des aktuellen Spielstands
     this.checkCurrentProgress();
   }
 
   /**
-   * Filtert passende Kandidaten für den aktuellen Spielstand:
-   * - Erlaubt nur Aufträge für das aktuelle Level oder maximal 1 Stufe voraus ("demnächst möglich")
-   * - Tiefenziele realistisch im Umkreis der bisherigen Maximaltiefe
-   * - Erze entweder bereits entdeckt oder dem aktuellen Level entsprechend
+   * Prüft strikt, ob ein Auftrag für den aktuellen Spielerzustand erreichbar ist:
+   * 1. Nie wieder anbieten, falls bereits abgeschlossen (Einmaligkeit)
+   * 2. Kein Vorgriff auf zukünftige Level (Spoiler-Vermeidung)
+   * 3. Erze: Nur anzeigen, wenn das Erz bereits entdeckt wurde ODER die Tiefe bereits in der entsprechenden Schicht liegt
+   * 4. Tiefe: Tiefenziel muss im aktuellen Schachtbereich liegen (stufenweises Freischalten)
    */
-  getAvailableCandidates(excludeIds = []) {
-    const pLevel = this.player.level || 1;
-    const maxLevel = pLevel + 1;
-    const currentDepth = Math.max(this.player.highestDepthReached || 0, this.player.depthMeters || 0, 20);
-    const maxTargetDepth = Math.round(currentDepth * 1.9 + 50);
+  isMissionReachable(m) {
+    if (!m || !m.id) return false;
 
-    return MISSION_POOL.filter(m => {
-      if (excludeIds.includes(m.id)) return false;
-      if (m.minLevel > maxLevel) return false;
-      if (m.type === 'REACH_DEPTH' && m.targetDepth > maxTargetDepth) return false;
-      if (m.type === 'COLLECT_ORE') {
-        const isDiscovered = this.player.isOreDiscovered(m.targetOre);
-        if (!isDiscovered && m.minLevel > pLevel) return false;
+    // Einmalig: Bereits erledigte Aufträge nie wieder anbieten
+    if (this.completedMissionIds && this.completedMissionIds.has(m.id)) {
+      return false;
+    }
+
+    const pLevel = this.player?.level || 1;
+    // Kein Vorgriff auf zukünftige Level
+    if ((m.minLevel || 1) > pLevel) {
+      return false;
+    }
+
+    const maxDepthReached = Math.max(
+      this.player?.highestDepthReached || 0,
+      this.player?.depthMeters || 0
+    );
+
+    if (m.type === 'COLLECT_ORE') {
+      const oreKey = m.targetOre;
+      const oreMeta = ORE_DATA[oreKey];
+      if (!oreMeta) return false;
+
+      // Bereits entdeckt? Dann gilt das Erz als bekannt & anvisierbar
+      const isDiscovered = this.player?.isOreDiscovered ? this.player.isOreDiscovered(oreKey) : false;
+      if (isDiscovered) return true;
+
+      // Noch nicht entdeckt: Nur anzeigen, wenn die Tiefe bereits in der entsprechenden Schicht liegt
+      const minOreDepth = oreMeta.minDepth ?? 0;
+      if (maxDepthReached < minOreDepth) {
+        return false; // Spoiler-Schutz: Schicht noch nicht betreten!
       }
       return true;
+    }
+
+    if (m.type === 'REACH_DEPTH') {
+      // Tiefenziel darf nicht weit jenseits des aktuellen Horizonts liegen
+      // Tiefen werden stufenweise freigeschaltet (Start: max 35m, 20m Tiefe -> max 50m, 40m -> max 80m, usw.)
+      const allowedTargetDepth = Math.max(35, Math.round(maxDepthReached * 1.5 + 20));
+      if (m.targetDepth > allowedTargetDepth) {
+        return false;
+      }
+      return true;
+    }
+
+    return true;
+  }
+
+  /**
+   * Filtert passende Kandidaten für den aktuellen Spielstand.
+   * Keine aggressiven Fallbacks auf höhere Level oder unerreichbare Erze!
+   */
+  getAvailableCandidates(excludeIds = []) {
+    return MISSION_POOL.filter(m => {
+      if (excludeIds.includes(m.id)) return false;
+      return this.isMissionReachable(m);
     });
   }
 
   /**
-   * Stellt sicher, dass stets genau maxSlots Aufträge auf dem Board verfügbar sind
+   * Stellt sicher, dass erreichbare Aufträge auf dem Board liegen (maximal maxSlots = 3).
+   * Wenn weniger erreichbar sind, bleibt die Liste begrenzt (kein Erwingen von Spoiler-Aufträgen).
    */
   ensureAvailableMissions(maxSlots = 3) {
     if (!Array.isArray(this.availableMissions)) {
       this.availableMissions = [];
     }
-    this.availableMissions = this.availableMissions.filter(m => m && m.id);
+    if (!this.completedMissionIds) {
+      this.completedMissionIds = new Set();
+    }
 
+    // Bereinigen: Ungültige, bereits erledigte oder unerreichbare Aufträge entfernen
+    this.availableMissions = this.availableMissions.filter(m => {
+      if (!m || !m.id) return false;
+      if (this.completedMissionIds.has(m.id)) return false;
+      return this.isMissionReachable(m);
+    });
+
+    // Auffüllen bis maxSlots, sofern ERREICHBARE Kandidaten existieren
     while (this.availableMissions.length < maxSlots) {
       const currentIds = this.availableMissions.map(m => m.id);
-      let candidates = this.getAvailableCandidates(currentIds);
-
-      // Fallback falls enge Kriterien erschöpft sind
+      const candidates = this.getAvailableCandidates(currentIds);
       if (candidates.length === 0) {
-        const pLevel = this.player.level || 1;
-        candidates = MISSION_POOL.filter(m => !currentIds.includes(m.id) && m.minLevel <= pLevel + 1);
+        // Keine erreichbaren Aufträge mehr vorhanden -> bewusst begrenzen, KEIN Fallback auf Spoiler!
+        break;
       }
-      if (candidates.length === 0) {
-        candidates = MISSION_POOL.filter(m => !currentIds.includes(m.id));
-      }
-      if (candidates.length === 0) break;
 
       const chosen = candidates[Math.floor(Math.random() * candidates.length)];
       this.availableMissions.push({
         ...chosen,
         progress: 0,
-        isCompleted: false
+        isCompleted: false,
+        isRerolled: false
       });
     }
 
@@ -568,7 +601,6 @@ export class MissionSystem {
    * Synchronisiert die primär im HUD angezeigte Mission
    */
   syncActiveMission() {
-    // Falls ein Auftrag bereits fertig ist, soll dieser bevorzugt hervorgehoben werden
     const ready = this.availableMissions.find(m => m.isCompleted);
     this.activeMission = ready || this.availableMissions[0] || null;
 
@@ -626,9 +658,41 @@ export class MissionSystem {
       }
     });
 
+    // Prüfen, ob durch das neue Erz ein neuer Slot befüllt werden kann
+    const prevCount = this.availableMissions.length;
+    if (prevCount < 3) {
+      this.ensureAvailableMissions(3);
+      if (this.availableMissions.length > prevCount) {
+        anyChanged = true;
+      }
+    }
+
     if (anyChanged) {
       this.syncActiveMission();
       this.scene.events.emit('mission_updated', this.getMissionStatus());
+    }
+  }
+
+  onOreDiscovered() {
+    const prevCount = this.availableMissions.length;
+    if (prevCount < 3) {
+      this.ensureAvailableMissions(3);
+      if (this.availableMissions.length > prevCount) {
+        this.syncActiveMission();
+        this.scene.events.emit('mission_updated', this.getMissionStatus());
+      }
+    }
+  }
+
+  onLevelUp() {
+    const prevCount = this.availableMissions.length;
+    if (prevCount < 3) {
+      this.ensureAvailableMissions(3);
+      if (this.availableMissions.length > prevCount) {
+        this.syncActiveMission();
+        this.scene.events.emit('mission_updated', this.getMissionStatus());
+        this.scene.events.emit('notify', `📋 Neue Aufträge für Level ${this.player.level} freigeschaltet!`);
+      }
     }
   }
 
@@ -651,6 +715,19 @@ export class MissionSystem {
         }
       }
     });
+
+    // Prüfen, ob durch größeres Vordringen neue Aufträge freigeschaltet werden können
+    const prevCount = this.availableMissions.length;
+    if (prevCount < 3) {
+      this.ensureAvailableMissions(3);
+      if (this.availableMissions.length > prevCount) {
+        anyChanged = true;
+        const newlyAdded = this.availableMissions[this.availableMissions.length - 1];
+        if (newlyAdded) {
+          this.scene.events.emit('notify', `📋 Neuer Auftrag verfügbar: ${newlyAdded.title}`);
+        }
+      }
+    }
 
     if (anyChanged) {
       this.syncActiveMission();
@@ -695,20 +772,39 @@ export class MissionSystem {
     soundFx.playPurchase();
     this.scene.events.emit('notify', `💰 Belohnung erhalten: +€${cash.toLocaleString('de-DE')}, +${xp} XP${compMsg}!`);
 
-    // Abgeschlossene Mission aus den verfügbaren entfernen und neuen Auftrag nachziehen
+    // Dauerhaft als erledigt markieren (aufträge dürfen nur einmal gemacht werden)
+    if (!this.completedMissionIds) {
+      this.completedMissionIds = new Set();
+    }
+    this.completedMissionIds.add(target.id);
+
+    // Abgeschlossene Mission aus den verfügbaren entfernen
     const index = this.availableMissions.findIndex(m => m.id === target.id);
     if (index !== -1) {
       this.availableMissions.splice(index, 1);
     }
+
+    // Begrenzt nachziehen (nur wenn erreichbare Aufträge existieren)
     this.ensureAvailableMissions(3);
 
+    this.syncActiveMission();
     this.scene.events.emit('mission_updated', this.getMissionStatus());
     this.scene.events.emit('player_updated');
     return true;
   }
 
   /**
-   * Tauscht einen bestimmten Auftrag gegen einen neuen aus dem Pool
+   * Prüft, ob ein Auftrag noch ersetzt werden darf (jeder Auftrag darf nur 1x ersetzt werden)
+   */
+  canRerollMission(mission) {
+    if (!mission || !mission.id) return false;
+    if (mission.isRerolled) return false;
+    if (this.rerolledMissionIds && this.rerolledMissionIds.has(mission.id)) return false;
+    return true;
+  }
+
+  /**
+   * Tauscht einen bestimmten Auftrag gegen einen neuen erreichbaren aus dem Pool (maximal 1x)
    */
   rerollMission(missionId = null) {
     if (!Array.isArray(this.availableMissions) || this.availableMissions.length === 0) return;
@@ -719,25 +815,36 @@ export class MissionSystem {
 
     if (index === -1) return;
 
-    const currentIds = this.availableMissions.map(m => m.id);
-    let candidates = this.getAvailableCandidates(currentIds);
-    if (candidates.length === 0) {
-      const pLevel = this.player.level || 1;
-      candidates = MISSION_POOL.filter(m => !currentIds.includes(m.id) && m.minLevel <= pLevel + 1);
+    const currentMission = this.availableMissions[index];
+    if (!this.canRerollMission(currentMission)) {
+      soundFx.playError?.();
+      this.scene.events.emit('notify', '⚠️ Dieser Auftrag wurde bereits einmal ersetzt.');
+      return;
     }
 
-    if (candidates.length > 0) {
-      const chosen = candidates[Math.floor(Math.random() * candidates.length)];
-      this.availableMissions[index] = {
-        ...chosen,
-        progress: 0,
-        isCompleted: false
-      };
-      soundFx.playClick();
-      this.syncActiveMission();
-      this.scene.events.emit('mission_updated', this.getMissionStatus());
-      this.scene.events.emit('notify', `Neuer Auftrag aktiviert: ${chosen.title}`);
+    const currentIds = this.availableMissions.map(m => m.id);
+    const candidates = this.getAvailableCandidates(currentIds);
+
+    if (candidates.length === 0) {
+      soundFx.playError?.();
+      this.scene.events.emit('notify', 'Keine weiteren erreichbaren Aufträge für diese Schicht verfügbar.');
+      return;
     }
+
+    if (!this.rerolledMissionIds) this.rerolledMissionIds = new Set();
+    this.rerolledMissionIds.add(currentMission.id);
+
+    const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+    this.availableMissions[index] = {
+      ...chosen,
+      progress: 0,
+      isCompleted: false,
+      isRerolled: true // Ersatzauftrag kann nicht noch einmal getauscht werden
+    };
+    soundFx.playClick();
+    this.syncActiveMission();
+    this.scene.events.emit('mission_updated', this.getMissionStatus());
+    this.scene.events.emit('notify', `Neuer Auftrag erhalten: ${chosen.title}`);
   }
 
   // Rückwärtskompatible Methode
@@ -751,27 +858,35 @@ export class MissionSystem {
   restoreSavedMissions(data) {
     if (!data) return;
 
+    this.completedMissionIds = new Set(data.completedMissionIds || []);
+    this.rerolledMissionIds = new Set(data.rerolledMissionIds || []);
+
     if (Array.isArray(data.availableMissions) && data.availableMissions.length > 0) {
       this.availableMissions = [];
       data.availableMissions.slice(0, 3).forEach(saved => {
+        if (this.completedMissionIds.has(saved.id)) return;
         const base = MISSION_POOL.find(m => m.id === saved.id);
-        if (base) {
+        if (base && this.isMissionReachable(base)) {
           this.availableMissions.push({
             ...base,
             progress: saved.progress || 0,
-            isCompleted: !!saved.isCompleted
+            isCompleted: !!saved.isCompleted,
+            isRerolled: !!saved.isRerolled
           });
         }
       });
     } else if (data.id) {
       // Abwärtskompatibilität für alte Spielstände mit einzelnem Missions-Objekt
-      const base = MISSION_POOL.find(m => m.id === data.id);
-      if (base) {
-        this.availableMissions = [{
-          ...base,
-          progress: data.progress || 0,
-          isCompleted: !!data.isCompleted
-        }];
+      if (!this.completedMissionIds.has(data.id)) {
+        const base = MISSION_POOL.find(m => m.id === data.id);
+        if (base && this.isMissionReachable(base)) {
+          this.availableMissions = [{
+            ...base,
+            progress: data.progress || 0,
+            isCompleted: !!data.isCompleted,
+            isRerolled: !!data.isRerolled
+          }];
+        }
       }
     }
 
@@ -781,6 +896,8 @@ export class MissionSystem {
   }
 
   resetAll() {
+    this.completedMissionIds = new Set();
+    this.rerolledMissionIds = new Set();
     this.availableMissions = [];
     this.activeMission = null;
     this.progress = 0;

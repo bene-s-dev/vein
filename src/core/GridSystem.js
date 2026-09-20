@@ -15,6 +15,7 @@ export const TILE_TYPES = {
   EMPTY: 'empty',
   SURFACE: 'tile_surface',
   DIRT: 'tile_dirt',
+  DIRT_ORE: 'tile_dirt_ore',
   STONE: 'tile_stone',
   GRANITE: 'tile_granite',
   OBSIDIAN: 'tile_obsidian',
@@ -40,7 +41,7 @@ export const ORE_DATA = {
   coal: {
     id: 'coal',
     name: 'Kohle',
-    color: '#222222',
+    color: '#09090b',
     sprite: 'ore_coal',
     value: 25,
     hardness: 1.0,
@@ -854,17 +855,20 @@ export class GridSystem {
 
         let bundle = this.activeSprites.get(key);
         const tileTint = (tile.type === TILE_TYPES.LAVA) ? 0xffffff : depthTint;
+        const expectedBg = (tile.type === TILE_TYPES.DIRT && tile.ore) ? 'tile_dirt_ore' : tile.type;
         if (!bundle) {
-          const bgSprite = this.scene.add.image(tileCenterX, tileCenterY, tile.type)
+          const bgSprite = this.scene.add.image(tileCenterX, tileCenterY, expectedBg)
             .setDepth(2)
             .setTint(tileTint);
           let oreSprite = null;
 
           if (tile.ore && (ORE_DATA[tile.ore] || this.scene.textures.exists(`ore_${tile.ore}`))) {
             const oreTex = ORE_DATA[tile.ore]?.sprite || `ore_${tile.ore}`;
+            const flipX = ((x * 7 + y * 13) % 2 === 0);
             oreSprite = this.scene.add.image(tileCenterX, tileCenterY, oreTex)
               .setDepth(3)
-              .setTint(oreTint);
+              .setTint(oreTint)
+              .setFlipX(flipX);
           }
 
           let crackSprite = null;
@@ -878,19 +882,21 @@ export class GridSystem {
           this.activeSprites.set(key, bundle);
         } else {
           // Sprite existiert bereits: Typ, Erz und Risse mit aktuellem Kachelzustand synchronisieren
-          if (bundle.bgSprite.texture.key !== tile.type) {
-            bundle.bgSprite.setTexture(tile.type).setDepth(2).setTint(tileTint);
+          if (bundle.bgSprite.texture.key !== expectedBg) {
+            bundle.bgSprite.setTexture(expectedBg).setDepth(2).setTint(tileTint);
           }
           if (!bundle.bgSprite.visible) bundle.bgSprite.setVisible(true);
 
           const expectedOreSprite = tile.ore ? (ORE_DATA[tile.ore]?.sprite || `ore_${tile.ore}`) : null;
           if (expectedOreSprite) {
+            const flipX = ((x * 7 + y * 13) % 2 === 0);
             if (!bundle.oreSprite) {
               bundle.oreSprite = this.scene.add.image(tileCenterX, tileCenterY, expectedOreSprite)
                 .setDepth(3)
-                .setTint(oreTint);
+                .setTint(oreTint)
+                .setFlipX(flipX);
             } else if (bundle.oreSprite.texture.key !== expectedOreSprite) {
-              bundle.oreSprite.setTexture(expectedOreSprite).setTint(oreTint);
+              bundle.oreSprite.setTexture(expectedOreSprite).setTint(oreTint).setFlipX(flipX);
             }
             if (!bundle.oreSprite.visible) bundle.oreSprite.setVisible(true);
           } else if (bundle.oreSprite) {
@@ -958,6 +964,7 @@ export class GridSystem {
         this.fogImage.setVisible(true);
 
         const ctx = this.fogTexture.context;
+        ctx.imageSmoothingEnabled = false;
         if (!this.darkRockPattern) {
           const patCanvas = this.createDarkRockPattern();
           this.darkRockPattern = ctx.createPattern(patCanvas, 'repeat');
@@ -998,7 +1005,7 @@ export class GridSystem {
             if (isExplored || isDestroyed || (tile && (tile.explored || tile.type === TILE_TYPES.EMPTY))) {
               const cx = x * TILE_SIZE - bufferX;
               const cy = y * TILE_SIZE - bufferY;
-              ctx.fillRect(cx - 1, cy - 1, TILE_SIZE + 2, TILE_SIZE + 2);
+              ctx.fillRect(cx, cy, TILE_SIZE, TILE_SIZE);
             }
           }
         }

@@ -581,7 +581,7 @@ export class Player {
 
   update(delta, inputDir) {
     if (soundFx && soundFx.isMenuOpen?.()) {
-      soundFx.stopAllLoops?.();
+      soundFx.stopAllLoops?.(true);
       if (this.state === PLAYER_STATES.DRILLING) {
         this.cancelDrilling();
       }
@@ -2264,7 +2264,10 @@ export class Player {
     // 2. Fabrik-Produkte & Montage-Bauteile: Freigeschaltet, sobald alle Erze des Rezepts entdeckt sind
     if (FACTORY_PRODUCTS && FACTORY_PRODUCTS[prodId]) {
       const recipe = FACTORY_PRODUCTS[prodId].recipe || {};
-      const allOresFound = Object.keys(recipe).length > 0 && Object.keys(recipe).every(ore => this.isOreDiscovered(ore));
+      const allOresFound = Object.keys(recipe).length > 0 && Object.keys(recipe).every(matKey => {
+        const rawKey = matKey.startsWith('bar_') ? matKey.replace('bar_', '') : matKey;
+        return this.isOreDiscovered(rawKey);
+      });
       if (allOresFound) {
         this.discoveredProducts.add(prodId);
         return true;
@@ -2364,26 +2367,93 @@ export class Player {
 
   getReturnFuelCost() {
     const efficiency = Math.max(0.1, this.fuelEfficiency || 1.0);
-    const entranceGx = 19.5;
-    const baseReserve = 1.6; // Solide Mindestreserve für Landung, Notfall & Schachtmanöver
+    const baseReserve = 1.6; // Mindestreserve für Einrasten, Notfall & Schachtmanöver
     const atSurface = this.gy <= -1 || (this.sprite && this.sprite.y <= -16);
 
     if (atSurface) {
-      return 0; // An der Erdoberfläche kein Verbrauch und keine Kerosinkosten nötig
+      this.returnFuelTarget = { name: 'Hangar (Oberfläche)', depth: 0, gx: 19.5, gy: -1, isSurface: true, cost: 0 };
+      return 0;
     }
 
-    // Unterirdisch: Steigflug + horizontaler Weg + 15% Sicherheitsmarge + Reserve
+    // Falls der Spieler bereits direkt an einer betriebsbereiten Untertage-Tankanlage steht:
+    const nearbyStation = this.scene?.baseSystem?.getNearbyStation ? this.scene.baseSystem.getNearbyStation(this.gx, this.gy, 2.4) : null;
+    if (nearbyStation && (nearbyStation.type === 'fuel' || nearbyStation.type === 'geothermal') && (nearbyStation.isBuilt !== false)) {
+      this.returnFuelTarget = {
+        name: nearbyStation.name || 'Tankanlage',
+        depth: nearbyStation.depth || Math.round(nearbyStation.gy * 1.5),
+        gx: nearbyStation.gx,
+        gy: nearbyStation.gy,
+        isSurface: false,
+        cost: 0
+      };
+      return 0;
+    }
+
     const currentY = this.sprite ? this.sprite.y : (this.gy * TILE_SIZE + TILE_SIZE / 2);
-    const distY = Math.max(0, currentY - (-16));
     const flightSpeed = Math.max(1, this.flightSpeed || 120);
 
-    const flightTimeSec = distY / flightSpeed;
-    const verticalFuel = flightTimeSec * (1.8 / efficiency);
+    // Alle möglichen Betankungsziele sammeln: Erdoberfläche + gebaute Untertage-Tankanlagen
+    const candidates = [
+      {
+        name: 'Hangar (Oberfläche)',
+        depth: 0,
+        gx: 19.5,
+        gy: -1,
+        targetY: -16,
+        isSurface: true
+      }
+    ];
 
-    const tilesX = Math.abs(this.gx - entranceGx);
-    const horizontalFuel = tilesX * (0.3 / efficiency);
+    const builtStations = this.scene?.baseSystem?.subsurfaceStations || [];
+    for (const st of builtStations) {
+      if ((st.type === 'fuel' || st.type === 'geothermal') && (st.isBuilt !== false)) {
+        candidates.push({
+          name: st.name || 'Tankanlage',
+          depth: st.depth || Math.round(st.gy * 1.5),
+          gx: st.gx,
+          gy: st.gy,
+          targetY: st.gy * TILE_SIZE + TILE_SIZE / 2,
+          isSurface: false
+        });
+      }
+    }
 
-    return ((verticalFuel + horizontalFuel) * 1.15) + baseReserve;
+    // Berechne für jedes Ziel den exakten Treibstoffbedarf
+    let bestTarget = null;
+    let minCost = Infinity;
+
+    for (const cand of candidates) {
+      const tilesX = Math.abs(this.gx - cand.gx);
+      const horizontalFuel = tilesX * (0.3 / efficiency);
+
+      let verticalFuel = 0;
+      if (cand.targetY < currentY) {
+        // Ziel liegt ÜBER dem Spieler: Aktiver Steigflug gegen die Schwerkraft
+        const distY = currentY - cand.targetY;
+        const flightTimeSec = distY / flightSpeed;
+        verticalFuel = flightTimeSec * (1.8 / efficiency);
+      } else {
+        // Ziel liegt UNTER oder auf Höhe des Spielers: Sanftes Absinken mit Schwerkraft & Stabilisierung
+        const distY = cand.targetY - currentY;
+        verticalFuel = (distY / TILE_SIZE) * (0.12 / efficiency);
+      }
+
+      const totalCost = ((verticalFuel + horizontalFuel) * 1.15) + baseReserve;
+      if (totalCost < minCost) {
+        minCost = totalCost;
+        bestTarget = { ...cand, cost: totalCost };
+      }
+    }
+
+    this.returnFuelTarget = bestTarget || candidates[0];
+    return minCost;
+  }
+
+  getReturnFuelTarget() {
+    if (!this.returnFuelTarget) {
+      this.getReturnFuelCost();
+    }
+    return this.returnFuelTarget;
   }
 
   getReturnFuelPercent() {

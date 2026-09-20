@@ -2,7 +2,7 @@ import { ORE_DATA, TILE_SIZE, TILE_TYPES } from '../core/GridSystem.js';
 import { soundFx } from '../core/SoundEffects.js';
 import { icon, refreshIcons, oreIcon, itemDisplayIcon, getRefinedOreName } from './IconHelper.js';
 import { ORE_DESCRIPTIONS, GEOLOGICAL_LAYERS, BOOK_PRODUCTS } from './MinerBookModal.js';
-import { isModalActive, notifyModalClosed, FACTORY_PRODUCTS, COMPONENT_DATA, EXPEDITION_ITEMS } from '../core/BaseSystem.js';
+import { isModalActive, notifyModalClosed, FACTORY_PRODUCTS, COMPONENT_DATA, EXPEDITION_ITEMS, getRefinedOreNetValue } from '../core/BaseSystem.js';
 import { launchConfetti } from './HUD.js';
 
 export const ORE_USAGE_INFO = {
@@ -379,13 +379,15 @@ export function showGoodsInfoModal(itemKey, scene) {
   if (typeof bookItem?.value === 'number') value = bookItem.value;
   else if (typeof factoryItem?.value === 'number') value = factoryItem.value;
   else if (typeof expItem?.price === 'number') value = expItem.price;
-  else if (isBar && rawKey && ORE_DATA[rawKey]) value = Math.round(ORE_DATA[rawKey].value * 1.5);
+  else if (isBar && rawKey && ORE_DATA[rawKey]) value = getRefinedOreNetValue(rawKey);
 
   // Rezeptur
   let recipeText = bookItem?.req || '';
   if (!recipeText && factoryItem?.recipe) {
     const parts = Object.entries(factoryItem.recipe).map(([k, count]) => {
-      const oreN = ORE_DATA[k]?.name || k;
+      const isB = k.startsWith('bar_');
+      const rKey = isB ? k.replace('bar_', '') : k;
+      const oreN = isB ? (getRefinedOreName(rKey) || rKey) : (ORE_DATA[rKey]?.name || rKey);
       return `${count}x ${oreN}`;
     });
     recipeText = parts.join(' + ') + ' (Fabrik)';

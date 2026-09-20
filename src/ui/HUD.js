@@ -469,7 +469,16 @@ export class HUD {
 }
 
   updateMissionWidget(info) {
-    if (!info) return;
+    if (!info) {
+      if (this.missionTitle) this.missionTitle.innerText = 'Kein aktiver Auftrag';
+      if (this.missionTarget) this.missionTarget.innerText = 'Erkunde tiefere Schichten';
+      if (this.missionReward) this.missionReward.innerText = '';
+      if (this.missionStatus) {
+        this.missionStatus.innerText = 'Pausiert';
+        this.missionStatus.style.color = '#94a3b8';
+      }
+      return;
+    }
     if (this.missionTitle) this.missionTitle.innerText = info.title;
     if (this.missionTarget) this.missionTarget.innerText = info.targetText;
     if (this.missionReward) this.missionReward.innerText = `+€${info.rewardCash}`;
@@ -510,7 +519,7 @@ export class HUD {
       }
     }
 
-    if (this.scene && (this.scene.inStartScreen || (this.scene.isPaused && !force))) return;
+    if (this.scene && this.scene.inStartScreen) return;
 
     // Position & Tiefenstatus
     const currentY = this.player.sprite ? this.player.sprite.y : (this.player.gy * 32 + 16);
@@ -571,11 +580,15 @@ export class HUD {
       const roundedReturn = Math.round(effectiveReturnThreshold);
       const fuelPct = Math.round(fuelPercent);
       const returnCost = Math.round(this.player.getReturnFuelCost ? this.player.getReturnFuelCost() : 0);
+      const target = this.player.getReturnFuelTarget ? this.player.getReturnFuelTarget() : null;
+      const targetLabel = target && !target.isSurface
+        ? `Tankanlage (${target.depth || Math.round(target.gy * 1.5)}m)`
+        : 'Basis/Hangar';
       if (this._lastFuelTitleFuel !== curFuel || this._lastFuelTitleReturn !== roundedReturn) {
         this._lastFuelTitleFuel = curFuel;
         this._lastFuelTitleReturn = roundedReturn;
         this.fuelBarContainer.title = roundedReturn > 0
-          ? `Tank: ${curFuel}/${maxFuel}L (${fuelPct}%) | Rückkehr-Bedarf (rot): ${returnCost}L (${roundedReturn}%)`
+          ? `Tank: ${curFuel}/${maxFuel}L (${fuelPct}%) | Notration für Rückweg zu ${targetLabel}: ${returnCost}L (${roundedReturn}%)`
           : `Tank: ${curFuel}/${maxFuel}L (${fuelPct}%)`;
       }
     }
@@ -730,9 +743,12 @@ export class HUD {
       if (this.btnActionDetonate) this.btnActionDetonate.style.display = 'none';
     }
 
-    // Rückkehr-Status (Kritisch: aktueller Tank erreicht die Rückkehr-Schwelle inkl. Puffer - außerhalb des Hangars)
+    // Rückkehr-Status (Kritisch: aktueller Tank erreicht die Rückkehr-Schwelle inkl. Puffer - außerhalb von Tankstellen)
     const isAtHangar = isAtSurface && (this.player.gx >= 13 && this.player.gx <= 17);
-    const isReturnCritical = !isAtHangar && returnPercent > 2 && fuelPercent <= effectiveReturnThreshold;
+    const nearbyStation = (!isAtSurface && this.scene?.baseSystem?.getNearbyStation) ? this.scene.baseSystem.getNearbyStation(this.player.gx, this.player.gy, 2.5) : null;
+    const isAtUndergroundFuel = nearbyStation && (nearbyStation.type === 'fuel' || nearbyStation.type === 'geothermal') && (nearbyStation.isBuilt !== false);
+    const isAtRefuelStation = isAtHangar || isAtUndergroundFuel;
+    const isReturnCritical = !isAtRefuelStation && returnPercent > 2 && fuelPercent <= effectiveReturnThreshold;
 
     // Tankwarnung: NUR wenn der Tank tatsächlich niedrig ist (<= 15%), NICHT bei Rückkehrschwelle!
     const isFuelLow = fuelPercent <= 15;
@@ -743,9 +759,16 @@ export class HUD {
     }
 
     // Adaptive Rückkehr-Warnung (oben rechts, pulsierender roter Button/Badge)
-    if (this.returnWarn && this._lastReturnWarn !== isReturnCritical) {
-      this._lastReturnWarn = isReturnCritical;
-      this.returnWarn.style.display = isReturnCritical ? 'inline-flex' : 'none';
+    if (this.returnWarn) {
+      if (this._lastReturnWarn !== isReturnCritical) {
+        this._lastReturnWarn = isReturnCritical;
+        this.returnWarn.style.display = isReturnCritical ? 'inline-flex' : 'none';
+      }
+      if (isReturnCritical) {
+        const target = this.player.getReturnFuelTarget ? this.player.getReturnFuelTarget() : null;
+        const targetLabel = target && !target.isSurface ? `Tankanlage (${target.depth || Math.round(target.gy * 1.5)}m)` : 'Basis/Hangar';
+        this.returnWarn.title = `Notration erreicht! Reicht nur noch bis zur ${targetLabel}.`;
+      }
     }
 
     // Notfall-Rettung Button (bei leerem Tank unter Tage oder bei Game Over)
@@ -776,9 +799,11 @@ export class HUD {
 
       if (isReturnCritical && !this.warnedPointOfNoReturn) {
         this.warnedPointOfNoReturn = true;
+        const target = this.player.getReturnFuelTarget ? this.player.getReturnFuelTarget() : null;
+        const targetName = target && !target.isSurface ? `Tankanlage (${target.depth || Math.round(target.gy * 1.5)}m)` : 'Basis';
         toastManager.show({
           id: 'tank-warning-return',
-          text: 'Tankwarnung: Sofort umkehren!',
+          text: `Tankwarnung: Sofort zur ${targetName} umkehren!`,
           duration: 5000,
           sound: 'cockpit'
         });
@@ -874,6 +899,10 @@ export class HUD {
       } else if (this.depthText) {
         this.depthText.textContent = `${displayStr} m`;
       }
+    }
+
+    if (this.drillerModal && this.drillerModal.isOpen && this.drillerModal.syncLiveStats) {
+      this.drillerModal.syncLiveStats();
     }
   }
 
@@ -1097,6 +1126,18 @@ export class HUD {
               <span>${document.fullscreenElement ? 'Beenden' : 'An'}</span>
             </button>
           </div>
+
+          <!-- Oberfläche / Tageszeit (Tag & Nacht) -->
+          <div style="background: rgba(15, 23, 42, 0.65); border-radius: 12px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 4px rgba(0,0,0,0.2);">
+            <div>
+              <strong style="color: #f8fafc; font-size: 12px; display: block;">Oberfläche</strong>
+              <span style="color: #94a3b8; font-size: 10.5px;">Tag- & Nachtmodus</span>
+            </div>
+            <button id="btn-toggle-time-of-day" class="${(this.scene?.surfaceTheme === 'night') ? 'btn-3d-secondary' : 'btn-action'}" style="height: 30px; padding: 0 10px; font-size: 11px; display: inline-flex; align-items: center; gap: 5px; border: none; border-radius: 8px;" title="Zwischen Tag und Nacht umschalten">
+              ${icon((this.scene?.surfaceTheme === 'night') ? 'moon' : 'sun', '', 13)}
+              <span>${(this.scene?.surfaceTheme === 'night') ? 'Nacht' : 'Tag'}</span>
+            </button>
+          </div>
         </div>
 
         <!-- 1. Spiele -->
@@ -1288,6 +1329,26 @@ export class HUD {
         `;
         toggleFullscreenBtn.className = isFs ? 'btn-3d-success' : 'btn-action';
         refreshIcons(toggleFullscreenBtn);
+      };
+    }
+
+    const toggleTimeBtn = document.getElementById('btn-toggle-time-of-day');
+    if (toggleTimeBtn) {
+      toggleTimeBtn.onclick = () => {
+        try {
+          soundFx.playClick();
+        } catch (_) {}
+        const sc = this.scene;
+        if (sc && sc.toggleSurfaceTheme) {
+          const nextTheme = sc.toggleSurfaceTheme();
+          const isNightNow = nextTheme === 'night';
+          toggleTimeBtn.innerHTML = `
+            ${icon(isNightNow ? 'moon' : 'sun', '', 13)}
+            <span>${isNightNow ? 'Nacht' : 'Tag'}</span>
+          `;
+          toggleTimeBtn.className = isNightNow ? 'btn-3d-secondary' : 'btn-action';
+          refreshIcons(toggleTimeBtn);
+        }
       };
     }
 

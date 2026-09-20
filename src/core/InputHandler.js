@@ -131,40 +131,20 @@ export class InputHandler {
     this.setupControls();
   }
 
-  cancelAutoAscend() {
-    if (!this.isAutoAscending) return;
+  cancelLock() {
+    if (!this.lockedDirection) return;
+    const prevDir = this.lockedDirection;
+    this.lockedDirection = null;
     this.isAutoAscending = false;
-    this.touchDirection = null;
-    const joystickContainer = document.getElementById('floating-joystick');
-    const knob = document.getElementById('joystick-knob');
-    if (joystickContainer) {
-      joystickContainer.classList.remove('locked-up');
-      joystickContainer.style.opacity = '0';
-      setTimeout(() => {
-        if (!this.isAutoAscending && joystickContainer) {
-          joystickContainer.style.display = 'none';
-        }
-      }, 150);
-    }
-    if (knob) {
-      knob.style.transform = 'translate(0px, 0px)';
-    }
-    if (this.scene?.player && this.scene.player.state === 'flying') {
-      this.scene.player.stopFlying();
-    }
-  }
-
-  cancelAutoDescend() {
-    if (!this.isAutoDescending) return;
     this.isAutoDescending = false;
     this.touchDirection = null;
     const joystickContainer = document.getElementById('floating-joystick');
     const knob = document.getElementById('joystick-knob');
     if (joystickContainer) {
-      joystickContainer.classList.remove('locked-down');
+      joystickContainer.classList.remove('locked-up', 'locked-down', 'locked-left', 'locked-right', 'ready-to-lock');
       joystickContainer.style.opacity = '0';
       setTimeout(() => {
-        if (!this.isAutoAscending && !this.isAutoDescending && joystickContainer) {
+        if (!this.lockedDirection && joystickContainer) {
           joystickContainer.style.display = 'none';
         }
       }, 150);
@@ -172,6 +152,17 @@ export class InputHandler {
     if (knob) {
       knob.style.transform = 'translate(0px, 0px)';
     }
+    if (prevDir === 'UP' && this.scene?.player && this.scene.player.state === 'flying') {
+      this.scene.player.stopFlying();
+    }
+  }
+
+  cancelAutoAscend() {
+    this.cancelLock();
+  }
+
+  cancelAutoDescend() {
+    this.cancelLock();
   }
 
   setupControls() {
@@ -219,13 +210,13 @@ export class InputHandler {
     const hideJoystick = () => {
       activePointerId = null;
       this.touchDirection = null;
-      if (this.isAutoAscending || this.isAutoDescending) {
+      if (this.lockedDirection) {
         return; // Eingerasteter Zustand bleibt aktiv
       }
       if (joystickContainer) {
         joystickContainer.style.opacity = '0';
         setTimeout(() => {
-          if (activePointerId === null && !this.isAutoAscending && !this.isAutoDescending) {
+          if (activePointerId === null && !this.lockedDirection) {
             joystickContainer.style.display = 'none';
           }
         }, 150);
@@ -237,12 +228,9 @@ export class InputHandler {
 
     // POINTER DOWN: Frei auf dem Bildschirm berühren spawnt den Joystick
     this.scene.input.on('pointerdown', (pointer, currentlyOver) => {
-      // Wenn der automatische Steigflug oder Sinkflug aktiv war: Jede Berührung bricht ihn sofort ab!
-      if (this.isAutoAscending) {
-        this.cancelAutoAscend();
-      }
-      if (this.isAutoDescending) {
-        this.cancelAutoDescend();
+      // Wenn der Joystick eingerastet war: Jede Berührung bricht ihn sofort ab!
+      if (this.lockedDirection) {
+        this.cancelLock();
       }
 
       if (isModalActive()) {
@@ -292,6 +280,9 @@ export class InputHandler {
       startWorldY = pointer.worldY;
       startTime = Date.now();
       hasMovedBeyondTap = false;
+      this.lockCandidateStart = 0;
+      this.lockCandidateDir = null;
+      if (joystickContainer) joystickContainer.classList.remove('ready-to-lock');
 
       if (joystickContainer) {
         joystickContainer.style.left = `${startClientX - 48}px`;
@@ -333,18 +324,39 @@ export class InputHandler {
 
       if (dist < deadzone) {
         this.touchDirection = null;
+        this.lockCandidateStart = 0;
+        this.lockCandidateDir = null;
+        if (joystickContainer) joystickContainer.classList.remove('ready-to-lock');
         return;
       }
 
       const deg = (Math.atan2(dy, dx) * 180) / Math.PI;
-      if (deg >= -140 && deg <= -40) {
-        this.touchDirection = 'UP';
-      } else if (deg >= 40 && deg <= 140) {
-        this.touchDirection = 'DOWN';
-      } else if (deg > -40 && deg < 40) {
-        this.touchDirection = 'RIGHT';
+      let currentDir = null;
+      if (deg >= -135 && deg <= -45) {
+        currentDir = 'UP';
+      } else if (deg >= 45 && deg <= 135) {
+        currentDir = 'DOWN';
+      } else if (deg > -45 && deg < 45) {
+        currentDir = 'RIGHT';
       } else {
-        this.touchDirection = 'LEFT';
+        currentDir = 'LEFT';
+      }
+      this.touchDirection = currentDir;
+
+      // Einrast-Erkennung für alle 4 Richtungen (UP, DOWN, LEFT, RIGHT):
+      // Ab 65% Auslenkung und ca. 400ms Haltezeit signalisiert 'ready-to-lock' Einrastbereitschaft
+      const isDeflected = (dist >= maxRadius * 0.65);
+      if (isDeflected && currentDir) {
+        if (this.lockCandidateDir !== currentDir) {
+          this.lockCandidateDir = currentDir;
+          this.lockCandidateStart = Date.now();
+        } else if (Date.now() - this.lockCandidateStart >= 400) {
+          if (joystickContainer) joystickContainer.classList.add('ready-to-lock');
+        }
+      } else {
+        this.lockCandidateStart = 0;
+        this.lockCandidateDir = null;
+        if (joystickContainer) joystickContainer.classList.remove('ready-to-lock');
       }
     });
 
@@ -357,44 +369,40 @@ export class InputHandler {
       const upClientY = (pointer && pointer.event && pointer.event.clientY != null) ? pointer.event.clientY : (pointer ? pointer.y : startClientY);
       const tapDist = Math.hypot(upClientX - startClientX, upClientY - startClientY);
 
-      // Prüfen, ob der Spieler gerade nach oben geflogen ist (Untertage im offenen Schacht)
+      // Prüfen, ob der Joystick in die Richtung gehalten wurde und einrasten soll:
+      const heldDuration = (this.lockCandidateStart > 0 && this.lockCandidateDir === this.touchDirection)
+        ? (upTime - this.lockCandidateStart)
+        : 0;
+
       const player = this.scene.player;
-      const isBelowSurface = player && (player.gy >= 0 || (player.sprite && player.sprite.y > -16));
-      const isFlyingUp = (this.touchDirection === 'UP') && player && (player.state === 'flying' || (isBelowSurface && !this.scene.gridSystem?.isSolid(player.gx, Math.floor(player.gy - 0.5))));
-      const canLockAscent = isFlyingUp && player && player.fuel > 0 && isBelowSurface;
+      const canLock = heldDuration >= 400 && this.touchDirection && (!player || player.fuel > 0);
 
-      if (canLockAscent) {
-        // Joystick rastet oben ein -> selbstständiger Steigflug!
-        this.isAutoAscending = true;
+      this.lockCandidateStart = 0;
+      this.lockCandidateDir = null;
+      if (joystickContainer) joystickContainer.classList.remove('ready-to-lock');
+
+      if (canLock) {
+        // Joystick rastet in die gehaltene Richtung ein! (UP, DOWN, LEFT, RIGHT)
+        const dir = this.touchDirection;
+        this.lockedDirection = dir;
+        this.isAutoAscending = (dir === 'UP');
+        this.isAutoDescending = (dir === 'DOWN');
         activePointerId = null;
+
         if (joystickContainer) {
-          joystickContainer.classList.add('locked-up');
+          joystickContainer.classList.remove('locked-up', 'locked-down', 'locked-left', 'locked-right');
+          joystickContainer.classList.add('locked-' + dir.toLowerCase());
           joystickContainer.style.opacity = '1';
         }
-        if (knob) {
-          knob.style.transform = 'translate(0px, -40px)';
-        }
-        return;
-      }
 
-      // Prüfen, ob der Spieler gerade nach unten fliegt / fährt (im Schacht / Freiraum)
-      const nextDownGy = Math.floor((player ? player.gy : 0) + 1);
-      const isDescending = (this.touchDirection === 'DOWN') && player && (
-        !this.scene.gridSystem?.isSolid(player.gx, nextDownGy) ||
-        (player.state === 'moving' && player.currentDirection === 'DOWN')
-      );
-      const canLockDescent = isDescending && player && player.fuel > 0;
-
-      if (canLockDescent) {
-        // Joystick rastet unten ein -> selbstständiger Sinkflug nach unten!
-        this.isAutoDescending = true;
-        activePointerId = null;
-        if (joystickContainer) {
-          joystickContainer.classList.add('locked-down');
-          joystickContainer.style.opacity = '1';
-        }
         if (knob) {
-          knob.style.transform = 'translate(0px, 40px)';
+          let kx = 0;
+          let ky = 0;
+          if (dir === 'UP') ky = -40;
+          else if (dir === 'DOWN') ky = 40;
+          else if (dir === 'LEFT') kx = -40;
+          else if (dir === 'RIGHT') kx = 40;
+          knob.style.transform = `translate(${kx}px, ${ky}px)`;
         }
         return;
       }
@@ -435,7 +443,7 @@ export class InputHandler {
     this.scene.input.on('pointerup', handlePointerUp);
     this.scene.input.on('pointercancel', handlePointerUp);
     this.scene.input.on('gameout', handlePointerUp);
-    window.addEventListener('blur', () => this.cancelAutoAscend());
+    window.addEventListener('blur', () => this.cancelLock());
   }
 
   getDirection() {
@@ -449,36 +457,41 @@ export class InputHandler {
       return 'UP';
     }
 
-    // 2. Automatischer Steigflug / Sinkflug (eingerasteter Joystick)
-    if (this.isAutoAscending) {
-      return 'UP';
-    }
-    if (this.isAutoDescending) {
-      return 'DOWN';
+    // 2. Eingerasteter Joystick (Dauerfahrt in alle 4 Richtungen: UP, DOWN, LEFT, RIGHT)
+    if (this.lockedDirection) {
+      // Wenn der Tank leer ist, Einrasten sofort aufheben
+      if (this.scene?.player && this.scene.player.fuel <= 0) {
+        this.cancelLock();
+        return null;
+      }
+      // Wenn beim Aufstieg die Erdoberfläche erreicht wird, sanft stoppen
+      if (this.lockedDirection === 'UP' && this.scene?.player && (this.scene.player.gy <= -1 || (this.scene.player.sprite && this.scene.player.sprite.y <= -16))) {
+        this.cancelLock();
+        return null;
+      }
+      return this.lockedDirection;
     }
 
-    // 3. Mobile Floating-Joystick
+    // 3. Mobile Floating-Joystick (aktive Berührung)
     if (this.touchDirection) {
       return this.touchDirection;
     }
 
-    // 4. Desktop Tastatur (WASD / Pfeiltasten)
+    // 4. Desktop Tastatur (WASD / Pfeiltasten - bricht aktives Einrasten ab)
     if (this.cursors.left.isDown || this.wasd.A.isDown) {
-      if (this.isAutoAscending) this.cancelAutoAscend();
-      if (this.isAutoDescending) this.cancelAutoDescend();
+      if (this.lockedDirection) this.cancelLock();
       return 'LEFT';
     }
     if (this.cursors.right.isDown || this.wasd.D.isDown) {
-      if (this.isAutoAscending) this.cancelAutoAscend();
-      if (this.isAutoDescending) this.cancelAutoDescend();
+      if (this.lockedDirection) this.cancelLock();
       return 'RIGHT';
     }
     if (this.cursors.down.isDown || this.wasd.S.isDown) {
-      if (this.isAutoAscending) this.cancelAutoAscend();
+      if (this.lockedDirection) this.cancelLock();
       return 'DOWN';
     }
     if (this.cursors.up.isDown || this.wasd.W.isDown) {
-      if (this.isAutoDescending) this.cancelAutoDescend();
+      if (this.lockedDirection) this.cancelLock();
       return 'UP';
     }
 

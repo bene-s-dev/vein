@@ -75,6 +75,16 @@ export class AssetLoader {
       ctx.fillRect(31, 0, 1, 32);
     });
 
+    // Dirt für Erdblöcke mit Erz (einheitlicher Hintergrund ohne dunkle Flecken)
+    createTexture('tile_dirt_ore', TILE_SIZE, TILE_SIZE, (ctx) => {
+      ctx.fillStyle = '#64422b';
+      ctx.fillRect(0, 0, 32, 32);
+      // Weiche Kanten
+      ctx.fillStyle = '#3f2615';
+      ctx.fillRect(0, 31, 32, 1);
+      ctx.fillRect(31, 0, 1, 32);
+    });
+
     // Stone (32x32)
     createTexture('tile_stone', TILE_SIZE, TILE_SIZE, (ctx) => {
       ctx.fillStyle = '#475569'; // Clean Slate
@@ -460,42 +470,493 @@ export class AssetLoader {
     });
 
     // =======================================================
-    // 2. ERZ-FACETTEN (1:1 FARBLICH ABGESTIMMT AUF DIE MENÜ-STONE-ICONS)
+    // 2. INDIVIDUELLE ERZ-STRUKTUREN & MINERAL-FACETTEN
+    // Jedes Erz besitzt eine radikal eigenständige Silhouette & Wuchsform:
+    // Flöze, Dendriten-Adern, Knollen, Granulat, Nadeln, Säulen, Rauten,
+    // Lamellen, 3D-Würfel, Igelsterne, Glasscherben und Singularitäten.
     // =======================================================
-    const oreKeys = [
-      'coal', 'copper', 'iron', 'tin', 'silver',
-      'gold', 'emerald', 'sapphire', 'ruby', 'diamond',
-      'titanium', 'platinum', 'uranium', 'obsidian_gem', 'dark_matter'
-    ];
 
-    oreKeys.forEach(key => {
-      const color = ORE_FILL_COLORS[key] || '#334155';
-      const highlight = ORE_COLORS[key] || '#94a3b8';
+    // 1. KOHLE (Horizontale zerklüftete Sedimentflöze & Schiefer-Schichten)
+    createTexture('ore_coal', TILE_SIZE, TILE_SIZE, (ctx) => {
+      // Tiefschwarze Flözschicht 1 (oben quer durch den Block)
+      ctx.fillStyle = '#09090b';
+      ctx.beginPath();
+      ctx.moveTo(1, 8);
+      ctx.lineTo(9, 6);
+      ctx.lineTo(18, 7);
+      ctx.lineTo(25, 5);
+      ctx.lineTo(31, 7);
+      ctx.lineTo(31, 14);
+      ctx.lineTo(24, 15);
+      ctx.lineTo(17, 13);
+      ctx.lineTo(8, 15);
+      ctx.lineTo(1, 13);
+      ctx.closePath();
+      ctx.fill();
 
-      createTexture(`ore_${key}`, TILE_SIZE, TILE_SIZE, (ctx) => {
-        // Kristallflächen (Satte Grundfarbe der Menü-Stone-Icons)
-        ctx.fillStyle = color;
-        ctx.fillRect(5, 6, 8, 8);
-        ctx.fillRect(17, 15, 9, 9);
-        ctx.fillRect(8, 20, 7, 7);
-        ctx.fillRect(19, 5, 7, 6);
+      // Tiefschwarze Flözschicht 2 (unten quer durch den Block)
+      ctx.beginPath();
+      ctx.moveTo(0, 19);
+      ctx.lineTo(8, 18);
+      ctx.lineTo(15, 20);
+      ctx.lineTo(23, 18);
+      ctx.lineTo(31, 20);
+      ctx.lineTo(31, 26);
+      ctx.lineTo(22, 27);
+      ctx.lineTo(14, 25);
+      ctx.lineTo(7, 27);
+      ctx.lineTo(0, 25);
+      ctx.closePath();
+      ctx.fill();
 
-        // Strahlende Lichtkante & Konturfacetten (Leuchtender Stone-Kontur-Akzent aus den Menüs)
-        ctx.fillStyle = highlight;
-        ctx.fillRect(6, 7, 4, 3);
-        ctx.fillRect(18, 16, 5, 4);
-        ctx.fillRect(9, 21, 3, 3);
-        ctx.fillRect(20, 6, 3, 3);
+      // Schieferungs-Spalten & Rillen (Dunkles Anthrazit)
+      ctx.fillStyle = '#18181b';
+      ctx.fillRect(2, 9, 27, 2);
+      ctx.fillRect(1, 21, 29, 2);
 
-        // Funkelnder Glanzpunkt
+      ctx.fillStyle = '#27272a';
+      ctx.fillRect(3, 7, 12, 1);
+      ctx.fillRect(17, 6, 11, 1);
+      ctx.fillRect(4, 19, 15, 1);
+      ctx.fillRect(20, 19, 9, 1);
+
+      // Matte Bruchkanten-Reflexe
+      ctx.fillStyle = '#52525b';
+      ctx.globalAlpha = 0.55;
+      ctx.fillRect(6, 8, 5, 1);
+      ctx.fillRect(20, 7, 4, 1);
+      ctx.fillRect(7, 20, 6, 1);
+      ctx.globalAlpha = 1.0;
+    });
+
+    // 2. KUPFER (Verzweigte dendritische Erzadern / diagonale Wurzelverästelung)
+    createTexture('ore_copper', TILE_SIZE, TILE_SIZE, (ctx) => {
+      // Dunkles Rotbraun (Gesteinseinfassung der Ader)
+      ctx.fillStyle = '#541c08';
+      ctx.beginPath();
+      ctx.moveTo(1, 6);
+      ctx.lineTo(11, 11);
+      ctx.lineTo(18, 18);
+      ctx.lineTo(29, 23);
+      ctx.lineTo(27, 28);
+      ctx.lineTo(16, 23);
+      ctx.lineTo(8, 15);
+      ctx.lineTo(0, 10);
+      ctx.closePath();
+      ctx.fill();
+
+      // Verzweigter Nebenast nach rechts oben
+      ctx.beginPath();
+      ctx.moveTo(11, 11);
+      ctx.lineTo(20, 7);
+      ctx.lineTo(28, 4);
+      ctx.lineTo(26, 8);
+      ctx.lineTo(17, 13);
+      ctx.closePath();
+      ctx.fill();
+
+      // Sattes Kupferorange (Fließader)
+      ctx.fillStyle = '#ea580c';
+      ctx.fillRect(3, 8, 7, 3);
+      ctx.fillRect(11, 12, 6, 4);
+      ctx.fillRect(18, 18, 8, 3);
+      ctx.fillRect(14, 8, 7, 3);
+      ctx.fillRect(22, 5, 5, 2);
+
+      // Glühende Kupfer-Glanzlichter
+      ctx.fillStyle = '#fdba74';
+      ctx.fillRect(4, 8, 4, 1);
+      ctx.fillRect(12, 12, 4, 1);
+      ctx.fillRect(20, 18, 4, 1);
+      ctx.fillRect(15, 8, 4, 1);
+    });
+
+    // 3. EISEN (Wuchtige, schwere Knollen & gerundete polygonale Nuggets)
+    createTexture('ore_iron', TILE_SIZE, TILE_SIZE, (ctx) => {
+      // Rostige Eisenstein-Kruste (dunkles Roteisen)
+      ctx.fillStyle = '#78350f';
+      ctx.beginPath();
+      ctx.arc(10, 11, 7.5, 0, Math.PI * 2);
+      ctx.arc(22, 17, 8.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Massive stahlgraue Nugget-Körper
+      ctx.fillStyle = '#475569';
+      ctx.beginPath();
+      ctx.arc(9, 10, 5.5, 0, Math.PI * 2);
+      ctx.arc(21, 16, 6.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Stahl-Lichtfacetten
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillRect(6, 7, 5, 3);
+      ctx.fillRect(17, 13, 6, 3);
+
+      // Heller metallischer Glanz
+      ctx.fillStyle = '#ffffff';
+      ctx.globalAlpha = 0.7;
+      ctx.fillRect(7, 7, 2, 1);
+      ctx.fillRect(18, 13, 3, 1);
+      ctx.globalAlpha = 1.0;
+    });
+
+    // 4. ZINN (Feine Granulat-Körnung / gesprenkelte Kassiterit-Nester)
+    createTexture('ore_tin', TILE_SIZE, TILE_SIZE, (ctx) => {
+      // Zwei getrennte Schwärme feiner Körnchen (keine Blöcke!)
+      const dots = [
+        { x: 4, y: 6 }, { x: 7, y: 4 }, { x: 11, y: 7 }, { x: 8, y: 9 },
+        { x: 5, y: 12 }, { x: 10, y: 13 }, { x: 13, y: 10 }, { x: 14, y: 5 },
+        { x: 18, y: 16 }, { x: 22, y: 13 }, { x: 26, y: 15 }, { x: 21, y: 19 },
+        { x: 25, y: 22 }, { x: 17, y: 23 }, { x: 27, y: 19 }, { x: 20, y: 26 }
+      ];
+
+      // Dunkle Fassung jedes Korns
+      ctx.fillStyle = '#334155';
+      dots.forEach(d => ctx.fillRect(d.x - 1, d.y - 1, 4, 4));
+
+      // Helles Zinn-Granulat
+      ctx.fillStyle = '#cbd5e1';
+      dots.forEach(d => ctx.fillRect(d.x, d.y, 2, 2));
+
+      // Strahlende Zinn-Glimmerpunkte
+      ctx.fillStyle = '#ffffff';
+      dots.filter((_, idx) => idx % 2 === 0).forEach(d => ctx.fillRect(d.x, d.y, 1, 1));
+    });
+
+    // 5. SILBER (Filigrane, zackige Kristall-Nadeln & Lockensilber-Drähte)
+    createTexture('ore_silver', TILE_SIZE, TILE_SIZE, (ctx) => {
+      // Dunkler Schiefer-Hintergrund für spitze Nadeln
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.moveTo(3, 22);
+      ctx.lineTo(11, 7);
+      ctx.lineTo(16, 13);
+      ctx.lineTo(27, 4);
+      ctx.lineTo(23, 13);
+      ctx.lineTo(16, 17);
+      ctx.lineTo(22, 27);
+      ctx.lineTo(13, 22);
+      ctx.closePath();
+      ctx.fill();
+
+      // Spitzige strahlende Silbernadeln
+      ctx.fillStyle = '#e2e8f0';
+      ctx.beginPath();
+      // Nadel 1 (steil nach oben links)
+      ctx.moveTo(5, 20); ctx.lineTo(11, 8); ctx.lineTo(13, 14); ctx.closePath();
+      // Nadel 2 (diagonal nach oben rechts)
+      ctx.moveTo(13, 14); ctx.lineTo(26, 5); ctx.lineTo(21, 14); ctx.closePath();
+      // Nadel 3 (nach unten rechts)
+      ctx.moveTo(15, 17); ctx.lineTo(21, 26); ctx.lineTo(14, 21); ctx.closePath();
+      ctx.fill();
+
+      // Reines Silberweiß & Lichtspitzen
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(10, 8, 2, 2);
+      ctx.fillRect(25, 5, 2, 2);
+      ctx.fillRect(20, 25, 2, 2);
+      ctx.fillRect(14, 15, 2, 2);
+    });
+
+    // 6. GOLD (Glatte, weiche Tropfen-Nuggets mit üppigem Glanz)
+    createTexture('ore_gold', TILE_SIZE, TILE_SIZE, (ctx) => {
+      // Dunkler Goldocker-Kern
+      ctx.fillStyle = '#78350f';
+      ctx.beginPath();
+      ctx.arc(10, 11, 6.5, 0, Math.PI * 2);
+      ctx.arc(21, 18, 7.5, 0, Math.PI * 2);
+      ctx.arc(22, 8, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Sattes Goldgelb (organische Tropfen)
+      ctx.fillStyle = '#eab308';
+      ctx.beginPath();
+      ctx.arc(9, 10, 5, 0, Math.PI * 2);
+      ctx.arc(20, 17, 6, 0, Math.PI * 2);
+      ctx.arc(21, 7, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Warmer Goldglanz
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(7, 8, 4, 3);
+      ctx.fillRect(17, 14, 5, 4);
+      ctx.fillRect(20, 6, 2, 2);
+
+      // Brillanter Glanzpunkt
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(8, 8, 2, 1);
+      ctx.fillRect(18, 14, 2, 2);
+    });
+
+    // 7. SMARAGD (Aufrechte hexagonale Säulenprismen mit Dachhaube)
+    createTexture('ore_emerald', TILE_SIZE, TILE_SIZE, (ctx) => {
+      // Dunkler Smaragdrand
+      ctx.fillStyle = '#064e3b';
+      ctx.fillRect(6, 4, 8, 18);
+      ctx.fillRect(17, 8, 9, 19);
+
+      // Leuchtender Prismenkörper
+      ctx.fillStyle = '#10b981';
+      ctx.fillRect(7, 6, 5, 15);
+      ctx.fillRect(18, 10, 6, 16);
+
+      // Angeschrägtes Säulendach (Hexagon-Abschluss)
+      ctx.fillStyle = '#34d399';
+      ctx.beginPath();
+      ctx.moveTo(6, 4); ctx.lineTo(10, 1); ctx.lineTo(14, 4); ctx.closePath();
+      ctx.moveTo(17, 8); ctx.lineTo(21, 4); ctx.lineTo(26, 8); ctx.closePath();
+      ctx.fill();
+
+      // Kristall-Lichtkanten
+      ctx.fillStyle = '#a7f3d0';
+      ctx.fillRect(7, 6, 1, 15);
+      ctx.fillRect(18, 10, 1, 16);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(10, 2, 1, 1);
+      ctx.fillRect(21, 5, 1, 1);
+    });
+
+    // 8. SAPHIR (Rhomboedrische Doppelspitzen & Diamantkanten)
+    createTexture('ore_sapphire', TILE_SIZE, TILE_SIZE, (ctx) => {
+      ctx.fillStyle = '#1e3a8a';
+      const drawRhombus = (cx, cy, rx, ry) => {
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - ry);
+        ctx.lineTo(cx + rx, cy);
+        ctx.lineTo(cx, cy + ry);
+        ctx.lineTo(cx - rx, cy);
+        ctx.closePath();
+        ctx.fill();
+      };
+      drawRhombus(11, 12, 8, 10);
+      drawRhombus(22, 18, 7, 9);
+
+      // Strahlendes Königsblau
+      ctx.fillStyle = '#2563eb';
+      drawRhombus(11, 12, 6, 7);
+      drawRhombus(22, 18, 5, 6);
+
+      // Facetten-Kreuz & Lichtdreieck
+      ctx.fillStyle = '#60a5fa';
+      ctx.beginPath();
+      ctx.moveTo(11, 5); ctx.lineTo(15, 12); ctx.lineTo(11, 12); ctx.closePath();
+      ctx.moveTo(22, 12); ctx.lineTo(26, 18); ctx.lineTo(22, 18); ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(11, 7, 1, 2);
+      ctx.fillRect(22, 14, 1, 2);
+    });
+
+    // 9. RUBIN (Tafelförmige scharfkantige Schildkristalle)
+    createTexture('ore_ruby', TILE_SIZE, TILE_SIZE, (ctx) => {
+      // Dunkelroter Umriss
+      ctx.fillStyle = '#7f1d1d';
+      ctx.beginPath();
+      ctx.moveTo(5, 13); ctx.lineTo(15, 4); ctx.lineTo(21, 8); ctx.lineTo(14, 18); ctx.closePath();
+      ctx.moveTo(12, 15); ctx.lineTo(24, 11); ctx.lineTo(28, 22); ctx.lineTo(17, 26); ctx.closePath();
+      ctx.fill();
+
+      // Blutrotes Zentrum
+      ctx.fillStyle = '#dc2626';
+      ctx.beginPath();
+      ctx.moveTo(7, 13); ctx.lineTo(14, 6); ctx.lineTo(19, 9); ctx.lineTo(13, 16); ctx.closePath();
+      ctx.moveTo(14, 16); ctx.lineTo(23, 13); ctx.lineTo(26, 21); ctx.lineTo(18, 24); ctx.closePath();
+      ctx.fill();
+
+      // Lichtkante & Glanz
+      ctx.fillStyle = '#fca5a5';
+      ctx.fillRect(8, 10, 4, 1);
+      ctx.fillRect(16, 15, 5, 1);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(14, 6, 2, 1);
+      ctx.fillRect(23, 13, 2, 1);
+    });
+
+    // 10. DIAMANT (8-zackige Kristallsterne & funkelnde Brillanten)
+    createTexture('ore_diamond', TILE_SIZE, TILE_SIZE, (ctx) => {
+      // Tiefcyan Umriss
+      ctx.fillStyle = '#0e7490';
+      const drawStar = (cx, cy, r) => {
+        ctx.beginPath();
+        for (let i = 0; i < 8; i++) {
+          const angle = (i * Math.PI) / 4;
+          const rad = (i % 2 === 0) ? r : r * 0.40;
+          const px = cx + Math.cos(angle) * rad;
+          const py = cy + Math.sin(angle) * rad;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fill();
+      };
+      drawStar(11, 12, 9);
+      drawStar(22, 19, 8);
+      drawStar(23, 7, 5.5);
+
+      // Brillantes Cyan
+      ctx.fillStyle = '#06b6d4';
+      drawStar(11, 12, 6.5);
+      drawStar(22, 19, 5.5);
+      drawStar(23, 7, 3.5);
+
+      // Diamant-Reflexionen (Kristallweiß)
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(10, 11, 2, 2);
+      ctx.fillRect(21, 18, 2, 2);
+      ctx.fillRect(22, 6, 2, 2);
+    });
+
+    // 11. TITAN (High-Tech Lamellenbänder / parallele Metallleisten)
+    createTexture('ore_titanium', TILE_SIZE, TILE_SIZE, (ctx) => {
+      // 3 parallele, geometrisch präzise Lamellen-Schienen mit 45°-Schrägen
+      ctx.fillStyle = '#312e81';
+      ctx.beginPath();
+      // Leiste 1
+      ctx.moveTo(3, 5); ctx.lineTo(26, 5); ctx.lineTo(29, 8); ctx.lineTo(26, 11); ctx.lineTo(3, 11); ctx.lineTo(0, 8); ctx.closePath();
+      // Leiste 2
+      ctx.moveTo(5, 13); ctx.lineTo(28, 13); ctx.lineTo(31, 16); ctx.lineTo(28, 19); ctx.lineTo(5, 19); ctx.lineTo(2, 16); ctx.closePath();
+      // Leiste 3
+      ctx.moveTo(2, 21); ctx.lineTo(25, 21); ctx.lineTo(28, 24); ctx.lineTo(25, 27); ctx.lineTo(2, 27); ctx.lineTo(-1, 24); ctx.closePath();
+      ctx.fill();
+
+      // Helles Stahl-Violett
+      ctx.fillStyle = '#6366f1';
+      ctx.fillRect(5, 7, 19, 2);
+      ctx.fillRect(7, 15, 19, 2);
+      ctx.fillRect(4, 23, 19, 2);
+
+      // Glänzende Lamellen-Kanten
+      ctx.fillStyle = '#c7d2fe';
+      ctx.fillRect(5, 6, 14, 1);
+      ctx.fillRect(9, 14, 14, 1);
+      ctx.fillRect(4, 22, 14, 1);
+    });
+
+    // 12. PLATIN (Isometrische 3D-Würfel & Barrenblöcke)
+    createTexture('ore_platinum', TILE_SIZE, TILE_SIZE, (ctx) => {
+      const drawIsoCube = (ox, oy, w, h) => {
+        // Seitenfläche rechts (dunkel)
+        ctx.fillStyle = '#334155';
+        ctx.beginPath();
+        ctx.moveTo(ox + w, oy);
+        ctx.lineTo(ox + w + 4, oy - 3);
+        ctx.lineTo(ox + w + 4, oy + h - 3);
+        ctx.lineTo(ox + w, oy + h);
+        ctx.closePath();
+        ctx.fill();
+
+        // Deckfläche oben (strahlend)
+        ctx.fillStyle = '#f1f5f9';
+        ctx.beginPath();
+        ctx.moveTo(ox, oy);
+        ctx.lineTo(ox + 4, oy - 3);
+        ctx.lineTo(ox + w + 4, oy - 3);
+        ctx.lineTo(ox + w, oy);
+        ctx.closePath();
+        ctx.fill();
+
+        // Vorderseite (Platin-Silber)
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillRect(ox, oy, w, h);
+
+        // Diagonale Spiegellinie
         ctx.fillStyle = '#ffffff';
-        ctx.globalAlpha = 0.55;
-        ctx.fillRect(7, 8, 1, 1);
-        ctx.fillRect(19, 17, 2, 1);
-        ctx.fillRect(10, 22, 1, 1);
-        ctx.fillRect(21, 7, 1, 1);
-        ctx.globalAlpha = 1.0;
-      });
+        ctx.fillRect(ox + 2, oy + 2, w - 4, 1);
+      };
+
+      drawIsoCube(4, 8, 11, 9);
+      drawIsoCube(15, 17, 12, 10);
+    });
+
+    // 13. URAN (Radiäres Nadelbündel / radioaktiver Igel-Stern)
+    createTexture('ore_uranium', TILE_SIZE, TILE_SIZE, (ctx) => {
+      // Giftiges Dunkelgrün
+      ctx.fillStyle = '#365314';
+      ctx.beginPath();
+      ctx.arc(12, 12, 8, 0, Math.PI * 2);
+      ctx.arc(22, 20, 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Nadelige Strahlen in 8 Richtungen
+      ctx.fillStyle = '#65a30d';
+      ctx.fillRect(11, 2, 2, 20);
+      ctx.fillRect(2, 11, 20, 2);
+      ctx.fillRect(21, 13, 2, 14);
+      ctx.fillRect(15, 19, 14, 2);
+
+      // Diagonale Strahlenspitzen
+      ctx.beginPath();
+      ctx.moveTo(5, 5); ctx.lineTo(19, 19); ctx.lineTo(18, 20); ctx.lineTo(4, 6); ctx.closePath();
+      ctx.moveTo(19, 5); ctx.lineTo(5, 19); ctx.lineTo(6, 20); ctx.lineTo(20, 6); ctx.closePath();
+      ctx.fill();
+
+      // Radioaktives Neongrün
+      ctx.fillStyle = '#84cc16';
+      ctx.fillRect(10, 10, 4, 4);
+      ctx.fillRect(20, 18, 4, 4);
+
+      // Giftgelber Isotopen-Kern
+      ctx.fillStyle = '#ecfccb';
+      ctx.fillRect(11, 11, 2, 2);
+      ctx.fillRect(21, 19, 2, 2);
+    });
+
+    // 14. OBSIDIAN-EDELSTEIN (Rasiermesserscharfe Muschelbruch-Glassplitter)
+    createTexture('ore_obsidian_gem', TILE_SIZE, TILE_SIZE, (ctx) => {
+      // Dunkles Violett-Glas
+      ctx.fillStyle = '#2e1065';
+      ctx.beginPath();
+      ctx.moveTo(4, 21); ctx.lineTo(13, 3); ctx.lineTo(19, 14); ctx.closePath();
+      ctx.moveTo(13, 26); ctx.lineTo(22, 7); ctx.lineTo(28, 21); ctx.closePath();
+      ctx.fill();
+
+      // Scharfes Violett
+      ctx.fillStyle = '#7e22ce';
+      ctx.beginPath();
+      ctx.moveTo(6, 20); ctx.lineTo(13, 6); ctx.lineTo(17, 14); ctx.closePath();
+      ctx.moveTo(15, 24); ctx.lineTo(22, 10); ctx.lineTo(26, 20); ctx.closePath();
+      ctx.fill();
+
+      // Rasiermesserscharfe Lichtkanten
+      ctx.fillStyle = '#e9d5ff';
+      ctx.fillRect(12, 6, 1, 5);
+      ctx.fillRect(21, 10, 1, 6);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(13, 5, 1, 1);
+      ctx.fillRect(22, 9, 1, 1);
+    });
+
+    // 15. DUNKLE MATERIE (Kosmische Singularität & Void-Orb mit Akkretionsring)
+    createTexture('ore_dark_matter', TILE_SIZE, TILE_SIZE, (ctx) => {
+      // Äußerer Gravitations-Akkretionsring (geneigte Ellipse)
+      ctx.fillStyle = '#6b21a8';
+      ctx.beginPath();
+      ctx.ellipse(16, 16, 14, 5, -0.3, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Hellere Ring-Vorderkante
+      ctx.fillStyle = '#c084fc';
+      ctx.beginPath();
+      ctx.ellipse(16, 17, 12, 3, -0.3, 0, Math.PI);
+      ctx.fill();
+
+      // Zentraler absoluter Void-Kern (Ereignishorizont)
+      ctx.fillStyle = '#020617';
+      ctx.beginPath();
+      ctx.arc(16, 16, 7.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Schwebende Quantenpartikel im Orbit
+      ctx.fillStyle = '#e9d5ff';
+      ctx.fillRect(6, 10, 2, 2);
+      ctx.fillRect(25, 20, 2, 2);
+      ctx.fillRect(12, 4, 2, 2);
+      ctx.fillRect(21, 26, 2, 2);
+
+      // Blitzender Singularitäts-Kern
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(15, 15, 2, 2);
     });
 
     // =======================================================
