@@ -245,64 +245,122 @@ export class DrillerMenuModal {
       </div>
     `;
 
-    // 3. Fahrzeug-Scheinwerfer (Beidseitiges Weichlicht für tiefe Schichten)
-    const headlightsActive = !!this.player.headlightsEnabled;
-    const headlightsHtml = `
+    // 3. Fahrerassistenz & Beleuchtung
+    const frontOn = !!this.player.frontLightEnabled;
+    const rearOn = !!this.player.rearLightEnabled;
+    const intensity = Math.round((this.player.lightIntensity ?? 0.85) * 100);
+    const lockOn = this.player.directionLockEnabled !== false;
+    const drillOn = this.player.autoDrillEnabled !== false;
+
+    const mkToggle = (id, label, sub, isOn, iconName) => `
       <div style="
-        background: rgba(15, 23, 42, 0.75);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(15,23,42,0.7);
+        border: 1px solid rgba(255,255,255,${isOn ? '0.14' : '0.06'});
         border-radius: 10px;
-        padding: 8px 12px;
+        padding: 8px 10px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 10px;
+        gap: 8px;
       ">
-        <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+        <div style="display:flex;align-items:center;gap:8px;min-width:0;">
           <div style="
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: ${headlightsActive ? 'rgba(245, 158, 11, 0.18)' : 'rgba(71, 85, 105, 0.2)'};
-            border-radius: 8px;
-            color: ${headlightsActive ? '#f59e0b' : '#64748b'};
-            flex-shrink: 0;
-            transition: all 0.2s ease;
-          ">
-            ${icon('sun', '', 18)}
+            width:28px;height:28px;display:flex;align-items:center;justify-content:center;
+            background:${isOn ? 'rgba(245,158,11,0.18)' : 'rgba(71,85,105,0.15)'};
+            border-radius:7px;color:${isOn ? '#f59e0b' : '#64748b'};flex-shrink:0;">
+            ${icon(iconName, '', 15)}
           </div>
-          <div style="min-width: 0;">
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <span style="font-size: 11.5px; font-weight: 700; color: #f8fafc; white-space: nowrap;">Scheinwerfer</span>
-              <span style="font-size: 9px; font-weight: 800; padding: 1px 5px; border-radius: 4px; background: ${headlightsActive ? 'rgba(16, 185, 129, 0.2)' : 'rgba(100, 116, 139, 0.2)'}; color: ${headlightsActive ? '#10b981' : '#94a3b8'};">
-                ${headlightsActive ? 'AN (BEIDSEITIG)' : 'AUS'}
-              </span>
-            </div>
-            <div style="font-size: 10px; color: #94a3b8; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-              Weicher Lichtkegel nach links & rechts (Taste L)
-            </div>
+          <div style="min-width:0;">
+            <div style="font-size:11px;font-weight:700;color:#f8fafc;white-space:nowrap;">${label}</div>
+            <div style="font-size:9.5px;color:#94a3b8;margin-top:1px;white-space:nowrap;">${sub}</div>
           </div>
         </div>
-        <button id="btn-driller-headlights" class="btn-buy" style="
-          height: 28px;
-          padding: 0 12px;
-          font-size: 10.5px;
-          font-weight: 800;
-          background: ${headlightsActive ? 'linear-gradient(135deg, #10b981, #059669)' : '#334155'};
-          color: ${headlightsActive ? '#ffffff' : '#cbd5e1'};
-          border: none;
-          border-radius: 6px;
-          white-space: nowrap;
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-          cursor: pointer;
-          transition: all 0.15s ease;
-        ">
-          ${headlightsActive ? 'Ausschalten' : 'Einschalten'}
+        <button id="${id}" style="
+          width:44px;height:24px;border:none;border-radius:12px;cursor:pointer;flex-shrink:0;
+          background:${isOn ? 'linear-gradient(135deg,#10b981,#059669)' : '#334155'};
+          position:relative;transition:background 0.2s ease;">
+          <span style="
+            position:absolute;top:3px;left:${isOn ? '22px' : '3px'};
+            width:18px;height:18px;border-radius:50%;background:#fff;
+            transition:left 0.2s ease;display:block;"></span>
         </button>
+      </div>`;
+
+    const assistHtml = `
+      <div style="
+        background: rgba(8,14,26,0.6);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 12px;
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      ">
+        <div style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.6px;display:flex;align-items:center;gap:5px;margin-bottom:2px;">
+          ${icon('settings-2','',11)} Beleuchtung & Fahrerassistenz
+        </div>
+
+        ${mkToggle('btn-front-light','Frontscheinwerfer','Arbeitsrichtung beleuchten (Taste L)', frontOn, 'lightbulb')}
+        ${mkToggle('btn-rear-light','Heckscheinwerfer','Schachtrücken & Rückwärtsbereich', rearOn, 'lightbulb-off')}
+
+        <div style="
+          background: rgba(15,23,42,0.7);
+          border: 1px solid rgba(255,255,255,${(frontOn||rearOn) ? '0.14' : '0.06'});
+          border-radius: 10px;
+          padding: 8px 10px;
+        ">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;
+                background:rgba(245,158,11,0.12);border-radius:7px;color:#f59e0b;flex-shrink:0;">
+                ${icon('sun-dim','',15)}
+              </div>
+              <div>
+                <div style="font-size:11px;font-weight:700;color:#f8fafc;">Lichtstärke</div>
+                <div style="font-size:9.5px;color:#94a3b8;">Helligkeit der Scheinwerfer</div>
+              </div>
+            </div>
+            <span id="driller-intensity-val" style="font-size:12px;font-weight:800;color:#f59e0b;min-width:36px;text-align:right;">${intensity}%</span>
+          </div>
+          <style>
+            #driller-intensity-slider{
+              -webkit-appearance:none;appearance:none;
+              width:100%;height:16px;background:transparent;
+              outline:none;cursor:pointer;display:block;
+              padding:0;margin:2px 0;
+            }
+            #driller-intensity-slider::-webkit-slider-runnable-track{
+              height:4px;border-radius:99px;
+              background:linear-gradient(to right,#f59e0b var(--v,85%),rgba(255,255,255,0.13) var(--v,85%));
+            }
+            #driller-intensity-slider::-webkit-slider-thumb{
+              -webkit-appearance:none;appearance:none;
+              width:16px;height:16px;border-radius:50%;
+              background:#f59e0b;border:2.5px solid #fff;
+              box-shadow:0 0 8px rgba(245,158,11,0.6);
+              margin-top:-6px;cursor:pointer;
+            }
+            #driller-intensity-slider::-moz-range-track{
+              height:4px;border-radius:99px;
+              background:rgba(255,255,255,0.13);
+            }
+            #driller-intensity-slider::-moz-range-progress{
+              height:4px;border-radius:99px;background:#f59e0b;
+            }
+            #driller-intensity-slider::-moz-range-thumb{
+              width:13px;height:13px;border-radius:50%;
+              background:#f59e0b;border:2.5px solid #fff;
+              box-shadow:0 0 8px rgba(245,158,11,0.6);cursor:pointer;
+            }
+          </style>
+          <input id="driller-intensity-slider" type="range" min="10" max="100" value="${intensity}"
+            style="--v:${intensity}%">
+        </div>
+
+
+
+        ${mkToggle('btn-dir-lock','Einrasten','Richtung durch Halten fixieren', lockOn, 'lock')}
+        ${mkToggle('btn-auto-drill','Automatisch weiterbohren','Blockiert nicht an Gestein', drillOn, 'drill')}
       </div>
     `;
 
@@ -421,7 +479,7 @@ export class DrillerMenuModal {
       <div style="display: flex; flex-direction: column; max-width: 620px; margin: 0 auto; width: 100%; box-sizing: border-box; padding: 0 4px 36px 4px; gap: 14px;">
         ${statusBarsHtml}
         ${emergencyActionsHtml}
-        ${headlightsHtml}
+        ${assistHtml}
         ${inventoryHtml}
       </div>
     `;
@@ -430,14 +488,36 @@ export class DrillerMenuModal {
     modalEl.style.display = 'flex';
     refreshIcons(modalEl);
 
-    // Klick auf Scheinwerfer-Umschalter
-    const headlightsBtn = bodyEl.querySelector('#btn-driller-headlights');
-    if (headlightsBtn) {
-      headlightsBtn.onclick = (e) => {
-        e.stopPropagation();
-        this.player?.setHeadlights(!this.player.headlightsEnabled);
-        this.render();
+    // Frontscheinwerfer
+    const frontBtn = bodyEl.querySelector('#btn-front-light');
+    if (frontBtn) {
+      frontBtn.onclick = (e) => { e.stopPropagation(); this.player?.setFrontLight(!this.player.frontLightEnabled); this.render(); };
+    }
+    // Heckscheinwerfer
+    const rearBtn = bodyEl.querySelector('#btn-rear-light');
+    if (rearBtn) {
+      rearBtn.onclick = (e) => { e.stopPropagation(); this.player?.setRearLight(!this.player.rearLightEnabled); this.render(); };
+    }
+    // Lichtstärke-Slider (Live-Update ohne re-render)
+    const slider = bodyEl.querySelector('#driller-intensity-slider');
+    const intensityVal = bodyEl.querySelector('#driller-intensity-val');
+    if (slider) {
+      slider.oninput = (e) => {
+        const v = Number(e.target.value);
+        if (intensityVal) intensityVal.textContent = `${v}%`;
+        slider.style.setProperty('--v', `${v}%`);
+        this.player?.setLightIntensity(v / 100);
       };
+    }
+    // Einrasten
+    const lockBtn = bodyEl.querySelector('#btn-dir-lock');
+    if (lockBtn) {
+      lockBtn.onclick = (e) => { e.stopPropagation(); this.player?.setDirectionLock(this.player.directionLockEnabled === false); this.render(); };
+    }
+    // Auto-Bohren
+    const drillBtn = bodyEl.querySelector('#btn-auto-drill');
+    if (drillBtn) {
+      drillBtn.onclick = (e) => { e.stopPropagation(); this.player?.setAutoDrill(this.player.autoDrillEnabled === false); this.render(); };
     }
 
     // Klick auf Notfall-Ausrüstung im Driller-Menü

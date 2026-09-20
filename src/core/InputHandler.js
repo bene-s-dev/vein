@@ -386,7 +386,8 @@ export class InputHandler {
         : 0;
 
       const player = this.scene.player;
-      const canLock = heldDuration >= 400 && this.touchDirection && (!player || player.fuel > 0);
+      const isLockAllowed = (player?.directionLockEnabled !== false);
+      const canLock = isLockAllowed && heldDuration >= 400 && this.touchDirection && (!player || player.fuel > 0);
 
       this.lockCandidateStart = 0;
       this.lockCandidateDir = null;

@@ -171,14 +171,27 @@ export class Player {
     // Set aller bisher im Büro eingesehenen Steinforscher-Aufträge
     this.seenGeologistQuests = new Set();
 
-    // Dynamischer Dual-Scheinwerfer (Weiche Kanten, leuchtet nach links & rechts)
-    this.headlightsEnabled = true;
-    this.headlightSprite = scene.add.image(this.x, this.y, 'headlight_dual')
-      .setDepth(8)
+    // Fahrzeug-Scheinwerferanlage (Front & Heck getrennt steuerbar, stufenlos dimmbar)
+    this.frontLightEnabled = true;
+    this.rearLightEnabled = true;
+    this.lightIntensity = 0.85;
+    this._lightDirCurrent = 1;   // aktuell gerenderete Richtung (+1=rechts, -1=links)
+    this._lightFlipProg   = 1.0; // 1=voll sichtbar, 0=mitten im Richtungswechsel (Fade)
+
+    this.frontLightSprite = scene.add.image(this.x, this.y, 'headlight_beam')
+      .setDepth(5.5)
       .setBlendMode(Phaser.BlendModes.ADD)
-      .setAlpha(0.85)
+      .setOrigin(0, 0.5)  // Strahl beginnt am Fahrzeugzentrum und läuft nach rechts
       .setVisible(false);
-    this.headlight = this.headlightSprite;
+
+    this.rearLightSprite = scene.add.image(this.x, this.y, 'headlight_beam')
+      .setDepth(5.5)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setOrigin(0, 0.5)
+      .setVisible(false);
+
+    this.headlightSprite = this.frontLightSprite;
+    this.headlight = this.frontLightSprite;
 
     // Fahrzeug-Werte & Stats (ausbalancierte Wirtschaft)
     this.maxFuel = 60;
@@ -193,6 +206,11 @@ export class Player {
     this.researchedEngineTier = 1; // Im Labor erforschter Bauplan (Montage im Hangar erforderlich)
     this.moveDuration = 230; // 230ms pro Kachel (synchronisiert mit Stufe 1, ruhigeres & präzises Manövrieren)
     this.flightSpeed = 140;  // 140 px/s Steigflug (ca. 4.4 Kacheln/s)
+    this.flightBoostMult = 1.0;   // Aktueller Boost-Multiplikator (steigt bei längerem Aufstieg)
+    this.flightBoostTimer = 0;    // Kontinuierliche Flugzeit in Sekunden (seit letzter Richtungsänderung)
+    this._descentBoostTimer = 0;  // Kontinuierliche Abstiegszeit in Sekunden
+    this._descentBoostMult  = 1.0; // Aktueller Boost-Multiplikator für Abstieg
+
     this.moveTargetGx = this.gx;
     this.moveTargetGy = this.gy;
     this.moveTargetX = this.x;
@@ -431,6 +449,8 @@ export class Player {
     this.fuelEfficiency = 1.0;
     this.moveDuration = 230;
     this.flightSpeed = 140;
+    this.flightBoostMult = 1.0;
+    this.flightBoostTimer = 0;
     this.moveSpeed = Math.max(80, TILE_SIZE / (this.moveDuration / 1000));
     this.sensorRadius = 1.6;
 
@@ -512,8 +532,7 @@ export class Player {
     if (this.sprite) {
       this.sprite.setPosition(this.x, this.y);
     }
-    if (this.headlightSprite) {
-      this.headlightSprite.setPosition(this.x, this.y);
+    if (this.frontLightSprite) {
       this.updateHeadlightVisibility();
     }
     if (this.scannerRing) {
@@ -522,18 +541,99 @@ export class Player {
     this.syncAttachments?.();
   }
 
-  setHeadlights(enabled) {
-    this.headlightsEnabled = !!enabled;
+  setFrontLight(enabled) {
+    this.frontLightEnabled = !!enabled;
     this.updateHeadlightVisibility();
     soundFx.play?.('click');
   }
 
-  updateHeadlightVisibility() {
-    if (!this.headlightSprite) return;
+  setRearLight(enabled) {
+    this.rearLightEnabled = !!enabled;
+    this.updateHeadlightVisibility();
+    soundFx.play?.('click');
+  }
+
+  setLightIntensity(intensity) {
+    this.lightIntensity = Math.max(0.1, Math.min(1.0, Number(intensity) || 0.85));
+    this.updateHeadlightVisibility();
+  }
+
+  setDirectionLock(enabled) {
+    this.directionLockEnabled = !!enabled;
+    if (!this.directionLockEnabled && this.scene?.inputHandler?.lockedDirection) {
+      this.scene.inputHandler.cancelLock();
+    }
+    soundFx.play?.('click');
+  }
+
+  setAutoDrill(enabled) {
+    this.autoDrillEnabled = !!enabled;
+    soundFx.play?.('click');
+  }
+
+  setHeadlights(enabled) {
+    this.frontLightEnabled = !!enabled;
+    this.rearLightEnabled = !!enabled;
+    this.updateHeadlightVisibility();
+    soundFx.play?.('click');
+  }
+
+  get headlightsEnabled() {
+    return this.frontLightEnabled || this.rearLightEnabled;
+  }
+
+  updateHeadlightVisibility(dt) {
+    if (!this.frontLightSprite || !this.rearLightSprite) return;
+
     const atSurface = this.gy <= -1 || (this.sprite && this.sprite.y <= -16);
-    const visible = !!this.headlightsEnabled && !atSurface;
-    if (this.headlightSprite.visible !== visible) {
-      this.headlightSprite.setVisible(visible);
+    const isUnderground = !atSurface;
+    const curX = this.sprite ? this.sprite.x : this.x;
+    const curY = this.sprite ? this.sprite.y : this.y;
+    const intensity = Math.max(0.1, Math.min(1.0, this.lightIntensity ?? 0.85));
+
+    // Ziel-Richtung basierend auf letzter Fahrtrichtung
+    const facing = (this.lastHorizontalDirection || this.currentDirection || 'RIGHT').toUpperCase();
+    const targetDir = facing === 'LEFT' ? -1 : 1;
+
+    // Crossfade: Fade-out → Richtung wechseln → Fade-in (kein Scale-Squish)
+    if (dt) {
+      const step = (dt / 1000) * 10; // ~100ms für vollständiges Fade
+      if (targetDir !== this._lightDirCurrent) {
+        // Fade-out Phase
+        this._lightFlipProg = Math.max(0, this._lightFlipProg - step);
+        if (this._lightFlipProg === 0) {
+          this._lightDirCurrent = targetDir; // Richtung wechseln wenn unsichtbar
+        }
+      } else {
+        // Fade-in Phase
+        this._lightFlipProg = Math.min(1, this._lightFlipProg + step);
+      }
+    }
+
+    const dir = this._lightDirCurrent; // immer exakt ±1, kein Squish
+    const flipAlpha = this._lightFlipProg;
+
+    // Mit setScale(dir, 1): dir=-1 zieht den Strahl nach links (Textur invertiert in X),
+    // dir=+1 nach rechts. Origin (0,0.5) bedeutet: Strahl startet am Fahrzeugzentrum.
+
+    // 1. Frontscheinwerfer – Fahrtrichtung
+    if (this.frontLightEnabled && isUnderground) {
+      this.frontLightSprite.setVisible(true);
+      this.frontLightSprite.setAlpha(0.85 * intensity * flipAlpha);
+      this.frontLightSprite.setPosition(curX, curY);
+      this.frontLightSprite.setScale(dir, 1);
+    } else {
+      this.frontLightSprite.setVisible(false);
+    }
+
+    // 2. Heckscheinwerfer – entgegen der Fahrtrichtung
+    if (this.rearLightEnabled && isUnderground) {
+      this.rearLightSprite.setVisible(true);
+      this.rearLightSprite.setAlpha(0.85 * intensity * flipAlpha);
+      this.rearLightSprite.setPosition(curX, curY);
+      this.rearLightSprite.setScale(-dir, 1);
+    } else {
+      this.rearLightSprite.setVisible(false);
     }
   }
 
@@ -581,8 +681,7 @@ export class Player {
     this.x = curX;
     this.y = curY;
 
-    if (this.headlightSprite) {
-      this.headlightSprite.setPosition(curX, curY);
+    if (this.frontLightSprite) {
       this.updateHeadlightVisibility();
     }
 
@@ -629,6 +728,8 @@ export class Player {
     }
 
     this.syncAttachments();
+    // Scheinwerfer-Richtung einmal pro Frame mit delta glätten
+    if (this.frontLightSprite) this.updateHeadlightVisibility(delta);
 
     if (this.state === PLAYER_STATES.FLYING) {
       // Voller Steigflug: Große Düsenstrahlen an, sanfte Schwebedüsen aus
@@ -1721,13 +1822,40 @@ export class Player {
 
     // Wenn kein Treibstoff mehr vorhanden ist oder Aufstieg beendet wurde
     if (this.fuel <= 0 || !isUpActive) {
+      // Boost zurücksetzen wenn Taste losgelassen
+      this.flightBoostMult = 1.0;
+      this.flightBoostTimer = 0;
       this.stopFlying();
       return;
     }
 
     const dt = Math.min(delta, 100) / 1000;
 
-    // Sanfter, gleichmäßiger Treibstoffverbrauch im Flug
+    // ── Vertikaler Geschwindigkeits-Boost ──────────────────────────────────
+    // Jede 5 Sekunden kontinuierlichen Aufstiegs verdoppelt fast den Boost-Faktor
+    // (exponentiell, max. 8×). Loslassen der Taste setzt den Timer zurück.
+    this.flightBoostTimer += dt;
+    const boostStage = Math.floor(this.flightBoostTimer / 5); // 0 bei <5s, 1 bei 5-10s, …
+    const targetBoost = Math.min(8.0, Math.pow(1.9, boostStage));  // 1 → 1.9 → 3.6 → 6.9 → 8
+    // Weiche Annäherung an Ziel-Boost (Beschleunigungsgefühl)
+    this.flightBoostMult += (targetBoost - this.flightBoostMult) * Math.min(1, dt * 1.4);
+
+    // ── Oberflächen-Bremse ──────────────────────────────────────────────────
+    // In den letzten ~5 Kacheln vor der Oberfläche (y ≤ 5*TILE_SIZE) sanft abbremsen
+    const SURFACE_Y = 0; // gy=0 → y = TILE_SIZE/2 ≈ 16
+    const BRAKE_TILES = 5;
+    const brakeThreshold = BRAKE_TILES * TILE_SIZE; // 5 × 32 = 160px
+    const distToSurface = this.sprite.y - SURFACE_Y;
+    let brakeFactor = 1.0;
+    if (distToSurface > 0 && distToSurface < brakeThreshold) {
+      // Linear von 1 auf 0.2 beim Annähern (verhindert hartes Durchschießen)
+      brakeFactor = 0.2 + 0.8 * (distToSurface / brakeThreshold);
+    }
+
+    const baseSpeed = this.flightSpeed || 140;
+    const effectiveSpeed = baseSpeed * this.flightBoostMult * brakeFactor;
+
+    // Treibstoffverbrauch konstant – unabhängig vom Boost
     this.consumeFuel(dt * 1.8);
 
     // Zwei sichtbare blaue Jetpack-Strahlen unter dem Fahrgestell
@@ -1749,9 +1877,8 @@ export class Player {
       soundFx.startJetpack();
     }
 
-    // Flüssiger, stabiler Aufstieg mit kontinuierlicher Geschwindigkeit
-    const flightSpeed = this.flightSpeed || 140;
-    const dy = flightSpeed * dt;
+    // Flüssiger Aufstieg mit dynamischer Boost-Geschwindigkeit
+    const dy = effectiveSpeed * dt;
     const nextY = this.sprite.y - dy;
 
     // Horizontale Steuerung während des Flugs (konsistente Geschwindigkeit wie Steigflug)
@@ -1759,7 +1886,7 @@ export class Player {
     if (inputHandler) {
       const isLeft = inputHandler.cursors?.left?.isDown || inputHandler.wasd?.A?.isDown || inputHandler.touchDirection === 'LEFT';
       const isRight = inputHandler.cursors?.right?.isDown || inputHandler.wasd?.D?.isDown || inputHandler.touchDirection === 'RIGHT';
-      const horizSpeed = flightSpeed * dt;
+      const horizSpeed = baseSpeed * dt;
 
       const topGy = Math.floor((this.sprite.y - 10) / TILE_SIZE);
       const bottomGy = Math.floor((this.sprite.y + 10) / TILE_SIZE);
@@ -1804,7 +1931,7 @@ export class Player {
       const targetCenterX = this.gx * TILE_SIZE + TILE_SIZE / 2;
       const diffX = targetCenterX - this.sprite.x;
       if (Math.abs(diffX) > 0.4) {
-        this.sprite.x += Math.sign(diffX) * Math.min(Math.abs(diffX), flightSpeed * 0.3 * dt);
+        this.sprite.x += Math.sign(diffX) * Math.min(Math.abs(diffX), baseSpeed * 0.3 * dt);
         this.x = this.sprite.x;
       }
     }
@@ -1943,6 +2070,7 @@ export class Player {
     this.sprite.setAngle(0);
     this.sprite.setFlipX(false);
     this.updateDrillTexture();
+    this.updateHeadlightVisibility();
   }
 
   moveTo(targetGx, targetGy, duration = null) {
@@ -1988,7 +2116,21 @@ export class Player {
     }
 
     const dt = Math.min(delta, 100) / 1000;
-    let step = (this.moveSpeed || 200) * dt;
+
+    // Abstiegs-Boost: Alle 5 Sekunden DOWN-Fahrt wird schneller (max. 8×)
+    const currentDir = this.lastInputDir || (this.scene.inputHandler ? this.scene.inputHandler.getDirection() : null);
+    if (currentDir === 'DOWN') {
+      this._descentBoostTimer = (this._descentBoostTimer || 0) + dt;
+      const boostStage = Math.floor(this._descentBoostTimer / 5);
+      const targetBoost = Math.min(8.0, Math.pow(1.9, boostStage));
+      this._descentBoostMult = (this._descentBoostMult || 1) + (targetBoost - (this._descentBoostMult || 1)) * Math.min(1, dt * 1.4);
+    } else {
+      this._descentBoostTimer = 0;
+      this._descentBoostMult = 1.0;
+    }
+
+    const descentMult = currentDir === 'DOWN' ? (this._descentBoostMult || 1.0) : 1.0;
+    let step = (this.moveSpeed || 200) * dt * descentMult;
 
     while (step > 0 && this.state === PLAYER_STATES.MOVING) {
       const dx = this.moveTargetX - this.sprite.x;
@@ -2048,7 +2190,11 @@ export class Player {
             // Feste Wand / Gestein: Anhalten oder Bohren starten
             this.state = PLAYER_STATES.IDLE;
             soundFx.stopDrive();
-            this.handleInput(nextDir);
+            if (this.autoDrillEnabled !== false) {
+              this.handleInput(nextDir);
+            } else if (this.scene.inputHandler?.lockedDirection) {
+              this.scene.inputHandler.cancelLock();
+            }
             break;
           }
         } else {
@@ -2061,8 +2207,24 @@ export class Player {
         }
       } else {
         // Noch unterwegs zur aktuellen Kachelmitte
-        this.sprite.x += (dx / dist) * step;
-        this.sprite.y += (dy / dist) * step;
+        // Bremse: Wenn wir im Abstieg auf der letzten freien Kachel vor einem Solid-Block sind,
+        // in der hinteren Hälfte der Kachel den Step dämpfen (wie Aufstieg nahe Oberfläche)
+        let effectiveStep = step;
+        if (currentDir === 'DOWN' && this._descentBoostMult > 1.05) {
+          const belowGy = this.moveTargetGy + 1;
+          const isFinalTile = belowGy >= 0 && this.gridSystem.isSolid(this.moveTargetGx, belowGy);
+          if (isFinalTile) {
+            // dist = verbleibende Pixel bis Kachelmitte; TILE_SIZE = gesamte Kachellänge
+            const progress = 1 - Math.min(1, dist / TILE_SIZE); // 0=Anfang, 1=Mitte
+            if (progress > 0.4) {
+              // Linear von 1.0 auf 0.2 in der letzten 60% der Kachel
+              const brakeFactor = 1 - (progress - 0.4) / 0.6 * 0.8;
+              effectiveStep = step * brakeFactor;
+            }
+          }
+        }
+        this.sprite.x += (dx / dist) * effectiveStep;
+        this.sprite.y += (dy / dist) * effectiveStep;
         this.syncAttachments();
         step = 0;
       }

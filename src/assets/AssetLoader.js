@@ -5221,71 +5221,42 @@ export class AssetLoader {
       ctx.fillRect(3, 7, 6, 2);
     });
 
-    // Dual-Scheinwerfer für das Bohr-Fahrzeug mit butterweichem Lichtkegel nach links & rechts
-    createTexture('headlight_dual', 640, 160, (ctx, width, height) => {
+    // Scheinwerfer-Lichtkegel für Front- & Heckbeleuchtung (nahtlos ab Fahrzeugmitte, kein Spalt)
+    createTexture('headlight_beam', 300, 300, (ctx, width, height) => {
       const imgData = ctx.createImageData(width, height);
       const data = imgData.data;
-      const cx = width / 2;
-      const cy = height / 2;
+      const cy = height / 2; // 150
 
       for (let y = 0; y < height; y++) {
         const dy = y - cy;
         const absDy = Math.abs(dy);
 
         for (let x = 0; x < width; x++) {
-          const dx = x - cx;
-          const absDx = Math.abs(dx);
           const idx = (y * width + x) * 4;
+          const prog = Math.min(1.0, x / 280);
 
-          // 1. Zentrale Fahrzeug-Aura (sanfter, weicher Nahbereich um das Fahrzeug)
-          const haloDist = Math.hypot(absDx * 0.75, absDy * 1.1);
-          let halo = 0;
-          if (haloDist < 65) {
-            const factor = Math.cos((haloDist / 65) * Math.PI * 0.5);
-            halo = Math.pow(factor, 1.8) * 0.40;
-          }
+          // Fächerung: Startet nahtlos mit 50px Halbhöhe direkt am Fahrzeug und weitet sich auf 125px
+          const halfH = 50 + prog * 75;
 
-          // 2. Beidseitige Scheinwerfer-Lichtkegel (nach links und rechts)
-          let beam = 0;
-          let core = 0;
-          const beamStart = 14;
-          const beamEnd = 310;
+          if (absDy < halfH) {
+            // Butterweicher Cosinus-Abfall vertikal
+            const normY = absDy / halfH;
+            const fadeY = Math.pow(Math.cos(normY * Math.PI * 0.5), 1.25);
 
-          if (absDx >= beamStart && absDx <= beamEnd) {
-            const prog = (absDx - beamStart) / (beamEnd - beamStart);
+            // Weicher Reichweiten-Abfall horizontal
+            const fadeX = Math.pow(Math.cos(prog * Math.PI * 0.5), 0.85);
 
-            // Vertikale Weitung des Lichtkegels von 16px auf 58px Halbwinkel
-            const halfH = 16 + prog * 44;
+            const intensity = 0.65 * fadeX * fadeY;
 
-            if (absDy < halfH) {
-              // Perfekt weiche Kante via Cosinus-Abfall (stetig differenzierbar, 0 Kanten/Artefakte)
-              const normY = absDy / halfH;
-              const fadeY = Math.pow(Math.cos(normY * Math.PI * 0.5), 1.6);
-
-              // Reichweiten-Fading nach außen
-              const fadeX = Math.pow(Math.cos(prog * Math.PI * 0.5), 0.85);
-
-              beam = 0.58 * fadeX * fadeY;
-
-              // Hellerer Fokus-Kern in der Strahlmitte
-              if (absDy < halfH * 0.40) {
-                const normCoreY = absDy / (halfH * 0.40);
-                const fadeCoreY = Math.pow(Math.cos(normCoreY * Math.PI * 0.5), 1.8);
-                core = 0.24 * fadeX * fadeCoreY;
-              }
+            if (intensity > 0.002) {
+              data[idx] = 255;
+              data[idx + 1] = Math.round(238 + 17 * (1.0 - intensity));
+              data[idx + 2] = Math.round(195 + 45 * (1.0 - intensity));
+              data[idx + 3] = Math.round(intensity * 225);
+              continue;
             }
           }
-
-          const totalIntensity = Math.min(1.0, halo + beam + core);
-          if (totalIntensity > 0.002) {
-            // Warmer, hochqualitativer Halogen-/Xenon-Farbton
-            data[idx] = 255;
-            data[idx + 1] = Math.round(236 + 19 * (1.0 - totalIntensity));
-            data[idx + 2] = Math.round(195 + 45 * (1.0 - totalIntensity));
-            data[idx + 3] = Math.round(totalIntensity * 230);
-          } else {
-            data[idx + 3] = 0;
-          }
+          data[idx + 3] = 0;
         }
       }
 

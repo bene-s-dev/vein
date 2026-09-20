@@ -229,6 +229,11 @@ export class SaveSystem {
         activeInsurance: p.activeInsurance ? { ...p.activeInsurance } : null,
         isGameOver: !!p.isGameOver,
         hasPurchasedDynamite: !!p.hasPurchasedDynamite,
+        frontLightEnabled: p.frontLightEnabled !== undefined ? !!p.frontLightEnabled : true,
+        rearLightEnabled: p.rearLightEnabled !== undefined ? !!p.rearLightEnabled : true,
+        lightIntensity: typeof p.lightIntensity === 'number' ? p.lightIntensity : 0.85,
+        directionLockEnabled: p.directionLockEnabled !== undefined ? !!p.directionLockEnabled : true,
+        autoDrillEnabled: p.autoDrillEnabled !== undefined ? !!p.autoDrillEnabled : true,
         headlightsEnabled: p.headlightsEnabled !== undefined ? !!p.headlightsEnabled : true,
         stats: {
           totalTilesMined: p.stats?.totalTilesMined || 0,
@@ -582,12 +587,35 @@ export class SaveSystem {
       p.syncAttachments?.();
       p._lastEmittedDepth = -1;
       p.highestDepthReached = Math.max(p.highestDepthReached || 0, Math.floor(targetGy));
-      if (typeof data.player.headlightsEnabled === 'boolean') {
-        p.setHeadlights?.(data.player.headlightsEnabled);
+      if (typeof data.player.frontLightEnabled === 'boolean') {
+        p.frontLightEnabled = data.player.frontLightEnabled;
+      } else if (typeof data.player.headlightsEnabled === 'boolean') {
+        p.frontLightEnabled = data.player.headlightsEnabled;
       } else {
-        p.setHeadlights?.(true);
+        p.frontLightEnabled = true;
       }
-      if (p.headlight) p.headlight.setPosition(p.x, p.y);
+      if (typeof data.player.rearLightEnabled === 'boolean') {
+        p.rearLightEnabled = data.player.rearLightEnabled;
+      } else if (typeof data.player.headlightsEnabled === 'boolean') {
+        p.rearLightEnabled = data.player.headlightsEnabled;
+      } else {
+        p.rearLightEnabled = true;
+      }
+      if (typeof data.player.lightIntensity === 'number') {
+        p.lightIntensity = data.player.lightIntensity;
+      } else {
+        p.lightIntensity = 0.85;
+      }
+      if (typeof data.player.directionLockEnabled === 'boolean') {
+        p.directionLockEnabled = data.player.directionLockEnabled;
+      } else {
+        p.directionLockEnabled = true;
+      }
+      if (typeof data.player.autoDrillEnabled === 'boolean') {
+        p.autoDrillEnabled = data.player.autoDrillEnabled;
+      } else {
+        p.autoDrillEnabled = true;
+      }
       p.updateHeadlightVisibility?.();
       if (p.scannerRing) p.scannerRing.setPosition(p.x, p.y);
 
