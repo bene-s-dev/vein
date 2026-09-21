@@ -10,7 +10,7 @@
 
 import { TILE_TYPES, TILE_SIZE, MINE_ENTRANCE_GX_START, MINE_ENTRANCE_GX_END, ORE_DATA } from './GridSystem.js';
 import { MISSION_POOL } from './MissionSystem.js';
-import { DRILL_TIERS, DEPOT_TIERS, FACTORY_PRODUCTS, GEOLOGIST_QUESTS } from './BaseSystem.js';
+import { DRILL_TIERS, DRILL_DPS, DEPOT_TIERS, FACTORY_PRODUCTS, GEOLOGIST_QUESTS } from './BaseSystem.js';
 import { TANK_TIERS, HULL_TIERS, ENGINE_TIERS, CARGO_TIERS, SENSOR_TIERS } from './Player.js';
 import { LeaderboardService } from './LeaderboardService.js';
 
@@ -20,6 +20,8 @@ const ACTIVE_SLOT_KEY = 'deep_miner_active_slot_id';
 export class SaveSystem {
   static isClearing = false;
   static isLoading = false;
+  static hasLoadedSuccessfully = false;
+  static lastLoadFailed = false;
 
   static getActiveSlotId() {
     try {
@@ -53,18 +55,22 @@ export class SaveSystem {
     const isCurrent = (slotId === activeId);
 
     try {
-      const raw = localStorage.getItem(key);
-      if (!raw) {
-        return {
-          slotId,
-          key,
-          exists: false,
-          isCurrent,
-          label: `Slot ${slotId}`
-        };
+      let raw = localStorage.getItem(key);
+      let data = null;
+      if (raw) {
+        try {
+          data = JSON.parse(raw);
+        } catch (_) {}
+      }
+      if (!data || !data.player) {
+        try {
+          const backupRaw = localStorage.getItem(key + '_backup');
+          if (backupRaw) {
+            data = JSON.parse(backupRaw);
+          }
+        } catch (_) {}
       }
 
-      const data = JSON.parse(raw);
       if (!data || !data.player) {
         return {
           slotId,
@@ -272,13 +278,38 @@ export class SaveSystem {
     if (SaveSystem.isClearing) return false;
     if (!scene || !scene.player || !scene.gridSystem) return false;
 
+    const key = SaveSystem.getSlotKey(slotId);
+
+    // Schutz vor Datenverlust: Wenn der letzte Ladevorgang für einen existierenden Spielstand fehlschlug,
+    // darf dieser bestehende Spielstand keinesfalls durch ein uninitialisiertes Neuspiel überschrieben werden!
+    if (SaveSystem.lastLoadFailed) {
+      try {
+        const existingRaw = localStorage.getItem(key);
+        if (existingRaw) {
+          console.warn(`[SaveSystem] Speichern auf Slot ${slotId} blockiert, um bestehende Daten nach Ladefehler zu schützen.`);
+          return false;
+        }
+      } catch (_) {}
+    }
+
     let saveData = null;
     try {
       saveData = SaveSystem.buildSaveDataObject(scene);
       if (!saveData) return false;
 
-      const key = SaveSystem.getSlotKey(slotId);
-      localStorage.setItem(key, JSON.stringify(saveData));
+      const jsonStr = JSON.stringify(saveData);
+
+      // Automatisches rollierendes Backup vor dem Überschreiben anlegen
+      try {
+        const prev = localStorage.getItem(key);
+        if (prev && prev !== jsonStr) {
+          localStorage.setItem(key + '_backup', prev);
+        }
+      } catch (_) {}
+
+      localStorage.setItem(key, jsonStr);
+      SaveSystem.hasLoadedSuccessfully = true;
+      SaveSystem.lastLoadFailed = false;
       return true;
     } catch (err) {
       console.warn('Fehler beim Speichern auf Slot ' + slotId + ':', err);
@@ -286,9 +317,18 @@ export class SaveSystem {
       try {
         if (saveData && saveData.grid) {
           saveData.grid.exploredStamps = [];
-          const key = SaveSystem.getSlotKey(slotId);
-          localStorage.setItem(key, JSON.stringify(saveData));
+          // Wenn der Speicher voll ist, exploredTiles drastisch reduzieren (nur abgebaute + letzte 1000)
+          if (Array.isArray(saveData.grid.exploredTiles)) {
+            const preserved = new Set(saveData.grid.destroyedTiles || []);
+            const recent = saveData.grid.exploredTiles.slice(-1000);
+            recent.forEach(k => preserved.add(k));
+            saveData.grid.exploredTiles = Array.from(preserved);
+          }
+          const reducedJson = JSON.stringify(saveData);
+          localStorage.setItem(key, reducedJson);
           console.info('Speichern nach Quota-Bereinigung erfolgreich!');
+          SaveSystem.hasLoadedSuccessfully = true;
+          SaveSystem.lastLoadFailed = false;
           return true;
         }
       } catch (retryErr) {
@@ -306,20 +346,57 @@ export class SaveSystem {
   static loadSlot(scene, slotId) {
     if (!scene || !scene.player || !scene.gridSystem) return false;
 
+    const key = SaveSystem.getSlotKey(slotId);
+    let raw = null;
     try {
-      const key = SaveSystem.getSlotKey(slotId);
-      const raw = localStorage.getItem(key);
-      if (!raw) return false;
+      raw = localStorage.getItem(key);
+    } catch (e) {
+      console.warn('LocalStorage-Fehler beim Laden von Slot ' + slotId + ':', e);
+    }
 
-      const data = JSON.parse(raw);
-      if (!data || !data.player) return false;
+    let data = null;
+    if (raw) {
+      try {
+        data = JSON.parse(raw);
+      } catch (parseErr) {
+        console.warn(`Hauptspeicherstand für Slot ${slotId} defekt, prüfe Backup...`, parseErr);
+      }
+    }
 
-      SaveSystem.setActiveSlotId(slotId);
-      return SaveSystem.loadData(scene, data, `Slot ${slotId}`);
-    } catch (err) {
-      console.warn('Fehler beim Laden von Slot ' + slotId + ':', err);
+    // Wenn Hauptspeicherstand fehlt oder defekt ist, Backup prüfen
+    if (!data || !data.player) {
+      try {
+        const backupRaw = localStorage.getItem(key + '_backup');
+        if (backupRaw) {
+          const backupData = JSON.parse(backupRaw);
+          if (backupData && backupData.player) {
+            console.info(`[SaveSystem] Slot ${slotId} erfolgreich aus Backup wiederhergestellt!`);
+            data = backupData;
+          }
+        }
+      } catch (_) {}
+    }
+
+    if (!data || !data.player) {
+      if (!raw) {
+        // Frischer, leerer Slot (kein Fehler)
+        SaveSystem.hasLoadedSuccessfully = true;
+        SaveSystem.lastLoadFailed = false;
+      } else {
+        SaveSystem.lastLoadFailed = true;
+      }
       return false;
     }
+
+    SaveSystem.setActiveSlotId(slotId);
+    const success = SaveSystem.loadData(scene, data, `Slot ${slotId}`);
+    if (success) {
+      SaveSystem.hasLoadedSuccessfully = true;
+      SaveSystem.lastLoadFailed = false;
+    } else {
+      SaveSystem.lastLoadFailed = true;
+    }
+    return success;
   }
 
   static loadData(scene, data, sourceLabel = 'Speicherstand') {
@@ -420,7 +497,7 @@ export class SaveSystem {
       p.drillTier = data.player.drillTier || 1;
       p.researchedDrillTier = data.player.researchedDrillTier || p.drillTier;
       const parsedPower = parseFloat(data.player.drillPower);
-      p.drillPower = (!isNaN(parsedPower) && parsedPower > 0) ? parsedPower : (DRILL_TIERS[(p.drillTier || 1) - 1]?.stat || 38);
+      p.drillPower = (!isNaN(parsedPower) && parsedPower > 0) ? parsedPower : (DRILL_DPS[(p.drillTier || 1) - 1] || 38);
       if (p.updateDrillTexture) {
         p.updateDrillTexture();
       }
@@ -444,9 +521,6 @@ export class SaveSystem {
       p.sensorRadius = sensorData.radius || 1.8;
 
       p.discoveredOres = new Set(data.player.discoveredOres && data.player.discoveredOres.length ? data.player.discoveredOres : []);
-      if ((p.highestDepthReached || 0) <= 0 && (!data.player.stats || (data.player.stats.totalTilesMined || 0) === 0)) {
-        p.discoveredOres = new Set();
-      }
       if (Array.isArray(data.player.cargo)) {
         data.player.cargo.forEach(c => {
           const oreType = typeof c === 'string' ? c : c?.type;
@@ -472,27 +546,9 @@ export class SaveSystem {
       p.isGameOver = !!data.player.isGameOver;
 
       p.components = { ...(data.player.components || {}) };
-      // Schutz vor Altlasten: Wenn ein frisches Spiel auf Stufe 1 bei 0m geladen wird, keine Spezialbauteile vergeben
-      if ((p.highestDepthReached || 0) <= 0 && (p.level || 1) <= 1) {
-        if (p.components && p.components.hydraulic_part) {
-          p.components.hydraulic_part = 0;
-        }
-      }
       p.factoryProducts = { ...(data.player.factoryProducts || {}) };
-      let researchedTnt = typeof data.player.researchedTnt === 'number' ? data.player.researchedTnt : 0;
-      const hasPurchasedDynamite = !!data.player.hasPurchasedDynamite;
-      p.hasPurchasedDynamite = hasPurchasedDynamite;
-
-      // Bereinigung von fälschlicherweise vergebenem TNT-Forschungsstatus aus Kapsel-Altlasten
-      if (researchedTnt === 1 && !hasPurchasedDynamite) {
-        const hasIronTube = (data.player.discoveredProducts && data.player.discoveredProducts.includes('iron_tube')) ||
-                            (data.player.components && (data.player.components.iron_tube || 0) > 0) ||
-                            (data.player.factoryProducts && (data.player.factoryProducts.iron_tube || 0) > 0);
-        if (!hasIronTube && (p.level || 1) <= 3) {
-          researchedTnt = 0;
-        }
-      }
-      p.researchedTnt = researchedTnt;
+      p.hasPurchasedDynamite = !!data.player.hasPurchasedDynamite;
+      p.researchedTnt = typeof data.player.researchedTnt === 'number' ? data.player.researchedTnt : 0;
       p.researchedEmergency = typeof data.player.researchedEmergency === 'number' ? data.player.researchedEmergency : 0;
       p.researchedStationFuel = data.player.researchedStationFuel || 0;
       p.researchedStationTube = data.player.researchedStationTube || 0;
@@ -698,27 +754,39 @@ export class SaveSystem {
       }
 
       // Eventuell aktive Sounds sofort stoppen
-      if (typeof soundFx !== 'undefined' && soundFx) {
-        soundFx.stopAllLoops?.();
-      }
+      try {
+        if (typeof soundFx !== 'undefined' && soundFx) {
+          soundFx.stopAllLoops?.();
+        }
+      } catch (_) {}
 
       // HUD synchronisieren
-      if (scene.hud) {
-        scene.hud._lastDepth = -1;
-        scene.hud.update();
+      try {
+        if (scene.hud) {
+          scene.hud._lastDepth = -1;
+          scene.hud.update();
+        }
+      } catch (hudErr) {
+        console.warn('HUD-Update beim Laden übersprungen:', hudErr);
       }
 
       // Viewport & Nebel sofort frisch für neue Position & Spielstand rendern
-      gs.fogDirty = true;
-      gs.fogBufferReady = false;
-      if (scene.cameras && scene.cameras.main) {
-        if (scene.setupCamera) {
-          scene.setupCamera();
+      try {
+        gs.fogDirty = true;
+        gs.fogBufferReady = false;
+        if (scene.cameras && scene.cameras.main) {
+          if (scene.setupCamera) {
+            scene.setupCamera();
+          }
+          gs.updateViewport(scene.cameras.main, p);
         }
-        gs.updateViewport(scene.cameras.main, p);
+      } catch (vpErr) {
+        console.warn('Viewport-Update beim Laden übersprungen:', vpErr);
       }
 
-      scene.events.emit('notify', `💾 ${sourceLabel} erfolgreich geladen!`);
+      try {
+        scene.events.emit('notify', `💾 ${sourceLabel} erfolgreich geladen!`);
+      } catch (_) {}
 
       // Falls beim Speichern ein Game-Over aktiv war, prüfen ob der Admin in Supabase freigeschaltet hat
       if (p.isGameOver) {
@@ -753,6 +821,7 @@ export class SaveSystem {
     try {
       const key = SaveSystem.getSlotKey(slotId);
       localStorage.removeItem(key);
+      localStorage.removeItem(key + '_backup');
       return true;
     } catch (e) {
       console.warn(e);
@@ -786,6 +855,7 @@ export class SaveSystem {
     try {
       const activeKey = SaveSystem.getSlotKey(SaveSystem.getActiveSlotId());
       localStorage.removeItem(activeKey);
+      localStorage.removeItem(activeKey + '_backup');
     } catch (e) {
       console.warn(e);
     }
@@ -799,6 +869,7 @@ export class SaveSystem {
     try {
       const activeKey = SaveSystem.getSlotKey(SaveSystem.getActiveSlotId());
       localStorage.removeItem(activeKey);
+      localStorage.removeItem(activeKey + '_backup');
     } catch (e) {
       console.warn(e);
     }
@@ -848,6 +919,8 @@ export class SaveSystem {
     }
 
     SaveSystem.isClearing = false;
+    SaveSystem.hasLoadedSuccessfully = true;
+    SaveSystem.lastLoadFailed = false;
 
     // 7. Sauberen Anfangsspielstand sofort abspeichern
     SaveSystem.save(scene);

@@ -13,23 +13,23 @@ import { icon, refreshIcons, COMPONENT_ICONS, oreIcon, ORE_COLORS, REFINED_ORE_D
 import { TANK_TIERS, HULL_TIERS, ENGINE_TIERS, CARGO_TIERS, SENSOR_TIERS } from './Player.js';
 import { showOreInfoModal, showGoodsInfoModal } from '../ui/OreInfoModal.js';
 
-// Dauer für das Einschmelzen einzelner Erze in Sekunden (verlängert für spürbaren Fortschritt)
+// Dauer für das Einschmelzen einzelner Erze in Sekunden (dynamisch, flüssig & befriedigend)
 export const REFINERY_DURATIONS_SEC = {
-  coal: 20,          // 20s (vorher 10s)
-  copper: 35,        // 35s (vorher 16s)
-  iron: 55,          // 55s (vorher 26s)
-  tin: 75,           // 1m 15s (vorher 36s)
-  silver: 110,       // 1m 50s (vorher 50s)
-  gold: 160,         // 2m 40s (vorher 75s)
-  emerald: 220,      // 3m 40s (vorher 1m 45s)
-  sapphire: 280,     // 4m 40s (vorher 2m 15s)
-  ruby: 360,         // 6m (vorher 2m 50s)
-  diamond: 450,      // 7m 30s (vorher 3m 30s)
-  titanium: 550,     // 9m 10s (vorher 4m 20s)
-  platinum: 680,     // 11m 20s (vorher 5m 20s)
-  uranium: 850,      // 14m 10s (vorher 6m 40s)
-  obsidian_gem: 1100,// 18m 20s (vorher 8m 20s)
-  dark_matter: 1400  // 23m 20s (vorher 10m 50s)
+  coal: 1.0,          // 1.0s
+  copper: 1.0,        // 1.0s
+  iron: 1.2,          // 1.2s
+  tin: 1.2,           // 1.2s
+  silver: 1.5,        // 1.5s
+  gold: 1.8,          // 1.8s
+  emerald: 2.0,       // 2.0s
+  sapphire: 2.2,      // 2.2s
+  ruby: 2.5,          // 2.5s
+  diamond: 2.8,       // 2.8s
+  titanium: 3.0,      // 3.0s
+  platinum: 3.2,      // 3.2s
+  uranium: 3.5,       // 3.5s
+  obsidian_gem: 4.0,  // 4.0s
+  dark_matter: 4.5    // 4.5s
 };
 
 export function getFactorySpeedMultiplier(machineTier = 1) {
@@ -40,15 +40,15 @@ export function getFactorySpeedMultiplier(machineTier = 1) {
 
 export function getRefinerySmeltDurationMs(oreKey, machineTier = 1) {
   const sec = REFINERY_DURATIONS_SEC[oreKey];
-  const baseSec = sec || Math.max(20, Math.round((ORE_DATA[oreKey]?.value || 25) * 0.70));
+  const baseSec = sec || Math.max(1, Math.round((ORE_DATA[oreKey]?.value || 25) * 0.05));
   const mult = getFactorySpeedMultiplier(machineTier);
-  return Math.max(5, Math.round(baseSec * mult)) * 1000;
+  return Math.max(300, Math.round(baseSec * mult * 1000));
 }
 
 export function getFactoryProductDurationMs(prodId, machineTier = 1) {
-  const baseSec = FACTORY_PRODUCTS[prodId]?.durationSec || 60;
+  const baseSec = FACTORY_PRODUCTS[prodId]?.durationSec || 15;
   const mult = getFactorySpeedMultiplier(machineTier);
-  return Math.max(5, Math.round(baseSec * mult)) * 1000;
+  return Math.max(500, Math.round(baseSec * mult * 1000));
 }
 
 let lastModalCloseTimestamp = 0;
@@ -711,7 +711,7 @@ export const FACTORY_PRODUCTS = {
     recipe: { bar_iron: 2, bar_coal: 2 },
     fuelCoal: 2,
     minTier: 1,
-    durationSec: 45,
+    durationSec: 8,
     value: 950
   },
   bronze_ingot: {
@@ -722,7 +722,7 @@ export const FACTORY_PRODUCTS = {
     recipe: { bar_copper: 2, bar_tin: 1 },
     fuelCoal: 2,
     minTier: 1,
-    durationSec: 55,
+    durationSec: 10,
     value: 1050
   },
   circuit_board: {
@@ -733,7 +733,7 @@ export const FACTORY_PRODUCTS = {
     recipe: { bar_copper: 2, bar_tin: 1, bar_gold: 1 },
     fuelCoal: 2,
     minTier: 2,
-    durationSec: 110,
+    durationSec: 15,
     value: 2950
   },
   sapphire_glass: {
@@ -744,7 +744,7 @@ export const FACTORY_PRODUCTS = {
     recipe: { bar_sapphire: 2, bar_silver: 1 },
     fuelCoal: 2,
     minTier: 3,
-    durationSec: 160,
+    durationSec: 20,
     value: 11800
   },
   polished_gem: {
@@ -755,7 +755,7 @@ export const FACTORY_PRODUCTS = {
     recipe: { bar_emerald: 1, bar_ruby: 1, bar_diamond: 1 },
     fuelCoal: 2,
     minTier: 3,
-    durationSec: 200,
+    durationSec: 25,
     value: 25500
   },
   titan_plate: {
@@ -766,7 +766,7 @@ export const FACTORY_PRODUCTS = {
     recipe: { bar_titanium: 2, bar_diamond: 1 },
     fuelCoal: 2,
     minTier: 4,
-    durationSec: 300,
+    durationSec: 35,
     value: 56000
   },
   obsidian_matrix: {
@@ -777,7 +777,7 @@ export const FACTORY_PRODUCTS = {
     recipe: { bar_obsidian_gem: 1, bar_platinum: 2 },
     fuelCoal: 2,
     minTier: 5,
-    durationSec: 400,
+    durationSec: 45,
     value: 135000
   },
   fusion_rod: {
@@ -788,7 +788,7 @@ export const FACTORY_PRODUCTS = {
     recipe: { bar_uranium: 2, bar_dark_matter: 1 },
     fuelCoal: 2,
     minTier: 5,
-    durationSec: 480,
+    durationSec: 60,
     value: 215000
   },
 
@@ -801,7 +801,7 @@ export const FACTORY_PRODUCTS = {
     recipe: { bar_iron: 2, bar_copper: 1 },
     fuelCoal: 0,
     minTier: 1,
-    durationSec: 40,
+    durationSec: 8,
     value: 0,
     isComponent: true,
     compKey: 'iron_tube'
@@ -814,7 +814,7 @@ export const FACTORY_PRODUCTS = {
     recipe: { bar_tin: 2, bar_iron: 1 },
     fuelCoal: 0,
     minTier: 1,
-    durationSec: 50,
+    durationSec: 10,
     value: 0,
     isComponent: true,
     compKey: 'bronze_gear'
@@ -827,7 +827,7 @@ export const FACTORY_PRODUCTS = {
     recipe: { bar_silver: 2, bar_gold: 1 },
     fuelCoal: 0,
     minTier: 2,
-    durationSec: 90,
+    durationSec: 15,
     value: 0,
     isComponent: true,
     compKey: 'silver_coil'
@@ -840,7 +840,7 @@ export const FACTORY_PRODUCTS = {
     recipe: { bar_sapphire: 1, bar_emerald: 1 },
     fuelCoal: 0,
     minTier: 3,
-    durationSec: 160,
+    durationSec: 25,
     value: 0,
     isComponent: true,
     compKey: 'crystal_lens'
@@ -853,7 +853,7 @@ export const FACTORY_PRODUCTS = {
     recipe: { bar_titanium: 2, bar_platinum: 1 },
     fuelCoal: 0,
     minTier: 4,
-    durationSec: 240,
+    durationSec: 35,
     value: 0,
     isComponent: true,
     compKey: 'titan_bolt'
@@ -866,7 +866,7 @@ export const FACTORY_PRODUCTS = {
     recipe: { bar_uranium: 1, bar_obsidian_gem: 1 },
     fuelCoal: 0,
     minTier: 5,
-    durationSec: 360,
+    durationSec: 50,
     value: 0,
     isComponent: true,
     compKey: 'quantum_core'

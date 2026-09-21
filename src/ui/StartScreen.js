@@ -368,9 +368,12 @@ export class StartScreen {
       btnResume.onclick = () => {
         enableFullscreenLandscape();
         soundFx.playClick();
-        const activeId = SaveSystem.getActiveSlotId();
+        const slots = SaveSystem.listSlots();
+        const activeSlot = slots.find(s => s.isCurrent && s.exists) || slots.find(s => s.exists);
+        const targetSlot = activeSlot ? activeSlot.slotId : SaveSystem.getActiveSlotId();
+        SaveSystem.setActiveSlotId(targetSlot);
         if (this.scene) {
-          SaveSystem.loadSlot(this.scene, activeId);
+          SaveSystem.loadSlot(this.scene, targetSlot);
         }
         this.startSession(true);
       };
@@ -392,6 +395,14 @@ export class StartScreen {
       btnNew.onclick = () => {
         enableFullscreenLandscape();
         soundFx.playClick();
+        const slots = SaveSystem.listSlots();
+        const activeId = SaveSystem.getActiveSlotId();
+        const curSlot = slots.find(s => s.slotId === activeId);
+        if (curSlot && curSlot.exists) {
+          if (!confirm(`Achtung: In ${curSlot.label} existiert bereits ein Spielstand.\nMöchtest du wirklich ein neues Spiel starten und diesen überschreiben?`)) {
+            return;
+          }
+        }
         this.openNameModal(false, null);
       };
     }

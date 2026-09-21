@@ -57,7 +57,7 @@ export class MiningScene extends Phaser.Scene {
 
     // Vor Schließen des Fensters, Tab-Wechsel oder App-Minimieren automatisch sichern (auch iOS Safari)
     const handleAutoSave = () => {
-      if (!SaveSystem.isClearing) {
+      if (!SaveSystem.isClearing && !this.inStartScreen && SaveSystem.hasLoadedSuccessfully) {
         SaveSystem.save(this);
       }
     };
@@ -95,7 +95,7 @@ export class MiningScene extends Phaser.Scene {
   }
 
   autoSaveNow() {
-    if (!SaveSystem.isClearing) {
+    if (!SaveSystem.isClearing && !this.inStartScreen && SaveSystem.hasLoadedSuccessfully) {
       SaveSystem.save(this);
     }
   }
