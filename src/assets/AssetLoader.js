@@ -5222,7 +5222,8 @@ export class AssetLoader {
     });
 
     // 1. headlight_beam: Nahtlose Textur ab x=0 (wenn BEIDE Scheinwerfer an sind: absolut KEINE Lücke in der Mitte!)
-    const buildBeamTexture = (texKey, withStartFade = false) => {
+    // 2. headlight_beam_single: Echter Lichtkegel für Einzelscheinwerfer (startet schmal an der Lampe und weitet sich nach vorne auf)
+    const buildBeamTexture = (texKey, isSingle = false) => {
       createTexture(texKey, 520, 320, (ctx, width, height) => {
         const imgData = ctx.createImageData(width, height);
         const data = imgData.data;
@@ -5237,10 +5238,15 @@ export class AssetLoader {
             const idx = (y * width + x) * 4;
             const prog = Math.min(1.0, x / MAX_THROW);
 
-            // Weitet sich von 48px am Fahrzeug (vollständige Abdeckung ohne Lücke über/unter dem Fahrzeug) auf 105px auf
-            const baseH = 48 + Math.min(1.0, x / 300) * 57;
+            // Für Einzelscheinwerfer: Echter Lichtkegel!
+            // Startet schmal an der Lampe (halfH = 6px, also 12px Gesamthöhe am Ursprung),
+            // weitet sich nach vorne kegelförmig auf und geht am Fahrzeug keinesfalls "grade nach oben".
+            // Für beide an (isSingle = false): Startet bei 28px Halbhypotenuse für lückenlose Mittenabdeckung.
+            const startHalfH = isSingle ? 6 : 28;
+            const spreadRate = isSingle ? 0.26 : 0.22;
+            const baseH = startHalfH + x * spreadRate;
             const cap = Math.pow(Math.cos(Math.max(0, (prog - 0.7) / 0.3) * Math.PI * 0.5), 0.35);
-            const halfH = baseH * cap;
+            const halfH = Math.min(115, baseH * cap);
 
             if (absDy < halfH && halfH > 0) {
               const normY = absDy / halfH;
@@ -5251,13 +5257,13 @@ export class AssetLoader {
               const fadeY = 0.5 * coreY + 0.5 * haloY;
 
               // Weite Reichweite nach vorne mit stufenlosem Auslauf
-              const fadeForward = Math.pow(Math.cos(prog * Math.PI * 0.5), 1.5);
+              const fadeForward = Math.pow(Math.cos(prog * Math.PI * 0.5), 1.4);
 
-              // Bei Einzelscheinwerfer: 10px weicher Einblendungsstart (damit keine Kante entsteht)
-              // Bei beiden an (withStartFade === false): Kein Start-Fade, damit in der Mitte KEINE Lücke entsteht!
+              // Bei Einzelscheinwerfer: Sanfter Einblendungsstart (8px) an der Fahrzeuglampe
+              // Bei beiden an: Kein Start-Fade, damit in der Mitte absolut KEINE Lücke entsteht!
               let fadeStart = 1.0;
-              if (withStartFade) {
-                const startProg = Math.min(1.0, x / 10);
+              if (isSingle) {
+                const startProg = Math.min(1.0, x / 8);
                 fadeStart = Math.sin(startProg * Math.PI * 0.5);
               }
 
@@ -5280,7 +5286,7 @@ export class AssetLoader {
     };
 
     buildBeamTexture('headlight_beam', false);        // Nahtlos für beide an (keine Lücke in der Mitte)
-    buildBeamTexture('headlight_beam_single', true);   // Weicher Start für Einzelscheinwerfer
-    buildBeamTexture('headlight_beam_soft', false);    // Alias
+    buildBeamTexture('headlight_beam_single', true);   // Echter Lichtkegel für Einzelscheinwerfer (schmal am Fahrzeug)
+    buildBeamTexture('headlight_beam_soft', true);     // Weicher Lichtkegel
   }
 }

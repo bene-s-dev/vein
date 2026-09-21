@@ -150,12 +150,16 @@ export class SaveSystem {
     const destroyedTiles = Array.from(destroyedSet);
 
     // Aufgedeckte Kacheln ermitteln (alle abgebauten Kacheln sind automatisch auch aufgedeckt)
-    // Zur Schonung des localStorage-Limits (5MB Limit): alle abgebauten Kacheln + maximal 3.000 zuletzt aufgedeckte Kacheln
     const preservedExplored = new Set(destroyedTiles);
     if (gs.exploredTiles) {
-      const rawExplored = Array.from(gs.exploredTiles);
-      const recentExplored = rawExplored.slice(-3000);
-      recentExplored.forEach(k => preservedExplored.add(k));
+      gs.exploredTiles.forEach(k => preservedExplored.add(k));
+    }
+    if (gs.tiles) {
+      gs.tiles.forEach((tile, key) => {
+        if (tile && (tile.explored || tile.type === TILE_TYPES.EMPTY)) {
+          preservedExplored.add(key);
+        }
+      });
     }
     const exploredTiles = Array.from(preservedExplored);
 
@@ -317,12 +321,12 @@ export class SaveSystem {
           localStorage.removeItem('deep_miner_save_slot_3_backup');
         } catch (_) {}
 
-        // ExploredTiles nochmals auf nur abgebaut + letzte 500 Kacheln reduzieren
+        // ExploredTiles im Notfall schonend reduzieren
         if (saveData && saveData.grid) {
           saveData.grid.exploredStamps = [];
           const preserved = new Set(saveData.grid.destroyedTiles || []);
           if (Array.isArray(saveData.grid.exploredTiles)) {
-            const recent = saveData.grid.exploredTiles.slice(-500);
+            const recent = saveData.grid.exploredTiles.slice(-10000);
             recent.forEach(k => preserved.add(k));
           }
           saveData.grid.exploredTiles = Array.from(preserved);

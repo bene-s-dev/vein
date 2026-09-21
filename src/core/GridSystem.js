@@ -327,6 +327,21 @@ export class GridSystem {
       return null;
     }
 
+    const key = `${gx},${gy}`;
+    // Wenn die Kachel bereits abgebaut wurde, immer als leer und aufgedeckt zurückgeben
+    if (this.destroyedTiles && this.destroyedTiles.has(key)) {
+      const emptyTile = {
+        type: TILE_TYPES.EMPTY,
+        ore: null,
+        maxHp: 0,
+        hp: 0,
+        indestructible: false,
+        explored: true
+      };
+      this.tiles.set(key, emptyTile);
+      return emptyTile;
+    }
+
     // 1. Gesteinsart nach Tiefe mit progressiv länger werdenden Schichten
     let type = TILE_TYPES.DIRT;
     let baseHp = 85;
@@ -447,8 +462,6 @@ export class GridSystem {
     if (ore && ORE_DATA[ore]) {
       totalHp = Math.round(baseHp * ORE_DATA[ore].hardness);
     }
-
-    const key = `${gx},${gy}`;
     const isAlreadyExplored = this.exploredTiles ? this.exploredTiles.has(key) : false;
 
     const tile = {

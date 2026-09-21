@@ -1871,7 +1871,7 @@ export class Player {
     let effectiveBoost = this.flightBoostMult;
 
     if (this.flightBoostTimer >= 3.0 || this.flightBoostMult > 1.2) {
-      const BRAKE_DIST = 10 * TILE_SIZE; // 320px (~10 Kacheln spürbarer Bremsweg)
+      const BRAKE_DIST = 18 * TILE_SIZE; // 576px (~18 Kacheln spürbarer, starker Bremsweg)
       let nearestStopDist = Infinity;
 
       // 1. Distanz zur Erdoberfläche (Erdoberfläche-Niveau gy = -1, y = -16)
@@ -1880,19 +1880,19 @@ export class Player {
         nearestStopDist = this.sprite.y - surfaceStopY;
       }
 
-      // 2. Distanz zu festen Deckenkacheln im Schacht / Stollen (bis zu 14 Kacheln nach oben)
+      // 2. Distanz zu festen Deckenkacheln im Schacht / Stollen (bis zu 20 Kacheln nach oben)
       const currentHeadGy = Math.floor((this.sprite.y - TILE_SIZE / 2) / TILE_SIZE);
       const headLeftGx = Math.floor((this.sprite.x - 7) / TILE_SIZE);
       const headRightGx = Math.floor((this.sprite.x + 7) / TILE_SIZE);
 
-      for (let dy = 1; dy <= 14; dy++) {
+      for (let dy = 1; dy <= 20; dy++) {
         const checkGy = currentHeadGy - dy;
         if (checkGy >= 0) {
           if (this.gridSystem.isSolid(headLeftGx, checkGy) || this.gridSystem.isSolid(headRightGx, checkGy)) {
             // Unterkante des festen Blocks: (checkGy + 1) * TILE_SIZE + TILE_SIZE / 2
             const ceilingBottomY = (checkGy + 1) * TILE_SIZE + TILE_SIZE / 2;
             const distToCeiling = this.sprite.y - ceilingBottomY;
-            if (distToCeiling > 0 && distToCeiling < nearestStopDist) {
+            if (distToCeiling < nearestStopDist) {
               nearestStopDist = distToCeiling;
             }
             break;
@@ -1900,11 +1900,14 @@ export class Player {
         }
       }
 
-      if (nearestStopDist > 0 && nearestStopDist < BRAKE_DIST) {
-        const progress = Math.max(0, Math.min(1, nearestStopDist / BRAKE_DIST));
-        const eased = Math.pow(progress, 0.65);
-        // Deutliche, spürbare Verlangsamung von Boost-Speed herunter auf sanfte Landegeschwindigkeit (0.35x)
-        effectiveBoost = 0.35 + (this.flightBoostMult - 0.35) * eased;
+      if (nearestStopDist < BRAKE_DIST) {
+        const progress = Math.max(0, Math.min(1, Math.max(0, nearestStopDist) / BRAKE_DIST));
+        // Kraftvolle progressive Bremskurve: Greift ab Kante spürbar zu, verlangsamt drastisch
+        const brakeFactor = Math.pow(progress, 1.6);
+        const minFactor = 0.18; // Sanfte Schleich-/Aufsetzgeschwindigkeit
+        effectiveBoost = minFactor + (this.flightBoostMult - minFactor) * brakeFactor;
+        // Internen Flug-Boost sofort mit abbauen, damit nach der Landung kein Rest-Boost verbleibt!
+        this.flightBoostMult = Math.min(this.flightBoostMult, Math.max(1.0, effectiveBoost));
       }
     }
 
@@ -2209,25 +2212,31 @@ export class Player {
     // ── Abbremsen zum Flug-/Abstiegs-Ende nach unten ─────────────────────────
     // Die Verlangsamung zum Flugende NUR machen, wenn der Speed durch über 3 Sekunden Fliegen/Abstieg erhöht wurde!
     if (isMovingDown && (this._descentBoostTimer >= 3.0 || this._descentBoostMult > 1.2)) {
-      // Vorausschau bis zu 14 Kacheln nach unten für festen Boden
+      // Vorausschau bis zu 20 Kacheln nach unten für festen Boden
       let distToGround = Infinity;
-      const checkGx = this.moveTargetGx;
-      for (let dy = 1; dy <= 14; dy++) {
+      const targetGx = this.moveTargetGx;
+      const leftGx = Math.floor((this.sprite.x - 7) / TILE_SIZE);
+      const rightGx = Math.floor((this.sprite.x + 7) / TILE_SIZE);
+
+      for (let dy = 1; dy <= 20; dy++) {
         const checkGy = this.moveTargetGy + dy;
-        if (checkGy >= 0 && this.gridSystem.isSolid(checkGx, checkGy)) {
-          const solidTopY = checkGy * TILE_SIZE;
-          distToGround = solidTopY - (this.sprite.y + TILE_SIZE / 2);
-          break;
+        if (checkGy >= 0) {
+          if (this.gridSystem.isSolid(targetGx, checkGy) || this.gridSystem.isSolid(leftGx, checkGy) || this.gridSystem.isSolid(rightGx, checkGy)) {
+            const solidTopY = checkGy * TILE_SIZE;
+            distToGround = solidTopY - (this.sprite.y + TILE_SIZE / 2);
+            break;
+          }
         }
       }
 
-      const BRAKE_DIST = 10 * TILE_SIZE; // ca. 320px (~10 Kacheln spürbarer Bremsweg)
-      if (distToGround > 0 && distToGround < BRAKE_DIST) {
-        const progress = Math.max(0, Math.min(1, distToGround / BRAKE_DIST));
-        const eased = Math.pow(progress, 0.65);
-        // Deutliche, spürbare Verlangsamung von Boost-Speed herunter auf sanfte Landegeschwindigkeit (0.35x)
-        const targetMult = 0.35 + (this._descentBoostMult - 0.35) * eased;
+      const BRAKE_DIST = 18 * TILE_SIZE; // ca. 576px (~18 Kacheln spürbarer, starker Bremsweg)
+      if (distToGround < BRAKE_DIST) {
+        const progress = Math.max(0, Math.min(1, Math.max(0, distToGround) / BRAKE_DIST));
+        const brakeFactor = Math.pow(progress, 1.6); // Bremsen greifen sofort kraftvoll zu
+        const minFactor = 0.18; // Sanfte Schleich-/Aufsetzgeschwindigkeit
+        const targetMult = minFactor + (this._descentBoostMult - minFactor) * brakeFactor;
         descentMult = Math.min(descentMult, targetMult);
+        this._descentBoostMult = Math.min(this._descentBoostMult, Math.max(1.0, descentMult));
       }
     }
 
@@ -2285,6 +2294,27 @@ export class Player {
             if (nextDir !== 'DOWN') {
               this._descentBoostTimer = 0;
               this._descentBoostMult = 1.0;
+            } else if (this._descentBoostTimer >= 3.0 || this._descentBoostMult > 1.2) {
+              let lookDist = Infinity;
+              const curLeftGx = Math.floor((this.sprite.x - 7) / TILE_SIZE);
+              const curRightGx = Math.floor((this.sprite.x + 7) / TILE_SIZE);
+              for (let dyCheck = 1; dyCheck <= 20; dyCheck++) {
+                const cGy = nextGy + dyCheck;
+                if (cGy >= 0 && (this.gridSystem.isSolid(nextGx, cGy) || this.gridSystem.isSolid(curLeftGx, cGy) || this.gridSystem.isSolid(curRightGx, cGy))) {
+                  lookDist = cGy * TILE_SIZE - (this.sprite.y + TILE_SIZE / 2);
+                  break;
+                }
+              }
+              const BRAKE_DIST = 18 * TILE_SIZE;
+              if (lookDist < BRAKE_DIST) {
+                const p = Math.max(0, Math.min(1, Math.max(0, lookDist) / BRAKE_DIST));
+                const bf = Math.pow(p, 1.6);
+                const mf = 0.18;
+                const tm = mf + (this._descentBoostMult - mf) * bf;
+                descentMult = Math.min(descentMult, tm);
+                this._descentBoostMult = Math.min(this._descentBoostMult, Math.max(1.0, descentMult));
+                step = Math.min(step, (this.moveSpeed || 200) * dt * descentMult);
+              }
             }
             this.setVisualDirection(nextDir);
             this.moveTargetGx = nextGx;
