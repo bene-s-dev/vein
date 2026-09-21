@@ -142,6 +142,27 @@ export class InputHandler {
     this.setupControls();
   }
 
+  updateJoystickStatus() {
+    const joystickContainer = document.getElementById('floating-joystick');
+    const statusText = document.getElementById('joystick-status-text');
+    if (!joystickContainer || !statusText) return;
+
+    const player = this.scene?.player;
+    const isDrilling = player && player.state === 'drilling';
+    const isLocked = !!this.lockedDirection;
+
+    if (isDrilling) {
+      joystickContainer.classList.add('is-drilling');
+      statusText.textContent = '(Auto Drill)';
+    } else if (isLocked) {
+      joystickContainer.classList.remove('is-drilling');
+      statusText.textContent = '(Auto-Pilot)';
+    } else {
+      joystickContainer.classList.remove('is-drilling');
+      statusText.textContent = '(Auto-Pilot)';
+    }
+  }
+
   cancelLock() {
     if (!this.lockedDirection) return;
     const prevDir = this.lockedDirection;
@@ -152,7 +173,7 @@ export class InputHandler {
     const joystickContainer = document.getElementById('floating-joystick');
     const knob = document.getElementById('joystick-knob');
     if (joystickContainer) {
-      joystickContainer.classList.remove('locked-up', 'locked-down', 'locked-left', 'locked-right', 'ready-to-lock');
+      joystickContainer.classList.remove('locked-up', 'locked-down', 'locked-left', 'locked-right', 'ready-to-lock', 'is-drilling');
       joystickContainer.style.opacity = '0';
       setTimeout(() => {
         if (!this.lockedDirection && joystickContainer) {
@@ -416,6 +437,7 @@ export class InputHandler {
           else if (dir === 'RIGHT') kx = 40;
           knob.style.transform = `translate(${kx}px, ${ky}px)`;
         }
+        this.updateJoystickStatus();
         return;
       }
 
@@ -459,6 +481,8 @@ export class InputHandler {
   }
 
   getDirection() {
+    this.updateJoystickStatus();
+
     // Wenn der Fokus in einem Eingabefeld liegt (z. B. Spielstand löschen 'delete')
     if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
       return null;
