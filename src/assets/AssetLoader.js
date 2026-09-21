@@ -5221,46 +5221,66 @@ export class AssetLoader {
       ctx.fillRect(3, 7, 6, 2);
     });
 
-    // Scheinwerfer-Lichtkegel für Front- & Heckbeleuchtung (nahtlos ab Fahrzeugmitte, kein Spalt)
-    createTexture('headlight_beam', 300, 300, (ctx, width, height) => {
-      const imgData = ctx.createImageData(width, height);
-      const data = imgData.data;
-      const cy = height / 2; // 150
+    // 1. headlight_beam: Nahtlose Textur ab x=0 (wenn BEIDE Scheinwerfer an sind: absolut KEINE Lücke in der Mitte!)
+    const buildBeamTexture = (texKey, withStartFade = false) => {
+      createTexture(texKey, 520, 320, (ctx, width, height) => {
+        const imgData = ctx.createImageData(width, height);
+        const data = imgData.data;
+        const cy = height / 2; // 160
+        const MAX_THROW = 480;
 
-      for (let y = 0; y < height; y++) {
-        const dy = y - cy;
-        const absDy = Math.abs(dy);
+        for (let y = 0; y < height; y++) {
+          const dy = y - cy;
+          const absDy = Math.abs(dy);
 
-        for (let x = 0; x < width; x++) {
-          const idx = (y * width + x) * 4;
-          const prog = Math.min(1.0, x / 280);
+          for (let x = 0; x < width; x++) {
+            const idx = (y * width + x) * 4;
+            const prog = Math.min(1.0, x / MAX_THROW);
 
-          // Fächerung: Startet nahtlos mit 50px Halbhöhe direkt am Fahrzeug und weitet sich auf 125px
-          const halfH = 50 + prog * 75;
+            // Weitet sich von 48px am Fahrzeug (vollständige Abdeckung ohne Lücke über/unter dem Fahrzeug) auf 105px auf
+            const baseH = 48 + Math.min(1.0, x / 300) * 57;
+            const cap = Math.pow(Math.cos(Math.max(0, (prog - 0.7) / 0.3) * Math.PI * 0.5), 0.35);
+            const halfH = baseH * cap;
 
-          if (absDy < halfH) {
-            // Butterweicher Cosinus-Abfall vertikal
-            const normY = absDy / halfH;
-            const fadeY = Math.pow(Math.cos(normY * Math.PI * 0.5), 1.25);
+            if (absDy < halfH && halfH > 0) {
+              const normY = absDy / halfH;
 
-            // Weicher Reichweiten-Abfall horizontal
-            const fadeX = Math.pow(Math.cos(prog * Math.PI * 0.5), 0.85);
+              // Zweistufiges Vertikal-Profil: Intensiver Spot-Kern im Zentrum + weicher Lichtkegel-Halo
+              const coreY = Math.pow(Math.cos(normY * Math.PI * 0.5), 2.8);
+              const haloY = Math.pow(Math.cos(normY * Math.PI * 0.5), 1.15);
+              const fadeY = 0.5 * coreY + 0.5 * haloY;
 
-            const intensity = 0.65 * fadeX * fadeY;
+              // Weite Reichweite nach vorne mit stufenlosem Auslauf
+              const fadeForward = Math.pow(Math.cos(prog * Math.PI * 0.5), 1.5);
 
-            if (intensity > 0.002) {
-              data[idx] = 255;
-              data[idx + 1] = Math.round(238 + 17 * (1.0 - intensity));
-              data[idx + 2] = Math.round(195 + 45 * (1.0 - intensity));
-              data[idx + 3] = Math.round(intensity * 225);
-              continue;
+              // Bei Einzelscheinwerfer: 10px weicher Einblendungsstart (damit keine Kante entsteht)
+              // Bei beiden an (withStartFade === false): Kein Start-Fade, damit in der Mitte KEINE Lücke entsteht!
+              let fadeStart = 1.0;
+              if (withStartFade) {
+                const startProg = Math.min(1.0, x / 10);
+                fadeStart = Math.sin(startProg * Math.PI * 0.5);
+              }
+
+              const intensity = 0.72 * fadeForward * fadeY * fadeStart;
+
+              if (intensity > 0.001) {
+                data[idx] = 255;
+                data[idx + 1] = Math.round(238 + 17 * (1.0 - intensity));
+                data[idx + 2] = Math.round(195 + 45 * (1.0 - intensity));
+                data[idx + 3] = Math.round(intensity * 235);
+                continue;
+              }
             }
+            data[idx + 3] = 0;
           }
-          data[idx + 3] = 0;
         }
-      }
 
-      ctx.putImageData(imgData, 0, 0);
-    });
+        ctx.putImageData(imgData, 0, 0);
+      });
+    };
+
+    buildBeamTexture('headlight_beam', false);        // Nahtlos für beide an (keine Lücke in der Mitte)
+    buildBeamTexture('headlight_beam_single', true);   // Weicher Start für Einzelscheinwerfer
+    buildBeamTexture('headlight_beam_soft', false);    // Alias
   }
 }

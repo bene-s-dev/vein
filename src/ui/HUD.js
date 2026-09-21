@@ -1374,7 +1374,10 @@ export class HUD {
     bodyEl.querySelectorAll('.btn-slot-load').forEach(btn => {
       btn.onclick = () => {
         const slotId = parseInt(btn.getAttribute('data-slot'), 10);
-        SaveSystem.save(this.scene);
+        const currentActive = SaveSystem.getActiveSlotId();
+        if (slotId !== currentActive) {
+          SaveSystem.save(this.scene);
+        }
         if (SaveSystem.loadSlot(this.scene, slotId)) {
           soundFx.playPurchase();
           closeActiveModal(this.scene);

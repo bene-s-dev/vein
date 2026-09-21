@@ -5881,7 +5881,23 @@ export class BaseSystem {
   // 3. RAFFINERIE (ZEITGESTEUERT & OFFLINE ANHAND GERÄTE-UHRZEIT)
   // =========================================================
 
+  sanitizeRefineryQueue() {
+    if (!this.refinery?.queue || this.refinery.queue.length === 0) return;
+    const mTier = this.refinery.machineTier || 1;
+    this.refinery.queue.forEach(item => {
+      const properDuration = (item.isProduct && item.productId)
+        ? getFactoryProductDurationMs(item.productId, mTier)
+        : getRefinerySmeltDurationMs(item.ore, mTier);
+      if (item.durationMs > properDuration) {
+        const ratio = item.durationMs > 0 ? (item.remainingMs / item.durationMs) : 1;
+        item.durationMs = properDuration;
+        item.remainingMs = Math.max(100, Math.min(properDuration, Math.round(properDuration * ratio)));
+      }
+    });
+  }
+
   processRefinery(now = Date.now()) {
+    this.sanitizeRefineryQueue();
     const elapsedMs = Math.max(0, now - this.refinery.lastTimestamp);
     this.refinery.lastTimestamp = now;
 
@@ -5996,16 +6012,25 @@ export class BaseSystem {
     if (!savedData) return;
     this.refinery.fuelCoal = typeof savedData.fuelCoal === 'number' ? savedData.fuelCoal : 0;
     this.refinery.machineTier = typeof savedData.machineTier === 'number' ? savedData.machineTier : 1;
-    this.refinery.queue = (savedData.queue || []).map(item => ({
-      id: item.id || `q_${Math.random().toString(36).substr(2, 9)}`,
-      isProduct: !!item.isProduct,
-      productId: item.productId || null,
-      ore: item.ore,
-      name: item.name || (item.productId ? FACTORY_PRODUCTS[item.productId]?.name : ORE_DATA[item.ore]?.name) || 'Produkt',
-      durationMs: item.durationMs || (item.isProduct && item.productId ? getFactoryProductDurationMs(item.productId, this.refinery.machineTier) : getRefinerySmeltDurationMs(item.ore, this.refinery.machineTier)),
-      remainingMs: Math.max(0, item.remainingMs !== undefined ? item.remainingMs : (item.durationMs || 10000)),
-      value: item.value || (item.isProduct && item.productId ? FACTORY_PRODUCTS[item.productId]?.value : getRefinedOreNetValue(item.ore))
-    }));
+    this.refinery.queue = (savedData.queue || []).map(item => {
+      const properDuration = (item.isProduct && item.productId)
+        ? getFactoryProductDurationMs(item.productId, this.refinery.machineTier)
+        : getRefinerySmeltDurationMs(item.ore, this.refinery.machineTier);
+      const prevDur = item.durationMs || properDuration;
+      const ratio = prevDur > 0 ? Math.min(1, Math.max(0, (item.remainingMs !== undefined ? item.remainingMs : prevDur) / prevDur)) : 1;
+      const newRemaining = Math.max(100, Math.min(properDuration, Math.round(properDuration * ratio)));
+
+      return {
+        id: item.id || `q_${Math.random().toString(36).substr(2, 9)}`,
+        isProduct: !!item.isProduct,
+        productId: item.productId || null,
+        ore: item.ore,
+        name: item.name || (item.productId ? FACTORY_PRODUCTS[item.productId]?.name : ORE_DATA[item.ore]?.name) || 'Produkt',
+        durationMs: properDuration,
+        remainingMs: newRemaining,
+        value: item.value || (item.isProduct && item.productId ? FACTORY_PRODUCTS[item.productId]?.value : getRefinedOreNetValue(item.ore))
+      };
+    });
 
     this.refinery.finished = (savedData.finished || []).map(item => ({
       id: item.id || `f_${Math.random().toString(36).substr(2, 9)}`,
@@ -6088,7 +6113,16 @@ export class BaseSystem {
     if (currentSmelt) {
       const pct = Math.min(100, Math.max(0, Math.round(((currentSmelt.durationMs - currentSmelt.remainingMs) / currentSmelt.durationMs) * 100)));
       const timerEl = document.getElementById('smelt-timer');
-      if (timerEl) timerEl.textContent = this.formatRefineryClock(currentSmelt.remainingMs);
+      if (timerEl) {
+        timerEl.textContent = this.formatRefineryClock(currentSmelt.remainingMs);
+        const smeltQueue = queue.filter(item => !item.isProduct);
+        const totalSmeltMs = smeltQueue.reduce((sum, item, idx) => sum + (idx === 0 ? item.remainingMs : item.durationMs), 0);
+        if (smeltQueue.length > 1) {
+          timerEl.title = `Aktueller Barren: ${this.formatRefineryClock(currentSmelt.remainingMs)} | Gesamtzeit (${smeltQueue.length} Barren): ${this.formatRefineryClock(totalSmeltMs)}`;
+        } else {
+          timerEl.title = `Verbleibende Zeit: ${this.formatRefineryClock(currentSmelt.remainingMs)}`;
+        }
+      }
       const fillEl = document.getElementById('smelt-progress-fill');
       if (fillEl) fillEl.style.width = `${pct}%`;
     }
@@ -6096,7 +6130,16 @@ export class BaseSystem {
     if (currentCraft) {
       const pct = Math.min(100, Math.max(0, Math.round(((currentCraft.durationMs - currentCraft.remainingMs) / currentCraft.durationMs) * 100)));
       const timerEl = document.getElementById('craft-timer');
-      if (timerEl) timerEl.textContent = this.formatRefineryClock(currentCraft.remainingMs);
+      if (timerEl) {
+        timerEl.textContent = this.formatRefineryClock(currentCraft.remainingMs);
+        const craftQueue = queue.filter(item => item.isProduct);
+        const totalCraftMs = craftQueue.reduce((sum, item, idx) => sum + (idx === 0 ? item.remainingMs : item.durationMs), 0);
+        if (craftQueue.length > 1) {
+          timerEl.title = `Aktuelle Fertigung: ${this.formatRefineryClock(currentCraft.remainingMs)} | Gesamtzeit (${craftQueue.length} Aufträge): ${this.formatRefineryClock(totalCraftMs)}`;
+        } else {
+          timerEl.title = `Verbleibende Zeit: ${this.formatRefineryClock(currentCraft.remainingMs)}`;
+        }
+      }
       const fillEl = document.getElementById('craft-progress-fill');
       if (fillEl) fillEl.style.width = `${pct}%`;
     }
@@ -6146,8 +6189,8 @@ export class BaseSystem {
     // Laufende Warteschlange sofort proportional verkürzen
     if (this.refinery.queue && this.refinery.queue.length > 0) {
       this.refinery.queue.forEach(item => {
-        item.durationMs = Math.max(2000, Math.round(item.durationMs * speedRatio));
-        item.remainingMs = Math.max(1000, Math.round(item.remainingMs * speedRatio));
+        item.durationMs = Math.max(300, Math.round(item.durationMs * speedRatio));
+        item.remainingMs = Math.max(100, Math.round(item.remainingMs * speedRatio));
       });
     }
 
@@ -6183,6 +6226,9 @@ export class BaseSystem {
     const craftQueue = queue.filter(item => item.isProduct);
     const finishedSmelt = finished.filter(item => !item.isProduct);
     const finishedCraft = finished.filter(item => item.isProduct);
+
+    const totalSmeltMs = smeltQueue.reduce((sum, item, idx) => sum + (idx === 0 ? item.remainingMs : item.durationMs), 0);
+    const totalCraftMs = craftQueue.reduce((sum, item, idx) => sum + (idx === 0 ? item.remainingMs : item.durationMs), 0);
 
     const currentSmelt = smeltQueue[0] || null;
     const currentCraft = craftQueue[0] || null;
@@ -6294,7 +6340,7 @@ export class BaseSystem {
               <span style="background: ${hasSmeltFuel ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'}; border: 1px solid ${hasSmeltFuel ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'}; color: ${hasSmeltFuel ? '#34d399' : '#f87171'}; padding: 2px 7px; border-radius: 6px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;" title="Brennstoffverbrauch: 1x Kohle pro Barren">
                 ${itemDisplayIcon('coal', 13)} 1×
               </span>
-              <span id="smelt-timer" style="font-family: monospace; font-size: 12px; font-weight: 800; color: ${isSmelting ? '#fbbf24' : '#64748b'}; font-variant-numeric: tabular-nums;">
+              <span id="smelt-timer" style="font-family: monospace; font-size: 12px; font-weight: 800; color: ${isSmelting ? '#fbbf24' : '#64748b'}; font-variant-numeric: tabular-nums;" title="${smeltQueue.length > 1 ? `Aktueller Barren: ${this.formatRefineryClock(currentSmelt.remainingMs)} | Gesamtzeit (${smeltQueue.length} Barren): ${this.formatRefineryClock(totalSmeltMs)}` : `Verbleibende Zeit: ${this.formatRefineryClock(currentSmelt ? currentSmelt.remainingMs : 0)}`}">
                 ${isSmelting ? this.formatRefineryClock(currentSmelt.remainingMs) : '00:00'}
               </span>
             </div>
@@ -6304,7 +6350,7 @@ export class BaseSystem {
             ${isSmelting ? `
               <span style="font-weight: 700; color: #fbbf24; display: inline-flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                 &bull; ${itemDisplayIcon('bar_' + currentSmelt.ore, 12)} ${currentSmelt.name}
-                ${smeltQueue.length > 1 ? `<span style="font-size: 9.5px; color: #94a3b8; background: rgba(0,0,0,0.35); padding: 1px 5px; border-radius: 4px;">+${smeltQueue.length - 1}</span>` : ''}
+                ${smeltQueue.length > 1 ? `<span style="font-size: 9.5px; color: #94a3b8; background: rgba(0,0,0,0.35); padding: 1px 5px; border-radius: 4px;" title="Gesamtzeit für alle ${smeltQueue.length} Barren: ${this.formatRefineryClock(totalSmeltMs)}">+${smeltQueue.length - 1} (${this.formatRefineryClock(totalSmeltMs)})</span>` : ''}
               </span>
             ` : `
               <span style="color: ${hasSmeltFuel ? '#94a3b8' : '#f87171'}; font-weight: ${hasSmeltFuel ? '500' : '600'}; display: inline-flex; align-items: center; gap: 5px;">
@@ -6346,7 +6392,10 @@ export class BaseSystem {
             for (const oreKey of allOreKeys) {
               const oreName = ORE_DATA[oreKey]?.name || oreKey;
               const refinedName = getRefinedOreName(oreKey);
-              const effectiveDurSec = Math.round(getRefinerySmeltDurationMs(oreKey, currentTier) / 1000);
+              const effectiveDurMs = getRefinerySmeltDurationMs(oreKey, currentTier);
+              const effectiveDurSec = (effectiveDurMs / 1000) < 10 && (effectiveDurMs % 1000 !== 0)
+                ? (effectiveDurMs / 1000).toFixed(1)
+                : Math.round(effectiveDurMs / 1000);
               const inCargo = cargoCounts[oreKey] || 0;
               const inDepot = this.depot?.ores?.[oreKey] || 0;
               const totalThisOre = inCargo + inDepot;
@@ -6414,7 +6463,7 @@ export class BaseSystem {
               <span style="background: ${hasCraftFuel ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'}; border: 1px solid ${hasCraftFuel ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'}; color: ${hasCraftFuel ? '#34d399' : '#f87171'}; padding: 2px 7px; border-radius: 6px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;" title="Brennstoffverbrauch: 2x Kohle pro Fertigung">
                 ${itemDisplayIcon('coal', 13)} 2×
               </span>
-              <span id="craft-timer" style="font-family: monospace; font-size: 12px; font-weight: 800; color: ${isCrafting ? '#38bdf8' : '#64748b'}; font-variant-numeric: tabular-nums;">
+              <span id="craft-timer" style="font-family: monospace; font-size: 12px; font-weight: 800; color: ${isCrafting ? '#38bdf8' : '#64748b'}; font-variant-numeric: tabular-nums;" title="${craftQueue.length > 1 ? `Aktuelle Fertigung: ${this.formatRefineryClock(currentCraft.remainingMs)} | Gesamtzeit (${craftQueue.length} Aufträge): ${this.formatRefineryClock(totalCraftMs)}` : `Verbleibende Zeit: ${this.formatRefineryClock(currentCraft ? currentCraft.remainingMs : 0)}`}">
                 ${isCrafting ? this.formatRefineryClock(currentCraft.remainingMs) : '00:00'}
               </span>
             </div>
@@ -6424,7 +6473,7 @@ export class BaseSystem {
             ${isCrafting ? `
               <span style="font-weight: 700; color: #38bdf8; display: inline-flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                 &bull; ${itemDisplayIcon(currentCraft.productId, 12)} ${currentCraft.name}
-                ${craftQueue.length > 1 ? `<span style="font-size: 9.5px; color: #94a3b8; background: rgba(0,0,0,0.35); padding: 1px 5px; border-radius: 4px;">+${craftQueue.length - 1}</span>` : ''}
+                ${craftQueue.length > 1 ? `<span style="font-size: 9.5px; color: #94a3b8; background: rgba(0,0,0,0.35); padding: 1px 5px; border-radius: 4px;" title="Gesamtzeit für alle ${craftQueue.length} Aufträge: ${this.formatRefineryClock(totalCraftMs)}">+${craftQueue.length - 1} (${this.formatRefineryClock(totalCraftMs)})</span>` : ''}
               </span>
             ` : `
               <span style="color: ${hasCraftFuel ? '#94a3b8' : '#f87171'}; font-weight: ${hasCraftFuel ? '500' : '600'}; display: inline-flex; align-items: center; gap: 5px;">
@@ -6483,7 +6532,10 @@ export class BaseSystem {
                     <!-- Spalte 2: Fertigungs-Dauer -->
                     <div style="display: flex; align-items: center; flex-shrink: 0;">
                       ${(() => {
-                        const effectiveProdSec = Math.round(getFactoryProductDurationMs(prodId, currentTier) / 1000);
+                        const effectiveProdMs = getFactoryProductDurationMs(prodId, currentTier);
+                        const effectiveProdSec = (effectiveProdMs / 1000) < 10 && (effectiveProdMs % 1000 !== 0)
+                          ? (effectiveProdMs / 1000).toFixed(1)
+                          : Math.round(effectiveProdMs / 1000);
                         return `
                           <span style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); padding: 2px 7px; border-radius: 6px; font-size: 10.5px; color: #94a3b8; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 4px; box-sizing: border-box; white-space: nowrap; font-variant-numeric: tabular-nums;">
                             ${icon('clock', '', 10)} ${effectiveProdSec}s${currentTierData.speedBonus > 0 ? ` <span style="color: #34d399; font-size: 9.5px; font-weight: 700;">(-${currentTierData.speedBonus}%)</span>` : ''}

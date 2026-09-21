@@ -150,9 +150,14 @@ export class SaveSystem {
     const destroyedTiles = Array.from(destroyedSet);
 
     // Aufgedeckte Kacheln ermitteln (alle abgebauten Kacheln sind automatisch auch aufgedeckt)
-    const exploredSet = new Set(gs.exploredTiles || []);
-    destroyedTiles.forEach((k) => exploredSet.add(k));
-    const exploredTiles = Array.from(exploredSet);
+    // Zur Schonung des localStorage-Limits (5MB Limit): alle abgebauten Kacheln + maximal 3.000 zuletzt aufgedeckte Kacheln
+    const preservedExplored = new Set(destroyedTiles);
+    if (gs.exploredTiles) {
+      const rawExplored = Array.from(gs.exploredTiles);
+      const recentExplored = rawExplored.slice(-3000);
+      recentExplored.forEach(k => preservedExplored.add(k));
+    }
+    const exploredTiles = Array.from(preservedExplored);
 
     // Gebäude-Stati speichern
     const buildingsData = [];
@@ -275,7 +280,7 @@ export class SaveSystem {
   }
 
   static saveToSlot(scene, slotId) {
-    if (SaveSystem.isClearing) return false;
+    if (SaveSystem.isClearing || SaveSystem.isLoading) return false;
     if (!scene || !scene.player || !scene.gridSystem) return false;
 
     const key = SaveSystem.getSlotKey(slotId);
@@ -299,41 +304,46 @@ export class SaveSystem {
 
       const jsonStr = JSON.stringify(saveData);
 
-      // Automatisches rollierendes Backup vor dem Überschreiben anlegen
+      // 1. ZUERST den aktuellen Hauptspielstand schreiben
       try {
-        const prev = localStorage.getItem(key);
-        if (prev && prev !== jsonStr) {
-          localStorage.setItem(key + '_backup', prev);
+        localStorage.setItem(key, jsonStr);
+      } catch (writeErr) {
+        console.warn(`[SaveSystem] QuotaExceededError beim Speichern auf Slot ${slotId}, bereinige Backups und Kacheln...`, writeErr);
+        // Bei QuotaExceeded sofort alle Backups entfernen, um Platz zu schaffen
+        try {
+          localStorage.removeItem(key + '_backup');
+          localStorage.removeItem('deep_miner_save_v1_backup');
+          localStorage.removeItem('deep_miner_save_slot_2_backup');
+          localStorage.removeItem('deep_miner_save_slot_3_backup');
+        } catch (_) {}
+
+        // ExploredTiles nochmals auf nur abgebaut + letzte 500 Kacheln reduzieren
+        if (saveData && saveData.grid) {
+          saveData.grid.exploredStamps = [];
+          const preserved = new Set(saveData.grid.destroyedTiles || []);
+          if (Array.isArray(saveData.grid.exploredTiles)) {
+            const recent = saveData.grid.exploredTiles.slice(-500);
+            recent.forEach(k => preserved.add(k));
+          }
+          saveData.grid.exploredTiles = Array.from(preserved);
+        }
+        const reducedJson = JSON.stringify(saveData);
+        localStorage.setItem(key, reducedJson);
+        console.info('[SaveSystem] Speichern nach Quota-Bereinigung erfolgreich!');
+      }
+
+      // 2. Rollierendes Backup erst NACH erfolgreichem Hauptspeichern anlegen (nur wenn handlich)
+      try {
+        if (jsonStr.length < 500000) {
+          localStorage.setItem(key + '_backup', jsonStr);
         }
       } catch (_) {}
 
-      localStorage.setItem(key, jsonStr);
       SaveSystem.hasLoadedSuccessfully = true;
       SaveSystem.lastLoadFailed = false;
       return true;
     } catch (err) {
-      console.warn('Fehler beim Speichern auf Slot ' + slotId + ':', err);
-      // Spezieller iOS Safari Schutz vor QuotaExceededError (5MB Limit)
-      try {
-        if (saveData && saveData.grid) {
-          saveData.grid.exploredStamps = [];
-          // Wenn der Speicher voll ist, exploredTiles drastisch reduzieren (nur abgebaute + letzte 1000)
-          if (Array.isArray(saveData.grid.exploredTiles)) {
-            const preserved = new Set(saveData.grid.destroyedTiles || []);
-            const recent = saveData.grid.exploredTiles.slice(-1000);
-            recent.forEach(k => preserved.add(k));
-            saveData.grid.exploredTiles = Array.from(preserved);
-          }
-          const reducedJson = JSON.stringify(saveData);
-          localStorage.setItem(key, reducedJson);
-          console.info('Speichern nach Quota-Bereinigung erfolgreich!');
-          SaveSystem.hasLoadedSuccessfully = true;
-          SaveSystem.lastLoadFailed = false;
-          return true;
-        }
-      } catch (retryErr) {
-        console.error('Speicherfehler trotz Reduzierung:', retryErr);
-      }
+      console.error('Kritischer Fehler beim Speichern auf Slot ' + slotId + ':', err);
       return false;
     }
   }

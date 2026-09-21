@@ -591,47 +591,62 @@ export class Player {
     const curY = this.sprite ? this.sprite.y : this.y;
     const intensity = Math.max(0.1, Math.min(1.0, this.lightIntensity ?? 0.85));
 
-    // Ziel-Richtung basierend auf letzter Fahrtrichtung
-    const facing = (this.lastHorizontalDirection || this.currentDirection || 'RIGHT').toUpperCase();
-    const targetDir = facing === 'LEFT' ? -1 : 1;
+    // Richtungswinkel für alle 4 Richtungen:
+    // RIGHT (0), DOWN (+90° / Pi/2), LEFT (180° / Pi), UP (-90° / -Pi/2)
+    const DIR_ANGLES = {
+      'RIGHT': 0,
+      'DOWN': Math.PI * 0.5,
+      'LEFT': Math.PI,
+      'UP': -Math.PI * 0.5
+    };
+    const facing = (this.currentDirection || this.lastHorizontalDirection || 'RIGHT').toUpperCase();
+    const targetAngle = DIR_ANGLES[facing] !== undefined ? DIR_ANGLES[facing] : 0;
 
-    // Crossfade: Fade-out → Richtung wechseln → Fade-in (kein Scale-Squish)
-    if (dt) {
-      const step = (dt / 1000) * 10; // ~100ms für vollständiges Fade
-      if (targetDir !== this._lightDirCurrent) {
-        // Fade-out Phase
-        this._lightFlipProg = Math.max(0, this._lightFlipProg - step);
-        if (this._lightFlipProg === 0) {
-          this._lightDirCurrent = targetDir; // Richtung wechseln wenn unsichtbar
-        }
-      } else {
-        // Fade-in Phase
-        this._lightFlipProg = Math.min(1, this._lightFlipProg + step);
-      }
+    if (this._frontLightAngle === undefined) {
+      this._frontLightAngle = targetAngle;
     }
 
-    const dir = this._lightDirCurrent; // immer exakt ±1, kein Squish
-    const flipAlpha = this._lightFlipProg;
+    if (dt && typeof Phaser !== 'undefined' && Phaser.Math?.Angle?.RotateTo) {
+      const rotSpeed = 24; // rad/s (~65ms für 90-Grad-Drehung, butterweich & reaktionsschnell)
+      this._frontLightAngle = Phaser.Math.Angle.RotateTo(this._frontLightAngle, targetAngle, rotSpeed * (dt / 1000));
+    } else {
+      this._frontLightAngle = targetAngle;
+    }
 
-    // Mit setScale(dir, 1): dir=-1 zieht den Strahl nach links (Textur invertiert in X),
-    // dir=+1 nach rechts. Origin (0,0.5) bedeutet: Strahl startet am Fahrzeugzentrum.
+    const frontAngle = this._frontLightAngle;
+    const rearAngle = frontAngle + Math.PI;
 
-    // 1. Frontscheinwerfer – Fahrtrichtung
+    // Wenn BEIDE an sind: nahtlose Textur 'headlight_beam' (schließt bündig ab, absolut KEINE Lücke in der Mitte!)
+    // Wenn nur EIN Scheinwerfer an ist: 'headlight_beam_single' (weicher Start am Fahrzeug, keine messerscharfe Kante)
+    const bothOn = this.frontLightEnabled && this.rearLightEnabled && isUnderground;
+    const texKey = bothOn ? 'headlight_beam' : 'headlight_beam_single';
+
+    // 1. Frontscheinwerfer – Fahrtrichtung (dreht sich voll mit nach oben und unten)
     if (this.frontLightEnabled && isUnderground) {
-      this.frontLightSprite.setVisible(true);
-      this.frontLightSprite.setAlpha(0.85 * intensity * flipAlpha);
+      if (this.frontLightSprite.texture.key !== texKey) {
+        this.frontLightSprite.setTexture(texKey);
+      }
+      this.frontLightSprite.setOrigin(0, 0.5);
       this.frontLightSprite.setPosition(curX, curY);
-      this.frontLightSprite.setScale(dir, 1);
+      this.frontLightSprite.setRotation(frontAngle);
+      this.frontLightSprite.setScale(1, 1);
+      this.frontLightSprite.setAlpha(0.85 * intensity);
+      this.frontLightSprite.setVisible(true);
     } else {
       this.frontLightSprite.setVisible(false);
     }
 
-    // 2. Heckscheinwerfer – entgegen der Fahrtrichtung
+    // 2. Heckscheinwerfer – immer exakt in die entgegengesetzte Richtung!
     if (this.rearLightEnabled && isUnderground) {
-      this.rearLightSprite.setVisible(true);
-      this.rearLightSprite.setAlpha(0.85 * intensity * flipAlpha);
+      if (this.rearLightSprite.texture.key !== texKey) {
+        this.rearLightSprite.setTexture(texKey);
+      }
+      this.rearLightSprite.setOrigin(0, 0.5);
       this.rearLightSprite.setPosition(curX, curY);
-      this.rearLightSprite.setScale(-dir, 1);
+      this.rearLightSprite.setRotation(rearAngle);
+      this.rearLightSprite.setScale(1, 1);
+      this.rearLightSprite.setAlpha(0.85 * intensity);
+      this.rearLightSprite.setVisible(true);
     } else {
       this.rearLightSprite.setVisible(false);
     }

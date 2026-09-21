@@ -368,9 +368,9 @@ export class StartScreen {
       btnResume.onclick = () => {
         enableFullscreenLandscape();
         soundFx.playClick();
-        const slots = SaveSystem.listSlots();
-        const activeSlot = slots.find(s => s.isCurrent && s.exists) || slots.find(s => s.exists);
-        const targetSlot = activeSlot ? activeSlot.slotId : SaveSystem.getActiveSlotId();
+        const existingSlots = SaveSystem.listSlots().filter(s => s.exists);
+        existingSlots.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+        const targetSlot = existingSlots.length > 0 ? existingSlots[0].slotId : SaveSystem.getActiveSlotId();
         SaveSystem.setActiveSlotId(targetSlot);
         if (this.scene) {
           SaveSystem.loadSlot(this.scene, targetSlot);
