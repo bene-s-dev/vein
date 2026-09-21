@@ -5238,12 +5238,11 @@ export class AssetLoader {
             const idx = (y * width + x) * 4;
             const prog = Math.min(1.0, x / MAX_THROW);
 
-            // Für Einzelscheinwerfer: Echter Lichtkegel!
-            // Startet schmal an der Lampe (halfH = 6px, also 12px Gesamthöhe am Ursprung),
-            // weitet sich nach vorne kegelförmig auf und geht am Fahrzeug keinesfalls "grade nach oben".
-            // Für beide an (isSingle = false): Startet bei 28px Halbhypotenuse für lückenlose Mittenabdeckung.
-            const startHalfH = isSingle ? 6 : 28;
-            const spreadRate = isSingle ? 0.26 : 0.22;
+            // Ausgewogener Mittelweg für Einzelscheinwerfer:
+            // Weder zu steil/blockig (48px) noch zu spitz/nadelartig (6px), sondern harmonische 18px (36px Gesamthöhe am Fahrzeug)
+            // Für beide an (isSingle = false): 28px für lückenlose Mittenabdeckung.
+            const startHalfH = isSingle ? 18 : 28;
+            const spreadRate = isSingle ? 0.24 : 0.22;
             const baseH = startHalfH + x * spreadRate;
             const cap = Math.pow(Math.cos(Math.max(0, (prog - 0.7) / 0.3) * Math.PI * 0.5), 0.35);
             const halfH = Math.min(115, baseH * cap);
@@ -5259,11 +5258,11 @@ export class AssetLoader {
               // Weite Reichweite nach vorne mit stufenlosem Auslauf
               const fadeForward = Math.pow(Math.cos(prog * Math.PI * 0.5), 1.4);
 
-              // Bei Einzelscheinwerfer: Sanfter Einblendungsstart (8px) an der Fahrzeuglampe
+              // Bei Einzelscheinwerfer: Sanfter Übergang (10px) am Fahrzeug
               // Bei beiden an: Kein Start-Fade, damit in der Mitte absolut KEINE Lücke entsteht!
               let fadeStart = 1.0;
               if (isSingle) {
-                const startProg = Math.min(1.0, x / 8);
+                const startProg = Math.min(1.0, x / 10);
                 fadeStart = Math.sin(startProg * Math.PI * 0.5);
               }
 
