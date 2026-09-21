@@ -8,6 +8,7 @@ import { ORE_DATA } from '../core/GridSystem.js';
 import { notifyModalClosed, closeActiveModal } from '../core/BaseSystem.js';
 import { toastManager } from './ToastManager.js';
 import { showSpecialTileInfoModal } from './OreInfoModal.js';
+import { MapModal } from './MapModal.js';
 
 const ORE_DESCRIPTIONS = {
   coal: 'Fossiler Kohlenstoff aus den oberen Schichten. Solide Einnahmequelle für den Einstieg.',
@@ -123,6 +124,10 @@ export class HUD {
     // Bergmann-Buch (Schacht-Logbuch & Kompendium)
     this.minerBookModal = new MinerBookModal(scene, player);
 
+    // Minen-Karte & Navigation Modal
+    this.mapModal = new MapModal(scene, player, scene.baseSystem, this);
+    this.activeWaypoint = null;
+
     // DOM-Referenzen
     this.fuelText = document.getElementById('hud-fuel-text');
     this.fuelNum = document.getElementById('hud-fuel-num');
@@ -140,6 +145,28 @@ export class HUD {
     this.cargoText = document.getElementById('hud-cargo-text');
     this.cargoNum = document.getElementById('hud-cargo-num');
     this.cargoMax = document.getElementById('hud-cargo-max');
+    this.depotText = document.getElementById('hud-depot-text');
+    this.depotNum = document.getElementById('hud-depot-num');
+    this.depotMax = document.getElementById('hud-depot-max');
+    this.depotCluster = document.getElementById('hud-depot-cluster');
+
+    if (this.depotCluster) {
+      const openDepot = (e) => {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        soundFx.playClick();
+        if (this.scene?.baseSystem?.openDepotModal) {
+          this.scene.baseSystem.openDepotModal();
+        }
+      };
+      ['pointerdown', 'click'].forEach((evt) => {
+        this.depotCluster.addEventListener(evt, openDepot, { passive: false });
+      });
+    }
+    this.coordX = document.getElementById('hud-coord-x');
+    this.coordY = document.getElementById('hud-coord-y');
     this.cashText = document.getElementById('hud-cash');
     this.depthText = document.getElementById('hud-depth');
     this.depthVal = document.getElementById('hud-depth-val');
@@ -251,8 +278,11 @@ export class HUD {
     if (this.labelActionGeothermal) bindActionBtn(this.labelActionGeothermal, () => this.scene.baseSystem?.buildGeothermalStationAtPlayer?.());
 
     // Toast- und Alarm-Tracking (Point of No Return & Abfahrt mit zu wenig Tank)
-    this.warnedPointOfNoReturn = false;
-    this.warnedLowFuelOnEntry = false;
+    // Wenn der Spieler bereits unter Tage ist (z.B. nach Spielstand-Laden), Warnung als
+    // "bereits gezeigt" markieren, damit sie nur bei echtem Einfahren unter Tage erscheint.
+    const alreadyUnderground = this.player && (this.player.gy >= 0);
+    this.warnedPointOfNoReturn = alreadyUnderground;
+    this.warnedLowFuelOnEntry = alreadyUnderground;
 
     // Oberes linkes Bohrer-Status-Widget (Tank, Hülle, Fracht) als ein einheitliches klick-/tippbares Element
     let lastDrillerModalOpen = 0;
@@ -341,6 +371,275 @@ export class HUD {
     this.scene.events.on('special_tile_discovered', (_tileType) => {
       // Keine Unterbrechung/kein Modal/kein Pause während des Bohrens
     });
+
+    // Mini-Map Setup
+    this.minimapContainer = document.getElementById('hud-minimap');
+    this.minimapCanvas = document.getElementById('hud-minimap-canvas');
+    if (this.minimapCanvas) {
+      this.minimapCtx = this.minimapCanvas.getContext('2d');
+    }
+
+    // Gespeicherte Minimap-Einstellungen laden
+    this.isMinimapEnabled = localStorage.getItem('vein_minimap_enabled') !== 'false';
+    const savedZoom = Number(localStorage.getItem('vein_minimap_zoom')) || 1.0;
+    const validZooms = [0.05, 0.1, 0.25, 0.5, 0.7, 1.0];
+    this.minimapZoomLevel = validZooms.includes(savedZoom) ? savedZoom : 1.0;
+    if (this.minimapContainer) {
+      this.minimapContainer.style.display = this.isMinimapEnabled ? 'flex' : 'none';
+      const openMap = (e) => {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        this.toggleMapModal();
+      };
+      this.minimapContainer.addEventListener('click', openMap);
+    }
+
+    // Schwebender Navigationspfeil unter der Tiefenanzeige
+    this.navArrowBadge = document.getElementById('hud-nav-arrow-badge');
+    this.navArrowIcon = document.getElementById('hud-nav-arrow-icon');
+    this.navText = document.getElementById('hud-nav-text');
+    this.navCancelBtn = document.getElementById('hud-nav-cancel-btn');
+
+    if (this.navCancelBtn) {
+      const cancelNav = (e) => {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        soundFx.playClick?.();
+        this.clearNavigationWaypoint();
+      };
+      ['pointerdown', 'click'].forEach(evt => {
+        this.navCancelBtn.addEventListener(evt, cancelNav, { passive: false });
+      });
+    }
+
+    if (this.navArrowBadge) {
+      this.navArrowBadge.addEventListener('click', (e) => {
+        if (e.target && e.target.closest('#hud-nav-cancel-btn')) return;
+        e.preventDefault();
+        e.stopPropagation();
+        this.toggleMapModal();
+      });
+    }
+  }
+
+  setMinimapEnabled(enabled) {
+    this.isMinimapEnabled = !!enabled;
+    localStorage.setItem('vein_minimap_enabled', this.isMinimapEnabled ? 'true' : 'false');
+    if (this.minimapContainer) {
+      this.minimapContainer.style.display = this.isMinimapEnabled ? 'flex' : 'none';
+    }
+    if (this.isMinimapEnabled) {
+      this.updateMinimap();
+    }
+  }
+
+  setMinimapZoom(zoom) {
+    const validZooms = [0.05, 0.1, 0.25, 0.5, 0.7, 1.0];
+    const val = Number(zoom);
+    this.minimapZoomLevel = validZooms.includes(val) ? val : 1.0;
+    localStorage.setItem('vein_minimap_zoom', String(this.minimapZoomLevel));
+    this.updateMinimap();
+  }
+
+  formatStatFraction(current, max) {
+    return `<span class="hud-num-val">${current}</span><span class="hud-stat-slash">/</span><span class="hud-num-val">${max}</span>`;
+  }
+
+  setNavigationWaypoint(wp) {
+    this.activeWaypoint = wp ? { ...wp } : null;
+    if (this.mapModal) {
+      this.mapModal.activeWaypoint = this.activeWaypoint;
+    }
+    this.updateNavigationArrow();
+  }
+
+  clearNavigationWaypoint() {
+    this.activeWaypoint = null;
+    if (this.mapModal) {
+      this.mapModal.activeWaypoint = null;
+    }
+    if (this.navArrowBadge) {
+      this.navArrowBadge.style.display = 'none';
+    }
+  }
+
+  toggleMapModal() {
+    if (!this.mapModal) return;
+    if (this.scene && this.scene.baseSystem) {
+      this.mapModal.baseSystem = this.scene.baseSystem;
+    }
+    if (this.scene && this.scene.player) {
+      this.mapModal.player = this.scene.player;
+    }
+    this.mapModal.toggle();
+  }
+
+  updateMinimap() {
+    if (!this.isMinimapEnabled) return;
+    if (!this.minimapCanvas || !this.minimapCtx || !this.player) return;
+    if (document.body.classList.contains('modal-open') || document.body.classList.contains('discovery-modal-open')) return;
+
+    const now = Date.now();
+    if (now - (this._lastMinimapDraw || 0) < 40) return;
+    this._lastMinimapDraw = now;
+
+    const ctx = this.minimapCtx;
+    const w = 136;
+    const h = 84;
+    const dpr = window.devicePixelRatio || 1;
+
+    if (this.minimapCanvas.width !== Math.round(w * dpr) || this.minimapCanvas.height !== Math.round(h * dpr)) {
+      this.minimapCanvas.width = Math.round(w * dpr);
+      this.minimapCanvas.height = Math.round(h * dpr);
+    }
+
+    ctx.save();
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, w, h);
+
+    // Hintergrund
+    ctx.fillStyle = '#090d16';
+    ctx.fillRect(0, 0, w, h);
+
+    const pGx = this.player.gx || 20;
+    const pGy = this.player.gy || 0;
+    const zoomMult = this.minimapZoomLevel || 1.0;
+    const scale = 3.5 * zoomMult;
+    const cx = w / 2;
+    const cy = h / 2;
+    const panX = cx - pGx * scale;
+    const panY = cy - pGy * scale;
+
+    const maxDistX = Math.ceil(w / (2 * scale)) + 6;
+    const maxDistY = Math.ceil(h / (2 * scale)) + 6;
+
+    // Erdoberfläche & Himmel (gy < 0)
+    const surfaceY = panY + 0 * scale;
+    if (surfaceY > 0) {
+      ctx.fillStyle = '#0a192f';
+      ctx.fillRect(0, 0, w, surfaceY);
+      ctx.strokeStyle = '#22c55e';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, surfaceY);
+      ctx.lineTo(w, surfaceY);
+      ctx.stroke();
+    }
+
+    // Gegrabene Stollen & Schächte (mindestens 1.1px damit bei starkem Zoom Stollen klar sichtbar bleiben)
+    const destroyedTiles = this.scene?.gridSystem?.destroyedTiles || new Set();
+    ctx.fillStyle = '#1e293b';
+    const tileW = Math.max(1.1, scale);
+    const tileH = Math.max(1.1, scale);
+    for (const key of destroyedTiles) {
+      const commaIdx = key.indexOf(',');
+      if (commaIdx === -1) continue;
+      const gx = Number(key.substring(0, commaIdx));
+      const gy = Number(key.substring(commaIdx + 1));
+      if (Math.abs(gx - pGx) > maxDistX || Math.abs(gy - pGy) > maxDistY) continue;
+      const sx = panX + gx * scale;
+      const sy = panY + gy * scale;
+      ctx.fillRect(sx, sy, tileW, tileH);
+    }
+
+    // Fester Schachteinstieg (gx: 19..20, gy: 0)
+    ctx.fillStyle = '#334155';
+    for (let egx = 19; egx <= 20; egx++) {
+      if (Math.abs(egx - pGx) <= maxDistX && Math.abs(0 - pGy) <= maxDistY) {
+        const sx = panX + egx * scale;
+        const sy = panY + 0 * scale;
+        ctx.fillRect(sx, sy, tileW, tileH);
+      }
+    }
+
+    // Untertage-Stationen (Tankanlagen / Pneumatik / Geothermie)
+    const stations = this.scene?.baseSystem?.subsurfaceStations || [];
+    stations.forEach(st => {
+      const sx = panX + st.gx * scale;
+      const sy = panY + st.gy * scale;
+      if (sx >= -6 && sx <= w + 6 && sy >= -6 && sy <= h + 6) {
+        ctx.fillStyle = (st.type === 'fuel' || st.type === 'geothermal') ? '#f59e0b' : '#38bdf8';
+        ctx.beginPath();
+        ctx.arc(sx + scale / 2, sy + scale / 2, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    });
+
+    // Schachteinstieg Markierung (20, 0)
+    const entX = panX + 20 * scale;
+    const entY = panY + 0 * scale;
+    if (entX >= -6 && entX <= w + 6 && entY >= -6 && entY <= h + 6) {
+      ctx.fillStyle = '#10b981';
+      ctx.beginPath();
+      ctx.arc(entX + scale / 2, entY + scale / 2, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Aktives Navigationsziel (als dezenter Punkt, OHNE Pfeile oder Rand-Indikatoren)
+    if (this.activeWaypoint) {
+      const wx = panX + this.activeWaypoint.gx * scale + scale / 2;
+      const wy = panY + this.activeWaypoint.gy * scale + scale / 2;
+      if (wx >= 4 && wx <= w - 4 && wy >= 4 && wy <= h - 4) {
+        ctx.fillStyle = '#10b981';
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(wx, wy, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
+    }
+
+    // Bohrfahrzeug zentriert (reiner gelber Punkt passend zur Bohrerfarbe, OHNE Radar-Ping oder Wellen)
+    ctx.fillStyle = '#fbbf24';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  updateNavigationArrow() {
+    if (!this.navArrowBadge || !this.navArrowIcon || !this.navText) return;
+
+    if (!this.activeWaypoint || !this.player) {
+      this.navArrowBadge.style.display = 'none';
+      return;
+    }
+
+    if (document.body.classList.contains('modal-open') || document.body.classList.contains('discovery-modal-open')) {
+      this.navArrowBadge.style.display = 'none';
+      return;
+    }
+
+    this.navArrowBadge.style.display = 'inline-flex';
+
+    const pX = this.player.sprite ? this.player.sprite.x : (this.player.gx * 32 + 16);
+    const pY = this.player.sprite ? this.player.sprite.y : (this.player.gy * 32 + 16);
+    const tX = this.activeWaypoint.gx * 32 + 16;
+    const tY = this.activeWaypoint.gy * 32 + 16;
+
+    const dx = tX - pX;
+    const dy = tY - pY;
+    const distBlocks = Math.round(Math.hypot(dx, dy) / 32);
+    const distMeters = Math.round(distBlocks * 1.5);
+
+    const angleDeg = Math.atan2(dy, dx) * (180 / Math.PI);
+    const rot = angleDeg + 90;
+    this.navArrowIcon.style.transform = `rotate(${rot}deg)`;
+
+    if (distBlocks <= 1) {
+      this.navText.textContent = 'ZIEL';
+    } else {
+      this.navText.textContent = `${distMeters}m`;
+    }
   }
 
   openDrillerModal(tab = 'cargo') {
@@ -508,14 +807,13 @@ export class HUD {
         if (this.levelRight) this.levelRight.textContent = lvl;
       }
 
-      if (this.cargoText) {
-        const cargoCount = this.player.cargoCount || (this.player.cargo ? this.player.cargo.length : 0);
-        const maxCargo = this.player.maxCargo || 12;
-        const cargoStr = `${cargoCount}/${maxCargo}`;
-        if (this._lastCargoStr !== cargoStr) {
-          this._lastCargoStr = cargoStr;
-          this.cargoText.innerHTML = cargoStr;
-        }
+      const cargoCount = this.player.cargoCount || (this.player.cargo ? this.player.cargo.length : 0);
+      const maxCargo = this.player.maxCargo || 12;
+
+      const cargoStr = this.formatStatFraction(cargoCount, maxCargo);
+      if (this._lastCargoStr !== cargoStr) {
+        this._lastCargoStr = cargoStr;
+        if (this.cargoText) this.cargoText.innerHTML = cargoStr;
       }
     }
 
@@ -720,18 +1018,11 @@ export class HUD {
         }
       }
 
-      // Gesamten Action FAB nur anzeigen wenn mindestens 1 Item oder Aktion existiert!
-      const hasAnyAction = hasGeothermalAction || hasPneumaticAction || dCount > 0 || placedTntCount > 0;
+      // Action-FAB-Button unten rechts unter Tage DAUERHAFT sichtbar halten!
+      // (Verhindert, dass der Button bei 0 Dynamit oder fehlenden Stationen plötzlich verschwindet)
       if (this.actionFabContainer) {
-        if (hasAnyAction) {
-          if (this.actionFabContainer.style.display !== 'flex') {
-            this.actionFabContainer.style.display = 'flex';
-          }
-        } else {
-          if (this.actionFabContainer.style.display !== 'none') {
-            this.actionFabContainer.style.display = 'none';
-            this.actionFabContainer.classList.remove('open');
-          }
+        if (this.actionFabContainer.style.display !== 'flex') {
+          this.actionFabContainer.style.display = 'flex';
         }
       }
     } else {
@@ -859,21 +1150,42 @@ export class HUD {
       else this.cardGauges?.classList.remove('hull-warning');
     }
 
-    // Fracht (nur als Zahl)
-    if (this.cargoNum && this.cargoMax) {
-      if (this._lastCargo !== this.player.cargoCount) {
-        this.cargoNum.textContent = this.player.cargoCount;
-        this._lastCargo = this.player.cargoCount;
+    // Fracht (Laderaum)
+    const cargoCount = this.player.cargoCount || (this.player.cargo ? this.player.cargo.length : 0);
+    const maxCargo = this.player.maxCargo || 12;
+    const cargoStr = this.formatStatFraction(cargoCount, maxCargo);
+    if (this._lastCargoStr !== cargoStr) {
+      this._lastCargoStr = cargoStr;
+      if (this.cargoText) this.cargoText.innerHTML = cargoStr;
+    }
+
+    // Depot (Lagerbestand / Maximale Kapazität)
+    const baseSystem = this.scene?.baseSystem;
+    const depotCount = baseSystem?.getDepotTotalCount ? baseSystem.getDepotTotalCount() : 0;
+    const depotCap = baseSystem?.getDepotCapacity ? baseSystem.getDepotCapacity() : (baseSystem?.depot?.capacity || 10);
+    const depotStr = this.formatStatFraction(depotCount, depotCap);
+    if (this._lastDepotStr !== depotStr) {
+      this._lastDepotStr = depotStr;
+      if (this.depotText) {
+        this.depotText.innerHTML = depotStr;
+        this.depotText.style.color = (depotCount >= depotCap && depotCap > 0) ? '#f87171' : '#ffffff';
       }
-      if (this._lastMaxCargo !== this.player.maxCargo) {
-        this.cargoMax.textContent = this.player.maxCargo;
-        this._lastMaxCargo = this.player.maxCargo;
+    }
+
+    // Koordinaten relativ zum Ausstiegspunkt (0/0, 1 Block = Wert 1)
+    if (this.coordX && this.coordY) {
+      const curGx = Math.round(this.player.gx);
+      const curGy = Math.round(this.player.gy);
+      const relX = curGx - 20;
+      const relY = curGy === 0 ? 0 : -curGy;
+
+      if (this._lastRelX !== relX) {
+        this._lastRelX = relX;
+        this.coordX.textContent = relX;
       }
-    } else if (this.cargoText) {
-      const cargoStr = `${this.player.cargoCount}<span class="hud-cargo-slash">/</span>${this.player.maxCargo}`;
-      if (this._lastCargoStr !== cargoStr) {
-        this._lastCargoStr = cargoStr;
-        this.cargoText.innerHTML = cargoStr;
+      if (this._lastRelY !== relY) {
+        this._lastRelY = relY;
+        this.coordY.textContent = relY;
       }
     }
 
@@ -904,11 +1216,17 @@ export class HUD {
     if (this.drillerModal && this.drillerModal.isOpen && this.drillerModal.syncLiveStats) {
       this.drillerModal.syncLiveStats();
     }
+
+    // Mini-Map & Navigationspfeil aktualisieren
+    this.updateMinimap();
+    this.updateNavigationArrow();
   }
 
   togglePauseMenu() {
     const modalEl = document.getElementById('building-modal');
-    const isModalOpen = modalEl && modalEl.style.display && modalEl.style.display !== 'none';
+    const isModalOpen = (modalEl && modalEl.style.display && modalEl.style.display !== 'none') ||
+                        (this.mapModal && this.mapModal.isOpen) ||
+                        document.body.classList.contains('modal-open');
     if (isModalOpen) {
       closeActiveModal(this.scene);
     } else {

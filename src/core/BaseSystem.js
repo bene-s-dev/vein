@@ -103,9 +103,15 @@ export function closeActiveModal(scene) {
     sc.tutorialModal.close();
   }
 
+  // Minen-Karte & Navigation schließen falls geöffnet
+  if (sc && sc.hud && sc.hud.mapModal && sc.hud.mapModal.isOpen) {
+    sc.hud.mapModal.close();
+  }
+
   document.body.classList.remove('modal-open');
   document.body.classList.remove('discovery-modal-open');
   document.body.classList.remove('tutorial-open');
+  document.body.classList.remove('map-modal-open');
 
   try {
     soundFx.stopAllLoops?.();
@@ -141,6 +147,10 @@ export function isModalActive() {
       document.body.classList.contains('discovery-modal-open') ||
       document.body.classList.contains('tutorial-open')
     )) {
+      return true;
+    }
+    const mapModal = document.getElementById('map-modal');
+    if (mapModal && mapModal.style && (mapModal.style.display === 'flex' || (mapModal.style.display !== 'none' && mapModal.style.display !== ''))) {
       return true;
     }
     const modal = document.getElementById('building-modal');
@@ -1686,10 +1696,18 @@ export class BaseSystem {
   }
 
   spawnStationInWorld(st) {
-    const px = st.gx * TILE_SIZE + TILE_SIZE / 2;
+    let px = st.gx * TILE_SIZE + TILE_SIZE / 2;
     const py = st.gy * TILE_SIZE + TILE_SIZE / 2;
 
     const isTube = (st.type === 'pneumatic' || st.type === 'tube');
+    // Falls am selben Feld mehrere Stationen stehen (z.B. aus Altspeicherstand), horizontal staffeln
+    const overlapping = (this.subsurfaceStations || []).filter(s => Math.round(s.gx) === Math.round(st.gx) && Math.round(s.gy) === Math.round(st.gy));
+    if (overlapping.length > 1) {
+      const idx = overlapping.indexOf(st);
+      if (idx === 0) px -= 10;
+      else if (idx === 1) px += 10;
+    }
+
     const spriteKey = isTube ? 'station_pneumatic_tube' : 'station_fuel';
     const sprite = this.scene.add.image(px, py, spriteKey)
       .setDepth(6)
@@ -1731,6 +1749,15 @@ export class BaseSystem {
       return;
     }
 
+    const targetGx = Math.round(this.player.gx);
+    const targetGy = Math.round(this.player.gy);
+    const exactOccupied = (this.subsurfaceStations || []).find(s => Math.round(s.gx) === targetGx && Math.round(s.gy) === targetGy);
+    if (exactOccupied) {
+      this.scene.events.emit('notify', '⚠️ Diese Position ist bereits durch eine Station belegt! Wähle eine freie Kachel.');
+      soundFx.playError();
+      return;
+    }
+
     const nearby = this.getNearbyStation(this.player.gx, this.player.gy, 2.5);
     if (nearby && (nearby.type === 'pneumatic' || nearby.type === 'tube')) {
       this.openSubsurfaceStationModal(nearby);
@@ -1760,8 +1787,8 @@ export class BaseSystem {
       type: 'pneumatic',
       name: 'Förder-Schacht',
       depth: depthMeters,
-      gx: Math.round(this.player.gx),
-      gy: Math.round(this.player.gy),
+      gx: targetGx,
+      gy: targetGy,
       usedItem: usableKey,
       costCash: cost,
       isBuilt: true
@@ -1783,6 +1810,15 @@ export class BaseSystem {
     const depthMeters = Math.max(0, Math.floor(this.player.gy));
     if (depthMeters < 5) {
       this.scene.events.emit('notify', '⚠️ Tankanlagen können nur unter Tage gebaut werden!');
+      soundFx.playError();
+      return;
+    }
+
+    const targetGx = Math.round(this.player.gx);
+    const targetGy = Math.round(this.player.gy);
+    const exactOccupied = (this.subsurfaceStations || []).find(s => Math.round(s.gx) === targetGx && Math.round(s.gy) === targetGy);
+    if (exactOccupied) {
+      this.scene.events.emit('notify', '⚠️ Diese Position ist bereits durch eine Station belegt! Wähle eine freie Kachel.');
       soundFx.playError();
       return;
     }
@@ -1816,8 +1852,8 @@ export class BaseSystem {
       type: 'fuel',
       name: 'Tankanlage',
       depth: depthMeters,
-      gx: Math.round(this.player.gx),
-      gy: Math.round(this.player.gy),
+      gx: targetGx,
+      gy: targetGy,
       usedItem: usableKey,
       costCash: cost,
       isBuilt: true
@@ -1893,15 +1929,20 @@ export class BaseSystem {
     const isTube = (station.type === 'pneumatic' || station.type === 'tube');
     const isFuel = (station.type === 'fuel' || station.type === 'geothermal');
 
-    const titleIcon = isTube ? icon('conveyor-belt', '', 18) : icon('fuel', '', 18);
-    const titleColor = isTube ? '#38bdf8' : '#fb923c';
-    const stationName = isTube ? 'Pneumatische Erzförderung' : 'Untertage-Tankanlage';
+    // Partner-Station auf demselben oder direkt angrenzenden Feld suchen (z.B. wenn Tankstelle und Erzförderung überlagert sind)
+    const partnerStation = (this.subsurfaceStations || []).find(s => 
+      s.id !== station.id &&
+      Math.hypot(s.gx - station.gx, s.gy - station.gy) <= 1.5 &&
+      ((isTube && (s.type === 'fuel' || s.type === 'geothermal')) || (isFuel && (s.type === 'pneumatic' || s.type === 'tube')))
+    );
 
-    const itemData = EXPEDITION_ITEMS.find(i => i.key === station.usedItem);
-    let fallbackPrice = isTube ? 350 : 500;
-    if (station.depth > 950) fallbackPrice = isTube ? 7500 : 11000;
-    else if (station.depth > 180) fallbackPrice = isTube ? 1800 : 2600;
-    const refundPrice = itemData ? itemData.price : (station.costCash || fallbackPrice);
+    const tubeStation = isTube ? station : (partnerStation && (partnerStation.type === 'pneumatic' || partnerStation.type === 'tube') ? partnerStation : null);
+    const fuelStation = isFuel ? station : (partnerStation && (partnerStation.type === 'fuel' || partnerStation.type === 'geothermal') ? partnerStation : null);
+    const isCombined = !!(tubeStation && fuelStation);
+
+    const titleIcon = isCombined ? icon('layers', '', 18) : (isTube ? icon('conveyor-belt', '', 18) : icon('fuel', '', 18));
+    const titleColor = isCombined ? '#a855f7' : (isTube ? '#38bdf8' : '#fb923c');
+    const stationName = isCombined ? 'Versorgungs-Knotenpunkt' : (isTube ? 'Pneumatische Erzförderung' : 'Untertage-Tankanlage');
 
     const dist = Math.hypot(this.player.gx - station.gx, this.player.gy - station.gy);
     const isNearby = dist <= 3.5;
@@ -1917,14 +1958,19 @@ export class BaseSystem {
     const rawOreCount = rawOres.length;
     const maxCargo = this.player.maxCargo || 10;
 
-    let actionCardHtml = '';
-    if (isFuel) {
+    const renderFuelCard = (targetFuelSt) => {
       const isAlreadyFull = curFuel >= maxFuel;
-      actionCardHtml = `
-        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+      const fuelItem = EXPEDITION_ITEMS.find(i => i.key === targetFuelSt.usedItem);
+      let fbFuelPrice = 500;
+      if (targetFuelSt.depth > 950) fbFuelPrice = 11000;
+      else if (targetFuelSt.depth > 180) fbFuelPrice = 2600;
+      const fuelRefund = fuelItem ? fuelItem.price : (targetFuelSt.costCash || fbFuelPrice);
+
+      return `
+        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(251, 146, 60, 0.25); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 11.5px; font-weight: 700; color: #94a3b8; display: inline-flex; align-items: center; gap: 5px;">
-              ${icon('fuel', '', 14)} Treibstoff
+            <span style="font-size: 11.5px; font-weight: 700; color: #fb923c; display: inline-flex; align-items: center; gap: 5px;">
+              ${icon('fuel', '', 14)} Treibstoff-Versorgung
             </span>
             <span style="font-size: 12.5px; font-weight: 800; color: #fb923c; font-variant-numeric: tabular-nums;">
               ${curFuel} / ${maxFuel} L (${fuelPct}%)
@@ -1946,14 +1992,25 @@ export class BaseSystem {
               ${icon('zap', '', 15)} Vollständig auftanken
             </button>
           `}
+          <button id="btn-station-dismantle-fuel" class="btn-buy" style="width: 100%; height: 26px; font-size: 10.5px; font-weight: 700; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); color: #fca5a5; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer; margin-top: 2px;">
+            ${icon('trash-2', '', 11)} Tankanlage abbauen (+${fuelRefund.toLocaleString('de-DE')} €)
+          </button>
         </div>
       `;
-    } else {
-      actionCardHtml = `
-        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+    };
+
+    const renderTubeCard = (targetTubeSt) => {
+      const tubeItem = EXPEDITION_ITEMS.find(i => i.key === targetTubeSt.usedItem);
+      let fbTubePrice = 350;
+      if (targetTubeSt.depth > 950) fbTubePrice = 7500;
+      else if (targetTubeSt.depth > 180) fbTubePrice = 1800;
+      const tubeRefund = tubeItem ? tubeItem.price : (targetTubeSt.costCash || fbTubePrice);
+
+      return `
+        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 11.5px; font-weight: 700; color: #94a3b8; display: inline-flex; align-items: center; gap: 5px;">
-              ${icon('package', '', 14)} Laderaum
+            <span style="font-size: 11.5px; font-weight: 700; color: #38bdf8; display: inline-flex; align-items: center; gap: 5px;">
+              ${icon('package', '', 14)} Pneumatische Erzförderung
             </span>
             <span style="font-size: 12.5px; font-weight: 800; color: #38bdf8; font-variant-numeric: tabular-nums;">
               ${rawOreCount} Roh-Erze (${cargo.length} / ${maxCargo})
@@ -1972,8 +2029,20 @@ export class BaseSystem {
               ${icon('upload-cloud', '', 15)} ${rawOreCount}x Erze nach oben befördern
             </button>
           `}
+          <button id="btn-station-dismantle-tube" class="btn-buy" style="width: 100%; height: 26px; font-size: 10.5px; font-weight: 700; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); color: #fca5a5; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer; margin-top: 2px;">
+            ${icon('trash-2', '', 11)} Förderschacht abbauen (+${tubeRefund.toLocaleString('de-DE')} €)
+          </button>
         </div>
       `;
+    };
+
+    let cardsHtml = '';
+    if (isCombined) {
+      cardsHtml = renderFuelCard(fuelStation) + renderTubeCard(tubeStation);
+    } else if (isFuel) {
+      cardsHtml = renderFuelCard(station);
+    } else {
+      cardsHtml = renderTubeCard(station);
     }
 
     const contentHtml = `
@@ -1988,13 +2057,8 @@ export class BaseSystem {
           </span>
         </div>
 
-        <!-- Action Card -->
-        ${actionCardHtml}
-
-        <!-- Dismantle Button -->
-        <button id="btn-station-dismantle" class="btn-buy" style="width: 100%; height: 32px; font-size: 11.5px; font-weight: 700; background: rgba(239, 68, 68, 0.10); border: 1px solid rgba(239, 68, 68, 0.25); color: #fca5a5; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; cursor: pointer; transition: all 0.15s ease;">
-          ${icon('trash-2', '', 13)} Station abbauen (+${refundPrice.toLocaleString('de-DE')} €)
-        </button>
+        <!-- Action Cards -->
+        ${cardsHtml}
       </div>
     `;
 
@@ -2004,46 +2068,81 @@ export class BaseSystem {
       </span>
     `, contentHtml, 420);
 
-    // Event Listeners
-    if (isFuel) {
-      const useBtn = document.getElementById('btn-station-use-fuel');
-      if (useBtn) {
-        useBtn.onclick = () => {
-          this.player.fuel = this.player.maxFuel;
-          if (soundFx.playRefuel) soundFx.playRefuel();
-          else soundFx.playUpgrade();
-          const posX = this.player.gx * TILE_SIZE + 16;
-          const posY = this.player.gy * TILE_SIZE + 16;
-          this.showFloatingText(posX, posY - 20, '⛽ 100% Aufgetankt!', '#10b981');
-          this.scene.events.emit('notify', '⛽ Bohrer an der Tankanlage vollständig aufgetankt!');
-          if (this.scene.hud) this.scene.hud.update();
-          this.openSubsurfaceStationModal(station);
-        };
-      }
-    } else {
-      const useBtn = document.getElementById('btn-station-use-tube');
-      if (useBtn) {
-        useBtn.onclick = () => {
-          this.depositOresAtStation(station);
-          this.openSubsurfaceStationModal(station);
-        };
-      }
+    // Event Listeners: Refuel
+    const useFuelBtn = document.getElementById('btn-station-use-fuel');
+    if (useFuelBtn) {
+      useFuelBtn.onclick = () => {
+        this.player.fuel = this.player.maxFuel;
+        if (soundFx.playRefuel) soundFx.playRefuel();
+        else soundFx.playUpgrade();
+        const posX = this.player.gx * TILE_SIZE + 16;
+        const posY = this.player.gy * TILE_SIZE + 16;
+        this.showFloatingText(posX, posY - 20, '⛽ 100% Aufgetankt!', '#10b981');
+        this.scene.events.emit('notify', '⛽ Bohrer an der Tankanlage vollständig aufgetankt!');
+        if (this.scene.hud) this.scene.hud.update();
+        this.openSubsurfaceStationModal(station);
+      };
     }
 
-    // Dismantle button with 2-step confirmation
-    const dismantleBtn = document.getElementById('btn-station-dismantle');
-    if (dismantleBtn) {
+    // Event Listeners: Ore tube
+    const useTubeBtn = document.getElementById('btn-station-use-tube');
+    if (useTubeBtn && tubeStation) {
+      useTubeBtn.onclick = () => {
+        this.depositOresAtStation(tubeStation);
+        this.openSubsurfaceStationModal(station);
+      };
+    }
+
+    // Dismantle Fuel Station
+    const dismantleFuelBtn = document.getElementById('btn-station-dismantle-fuel');
+    if (dismantleFuelBtn && fuelStation) {
       let isConfirming = false;
-      dismantleBtn.onclick = () => {
+      const fuelItem = EXPEDITION_ITEMS.find(i => i.key === fuelStation.usedItem);
+      let fbFuelPrice = 500;
+      if (fuelStation.depth > 950) fbFuelPrice = 11000;
+      else if (fuelStation.depth > 180) fbFuelPrice = 2600;
+      const fuelRefund = fuelItem ? fuelItem.price : (fuelStation.costCash || fbFuelPrice);
+
+      dismantleFuelBtn.onclick = () => {
         if (!isConfirming) {
           isConfirming = true;
-          dismantleBtn.style.background = 'linear-gradient(135deg, #dc2626, #b91c1c)';
-          dismantleBtn.style.borderColor = '#ef4444';
-          dismantleBtn.style.color = '#ffffff';
-          dismantleBtn.innerHTML = `⚠️ Wirklich für ${refundPrice.toLocaleString('de-DE')} € abbauen? (Erneut tippen)`;
-          refreshIcons(dismantleBtn);
+          dismantleFuelBtn.style.background = 'linear-gradient(135deg, #dc2626, #b91c1c)';
+          dismantleFuelBtn.style.borderColor = '#ef4444';
+          dismantleFuelBtn.style.color = '#ffffff';
+          dismantleFuelBtn.innerHTML = `⚠️ Wirklich für ${fuelRefund.toLocaleString('de-DE')} € abbauen? (Erneut tippen)`;
+          refreshIcons(dismantleFuelBtn);
         } else {
-          this.dismantleSubsurfaceStation(station, refundPrice);
+          this.dismantleSubsurfaceStation(fuelStation, fuelRefund);
+          if (tubeStation && tubeStation.id !== fuelStation.id) {
+            this.openSubsurfaceStationModal(tubeStation);
+          }
+        }
+      };
+    }
+
+    // Dismantle Tube Station
+    const dismantleTubeBtn = document.getElementById('btn-station-dismantle-tube');
+    if (dismantleTubeBtn && tubeStation) {
+      let isConfirming = false;
+      const tubeItem = EXPEDITION_ITEMS.find(i => i.key === tubeStation.usedItem);
+      let fbTubePrice = 350;
+      if (tubeStation.depth > 950) fbTubePrice = 7500;
+      else if (tubeStation.depth > 180) fbTubePrice = 1800;
+      const tubeRefund = tubeItem ? tubeItem.price : (tubeStation.costCash || fbTubePrice);
+
+      dismantleTubeBtn.onclick = () => {
+        if (!isConfirming) {
+          isConfirming = true;
+          dismantleTubeBtn.style.background = 'linear-gradient(135deg, #dc2626, #b91c1c)';
+          dismantleTubeBtn.style.borderColor = '#ef4444';
+          dismantleTubeBtn.style.color = '#ffffff';
+          dismantleTubeBtn.innerHTML = `⚠️ Wirklich für ${tubeRefund.toLocaleString('de-DE')} € abbauen? (Erneut tippen)`;
+          refreshIcons(dismantleTubeBtn);
+        } else {
+          this.dismantleSubsurfaceStation(tubeStation, tubeRefund);
+          if (fuelStation && fuelStation.id !== tubeStation.id) {
+            this.openSubsurfaceStationModal(fuelStation);
+          }
         }
       };
     }

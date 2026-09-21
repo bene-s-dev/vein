@@ -60,10 +60,15 @@ export class DrillerMenuModal {
     const maxCargo = this.player.maxCargo || 10;
     const cargoPct = Math.max(0, Math.min(100, Math.round((cargoCount / maxCargo) * 100)));
 
+    const baseSystem = this.baseSystem || this.scene?.baseSystem;
+    const depotCount = baseSystem?.getDepotTotalCount ? baseSystem.getDepotTotalCount() : 0;
+    const depotCap = baseSystem?.getDepotCapacity ? baseSystem.getDepotCapacity() : (baseSystem?.depot?.capacity || 10);
+    const depotPct = depotCap > 0 ? Math.max(0, Math.min(100, Math.round((depotCount / depotCap) * 100))) : 0;
+
     const statusBarsHtml = `
       <div style="
         display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
+        grid-template-columns: repeat(4, 1fr);
         gap: 8px;
         margin-bottom: 16px;
       ">
@@ -133,15 +138,43 @@ export class DrillerMenuModal {
             <span style="font-size: 11px; font-weight: 700; color: #cbd5e1; display: inline-flex; align-items: center; gap: 4px;">
               ${icon('container', '', 12)} Fracht
             </span>
-            <span style="font-size: 13px; font-weight: 800; color: ${cargoPct >= 100 ? '#ef4444' : '#38bdf8'}; width: 44px; min-width: 44px; text-align: right; font-variant-numeric: tabular-nums; display: inline-block;">
+            <span id="driller-menu-cargo-num" style="font-size: 13px; font-weight: 800; color: ${cargoPct >= 100 ? '#ef4444' : '#38bdf8'}; width: 44px; min-width: 44px; text-align: right; font-variant-numeric: tabular-nums; display: inline-block;">
               ${cargoCount}
             </span>
           </div>
           <div style="height: 6px; background: rgba(0, 0, 0, 0.5); border-radius: 99px; overflow: hidden;">
-            <div style="width: ${cargoPct}%; height: 100%; background: ${cargoPct >= 100 ? '#ef4444' : '#38bdf8'}; border-radius: 99px; transition: width 0.2s ease;"></div>
+            <div id="driller-menu-cargo-fill" style="width: ${cargoPct}%; height: 100%; background: ${cargoPct >= 100 ? '#ef4444' : '#38bdf8'}; border-radius: 99px; transition: width 0.2s ease;"></div>
           </div>
-          <div style="font-size: 10px; color: #cbd5e1; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600;">
+          <div id="driller-menu-cargo-text" style="font-size: 10px; color: #cbd5e1; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600;">
             ${cargoCount} / ${maxCargo}
+          </div>
+        </div>
+
+        <!-- Depot -->
+        <div id="driller-menu-card-depot" style="
+          background: rgba(30, 41, 59, 0.75);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 10px;
+          padding: 8px 10px;
+          display: flex;
+          flex-direction: column;
+          gap: 5px;
+          cursor: pointer;
+          transition: border-color 0.15s ease, background 0.15s ease;
+        " title="Depot-Lager (Klick zum Öffnen)">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 11px; font-weight: 700; color: #cbd5e1; display: inline-flex; align-items: center; gap: 4px;">
+              ${icon('boxes', '', 12)} Depot
+            </span>
+            <span id="driller-menu-depot-num" style="font-size: 13px; font-weight: 800; color: ${depotPct >= 100 ? '#ef4444' : '#a855f7'}; width: 44px; min-width: 44px; text-align: right; font-variant-numeric: tabular-nums; display: inline-block;">
+              ${depotCount}
+            </span>
+          </div>
+          <div style="height: 6px; background: rgba(0, 0, 0, 0.5); border-radius: 99px; overflow: hidden;">
+            <div id="driller-menu-depot-fill" style="width: ${depotPct}%; height: 100%; background: ${depotPct >= 100 ? '#ef4444' : '#a855f7'}; border-radius: 99px; transition: width 0.2s ease;"></div>
+          </div>
+          <div id="driller-menu-depot-text" style="font-size: 10px; color: #cbd5e1; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600;">
+            ${depotCount} / ${depotCap}
           </div>
         </div>
       </div>
@@ -246,11 +279,14 @@ export class DrillerMenuModal {
     `;
 
     // 3. Fahrerassistenz & Beleuchtung
-    const frontOn = !!this.player.frontLightEnabled;
-    const rearOn = !!this.player.rearLightEnabled;
+    const workLightOn = this.player.workLightEnabled !== undefined
+      ? !!this.player.workLightEnabled
+      : (!!this.player.frontLightEnabled || !!this.player.rearLightEnabled);
     const intensity = Math.round((this.player.lightIntensity ?? 0.85) * 100);
     const lockOn = this.player.directionLockEnabled !== false;
     const drillOn = this.player.autoDrillEnabled !== false;
+    const minimapOn = this.scene?.hud ? this.scene.hud.isMinimapEnabled : (localStorage.getItem('vein_minimap_enabled') !== 'false');
+    const curZoom = this.scene?.hud ? (this.scene.hud.minimapZoomLevel || 1.0) : (Number(localStorage.getItem('vein_minimap_zoom')) || 1.0);
 
     const mkToggle = (id, label, sub, isOn, iconName) => `
       <div style="
@@ -272,7 +308,7 @@ export class DrillerMenuModal {
           </div>
           <div style="min-width:0;">
             <div style="font-size:11px;font-weight:700;color:#f8fafc;white-space:nowrap;">${label}</div>
-            <div style="font-size:9.5px;color:#94a3b8;margin-top:1px;white-space:nowrap;">${sub}</div>
+            ${sub ? `<div style="font-size:9.5px;color:#94a3b8;margin-top:1px;white-space:nowrap;">${sub}</div>` : ''}
           </div>
         </div>
         <button id="${id}" style="
@@ -300,64 +336,164 @@ export class DrillerMenuModal {
           ${icon('settings-2','',11)} Beleuchtung & Fahrerassistenz
         </div>
 
-        ${mkToggle('btn-front-light','Frontscheinwerfer','Arbeitsrichtung beleuchten (Taste L)', frontOn, 'lightbulb')}
-        ${mkToggle('btn-rear-light','Heckscheinwerfer','Schachtrücken & Rückwärtsbereich', rearOn, 'lightbulb-off')}
-
+        <!-- Arbeitsbeleuchtung & Lichtstärke in einer gemeinsamen Card (ohne horizontale Trennlinie) -->
         <div style="
           background: rgba(15,23,42,0.7);
-          border: 1px solid rgba(255,255,255,${(frontOn||rearOn) ? '0.14' : '0.06'});
+          border: 1px solid rgba(255,255,255,${workLightOn ? '0.14' : '0.06'});
           border-radius: 10px;
           padding: 8px 10px;
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
         ">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-            <div style="display:flex;align-items:center;gap:8px;">
-              <div style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;
-                background:rgba(245,158,11,0.12);border-radius:7px;color:#f59e0b;flex-shrink:0;">
-                ${icon('sun-dim','',15)}
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+            <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+              <div style="
+                width:28px;height:28px;display:flex;align-items:center;justify-content:center;
+                background:${workLightOn ? 'rgba(245,158,11,0.18)' : 'rgba(71,85,105,0.15)'};
+                border-radius:7px;color:${workLightOn ? '#f59e0b' : '#64748b'};flex-shrink:0;">
+                ${icon('lightbulb','',15)}
               </div>
-              <div>
-                <div style="font-size:11px;font-weight:700;color:#f8fafc;">Lichtstärke</div>
-                <div style="font-size:9.5px;color:#94a3b8;">Helligkeit der Scheinwerfer</div>
+              <div style="min-width:0;">
+                <div style="font-size:11px;font-weight:700;color:#f8fafc;white-space:nowrap;">Arbeitsbeleuchtung</div>
               </div>
             </div>
-            <span id="driller-intensity-val" style="font-size:12px;font-weight:800;color:#f59e0b;min-width:36px;text-align:right;">${intensity}%</span>
+            <button id="btn-work-light" style="
+              width:44px;height:24px;border:none;border-radius:12px;cursor:pointer;flex-shrink:0;
+              background:${workLightOn ? 'linear-gradient(135deg,#10b981,#059669)' : '#334155'};
+              position:relative;transition:background 0.2s ease;">
+              <span style="
+                position:absolute;top:3px;left:${workLightOn ? '22px' : '3px'};
+                width:18px;height:18px;border-radius:50%;background:#fff;
+                transition:left 0.2s ease;display:block;"></span>
+            </button>
           </div>
-          <style>
-            #driller-intensity-slider{
-              -webkit-appearance:none;appearance:none;
-              width:100%;height:16px;background:transparent;
-              outline:none;cursor:pointer;display:block;
-              padding:0;margin:2px 0;
-            }
-            #driller-intensity-slider::-webkit-slider-runnable-track{
-              height:4px;border-radius:99px;
-              background:linear-gradient(to right,#f59e0b var(--v,85%),rgba(255,255,255,0.13) var(--v,85%));
-            }
-            #driller-intensity-slider::-webkit-slider-thumb{
-              -webkit-appearance:none;appearance:none;
-              width:16px;height:16px;border-radius:50%;
-              background:#f59e0b;border:2.5px solid #fff;
-              box-shadow:0 0 8px rgba(245,158,11,0.6);
-              margin-top:-6px;cursor:pointer;
-            }
-            #driller-intensity-slider::-moz-range-track{
-              height:4px;border-radius:99px;
-              background:rgba(255,255,255,0.13);
-            }
-            #driller-intensity-slider::-moz-range-progress{
-              height:4px;border-radius:99px;background:#f59e0b;
-            }
-            #driller-intensity-slider::-moz-range-thumb{
-              width:13px;height:13px;border-radius:50%;
-              background:#f59e0b;border:2.5px solid #fff;
-              box-shadow:0 0 8px rgba(245,158,11,0.6);cursor:pointer;
-            }
-          </style>
-          <input id="driller-intensity-slider" type="range" min="10" max="100" value="${intensity}"
-            style="--v:${intensity}%">
+
+          <div style="
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            padding-top: 2px;
+            ${workLightOn ? '' : 'opacity: 0.38; pointer-events: none;'}
+          ">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <span style="font-size: 10px; font-weight: 700; color: #94a3b8; letter-spacing: 0.3px;">Lichtstärke:</span>
+              <span id="driller-intensity-val" style="font-size: 11px; font-weight: 800; color: #f59e0b; min-width: 32px; text-align: right;">${intensity}%</span>
+            </div>
+            <style>
+              #driller-intensity-slider{
+                -webkit-appearance:none;appearance:none;
+                width:100%;height:16px;background:transparent;
+                outline:none;cursor:pointer;display:block;
+                padding:0;margin:1px 0;
+              }
+              #driller-intensity-slider::-webkit-slider-runnable-track{
+                height:4px;border-radius:99px;
+                background:linear-gradient(to right, #f59e0b calc(8px + (100% - 16px) * var(--p, 0.833)), rgba(255,255,255,0.13) calc(8px + (100% - 16px) * var(--p, 0.833)));
+              }
+              #driller-intensity-slider::-webkit-slider-thumb{
+                -webkit-appearance:none;appearance:none;
+                width:16px;height:16px;border-radius:50%;
+                background:#f59e0b;border:2.5px solid #fff;
+                box-shadow:0 0 8px rgba(245,158,11,0.6);
+                margin-top:-6px;cursor:pointer;
+              }
+              #driller-intensity-slider::-moz-range-track{
+                height:4px;border-radius:99px;
+                background:rgba(255,255,255,0.13);
+              }
+              #driller-intensity-slider::-moz-range-progress{
+                height:4px;border-radius:99px;background:#f59e0b;
+              }
+              #driller-intensity-slider::-moz-range-thumb{
+                width:13px;height:13px;border-radius:50%;
+                background:#f59e0b;border:2.5px solid #fff;
+                box-shadow:0 0 8px rgba(245,158,11,0.6);cursor:pointer;
+              }
+            </style>
+            <input id="driller-intensity-slider" type="range" min="10" max="100" value="${intensity}"
+              style="--p:${Math.max(0, Math.min(1, (intensity - 10) / 90))};">
+          </div>
         </div>
 
+        <!-- Mienen-Navi mit Weitsicht-Zoomstufen (ohne horizontale Trennlinie) -->
+        <div style="
+          background: rgba(15,23,42,0.7);
+          border: 1px solid rgba(255,255,255,${minimapOn ? '0.14' : '0.06'});
+          border-radius: 10px;
+          padding: 8px 10px;
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        ">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+              <div style="
+                width:28px;height:28px;display:flex;align-items:center;justify-content:center;
+                background:${minimapOn ? 'rgba(56,189,248,0.18)' : 'rgba(71,85,105,0.15)'};
+                border-radius:7px;color:${minimapOn ? '#38bdf8' : '#64748b'};flex-shrink:0;">
+                ${icon('map', '', 15)}
+              </div>
+              <div style="min-width:0;">
+                <div style="font-size:11px;font-weight:700;color:#f8fafc;white-space:nowrap;">Mienen-Navi</div>
+                <div style="font-size:9.5px;color:#94a3b8;margin-top:1px;white-space:nowrap;">Zeigt Tunnel & Position im Cockpit</div>
+              </div>
+            </div>
+            <button id="btn-toggle-minimap" style="
+              width:44px;height:24px;border:none;border-radius:12px;cursor:pointer;flex-shrink:0;
+              background:${minimapOn ? 'linear-gradient(135deg,#10b981,#059669)' : '#334155'};
+              position:relative;transition:background 0.2s ease;">
+              <span style="
+                position:absolute;top:3px;left:${minimapOn ? '22px' : '3px'};
+                width:18px;height:18px;border-radius:50%;background:#fff;
+                transition:left 0.2s ease;display:block;"></span>
+            </button>
+          </div>
 
+          ${minimapOn ? `
+            <div style="
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              padding-top: 2px;
+              gap: 8px;
+            ">
+              <span style="font-size: 10px; font-weight: 700; color: #94a3b8; letter-spacing: 0.3px;">
+                Zoom:
+              </span>
+              <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                <button class="driller-minimap-zoom-btn" data-zoom="1.0" style="
+                  padding: 4px 8px; font-size: 10px; font-weight: 800; border-radius: 6px;
+                  border: 1px solid ${curZoom === 1.0 ? '#38bdf8' : 'rgba(255,255,255,0.1)'};
+                  background: ${curZoom === 1.0 ? 'rgba(56,189,248,0.2)' : 'rgba(15,23,42,0.6)'};
+                  color: ${curZoom === 1.0 ? '#38bdf8' : '#94a3b8'}; cursor: pointer; transition: all 0.15s ease;">
+                  Standard
+                </button>
+                <button class="driller-minimap-zoom-btn" data-zoom="0.25" style="
+                  padding: 4px 8px; font-size: 10px; font-weight: 800; border-radius: 6px;
+                  border: 1px solid ${curZoom === 0.25 ? '#38bdf8' : 'rgba(255,255,255,0.1)'};
+                  background: ${curZoom === 0.25 ? 'rgba(56,189,248,0.2)' : 'rgba(15,23,42,0.6)'};
+                  color: ${curZoom === 0.25 ? '#38bdf8' : '#94a3b8'}; cursor: pointer; transition: all 0.15s ease;">
+                  100m
+                </button>
+                <button class="driller-minimap-zoom-btn" data-zoom="0.1" style="
+                  padding: 4px 8px; font-size: 10px; font-weight: 800; border-radius: 6px;
+                  border: 1px solid ${curZoom === 0.1 ? '#38bdf8' : 'rgba(255,255,255,0.1)'};
+                  background: ${curZoom === 0.1 ? 'rgba(56,189,248,0.2)' : 'rgba(15,23,42,0.6)'};
+                  color: ${curZoom === 0.1 ? '#38bdf8' : '#94a3b8'}; cursor: pointer; transition: all 0.15s ease;">
+                  250m
+                </button>
+                <button class="driller-minimap-zoom-btn" data-zoom="0.05" style="
+                  padding: 4px 8px; font-size: 10px; font-weight: 800; border-radius: 6px;
+                  border: 1px solid ${curZoom === 0.05 ? '#38bdf8' : 'rgba(255,255,255,0.1)'};
+                  background: ${curZoom === 0.05 ? 'rgba(56,189,248,0.2)' : 'rgba(15,23,42,0.6)'};
+                  color: ${curZoom === 0.05 ? '#38bdf8' : '#94a3b8'}; cursor: pointer; transition: all 0.15s ease;">
+                  500m
+                </button>
+              </div>
+            </div>
+          ` : ''}
+        </div>
 
         ${mkToggle('btn-dir-lock','Auto-Pilot','Richtung durch Halten fixieren', lockOn, 'lock')}
         ${mkToggle('btn-auto-drill','Auto-Vortrieb','Automatisch durch Gestein bohren', drillOn, 'drill')}
@@ -488,15 +624,17 @@ export class DrillerMenuModal {
     modalEl.style.display = 'flex';
     refreshIcons(modalEl);
 
-    // Frontscheinwerfer
-    const frontBtn = bodyEl.querySelector('#btn-front-light');
-    if (frontBtn) {
-      frontBtn.onclick = (e) => { e.stopPropagation(); this.player?.setFrontLight(!this.player.frontLightEnabled); this.render(); };
-    }
-    // Heckscheinwerfer
-    const rearBtn = bodyEl.querySelector('#btn-rear-light');
-    if (rearBtn) {
-      rearBtn.onclick = (e) => { e.stopPropagation(); this.player?.setRearLight(!this.player.rearLightEnabled); this.render(); };
+    // Arbeitsbeleuchtung
+    const workBtn = bodyEl.querySelector('#btn-work-light');
+    if (workBtn) {
+      workBtn.onclick = (e) => {
+        e.stopPropagation();
+        const current = this.player.workLightEnabled !== undefined
+          ? this.player.workLightEnabled
+          : this.player.headlightsEnabled;
+        this.player?.setWorkLight(!current);
+        this.render();
+      };
     }
     // Lichtstärke-Slider (Live-Update ohne re-render)
     const slider = bodyEl.querySelector('#driller-intensity-slider');
@@ -504,11 +642,41 @@ export class DrillerMenuModal {
     if (slider) {
       slider.oninput = (e) => {
         const v = Number(e.target.value);
+        const p = Math.max(0, Math.min(1, (v - 10) / 90));
         if (intensityVal) intensityVal.textContent = `${v}%`;
-        slider.style.setProperty('--v', `${v}%`);
+        slider.style.setProperty('--p', String(p));
         this.player?.setLightIntensity(v / 100);
       };
     }
+    // Minimap Cockpit An / Aus
+    const minimapBtn = bodyEl.querySelector('#btn-toggle-minimap');
+    if (minimapBtn) {
+      minimapBtn.onclick = (e) => {
+        e.stopPropagation();
+        const nextState = !minimapOn;
+        if (this.scene?.hud) {
+          this.scene.hud.setMinimapEnabled(nextState);
+        } else {
+          localStorage.setItem('vein_minimap_enabled', nextState ? 'true' : 'false');
+        }
+        this.render();
+      };
+    }
+
+    // Minimap Weitsicht-Zoom
+    bodyEl.querySelectorAll('.driller-minimap-zoom-btn').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        soundFx.playClick?.();
+        const z = Number(btn.getAttribute('data-zoom')) || 1.0;
+        if (this.scene?.hud) {
+          this.scene.hud.setMinimapZoom(z);
+        } else {
+          localStorage.setItem('vein_minimap_zoom', String(z));
+        }
+        this.render();
+      };
+    });
     // Einrasten
     const lockBtn = bodyEl.querySelector('#btn-dir-lock');
     if (lockBtn) {
@@ -537,6 +705,19 @@ export class DrillerMenuModal {
         e.stopPropagation();
         if (this.player?.useRepairKit()) {
           this.render();
+        }
+      };
+    }
+
+    // Klick auf Depot-Card öffnet das Depot-Lager
+    const depotCard = bodyEl.querySelector('#driller-menu-card-depot');
+    if (depotCard) {
+      depotCard.onclick = (e) => {
+        e.stopPropagation();
+        if (this.baseSystem?.openDepotModal) {
+          this.baseSystem.openDepotModal();
+        } else if (this.scene?.baseSystem?.openDepotModal) {
+          this.scene.baseSystem.openDepotModal();
         }
       };
     }
@@ -583,5 +764,43 @@ export class DrillerMenuModal {
     }
     const hullTxtEl = document.getElementById('driller-menu-hull-text');
     if (hullTxtEl) hullTxtEl.textContent = `${Math.round(hull)} / ${maxHull} HP`;
+
+    // Fracht Live-Aktualisierung
+    const cargo = this.player.cargo || [];
+    const cargoCount = cargo.length;
+    const maxCargo = this.player.maxCargo || 10;
+    const cargoPct = Math.max(0, Math.min(100, Math.round((cargoCount / maxCargo) * 100)));
+
+    const cargoNumEl = document.getElementById('driller-menu-cargo-num');
+    if (cargoNumEl) {
+      cargoNumEl.textContent = `${cargoCount}`;
+      cargoNumEl.style.color = cargoPct >= 100 ? '#ef4444' : '#38bdf8';
+    }
+    const cargoFillEl = document.getElementById('driller-menu-cargo-fill');
+    if (cargoFillEl) {
+      cargoFillEl.style.width = `${cargoPct}%`;
+      cargoFillEl.style.background = cargoPct >= 100 ? '#ef4444' : '#38bdf8';
+    }
+    const cargoTxtEl = document.getElementById('driller-menu-cargo-text');
+    if (cargoTxtEl) cargoTxtEl.textContent = `${cargoCount} / ${maxCargo}`;
+
+    // Depot Live-Aktualisierung
+    const baseSystem = this.baseSystem || this.scene?.baseSystem;
+    const depotCount = baseSystem?.getDepotTotalCount ? baseSystem.getDepotTotalCount() : 0;
+    const depotCap = baseSystem?.getDepotCapacity ? baseSystem.getDepotCapacity() : (baseSystem?.depot?.capacity || 10);
+    const depotPct = depotCap > 0 ? Math.max(0, Math.min(100, Math.round((depotCount / depotCap) * 100))) : 0;
+
+    const depotNumEl = document.getElementById('driller-menu-depot-num');
+    if (depotNumEl) {
+      depotNumEl.textContent = `${depotCount}`;
+      depotNumEl.style.color = depotPct >= 100 ? '#ef4444' : '#a855f7';
+    }
+    const depotFillEl = document.getElementById('driller-menu-depot-fill');
+    if (depotFillEl) {
+      depotFillEl.style.width = `${depotPct}%`;
+      depotFillEl.style.background = depotPct >= 100 ? '#ef4444' : '#a855f7';
+    }
+    const depotTxtEl = document.getElementById('driller-menu-depot-text');
+    if (depotTxtEl) depotTxtEl.textContent = `${depotCount} / ${depotCap}`;
   }
 }

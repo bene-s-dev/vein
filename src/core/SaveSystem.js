@@ -244,6 +244,7 @@ export class SaveSystem {
         activeInsurance: p.activeInsurance ? { ...p.activeInsurance } : null,
         isGameOver: !!p.isGameOver,
         hasPurchasedDynamite: !!p.hasPurchasedDynamite,
+        workLightEnabled: p.workLightEnabled !== undefined ? !!p.workLightEnabled : true,
         frontLightEnabled: p.frontLightEnabled !== undefined ? !!p.frontLightEnabled : true,
         rearLightEnabled: p.rearLightEnabled !== undefined ? !!p.rearLightEnabled : true,
         lightIntensity: typeof p.lightIntensity === 'number' ? p.lightIntensity : 0.85,
@@ -657,20 +658,17 @@ export class SaveSystem {
       p.syncAttachments?.();
       p._lastEmittedDepth = -1;
       p.highestDepthReached = Math.max(p.highestDepthReached || 0, Math.floor(targetGy));
-      if (typeof data.player.frontLightEnabled === 'boolean') {
-        p.frontLightEnabled = data.player.frontLightEnabled;
+      if (typeof data.player.workLightEnabled === 'boolean') {
+        p.workLightEnabled = data.player.workLightEnabled;
       } else if (typeof data.player.headlightsEnabled === 'boolean') {
-        p.frontLightEnabled = data.player.headlightsEnabled;
+        p.workLightEnabled = data.player.headlightsEnabled;
+      } else if (typeof data.player.frontLightEnabled === 'boolean') {
+        p.workLightEnabled = data.player.frontLightEnabled;
       } else {
-        p.frontLightEnabled = true;
+        p.workLightEnabled = true;
       }
-      if (typeof data.player.rearLightEnabled === 'boolean') {
-        p.rearLightEnabled = data.player.rearLightEnabled;
-      } else if (typeof data.player.headlightsEnabled === 'boolean') {
-        p.rearLightEnabled = data.player.headlightsEnabled;
-      } else {
-        p.rearLightEnabled = true;
-      }
+      p.frontLightEnabled = p.workLightEnabled;
+      p.rearLightEnabled = p.workLightEnabled;
       if (typeof data.player.lightIntensity === 'number') {
         p.lightIntensity = data.player.lightIntensity;
       } else {

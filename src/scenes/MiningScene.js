@@ -798,8 +798,9 @@ export class MiningScene extends Phaser.Scene {
       const startX = startSurfaceGx * TILE_SIZE + TILE_SIZE / 2;
       const startY = surfaceY;
 
-      // Sicherheits-Watchdog: Falls Wegfindung oder Animation hängenbleibt, garantiert nach max. 20s bergen
-      safetyWatchdog = this.time.delayedCall(20000, () => {
+      // Sicherheits-Watchdog: Skaliert mit der Tiefe (45s bis 120s), falls etwas unerwartetes passiert
+      const watchdogTime = Math.max(45000, Math.min(120000, playerGy * 60));
+      safetyWatchdog = this.time.delayedCall(watchdogTime, () => {
         if (this.isRescueCutsceneActive) {
           console.warn('[RescueCutscene] Watchdog ausgelöst - Fallback Bergung');
           stopActivePathMovement();
@@ -847,7 +848,7 @@ export class MiningScene extends Phaser.Scene {
         ];
 
         let iterations = 0;
-        while (qHead < queue.length && iterations < 8000) {
+        while (qHead < queue.length && iterations < 45000) {
           iterations++;
           const [curGx, curGy] = queue[qHead++];
           if (curGx === toGx && curGy === toGy) {
@@ -1040,8 +1041,8 @@ export class MiningScene extends Phaser.Scene {
         return result;
       };
 
-      // Helfer für butterweiche, kontinuierliche Pfad-Bewegung pro Frame
-      const followPathSmoothly = (spriteToMove, rawWaypoints, moveSpeedPxPerSec, onDirectionChange, onStep, onFinished) => {
+      // Helfer für butterweiche, kontinuierliche Pfad-Bewegung pro Frame mit 3s-Beschleunigung & Bremsung
+      const followPathSmoothly = (spriteToMove, rawWaypoints, onDirectionChange, onStep, onFinished) => {
         const waypoints = simplifyPath(rawWaypoints);
         let wpIndex = 0;
 
@@ -1057,6 +1058,13 @@ export class MiningScene extends Phaser.Scene {
           updateDirectionForSegment(spriteToMove.x, spriteToMove.y, waypoints[0].x, waypoints[0].y);
         }
 
+        // Geschwindigkeits- und Beschleunigungsparameter (analog zur 3s-Logik des Bohrers):
+        const SURFACE_SPEED = 250;          // Ruhige, kontrollierte Fahrt an der Erdoberfläche
+        const UNDERGROUND_BASE_SPEED = 280; // Basis-Geschwindigkeit unter Tage
+        let continuousUndergroundTime = 0;
+        let undergroundBoostMult = 1.0;
+        let peakBoostMult = 1.0;
+
         const moveStep = (time, delta) => {
           if (!spriteToMove || !spriteToMove.active) {
             stopActivePathMovement();
@@ -1064,7 +1072,65 @@ export class MiningScene extends Phaser.Scene {
           }
 
           const dtSec = Math.min(0.05, delta / 1000);
-          let remainingMove = moveSpeedPxPerSec * dtSec;
+          const isAtSurface = (spriteToMove.y <= 0);
+
+          // 1. Geschwindigkeitsberechnung mit 3-Sekunden-Boost-Stufen
+          let currentSpeed = SURFACE_SPEED;
+
+          if (isAtSurface) {
+            // An der Erdoberfläche: kein Überschall, ruhige Fahrt mit Ketten
+            continuousUndergroundTime = 0;
+            undergroundBoostMult = 1.0;
+            currentSpeed = SURFACE_SPEED;
+          } else {
+            // Unter Tage: alle 3 Sekunden kontinuierlicher Fahrt erhöht sich die Stufe (1.0 -> 1.9 -> 3.61 -> 6.86 -> max 8.0)
+            continuousUndergroundTime += dtSec;
+            const boostStage = Math.floor(continuousUndergroundTime / 3.0);
+            const targetBoost = Math.min(8.0, Math.pow(1.9, boostStage));
+            undergroundBoostMult += (targetBoost - undergroundBoostMult) * Math.min(1, dtSec * 2.5);
+            peakBoostMult = Math.max(peakBoostMult, undergroundBoostMult);
+            currentSpeed = UNDERGROUND_BASE_SPEED * undergroundBoostMult;
+          }
+
+          // 2. Vorausschau & Bremsen:
+          // A) Verbleibende Gesamtdistanz zum Ziel auf dem aktuellen Pfad berechnen
+          let remainingDistToGoal = 0;
+          if (wpIndex < waypoints.length) {
+            remainingDistToGoal += Phaser.Math.Distance.Between(
+              spriteToMove.x, spriteToMove.y,
+              waypoints[wpIndex].x, waypoints[wpIndex].y
+            );
+            for (let i = wpIndex; i < waypoints.length - 1; i++) {
+              remainingDistToGoal += Phaser.Math.Distance.Between(
+                waypoints[i].x, waypoints[i].y,
+                waypoints[i + 1].x, waypoints[i + 1].y
+              );
+            }
+          }
+
+          // B) Ziel-Bremsung bei Annäherung an das Etappenziel (z. B. Havarist oder Hangar)
+          const boostRatio = Math.max(0, Math.min(1.0, (peakBoostMult - 1.0) / 7.0));
+          const brakeDist = (6 + boostRatio * 12) * TILE_SIZE; // 192px bis 576px Bremsweg je nach erreichter Spitze
+          if (remainingDistToGoal < brakeDist) {
+            const progress = Math.max(0, remainingDistToGoal / brakeDist);
+            const minRatio = isAtSurface ? 0.45 : Math.max(0.2, 0.65 - boostRatio * 0.35);
+            const brakeFactor = minRatio + (1.0 - minRatio) * Math.pow(progress, 0.75);
+            currentSpeed = Math.max(120, currentSpeed * brakeFactor);
+          }
+
+          // C) Oberflächen-Bremse beim Aufstieg:
+          // Sobald das Bergungsfahrzeug aus dem Schacht nach oben kommt, bremst es vor der Oberfläche sanft auf Oberflächen-Speed ab
+          const isHeadingToSurface = waypoints.slice(wpIndex).some(wp => wp.y <= 0);
+          if (!isAtSurface && isHeadingToSurface && spriteToMove.y < 380) {
+            const distToSurface = Math.max(0, spriteToMove.y - surfaceY);
+            const surfBrakeDist = 380;
+            const surfProgress = Math.max(0, Math.min(1, distToSurface / surfBrakeDist));
+            const blendedSpeed = SURFACE_SPEED + (currentSpeed - SURFACE_SPEED) * Math.pow(surfProgress, 0.75);
+            currentSpeed = Math.min(currentSpeed, blendedSpeed);
+          }
+
+          // 3. Bewegung entlang der Wegpunkte abtragen
+          let remainingMove = currentSpeed * dtSec;
 
           while (remainingMove > 0 && wpIndex < waypoints.length) {
             const target = waypoints[wpIndex];
@@ -1116,14 +1182,13 @@ export class MiningScene extends Phaser.Scene {
         }
       };
 
-      // Phase 1: Anfahrt zum Havaristen von rechts auf der Erdoberfläche
+      // Phase 1: Anfahrt zum Havaristen mit 3s-Beschleunigung und butterweicher Bremsung
       crawlerFacing = 'left';
       setSoundMode('drive');
 
       followPathSmoothly(
         rescueSprite,
         descentPath,
-        360,
         handleDirectionChange,
         null,
         () => {
@@ -1148,7 +1213,7 @@ export class MiningScene extends Phaser.Scene {
             scaleX: 0.3,
             scaleY: 0.3,
             alpha: 0,
-            duration: 650,
+            duration: 450,
             ease: 'Quad.easeIn',
             onComplete: () => {
               p.sprite.setVisible(false);
@@ -1166,96 +1231,88 @@ export class MiningScene extends Phaser.Scene {
 
                 crawlerFacing = 'left';
                 if (rescueSprite && rescueSprite.active) {
-                  rescueSprite.setTexture(`rescue_crawler_left_track_${trackStep}`);
+                  rescueSprite.setTexture(`rescue_crawler_left_track_0`);
                 }
-                setSoundMode('drive');
 
-                cam.pan(hangarX, hangarY, 1000, 'Sine.easeInOut');
+                cam.pan(hangarX, hangarY, 500, 'Sine.easeInOut');
 
-                this.tweens.add({
-                  targets: rescueSprite,
-                  x: hangarX + 36,
-                  y: hangarY,
-                  duration: 900,
-                  ease: 'Linear',
-                  onComplete: () => {
-                    setSoundMode(null);
+                this.time.delayedCall(200, () => {
+                  setSoundMode(null);
 
-                    // Phase 5: Bohrer wird hinten aus dem Rettungsfahrzeug entlassen
-                    p.sprite.setPosition(rescueSprite.x, rescueSprite.y);
-                    p.sprite.setVisible(true);
-                    p.sprite.setAlpha(0);
-                    p.sprite.setScale(0.3);
+                  // Phase 5: Bohrer wird hinten aus dem Rettungsfahrzeug entlassen
+                  p.sprite.setPosition(rescueSprite.x, rescueSprite.y);
+                  p.sprite.setVisible(true);
+                  p.sprite.setAlpha(0);
+                  p.sprite.setScale(0.3);
 
-                    soundFx.playPurchase?.();
+                  soundFx.playPurchase?.();
+
+                  this.tweens.add({
+                    targets: p.sprite,
+                    x: hangarX,
+                    y: hangarY,
+                    scaleX: 1,
+                    scaleY: 1,
+                    alpha: 1,
+                    duration: 500,
+                    ease: 'Quad.easeOut',
+                    onComplete: () => {
+                      p.sprite.setDepth(10);
+                      p.sprite.setVisible(true);
+                      p.sprite.setAlpha(1);
+                      p.sprite.setScale(1);
+                      p.isGameOver = false;
+                      p.gx = hangarGx;
+                      p.gy = hangarGy;
+                      p.x = hangarX;
+                      p.y = hangarY;
+                      p.sprite.setPosition(hangarX, hangarY);
+                      p.setVisualDirection('RIGHT');
+                      p.state = 'IDLE';
+
+                      // Notfall-Auftankung bei komplett leerem Tank (mind. 20% oder 15L)
+                      const minReserve = Math.max(15, Math.round(p.maxFuel * 0.2));
+                      if (p.fuel < minReserve) {
+                        p.fuel = Math.min(minReserve, p.maxFuel);
+                      }
+
+                      cam.startFollow(p.sprite, false, 1, 1);
+                      if (this.gridSystem) {
+                        this.gridSystem.updateViewport(cam, p);
+                      }
+
+                      if (this.events) {
+                        this.events.emit('notify', message);
+                      }
+
+                      stopActivePathMovement();
+                      if (safetyWatchdog) {
+                        safetyWatchdog.remove();
+                        safetyWatchdog = null;
+                      }
+
+                      this.isRescueCutsceneActive = false;
+                    }
+                  });
+
+                  // Rettungsfahrzeug fährt nach links aus dem Bildschirm
+                  this.time.delayedCall(400, () => {
+                    crawlerFacing = 'left';
+                    setSoundMode('drive');
 
                     this.tweens.add({
-                      targets: p.sprite,
-                      x: hangarX,
-                      y: hangarY,
-                      scaleX: 1,
-                      scaleY: 1,
-                      alpha: 1,
-                      duration: 700,
-                      ease: 'Quad.easeOut',
+                      targets: rescueSprite,
+                      x: -350,
+                      duration: 3200,
+                      ease: 'Quad.easeIn',
                       onComplete: () => {
-                        p.sprite.setDepth(10);
-                        p.sprite.setVisible(true);
-                        p.sprite.setAlpha(1);
-                        p.sprite.setScale(1);
-                        p.isGameOver = false;
-                        p.gx = hangarGx;
-                        p.gy = hangarGy;
-                        p.x = hangarX;
-                        p.y = hangarY;
-                        p.sprite.setPosition(hangarX, hangarY);
-                        p.setVisualDirection('RIGHT');
-                        p.state = 'IDLE';
-
-                        // Notfall-Auftankung bei komplett leerem Tank (mind. 20% oder 15L)
-                        const minReserve = Math.max(15, Math.round(p.maxFuel * 0.2));
-                        if (p.fuel < minReserve) {
-                          p.fuel = Math.min(minReserve, p.maxFuel);
-                        }
-
-                        cam.startFollow(p.sprite, false, 1, 1);
-                        if (this.gridSystem) {
-                          this.gridSystem.updateViewport(cam, p);
-                        }
-
-                        if (this.events) {
-                          this.events.emit('notify', message);
-                        }
-
-                        stopActivePathMovement();
-                        if (safetyWatchdog) {
-                          safetyWatchdog.remove();
-                          safetyWatchdog = null;
-                        }
-
-                        this.isRescueCutsceneActive = false;
+                        setSoundMode(null);
+                        if (crawlerTimer) crawlerTimer.remove();
+                        if (thrusterParticles) thrusterParticles.destroy();
+                        if (rescueSprite) rescueSprite.destroy();
                       }
                     });
-
-                    // Rettungsfahrzeug fährt nach links aus dem Bildschirm
-                    this.time.delayedCall(400, () => {
-                      crawlerFacing = 'left';
-                      setSoundMode('drive');
-
-                      this.tweens.add({
-                        targets: rescueSprite,
-                        x: -350,
-                        duration: 3200,
-                        ease: 'Linear',
-                        onComplete: () => {
-                          setSoundMode(null);
-                          if (crawlerTimer) crawlerTimer.remove();
-                          if (thrusterParticles) thrusterParticles.destroy();
-                          if (rescueSprite) rescueSprite.destroy();
-                        }
-                      });
-                    });
-                  }
+                  });
                 });
               };
 
@@ -1267,7 +1324,6 @@ export class MiningScene extends Phaser.Scene {
                 followPathSmoothly(
                   rescueSprite,
                   directPath,
-                  280,
                   handleDirectionChange,
                   (curX, curY) => {
                     p.sprite.setPosition(curX, curY);
@@ -1291,11 +1347,17 @@ export class MiningScene extends Phaser.Scene {
                 if (!ascentPath.some(w => w.gx === shaftGx && w.gy === surfaceGy)) {
                   ascentPath.push(surfaceWaypoint);
                 }
+                // Wegpunkt zum Hangar an der Erdoberfläche anhängen
+                ascentPath.push({
+                  gx: hangarGx,
+                  gy: hangarGy,
+                  x: hangarX + 36,
+                  y: hangarY
+                });
 
                 followPathSmoothly(
                   rescueSprite,
                   ascentPath,
-                  260,
                   handleDirectionChange,
                   (curX, curY) => {
                     p.sprite.setPosition(curX, curY);
@@ -1319,6 +1381,10 @@ export class MiningScene extends Phaser.Scene {
         if (safetyWatchdog) safetyWatchdog.remove();
       } catch (_) {}
       this.tweens.killTweensOf(p.sprite);
+      p.sprite.setVisible(true);
+      p.sprite.setAlpha(1);
+      p.sprite.setScale(1);
+      p.sprite.setDepth(10);
       this.isRescueCutsceneActive = false;
       p.teleportToSurface(message);
     }

@@ -5266,13 +5266,17 @@ export class AssetLoader {
                 fadeStart = Math.sin(startProg * Math.PI * 0.5);
               }
 
-              const intensity = 0.72 * fadeForward * fadeY * fadeStart;
+              // Volumetrische Licht-Intensität: Transparenter, atmosphärischer Lichtkegel im Raum
+              // (keine dicke gelbe Milchschicht, die Steine verdeckt!)
+              const intensity = 0.36 * fadeForward * fadeY * fadeStart;
 
               if (intensity > 0.001) {
+                // Kristallklarer, warmer Xenon-/LED-Lichtschein (kein stumpfes Schmutz-Gelb!)
+                // Intensiver Kern ist reines, brillantes Licht (255, 255, 255), Ränder haben feinen Champagner-Ton
                 data[idx] = 255;
-                data[idx + 1] = Math.round(238 + 17 * (1.0 - intensity));
-                data[idx + 2] = Math.round(195 + 45 * (1.0 - intensity));
-                data[idx + 3] = Math.round(intensity * 235);
+                data[idx + 1] = Math.round(248 + 7 * intensity);
+                data[idx + 2] = Math.round(226 + 29 * intensity);
+                data[idx + 3] = Math.round(intensity * 255);
                 continue;
               }
             }
@@ -5287,5 +5291,37 @@ export class AssetLoader {
     buildBeamTexture('headlight_beam', false);        // Nahtlos für beide an (keine Lücke in der Mitte)
     buildBeamTexture('headlight_beam_single', true);   // Echter Lichtkegel für Einzelscheinwerfer (schmal am Fahrzeug)
     buildBeamTexture('headlight_beam_soft', true);     // Weicher Lichtkegel
+
+    // 4. worklight_dome: Perfekt runde Glocke um das Fahrzeug (360-Grad Arbeitsbeleuchtung)
+    createTexture('worklight_dome', 480, 480, (ctx, width, height) => {
+      const imgData = ctx.createImageData(width, height);
+      const data = imgData.data;
+      const cx = width / 2;
+      const cy = height / 2;
+      const R = 220;
+
+      for (let y = 0; y < height; y++) {
+        const dy = y - cy;
+        for (let x = 0; x < width; x++) {
+          const dx = x - cx;
+          const dist = Math.hypot(dx, dy);
+          if (dist < R) {
+            const idx = (y * width + x) * 4;
+            const norm = dist / R;
+            // Glockenkurve mit intensivem Kern und weichem Auslauf
+            const bell = Math.pow(Math.cos(norm * Math.PI * 0.5), 1.25);
+            const core = Math.pow(Math.cos(norm * Math.PI * 0.5), 2.8);
+            const profile = 0.65 * bell + 0.35 * core;
+            const intensity = 0.28 * profile;
+
+            data[idx] = 255;
+            data[idx + 1] = Math.round(248 + 7 * profile);
+            data[idx + 2] = Math.round(226 + 29 * profile);
+            data[idx + 3] = Math.round(intensity * 255);
+          }
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+    });
   }
 }

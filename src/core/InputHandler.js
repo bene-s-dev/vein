@@ -43,6 +43,7 @@ export class InputHandler {
     this.keyZ = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z, false);
     this.keySpace = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE, false);
     this.keyL = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.L, false);
+    this.keyM = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.M, false);
 
     // Tastatur-Capture für Buchstaben und Ziffern freigeben, damit Texteingaben überall funktionieren
     if (scene.input.keyboard.removeCapture) {
@@ -63,12 +64,18 @@ export class InputHandler {
         Phaser.Input.Keyboard.KeyCodes.E,
         Phaser.Input.Keyboard.KeyCodes.Z,
         Phaser.Input.Keyboard.KeyCodes.SPACE,
-        Phaser.Input.Keyboard.KeyCodes.L
+        Phaser.Input.Keyboard.KeyCodes.L,
+        Phaser.Input.Keyboard.KeyCodes.M
       ]);
     }
 
     const handlePauseKey = () => {
       if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+        return;
+      }
+      // Minen-Karte schließen falls geöffnet
+      if (this.scene.hud && this.scene.hud.mapModal && this.scene.hud.mapModal.isOpen) {
+        this.scene.hud.mapModal.close();
         return;
       }
       const modalEl = document.getElementById('building-modal');
@@ -138,6 +145,18 @@ export class InputHandler {
       }
     };
     this.keyL.on('down', triggerToggleHeadlights);
+
+    const triggerMap = () => {
+      if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
+      if (this.scene.hud && this.scene.hud.mapModal) {
+        if (this.scene.hud.mapModal.isOpen) {
+          this.scene.hud.mapModal.close();
+        } else if (!isModalActive()) {
+          this.scene.hud.mapModal.open();
+        }
+      }
+    };
+    this.keyM.on('down', triggerMap);
 
     this.setupControls();
   }

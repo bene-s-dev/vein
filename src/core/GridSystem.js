@@ -261,6 +261,7 @@ export class GridSystem {
 
     // Intelligentes Dirty-Tracking & Viewport-Pufferung für drastische Akku- und CPU-Ersparnis
     this.fogDirty = true;
+    this.tilesDirty = true;
     this.fogBufferReady = false;
     this.fogBufferX = 0;
     this.fogBufferY = 0;
@@ -273,6 +274,8 @@ export class GridSystem {
     this.lastCamH = 0;
     this.lastPlayerX = null;
     this.lastPlayerY = null;
+    this.lastLightIntensity = null;
+    this.lastWorkLightOn = null;
   }
 
   // Erzeugt eine dezente, elegante Gesteinstextur für unerforschtes Erdreich (leichte Struktur)
@@ -763,6 +766,66 @@ export class GridSystem {
     this.fogBufferReady = false;
   }
 
+  // Berechnet die Lichtintensität (0.0 bis 1.0) für eine Kachel durch die runde Arbeitsbeleuchtungs-Glocke
+  getTileIllumination(tileCenterX, tileCenterY, pX, pY, player) {
+    if (!player || player.gy < 0) return 0; // Über Tage herrscht natürliches Tageslicht
+
+    const dx = tileCenterX - pX;
+    const dy = tileCenterY - pY;
+    const distSq = dx * dx + dy * dy;
+
+    const workLightOn = player.workLightEnabled !== undefined
+      ? !!player.workLightEnabled
+      : (!!player.frontLightEnabled || !!player.rearLightEnabled || !!player.headlightsEnabled);
+
+    if (!workLightOn) {
+      // 1. Not-Cockpitlicht direkt am Fahrzeug wenn Arbeitsbeleuchtung ausgeschaltet ist (~40px)
+      if (distSq < 1600) {
+        return Math.max(0, 1.0 - Math.sqrt(distSq) / 40) * 0.25;
+      }
+      return 0;
+    }
+
+    // 2. Runde Glocke um das Fahrzeug (360-Grad Arbeitsbeleuchtung)
+    const BELL_RADIUS = 220; // ~6.9 Kacheln Radius (ca. 14x14 Kacheln Arbeitsbereich)
+    const BELL_RADIUS_SQ = BELL_RADIUS * BELL_RADIUS;
+
+    if (distSq >= BELL_RADIUS_SQ) return 0;
+
+    const dist = Math.sqrt(distSq);
+    const norm = dist / BELL_RADIUS;
+
+    // Harmonische Glockenkurve: Breites, tageslichthelles Zentrum und weicher Auslauf zum Rand
+    const bell = Math.pow(Math.cos(norm * Math.PI * 0.5), 1.15);
+    const intensity = player.lightIntensity !== undefined ? player.lightIntensity : 0.85;
+
+    return Math.min(1.0, bell * (intensity / 0.85));
+  }
+
+  // Erhellt die Kachel-Pixel im ausgeleuchteten Bereich tatsächlich auf das Helligkeitsniveau der oberen Schichten (0xffffff)
+  calculateLitTint(baseTint, lightFactor) {
+    if (lightFactor <= 0.001) return baseTint;
+    if (baseTint === 0xffffff && lightFactor >= 0.99) return 0xffffff;
+
+    const r0 = (baseTint >> 16) & 0xff;
+    const g0 = (baseTint >> 8) & 0xff;
+    const b0 = baseTint & 0xff;
+
+    // Zielhelligkeit: Reines, tageslichthelles Weiß wie an der Erdoberfläche / in den oberen Schichten
+    const targetR = 255;
+    const targetG = 255;
+    const targetB = 255;
+
+    // Dynamische, kraftvolle Helligkeitskurve (bereits im Halbschatten deutlich sichtbar erhellt)
+    const factor = Math.min(1.0, Math.pow(lightFactor, 0.78) * 1.3);
+
+    const r = Math.min(255, Math.round(r0 + (targetR - r0) * factor));
+    const g = Math.min(255, Math.round(g0 + (targetG - g0) * factor));
+    const b = Math.min(255, Math.round(b0 + (targetB - b0) * factor));
+
+    return (r << 16) | (g << 8) | b;
+  }
+
   updateViewport(camera, player) {
     const camView = camera.worldView;
     const pX = player ? (player.sprite ? player.sprite.x : (player.x || 0)) : 0;
@@ -789,8 +852,20 @@ export class GridSystem {
     const playerDistSq = this.lastPlayerX !== null ? ((pX - this.lastPlayerX) ** 2 + (pY - this.lastPlayerY) ** 2) : 99999;
     const sizeChanged = viewW !== this.lastCamW || viewH !== this.lastCamH;
 
-    // Nur überspringen, wenn Schwellenwert nicht erreicht und Nebel sauber ist
-    if (this.lastCamX !== null && !this.fogDirty && !sizeChanged && camDistSq < viewThresholdSq && playerDistSq < viewThresholdSq) {
+    const workLightOn = player
+      ? (player.workLightEnabled !== undefined
+          ? !!player.workLightEnabled
+          : (!!player.frontLightEnabled || !!player.rearLightEnabled || !!player.headlightsEnabled))
+      : false;
+    const lightIntensity = player ? (player.lightIntensity !== undefined ? player.lightIntensity : 0.85) : 0;
+    const lightChanged = this.lastLightIntensity !== lightIntensity ||
+                         this.lastWorkLightOn !== workLightOn ||
+                         this.tilesDirty;
+
+    const pMoveThresholdSq = 8 * 8; // 8px Bewegungsschwelle für sanfte, flüssige Beleuchtung
+
+    // Nur überspringen, wenn Schwellenwert nicht erreicht und Nebel/Licht sauber ist
+    if (this.lastCamX !== null && !this.fogDirty && !this.tilesDirty && !sizeChanged && !lightChanged && camDistSq < viewThresholdSq && playerDistSq < pMoveThresholdSq) {
       return;
     }
 
@@ -800,6 +875,9 @@ export class GridSystem {
     this.lastCamH = viewH;
     this.lastPlayerX = pX;
     this.lastPlayerY = pY;
+    this.lastLightIntensity = lightIntensity;
+    this.lastWorkLightOn = workLightOn;
+    this.tilesDirty = false;
 
     const margin = 10;
     const startCol = Math.floor(viewX / TILE_SIZE) - margin;
@@ -838,25 +916,35 @@ export class GridSystem {
           if (this.exploredTiles) this.exploredTiles.add(key);
         }
 
+        // Dynamische Beleuchtungsberechnung für die Kachel
+        const tileLight = this.getTileIllumination(tileCenterX, tileCenterY, pX, pY, player);
+
         // 1. Ausgegrabene Hohlräume unter der Erde (y >= 0): Schacht-Hintergrundwand rendern!
         if (tile.type === TILE_TYPES.EMPTY) {
           if (y >= 0) {
             let bundle = this.activeSprites.get(key);
             const shaftTex = this.getShaftTexture(y);
+            const finalShaftTint = this.calculateLitTint(depthTint, tileLight);
+
             if (!bundle) {
               const bgSprite = this.scene.add.image(tileCenterX, tileCenterY, shaftTex)
                 .setDepth(1)
-                .setTint(depthTint);
-              bundle = { bgSprite, oreSprite: null, crackSprite: null };
+                .setTint(finalShaftTint);
+              bundle = { bgSprite, oreSprite: null, crackSprite: null, _lastBgTint: finalShaftTint };
               this.activeSprites.set(key, bundle);
             } else {
               if (bundle.bgSprite && bundle.bgSprite.texture.key !== shaftTex) {
-                bundle.bgSprite.setTexture(shaftTex).setDepth(1).setTint(depthTint);
+                bundle.bgSprite.setTexture(shaftTex).setDepth(1);
+              }
+              if (bundle.bgSprite && bundle._lastBgTint !== finalShaftTint) {
+                bundle.bgSprite.setTint(finalShaftTint);
+                bundle._lastBgTint = finalShaftTint;
               }
               // Sicherstellen, dass keine Erze oder Risse in abgebauten Kacheln schweben
               if (bundle.oreSprite) {
                 bundle.oreSprite.destroy();
                 bundle.oreSprite = null;
+                bundle._lastOreTint = null;
               }
               if (bundle.crackSprite) {
                 bundle.crackSprite.destroy();
@@ -871,10 +959,13 @@ export class GridSystem {
         let bundle = this.activeSprites.get(key);
         const tileTint = (tile.type === TILE_TYPES.LAVA) ? 0xffffff : depthTint;
         const expectedBg = (tile.type === TILE_TYPES.DIRT && tile.ore) ? 'tile_dirt_ore' : tile.type;
+        const finalTileTint = (tile.type === TILE_TYPES.LAVA) ? 0xffffff : this.calculateLitTint(tileTint, tileLight);
+        const finalOreTint = this.calculateLitTint(oreTint, tileLight);
+
         if (!bundle) {
           const bgSprite = this.scene.add.image(tileCenterX, tileCenterY, expectedBg)
             .setDepth(2)
-            .setTint(tileTint);
+            .setTint(finalTileTint);
           let oreSprite = null;
 
           if (tile.ore && (ORE_DATA[tile.ore] || this.scene.textures.exists(`ore_${tile.ore}`))) {
@@ -882,7 +973,7 @@ export class GridSystem {
             const flipX = ((x * 7 + y * 13) % 2 === 0);
             oreSprite = this.scene.add.image(tileCenterX, tileCenterY, oreTex)
               .setDepth(3)
-              .setTint(oreTint)
+              .setTint(finalOreTint)
               .setFlipX(flipX);
           }
 
@@ -893,12 +984,16 @@ export class GridSystem {
             crackSprite = this.scene.add.image(tileCenterX, tileCenterY, `crack_${stage}`).setDepth(5);
           }
 
-          bundle = { bgSprite, oreSprite, crackSprite };
+          bundle = { bgSprite, oreSprite, crackSprite, _lastBgTint: finalTileTint, _lastOreTint: finalOreTint };
           this.activeSprites.set(key, bundle);
         } else {
           // Sprite existiert bereits: Typ, Erz und Risse mit aktuellem Kachelzustand synchronisieren
           if (bundle.bgSprite.texture.key !== expectedBg) {
-            bundle.bgSprite.setTexture(expectedBg).setDepth(2).setTint(tileTint);
+            bundle.bgSprite.setTexture(expectedBg).setDepth(2);
+          }
+          if (bundle.bgSprite && bundle._lastBgTint !== finalTileTint) {
+            bundle.bgSprite.setTint(finalTileTint);
+            bundle._lastBgTint = finalTileTint;
           }
           if (!bundle.bgSprite.visible) bundle.bgSprite.setVisible(true);
 
@@ -908,15 +1003,23 @@ export class GridSystem {
             if (!bundle.oreSprite) {
               bundle.oreSprite = this.scene.add.image(tileCenterX, tileCenterY, expectedOreSprite)
                 .setDepth(3)
-                .setTint(oreTint)
+                .setTint(finalOreTint)
                 .setFlipX(flipX);
-            } else if (bundle.oreSprite.texture.key !== expectedOreSprite) {
-              bundle.oreSprite.setTexture(expectedOreSprite).setTint(oreTint).setFlipX(flipX);
+              bundle._lastOreTint = finalOreTint;
+            } else {
+              if (bundle.oreSprite.texture.key !== expectedOreSprite) {
+                bundle.oreSprite.setTexture(expectedOreSprite).setFlipX(flipX);
+              }
+              if (bundle._lastOreTint !== finalOreTint) {
+                bundle.oreSprite.setTint(finalOreTint);
+                bundle._lastOreTint = finalOreTint;
+              }
             }
             if (!bundle.oreSprite.visible) bundle.oreSprite.setVisible(true);
           } else if (bundle.oreSprite) {
             bundle.oreSprite.destroy();
             bundle.oreSprite = null;
+            bundle._lastOreTint = null;
           }
 
           if (tile.hp < tile.maxHp) {

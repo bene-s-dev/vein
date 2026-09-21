@@ -171,27 +171,24 @@ export class Player {
     // Set aller bisher im Büro eingesehenen Steinforscher-Aufträge
     this.seenGeologistQuests = new Set();
 
-    // Fahrzeug-Scheinwerferanlage (Front & Heck getrennt steuerbar, stufenlos dimmbar)
+    // Fahrzeug-Arbeitsbeleuchtung (Runde Glocke um das Fahrzeug)
+    this.workLightEnabled = true;
     this.frontLightEnabled = true;
     this.rearLightEnabled = true;
     this.lightIntensity = 0.85;
-    this._lightDirCurrent = 1;   // aktuell gerenderete Richtung (+1=rechts, -1=links)
-    this._lightFlipProg   = 1.0; // 1=voll sichtbar, 0=mitten im Richtungswechsel (Fade)
 
-    this.frontLightSprite = scene.add.image(this.x, this.y, 'headlight_beam')
+    // Runde Glocke: Vollständige 360-Grad Rundum-Beleuchtung zentriert auf das Fahrzeug
+    this.workLightSprite = scene.add.image(this.x, this.y, 'worklight_dome')
       .setDepth(5.5)
       .setBlendMode(Phaser.BlendModes.ADD)
-      .setOrigin(0, 0.5)  // Strahl beginnt am Fahrzeugzentrum und läuft nach rechts
+      .setOrigin(0.5, 0.5)
       .setVisible(false);
 
-    this.rearLightSprite = scene.add.image(this.x, this.y, 'headlight_beam')
-      .setDepth(5.5)
-      .setBlendMode(Phaser.BlendModes.ADD)
-      .setOrigin(0, 0.5)
-      .setVisible(false);
-
-    this.headlightSprite = this.frontLightSprite;
-    this.headlight = this.frontLightSprite;
+    // Abwärtskompatible Referenzen für bestehenden Code
+    this.frontLightSprite = this.workLightSprite;
+    this.rearLightSprite = this.workLightSprite;
+    this.headlightSprite = this.workLightSprite;
+    this.headlight = this.workLightSprite;
 
     // Fahrzeug-Werte & Stats (ausbalancierte Wirtschaft)
     this.maxFuel = 60;
@@ -541,21 +538,27 @@ export class Player {
     this.syncAttachments?.();
   }
 
-  setFrontLight(enabled) {
-    this.frontLightEnabled = !!enabled;
+  setWorkLight(enabled) {
+    this.workLightEnabled = !!enabled;
+    this.frontLightEnabled = this.workLightEnabled;
+    this.rearLightEnabled = this.workLightEnabled;
     this.updateHeadlightVisibility();
+    if (this.scene?.gridSystem) this.scene.gridSystem.tilesDirty = true;
     soundFx.play?.('click');
   }
 
+  setFrontLight(enabled) {
+    this.setWorkLight(enabled);
+  }
+
   setRearLight(enabled) {
-    this.rearLightEnabled = !!enabled;
-    this.updateHeadlightVisibility();
-    soundFx.play?.('click');
+    this.setWorkLight(enabled);
   }
 
   setLightIntensity(intensity) {
     this.lightIntensity = Math.max(0.1, Math.min(1.0, Number(intensity) || 0.85));
     this.updateHeadlightVisibility();
+    if (this.scene?.gridSystem) this.scene.gridSystem.tilesDirty = true;
   }
 
   setDirectionLock(enabled) {
@@ -572,18 +575,15 @@ export class Player {
   }
 
   setHeadlights(enabled) {
-    this.frontLightEnabled = !!enabled;
-    this.rearLightEnabled = !!enabled;
-    this.updateHeadlightVisibility();
-    soundFx.play?.('click');
+    this.setWorkLight(enabled);
   }
 
   get headlightsEnabled() {
-    return this.frontLightEnabled || this.rearLightEnabled;
+    return this.workLightEnabled !== undefined ? !!this.workLightEnabled : (this.frontLightEnabled || this.rearLightEnabled);
   }
 
   updateHeadlightVisibility(dt) {
-    if (!this.frontLightSprite || !this.rearLightSprite) return;
+    if (!this.workLightSprite) return;
 
     const atSurface = this.gy <= -1 || (this.sprite && this.sprite.y <= -16);
     const isUnderground = !atSurface;
@@ -591,64 +591,15 @@ export class Player {
     const curY = this.sprite ? this.sprite.y : this.y;
     const intensity = Math.max(0.1, Math.min(1.0, this.lightIntensity ?? 0.85));
 
-    // Richtungswinkel für alle 4 Richtungen:
-    // RIGHT (0), DOWN (+90° / Pi/2), LEFT (180° / Pi), UP (-90° / -Pi/2)
-    const DIR_ANGLES = {
-      'RIGHT': 0,
-      'DOWN': Math.PI * 0.5,
-      'LEFT': Math.PI,
-      'UP': -Math.PI * 0.5
-    };
-    const facing = (this.currentDirection || this.lastHorizontalDirection || 'RIGHT').toUpperCase();
-    const targetAngle = DIR_ANGLES[facing] !== undefined ? DIR_ANGLES[facing] : 0;
+    const isEnabled = this.workLightEnabled !== undefined ? this.workLightEnabled : (this.frontLightEnabled || this.rearLightEnabled);
 
-    if (this._frontLightAngle === undefined) {
-      this._frontLightAngle = targetAngle;
-    }
-
-    if (dt && typeof Phaser !== 'undefined' && Phaser.Math?.Angle?.RotateTo) {
-      const rotSpeed = 24; // rad/s (~65ms für 90-Grad-Drehung, butterweich & reaktionsschnell)
-      this._frontLightAngle = Phaser.Math.Angle.RotateTo(this._frontLightAngle, targetAngle, rotSpeed * (dt / 1000));
+    // Runde Glocke um das Fahrzeug
+    if (isEnabled && isUnderground) {
+      this.workLightSprite.setPosition(curX, curY);
+      this.workLightSprite.setAlpha(0.70 * intensity);
+      this.workLightSprite.setVisible(true);
     } else {
-      this._frontLightAngle = targetAngle;
-    }
-
-    const frontAngle = this._frontLightAngle;
-    const rearAngle = frontAngle + Math.PI;
-
-    // Wenn BEIDE an sind: nahtlose Textur 'headlight_beam' (schließt bündig ab, absolut KEINE Lücke in der Mitte!)
-    // Wenn nur EIN Scheinwerfer an ist: 'headlight_beam_single' (weicher Start am Fahrzeug, keine messerscharfe Kante)
-    const bothOn = this.frontLightEnabled && this.rearLightEnabled && isUnderground;
-    const texKey = bothOn ? 'headlight_beam' : 'headlight_beam_single';
-
-    // 1. Frontscheinwerfer – Fahrtrichtung (dreht sich voll mit nach oben und unten)
-    if (this.frontLightEnabled && isUnderground) {
-      if (this.frontLightSprite.texture.key !== texKey) {
-        this.frontLightSprite.setTexture(texKey);
-      }
-      this.frontLightSprite.setOrigin(0, 0.5);
-      this.frontLightSprite.setPosition(curX, curY);
-      this.frontLightSprite.setRotation(frontAngle);
-      this.frontLightSprite.setScale(1, 1);
-      this.frontLightSprite.setAlpha(0.85 * intensity);
-      this.frontLightSprite.setVisible(true);
-    } else {
-      this.frontLightSprite.setVisible(false);
-    }
-
-    // 2. Heckscheinwerfer – immer exakt in die entgegengesetzte Richtung!
-    if (this.rearLightEnabled && isUnderground) {
-      if (this.rearLightSprite.texture.key !== texKey) {
-        this.rearLightSprite.setTexture(texKey);
-      }
-      this.rearLightSprite.setOrigin(0, 0.5);
-      this.rearLightSprite.setPosition(curX, curY);
-      this.rearLightSprite.setRotation(rearAngle);
-      this.rearLightSprite.setScale(1, 1);
-      this.rearLightSprite.setAlpha(0.85 * intensity);
-      this.rearLightSprite.setVisible(true);
-    } else {
-      this.rearLightSprite.setVisible(false);
+      this.workLightSprite.setVisible(false);
     }
   }
 
@@ -3022,10 +2973,11 @@ export class Player {
       this.fuel = Math.min(minReserve, this.maxFuel);
     }
 
-    // 5. Kamera und Viewport sofort an die Basis binden
+    // 5. Kamera und Viewport sofort an die Basis binden & Follow reaktivieren
     if (this.scene && this.scene.cameras && this.scene.cameras.main) {
       const cam = this.scene.cameras.main;
       cam.centerOn(this.x, this.y);
+      cam.startFollow(this.sprite, false, 1, 1);
       if (this.gridSystem) {
         this.gridSystem.updateViewport(cam, this);
       }
