@@ -155,14 +155,14 @@ export class InputHandler {
     }
 
     // Bei fortlaufendem Bohren (z. B. Tunnel durch Felswände) bleibt der Status auch während
-    // des kurzen Kachel-Vorrückens (~200ms) stabil auf "Auto Drill", statt hin und her zu flackern!
+    // des kurzen Kachel-Vorrückens (~200ms) stabil auf "Auto-Vortrieb", statt hin und her zu flackern!
     const isContinuingDrill = this._lastDrillTime && (now - this._lastDrillTime < 500);
     const isDrillMode = isActivelyDrilling || isContinuingDrill;
     const isLocked = !!this.lockedDirection;
 
     if (isDrillMode) {
       joystickContainer.classList.add('is-drilling');
-      statusText.textContent = 'Auto Drill';
+      statusText.textContent = 'Auto-Vortrieb';
     } else if (isLocked) {
       joystickContainer.classList.remove('is-drilling');
       statusText.textContent = 'Auto-Pilot';

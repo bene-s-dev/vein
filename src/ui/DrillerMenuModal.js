@@ -359,8 +359,8 @@ export class DrillerMenuModal {
 
 
 
-        ${mkToggle('btn-dir-lock','Einrasten','Richtung durch Halten fixieren', lockOn, 'lock')}
-        ${mkToggle('btn-auto-drill','Automatisch weiterbohren','Blockiert nicht an Gestein', drillOn, 'drill')}
+        ${mkToggle('btn-dir-lock','Auto-Pilot','Richtung durch Halten fixieren', lockOn, 'lock')}
+        ${mkToggle('btn-auto-drill','Auto-Vortrieb','Automatisch durch Gestein bohren', drillOn, 'drill')}
       </div>
     `;
 
