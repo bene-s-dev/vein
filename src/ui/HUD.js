@@ -1076,12 +1076,12 @@ export class HUD {
       this.warnedPointOfNoReturn = false;
       this._suppressInitialFuelWarn = false;
     } else if (isBelowGround) {
-      // Beim ersten Update nach Spielladen unter Tage: Warnungen still als "gezeigt" markieren,
-      // damit der Toast nicht sofort beim Laden erscheint.
+      // Beim ersten Update nach Spielladen unter Tage: Nur die Einstiegswarnung
+      // ("Tank fast leer") still als "gezeigt" markieren. Die Rückkehr-Warnung
+      // ("Sofort umkehren") soll weiterhin normal ausgelöst werden.
       if (this._suppressInitialFuelWarn) {
         this._suppressInitialFuelWarn = false;
         this.warnedLowFuelOnEntry = true;
-        this.warnedPointOfNoReturn = true;
       }
 
       // Warnung beim Einfahren in den Schacht mit zu wenig Treibstoff (< 50%)
