@@ -1023,6 +1023,33 @@
       height: 100%;
     }
 
+    .map-legend {
+      position: absolute;
+      top: 8px;
+      right: 14px;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      pointer-events: auto;
+      user-select: none;
+    }
+
+    .map-legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      color: rgba(148, 163, 184, 0.65);
+      cursor: pointer;
+      transition: color 0.15s ease;
+    }
+
+    .map-legend-item:hover {
+      color: #f8fafc;
+    }
+
     .map-floating-actions {
       position: absolute;
       right: 24px;

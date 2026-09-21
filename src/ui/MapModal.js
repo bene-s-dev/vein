@@ -132,6 +132,15 @@ export class MapModal {
       <div class="map-canvas-wrapper mode-select" id="map-canvas-wrapper">
         <canvas id="map-viewport-canvas"></canvas>
 
+        <!-- Legende (schwebend oben rechts) -->
+        <div class="map-legend">
+          <span class="map-legend-item" id="chip-jump-player"><span class="poi-dot" style="background:#fbbf24;"></span> Bohrer</span>
+          <span class="map-legend-item" id="chip-jump-entrance"><span class="poi-dot" style="background:#10b981;"></span> Schacht</span>
+          <span class="map-legend-item" id="chip-jump-fuel"><span class="poi-dot" style="background:#f59e0b;"></span> Tankanlagen</span>
+          <span class="map-legend-item" id="chip-jump-pneumatic"><span class="poi-dot" style="background:#38bdf8;"></span> Erzförderung</span>
+          <span class="map-legend-item" id="chip-jump-surface"><span class="poi-dot" style="background:#a855f7;"></span> Basis</span>
+        </div>
+
         <!-- Floating Navigation Actions -->
         <div class="map-floating-actions" id="map-floating-actions">
           ${this.getFloatingActionsHtml()}
@@ -262,6 +271,22 @@ export class MapModal {
       chipSurface.onclick = () => {
         this.selectPOI({ gx: 15, gy: -1, name: 'Basis & Hangar', type: 'surface' });
         this.centerOn(15, -1);
+      };
+    }
+    const chipPneumatic = document.getElementById('chip-jump-pneumatic');
+    if (chipPneumatic) {
+      chipPneumatic.onclick = () => {
+        const stations = (this.baseSystem?.subsurfaceStations || []).filter(s => s.type === 'pneumatic');
+        if (stations.length > 0) {
+          let nearest = stations[0];
+          let minDist = 99999;
+          stations.forEach(s => {
+            const d = Math.hypot(s.gx - this.player.gx, s.gy - this.player.gy);
+            if (d < minDist) { minDist = d; nearest = s; }
+          });
+          this.selectPOI({ gx: nearest.gx, gy: nearest.gy, name: nearest.name || 'Erzförderung', type: 'pneumatic' });
+          this.centerOn(nearest.gx, nearest.gy);
+        }
       };
     }
 
