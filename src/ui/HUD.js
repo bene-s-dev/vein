@@ -278,11 +278,11 @@ export class HUD {
     if (this.labelActionGeothermal) bindActionBtn(this.labelActionGeothermal, () => this.scene.baseSystem?.buildGeothermalStationAtPlayer?.());
 
     // Toast- und Alarm-Tracking (Point of No Return & Abfahrt mit zu wenig Tank)
-    // Wenn der Spieler bereits unter Tage ist (z.B. nach Spielstand-Laden), Warnung als
-    // "bereits gezeigt" markieren, damit sie nur bei echtem Einfahren unter Tage erscheint.
-    const alreadyUnderground = this.player && (this.player.gy >= 0);
-    this.warnedPointOfNoReturn = alreadyUnderground;
-    this.warnedLowFuelOnEntry = alreadyUnderground;
+    // _suppressInitialFuelWarn unterdrückt die Warnung beim ersten Update nach dem Laden,
+    // da der Spieler ggf. schon unter Tage geladen wird und die Warnung sonst sofort käme.
+    this.warnedPointOfNoReturn = false;
+    this.warnedLowFuelOnEntry = false;
+    this._suppressInitialFuelWarn = true;
 
     // Oberes linkes Bohrer-Status-Widget (Tank, Hülle, Fracht) als ein einheitliches klick-/tippbares Element
     let lastDrillerModalOpen = 0;
@@ -1074,7 +1074,16 @@ export class HUD {
     if (isAtSurface) {
       this.warnedLowFuelOnEntry = false;
       this.warnedPointOfNoReturn = false;
+      this._suppressInitialFuelWarn = false;
     } else if (isBelowGround) {
+      // Beim ersten Update nach Spielladen unter Tage: Warnungen still als "gezeigt" markieren,
+      // damit der Toast nicht sofort beim Laden erscheint.
+      if (this._suppressInitialFuelWarn) {
+        this._suppressInitialFuelWarn = false;
+        this.warnedLowFuelOnEntry = true;
+        this.warnedPointOfNoReturn = true;
+      }
+
       // Warnung beim Einfahren in den Schacht mit zu wenig Treibstoff (< 50%)
       if (!this.warnedLowFuelOnEntry) {
         this.warnedLowFuelOnEntry = true;
