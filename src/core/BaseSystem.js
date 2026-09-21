@@ -5266,6 +5266,7 @@ export class BaseSystem {
         }
 
         pb.isBuilt = true;
+        pb.tier = 1;
         pb.sprite.setTexture(pb.spriteKey);
         pb.textLabel.setText(pb.label || pb.title);
         pb.textLabel.setColor('#ffffff');
