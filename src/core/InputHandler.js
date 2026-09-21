@@ -148,22 +148,32 @@ export class InputHandler {
     if (!joystickContainer || !statusText) return;
 
     const player = this.scene?.player;
-    const isDrilling = player && player.state === 'drilling';
+    const now = Date.now();
+    const isActivelyDrilling = player && player.state === 'drilling';
+    if (isActivelyDrilling) {
+      this._lastDrillTime = now;
+    }
+
+    // Bei fortlaufendem Bohren (z. B. Tunnel durch Felswände) bleibt der Status auch während
+    // des kurzen Kachel-Vorrückens (~200ms) stabil auf "Auto Drill", statt hin und her zu flackern!
+    const isContinuingDrill = this._lastDrillTime && (now - this._lastDrillTime < 500);
+    const isDrillMode = isActivelyDrilling || isContinuingDrill;
     const isLocked = !!this.lockedDirection;
 
-    if (isDrilling) {
+    if (isDrillMode) {
       joystickContainer.classList.add('is-drilling');
-      statusText.textContent = '(Auto Drill)';
+      statusText.textContent = 'Auto Drill';
     } else if (isLocked) {
       joystickContainer.classList.remove('is-drilling');
-      statusText.textContent = '(Auto-Pilot)';
+      statusText.textContent = 'Auto-Pilot';
     } else {
       joystickContainer.classList.remove('is-drilling');
-      statusText.textContent = '(Auto-Pilot)';
+      statusText.textContent = 'Auto-Pilot';
     }
   }
 
   cancelLock() {
+    this._lastDrillTime = 0;
     if (!this.lockedDirection) return;
     const prevDir = this.lockedDirection;
     this.lockedDirection = null;
