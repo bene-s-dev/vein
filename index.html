@@ -755,11 +755,11 @@
     .map-modal-header {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-start;
       padding: 6px 14px;
       margin-top: calc(max(6px, env(safe-area-inset-top)) + 40px);
-      background: rgba(15, 23, 42, 0.88);
-      border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+      background: transparent;
+      border-bottom: none;
       gap: 10px;
       z-index: 10;
       flex-wrap: wrap;
@@ -787,13 +787,13 @@
     }
 
     .poi-chip {
-      background: rgba(30, 41, 59, 0.7);
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: transparent;
+      border: none;
       border-radius: 999px;
-      padding: 4px 10px;
+      padding: 4px 6px;
       font-size: 11px;
       font-weight: 700;
-      color: #cbd5e1;
+      color: rgba(203, 213, 225, 0.7);
       cursor: pointer;
       display: flex;
       align-items: center;

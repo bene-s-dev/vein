@@ -534,6 +534,19 @@ export class InputHandler {
         this.cancelLock();
         return null;
       }
+      // Wenn ein Navigationsziel aktiv ist, am Ziel abbremsen und stoppen
+      const wp = this.scene?.hud?.activeWaypoint;
+      if (wp && this.scene?.player) {
+        const p = this.scene.player;
+        const atTargetY = (this.lockedDirection === 'DOWN' && p.gy >= wp.gy) ||
+                          (this.lockedDirection === 'UP' && p.gy <= wp.gy);
+        const atTargetX = (this.lockedDirection === 'RIGHT' && p.gx >= wp.gx) ||
+                          (this.lockedDirection === 'LEFT' && p.gx <= wp.gx);
+        if (atTargetY || atTargetX) {
+          this.cancelLock();
+          return null;
+        }
+      }
       return this.lockedDirection;
     }
 

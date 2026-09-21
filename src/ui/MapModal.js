@@ -129,26 +129,7 @@ export class MapModal {
 
     this.modalEl.innerHTML = `
       <div class="map-modal-header">
-        <div class="map-modal-title">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/>
-            <line x1="9" y1="3" x2="9" y2="18"/>
-            <line x1="15" y1="6" x2="15" y2="21"/>
-          </svg>
-          <span>MINEN-KARTE & NAVIGATION</span>
-        </div>
-
-        <!-- Modus-Umschalter: Ziel wählen vs. Verschieben -->
-        <div class="map-mode-selector">
-          <button class="map-mode-btn ${this.activeMode === 'select' ? 'active' : ''}" id="map-mode-select" title="Klick auf die Karte setzt Ziel (Standard)">
-            🎯 Ziel wählen
-          </button>
-          <button class="map-mode-btn ${this.activeMode === 'pan' ? 'active' : ''}" id="map-mode-pan" title="Karte verschieben & umschauen">
-            ✋ Verschieben
-          </button>
-        </div>
-
-        <!-- POI Quick Jump Chips -->
+        <!-- POI Legende (ohne Hintergrund) -->
         <div class="map-poi-chips">
           <button class="poi-chip" id="chip-jump-player" title="Zentriere auf Bohrfahrzeug">
             <span class="poi-dot" style="background:#fbbf24;"></span> Bohrer
@@ -159,27 +140,17 @@ export class MapModal {
           <button class="poi-chip" id="chip-jump-fuel" title="Zentriere auf nächste Tankanlage">
             <span class="poi-dot" style="background:#f59e0b;"></span> Tankanlagen
           </button>
-          <button class="poi-chip" id="chip-jump-surface" title="Zentriere auf Erdoberfläche & Basis">
+          <button class="poi-chip" id="chip-jump-surface" title="Zentriere auf Erdoberfläche &amp; Basis">
             <span class="poi-dot" style="background:#a855f7;"></span> Basis
           </button>
-        </div>
-
-        <div class="map-header-actions">
-          <div class="map-zoom-controls">
-            <button id="map-btn-zoom-in" class="map-btn-tool" title="Vergrößern (+)">+</button>
-            <span id="map-zoom-level" style="font-size:11px;font-weight:700;color:#94a3b8;min-width:32px;text-align:center;">100%</span>
-            <button id="map-btn-zoom-out" class="map-btn-tool" title="Verkleinern (-)">−</button>
-            <button id="map-btn-recenter" class="map-btn-tool" title="Auf Bohrer zentrieren">🎯</button>
-          </div>
-          <button class="map-modal-close" id="map-modal-close-btn" title="Schließen (ESC / M)">&times;</button>
         </div>
       </div>
 
       <!-- Canvas Area -->
-      <div class="map-canvas-wrapper ${this.activeMode === 'select' ? 'mode-select' : 'mode-pan'}" id="map-canvas-wrapper">
+      <div class="map-canvas-wrapper mode-select" id="map-canvas-wrapper">
         <canvas id="map-viewport-canvas"></canvas>
 
-        <!-- Floating Navigation Actions (ohne Leiste und ohne Erklärung) -->
+        <!-- Floating Navigation Actions -->
         <div class="map-floating-actions" id="map-floating-actions">
           ${this.getFloatingActionsHtml()}
         </div>

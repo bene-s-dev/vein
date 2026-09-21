@@ -487,6 +487,8 @@ export class HUD {
     if (now - (this._lastMinimapDraw || 0) < 40) return;
     this._lastMinimapDraw = now;
 
+    try {
+
     const ctx = this.minimapCtx;
     const w = 136;
     const h = 84;
@@ -604,6 +606,10 @@ export class HUD {
     ctx.stroke();
 
     ctx.restore();
+    } catch (e) {
+      // Canvas-Fehler abfangen um Tab-Crashes zu verhindern
+      console.warn('Minimap render error:', e);
+    }
   }
 
   updateNavigationArrow() {
