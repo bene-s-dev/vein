@@ -128,24 +128,6 @@ export class MapModal {
     const curMZoom = this.hud ? (this.hud.minimapZoomLevel || 1.0) : 1.0;
 
     this.modalEl.innerHTML = `
-      <div class="map-modal-header">
-        <!-- POI Legende (ohne Hintergrund) -->
-        <div class="map-poi-chips">
-          <button class="poi-chip" id="chip-jump-player" title="Zentriere auf Bohrfahrzeug">
-            <span class="poi-dot" style="background:#fbbf24;"></span> Bohrer
-          </button>
-          <button class="poi-chip" id="chip-jump-entrance" title="Zentriere auf Schachteinstieg">
-            <span class="poi-dot" style="background:#10b981;"></span> Schacht (0/0)
-          </button>
-          <button class="poi-chip" id="chip-jump-fuel" title="Zentriere auf nächste Tankanlage">
-            <span class="poi-dot" style="background:#f59e0b;"></span> Tankanlagen
-          </button>
-          <button class="poi-chip" id="chip-jump-surface" title="Zentriere auf Erdoberfläche &amp; Basis">
-            <span class="poi-dot" style="background:#a855f7;"></span> Basis
-          </button>
-        </div>
-      </div>
-
       <!-- Canvas Area -->
       <div class="map-canvas-wrapper mode-select" id="map-canvas-wrapper">
         <canvas id="map-viewport-canvas"></canvas>
@@ -594,7 +576,7 @@ export class MapModal {
       // Tiefenbeschriftung links
       ctx.fillStyle = 'rgba(148, 163, 184, 0.35)';
       ctx.font = '9px monospace';
-      ctx.fillText(`${Math.round(gy * 1.5)}m (Y:${gy})`, 10, sy - 3);
+      ctx.fillText(`${Math.round(gy * 1.5)}m`, 10, sy - 3);
     }
 
     // 2. Erdoberfläche & Himmel (gy < 0)
