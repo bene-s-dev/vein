@@ -200,8 +200,8 @@ export class SaveSystem {
         xp: p.xp,
         xpNeeded: p.xpNeeded,
         highestDepthReached: p.highestDepthReached || 0,
-        gx: p.gx,
-        gy: p.gy,
+        gx: (p.sprite && typeof p.sprite.x === 'number') ? Math.round((p.sprite.x - TILE_SIZE / 2) / TILE_SIZE) : (typeof p.gx === 'number' ? p.gx : 15),
+        gy: (p.sprite && typeof p.sprite.y === 'number') ? (p.sprite.y <= -8 ? -1 : Math.round((p.sprite.y - TILE_SIZE / 2) / TILE_SIZE)) : (typeof p.gy === 'number' ? p.gy : -1),
         fuel: p.fuel,
         maxFuel: p.maxFuel,
         fuelEfficiency: p.fuelEfficiency,
@@ -421,9 +421,9 @@ export class SaveSystem {
       const bs = scene.baseSystem;
       const ms = scene.missionSystem;
 
-      // Gespeicherte Spielerposition vorab erfassen
-      const targetGx = typeof data.player.gx === 'number' ? data.player.gx : 20;
-      const targetGy = typeof data.player.gy === 'number' ? data.player.gy : 0;
+      // Gespeicherte Spielerposition vorab erfassen (Standard: Basis an der Oberfläche gx: 15, gy: -1)
+      const targetGx = typeof data.player.gx === 'number' ? data.player.gx : 15;
+      const targetGy = typeof data.player.gy === 'number' ? data.player.gy : -1;
 
       // 1. Raster & Welt-Zustand komplett zurücksetzen und neu befüllen
       if (gs.clearAllSprites) {
@@ -565,7 +565,7 @@ export class SaveSystem {
 
       let dynamiteCount = data.player.gadgets?.dynamite ?? 0;
       // Wenn TNT im Labor nicht erforscht wurde oder Dynamit nie im Depot gekauft wurde: zwingend 0 Dynamit!
-      if ((p.researchedTnt || 0) < 1 || !hasPurchasedDynamite) {
+      if ((p.researchedTnt || 0) < 1 || !p.hasPurchasedDynamite) {
         dynamiteCount = 0;
       }
 
@@ -637,13 +637,13 @@ export class SaveSystem {
       p.gx = targetGx;
       p.gy = targetGy;
       p.x = p.gx * TILE_SIZE + TILE_SIZE / 2;
-      p.y = p.gy * TILE_SIZE + TILE_SIZE / 2;
+      p.y = (p.gy <= -1) ? -16 : (p.gy * TILE_SIZE + TILE_SIZE / 2);
       p.moveTargetGx = targetGx;
       p.moveTargetGy = targetGy;
       p.moveTargetX = p.x;
       p.moveTargetY = p.y;
       p.state = 'idle';
-      if (scene.tweens) {
+      if (scene.tweens && p.sprite) {
         scene.tweens.killTweensOf(p.sprite);
       }
       // WICHTIG: Zuerst das Sprite auf die gespeicherte Position setzen, BEVOR syncAttachments aufgerufen wird!
@@ -686,11 +686,10 @@ export class SaveSystem {
       if (p.scannerRing) p.scannerRing.setPosition(p.x, p.y);
 
       if (scene.cameras && scene.cameras.main && p.sprite) {
+        scene.cameras.main.centerOn(p.sprite.x, p.sprite.y);
+        scene.cameras.main.startFollow(p.sprite, false, 1, 1);
         if (scene.setupCamera) {
           scene.setupCamera();
-        } else {
-          scene.cameras.main.centerOn(p.x, p.y);
-          scene.cameras.main.startFollow(p.sprite, false, 1, 1);
         }
       }
 

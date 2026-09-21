@@ -1737,6 +1737,19 @@ export class Player {
       return false; // Kein Treibstoff unter Tage
     }
 
+    if (this.state === PLAYER_STATES.IDLE) {
+      this.resetSpeedBoosts();
+    } else {
+      if (dir !== 'UP') {
+        this.flightBoostTimer = 0;
+        this.flightBoostMult = 1.0;
+      }
+      if (dir !== 'DOWN') {
+        this._descentBoostTimer = 0;
+        this._descentBoostMult = 1.0;
+      }
+    }
+
     let targetGx = this.gx;
     let targetGy = this.gy;
 
@@ -1838,8 +1851,7 @@ export class Player {
     // Wenn kein Treibstoff mehr vorhanden ist oder Aufstieg beendet wurde
     if (this.fuel <= 0 || !isUpActive) {
       // Boost zurücksetzen wenn Taste losgelassen
-      this.flightBoostMult = 1.0;
-      this.flightBoostTimer = 0;
+      this.resetSpeedBoosts();
       this.stopFlying();
       return;
     }
@@ -1847,28 +1859,57 @@ export class Player {
     const dt = Math.min(delta, 100) / 1000;
 
     // ── Vertikaler Geschwindigkeits-Boost ──────────────────────────────────
-    // Jede 5 Sekunden kontinuierlichen Aufstiegs verdoppelt fast den Boost-Faktor
-    // (exponentiell, max. 8×). Loslassen der Taste setzt den Timer zurück.
+    // Alle 3 Sekunden kontinuierlichen Aufstiegs erhöht sich die Stufe
     this.flightBoostTimer += dt;
-    const boostStage = Math.floor(this.flightBoostTimer / 5); // 0 bei <5s, 1 bei 5-10s, …
+    const boostStage = Math.floor(this.flightBoostTimer / 3.0); // 0 bei <3s, 1 bei 3-6s, 2 bei 6-9s, …
     const targetBoost = Math.min(8.0, Math.pow(1.9, boostStage));  // 1 → 1.9 → 3.6 → 6.9 → 8
-    // Weiche Annäherung an Ziel-Boost (Beschleunigungsgefühl)
-    this.flightBoostMult += (targetBoost - this.flightBoostMult) * Math.min(1, dt * 1.4);
+    // Weiche, zügige Annäherung an Ziel-Boost (spürbares Beschleunigungsgefühl)
+    this.flightBoostMult += (targetBoost - this.flightBoostMult) * Math.min(1, dt * 2.5);
 
-    // ── Oberflächen-Bremse ──────────────────────────────────────────────────
-    // In den letzten ~5 Kacheln vor der Oberfläche (y ≤ 5*TILE_SIZE) sanft abbremsen
-    const SURFACE_Y = 0; // gy=0 → y = TILE_SIZE/2 ≈ 16
-    const BRAKE_TILES = 5;
-    const brakeThreshold = BRAKE_TILES * TILE_SIZE; // 5 × 32 = 160px
-    const distToSurface = this.sprite.y - SURFACE_Y;
-    let brakeFactor = 1.0;
-    if (distToSurface > 0 && distToSurface < brakeThreshold) {
-      // Linear von 1 auf 0.2 beim Annähern (verhindert hartes Durchschießen)
-      brakeFactor = 0.2 + 0.8 * (distToSurface / brakeThreshold);
+    // ── Oberflächen- & Decken-Bremse ────────────────────────────────────────
+    // Die Verlangsamung zum Flugende NUR machen, wenn der Speed durch über 3 Sekunden Fliegen erhöht wurde!
+    let effectiveBoost = this.flightBoostMult;
+
+    if (this.flightBoostTimer >= 3.0 || this.flightBoostMult > 1.2) {
+      const BRAKE_DIST = 10 * TILE_SIZE; // 320px (~10 Kacheln spürbarer Bremsweg)
+      let nearestStopDist = Infinity;
+
+      // 1. Distanz zur Erdoberfläche (Erdoberfläche-Niveau gy = -1, y = -16)
+      const surfaceStopY = -16;
+      if (this.sprite.y > surfaceStopY) {
+        nearestStopDist = this.sprite.y - surfaceStopY;
+      }
+
+      // 2. Distanz zu festen Deckenkacheln im Schacht / Stollen (bis zu 14 Kacheln nach oben)
+      const currentHeadGy = Math.floor((this.sprite.y - TILE_SIZE / 2) / TILE_SIZE);
+      const headLeftGx = Math.floor((this.sprite.x - 7) / TILE_SIZE);
+      const headRightGx = Math.floor((this.sprite.x + 7) / TILE_SIZE);
+
+      for (let dy = 1; dy <= 14; dy++) {
+        const checkGy = currentHeadGy - dy;
+        if (checkGy >= 0) {
+          if (this.gridSystem.isSolid(headLeftGx, checkGy) || this.gridSystem.isSolid(headRightGx, checkGy)) {
+            // Unterkante des festen Blocks: (checkGy + 1) * TILE_SIZE + TILE_SIZE / 2
+            const ceilingBottomY = (checkGy + 1) * TILE_SIZE + TILE_SIZE / 2;
+            const distToCeiling = this.sprite.y - ceilingBottomY;
+            if (distToCeiling > 0 && distToCeiling < nearestStopDist) {
+              nearestStopDist = distToCeiling;
+            }
+            break;
+          }
+        }
+      }
+
+      if (nearestStopDist > 0 && nearestStopDist < BRAKE_DIST) {
+        const progress = Math.max(0, Math.min(1, nearestStopDist / BRAKE_DIST));
+        const eased = Math.pow(progress, 0.65);
+        // Deutliche, spürbare Verlangsamung von Boost-Speed herunter auf sanfte Landegeschwindigkeit (0.35x)
+        effectiveBoost = 0.35 + (this.flightBoostMult - 0.35) * eased;
+      }
     }
 
     const baseSpeed = this.flightSpeed || 140;
-    const effectiveSpeed = baseSpeed * this.flightBoostMult * brakeFactor;
+    const effectiveSpeed = baseSpeed * effectiveBoost;
 
     // Treibstoffverbrauch konstant – unabhängig vom Boost
     this.consumeFuel(dt * 1.8);
@@ -2003,6 +2044,7 @@ export class Player {
       this.sprite.y = -16;
       this.y = -16;
       this.gy = -1;
+      this.resetSpeedBoosts();
       this.stopFlying();
       this.checkDepthProgress();
       return;
@@ -2037,7 +2079,15 @@ export class Player {
     return !solidGround;
   }
 
+  resetSpeedBoosts() {
+    this.flightBoostTimer = 0;
+    this.flightBoostMult = 1.0;
+    this._descentBoostTimer = 0;
+    this._descentBoostMult = 1.0;
+  }
+
   stopFlying() {
+    this.resetSpeedBoosts();
     this.flySoundTimer = 0;
     soundFx.stopJetpack();
     if (soundFx && soundFx.stopRefuel) {
@@ -2092,6 +2142,14 @@ export class Player {
     if (this.scene?.tweens) {
       this.scene.tweens.killTweensOf(this.sprite);
     }
+    if (this.state === PLAYER_STATES.IDLE) {
+      this.resetSpeedBoosts();
+    } else if (targetGy <= this.gy) {
+      this._descentBoostTimer = 0;
+      this._descentBoostMult = 1.0;
+    }
+    this.flightBoostTimer = 0;
+    this.flightBoostMult = 1.0;
     this.state = PLAYER_STATES.MOVING;
     this.moveTargetGx = targetGx;
     this.moveTargetGy = targetGy;
@@ -2132,19 +2190,47 @@ export class Player {
 
     const dt = Math.min(delta, 100) / 1000;
 
-    // Abstiegs-Boost: Alle 5 Sekunden DOWN-Fahrt wird schneller (max. 8×)
-    const currentDir = this.lastInputDir || (this.scene.inputHandler ? this.scene.inputHandler.getDirection() : null);
-    if (currentDir === 'DOWN') {
+    // Abstiegs-Boost: Alle 3 Sekunden DOWN-Fahrt wird schneller (max. 8×)
+    const activeDir = inputDir || this.lastInputDir || (this.scene.inputHandler ? this.scene.inputHandler.getDirection() : null);
+    const isMovingDown = (activeDir === 'DOWN') || (this.moveTargetGy > this.gy);
+
+    if (isMovingDown) {
       this._descentBoostTimer = (this._descentBoostTimer || 0) + dt;
-      const boostStage = Math.floor(this._descentBoostTimer / 5);
+      const boostStage = Math.floor(this._descentBoostTimer / 3.0);
       const targetBoost = Math.min(8.0, Math.pow(1.9, boostStage));
-      this._descentBoostMult = (this._descentBoostMult || 1) + (targetBoost - (this._descentBoostMult || 1)) * Math.min(1, dt * 1.4);
+      this._descentBoostMult = (this._descentBoostMult || 1) + (targetBoost - (this._descentBoostMult || 1)) * Math.min(1, dt * 2.5);
     } else {
       this._descentBoostTimer = 0;
       this._descentBoostMult = 1.0;
     }
 
-    const descentMult = currentDir === 'DOWN' ? (this._descentBoostMult || 1.0) : 1.0;
+    let descentMult = isMovingDown ? (this._descentBoostMult || 1.0) : 1.0;
+
+    // ── Abbremsen zum Flug-/Abstiegs-Ende nach unten ─────────────────────────
+    // Die Verlangsamung zum Flugende NUR machen, wenn der Speed durch über 3 Sekunden Fliegen/Abstieg erhöht wurde!
+    if (isMovingDown && (this._descentBoostTimer >= 3.0 || this._descentBoostMult > 1.2)) {
+      // Vorausschau bis zu 14 Kacheln nach unten für festen Boden
+      let distToGround = Infinity;
+      const checkGx = this.moveTargetGx;
+      for (let dy = 1; dy <= 14; dy++) {
+        const checkGy = this.moveTargetGy + dy;
+        if (checkGy >= 0 && this.gridSystem.isSolid(checkGx, checkGy)) {
+          const solidTopY = checkGy * TILE_SIZE;
+          distToGround = solidTopY - (this.sprite.y + TILE_SIZE / 2);
+          break;
+        }
+      }
+
+      const BRAKE_DIST = 10 * TILE_SIZE; // ca. 320px (~10 Kacheln spürbarer Bremsweg)
+      if (distToGround > 0 && distToGround < BRAKE_DIST) {
+        const progress = Math.max(0, Math.min(1, distToGround / BRAKE_DIST));
+        const eased = Math.pow(progress, 0.65);
+        // Deutliche, spürbare Verlangsamung von Boost-Speed herunter auf sanfte Landegeschwindigkeit (0.35x)
+        const targetMult = 0.35 + (this._descentBoostMult - 0.35) * eased;
+        descentMult = Math.min(descentMult, targetMult);
+      }
+    }
+
     let step = (this.moveSpeed || 200) * dt * descentMult;
 
     while (step > 0 && this.state === PLAYER_STATES.MOVING) {
@@ -2157,6 +2243,8 @@ export class Player {
         this.sprite.setPosition(this.moveTargetX, this.moveTargetY);
         this.gx = this.moveTargetGx;
         this.gy = this.moveTargetGy;
+        this.x = this.moveTargetX;
+        this.y = this.moveTargetY;
         this.syncAttachments();
         this.checkDepthProgress();
 
@@ -2173,6 +2261,7 @@ export class Player {
           else if (nextDir === 'DOWN') nextGy++;
           else if (nextDir === 'UP') {
             this.state = PLAYER_STATES.IDLE;
+            this.resetSpeedBoosts();
             soundFx.stopDrive();
             this.handleInput(nextDir);
             break;
@@ -2182,6 +2271,7 @@ export class Player {
           const maxGx = nextGy <= 0 ? 70 : 1000;
           if (nextGx < minGx || nextGx > maxGx) {
             this.state = PLAYER_STATES.IDLE;
+            this.resetSpeedBoosts();
             soundFx.stopDrive();
             if (this.scene.inputHandler?.lockedDirection) {
               this.scene.inputHandler.cancelLock();
@@ -2192,6 +2282,10 @@ export class Player {
           const isTargetSolid = this.gridSystem.isSolid(nextGx, nextGy);
           if (!isTargetSolid) {
             // Freies Nachbarfeld: Nahtlos im selben Frame weiterfahren
+            if (nextDir !== 'DOWN') {
+              this._descentBoostTimer = 0;
+              this._descentBoostMult = 1.0;
+            }
             this.setVisualDirection(nextDir);
             this.moveTargetGx = nextGx;
             this.moveTargetGy = nextGy;
@@ -2204,6 +2298,7 @@ export class Player {
           } else {
             // Feste Wand / Gestein: Anhalten oder Bohren starten
             this.state = PLAYER_STATES.IDLE;
+            this.resetSpeedBoosts();
             soundFx.stopDrive();
             if (this.autoDrillEnabled !== false) {
               this.handleInput(nextDir);
@@ -2215,6 +2310,7 @@ export class Player {
         } else {
           // Keine Richtungstaste aktiv: sauber an Kachelmitte anhalten
           this.state = PLAYER_STATES.IDLE;
+          this.resetSpeedBoosts();
           this.trackFrame = 0;
           this.updateDrillTexture();
           soundFx.stopDrive();
@@ -2222,24 +2318,8 @@ export class Player {
         }
       } else {
         // Noch unterwegs zur aktuellen Kachelmitte
-        // Bremse: Wenn wir im Abstieg auf der letzten freien Kachel vor einem Solid-Block sind,
-        // in der hinteren Hälfte der Kachel den Step dämpfen (wie Aufstieg nahe Oberfläche)
-        let effectiveStep = step;
-        if (currentDir === 'DOWN' && this._descentBoostMult > 1.05) {
-          const belowGy = this.moveTargetGy + 1;
-          const isFinalTile = belowGy >= 0 && this.gridSystem.isSolid(this.moveTargetGx, belowGy);
-          if (isFinalTile) {
-            // dist = verbleibende Pixel bis Kachelmitte; TILE_SIZE = gesamte Kachellänge
-            const progress = 1 - Math.min(1, dist / TILE_SIZE); // 0=Anfang, 1=Mitte
-            if (progress > 0.4) {
-              // Linear von 1.0 auf 0.2 in der letzten 60% der Kachel
-              const brakeFactor = 1 - (progress - 0.4) / 0.6 * 0.8;
-              effectiveStep = step * brakeFactor;
-            }
-          }
-        }
-        this.sprite.x += (dx / dist) * effectiveStep;
-        this.sprite.y += (dy / dist) * effectiveStep;
+        this.sprite.x += (dx / dist) * step;
+        this.sprite.y += (dy / dist) * step;
         this.syncAttachments();
         step = 0;
       }
@@ -2280,6 +2360,7 @@ export class Player {
   }
 
   startDrilling(targetGx, targetGy) {
+    this.resetSpeedBoosts();
     if (targetGy === 0) {
       if (this.scene?.inputHandler?.lockedDirection) {
         this.scene.inputHandler.cancelLock();
@@ -2390,6 +2471,7 @@ export class Player {
   }
 
   cancelDrilling() {
+    this.resetSpeedBoosts();
     this.state = PLAYER_STATES.IDLE;
     this.drillTarget = null;
     this.drillParticles.stop();
@@ -2818,6 +2900,7 @@ export class Player {
   }
 
   teleportToSurface(message = 'Bergung erfolgreich') {
+    this.resetSpeedBoosts();
     this.isGameOver = false;
     if (this.scene) {
       this.scene.isRescueCutsceneActive = false;

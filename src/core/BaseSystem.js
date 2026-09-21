@@ -34,7 +34,7 @@ export const REFINERY_DURATIONS_SEC = {
 
 export function getFactorySpeedMultiplier(machineTier = 1) {
   const tier = Math.max(1, Math.min(5, Number(machineTier) || 1));
-  const mults = { 1: 1.0, 2: 0.85, 3: 0.70, 4: 0.55, 5: 0.40 };
+  const mults = { 1: 1.0, 2: 0.95, 3: 0.90, 4: 0.85, 5: 0.80 };
   return mults[tier] || 1.0;
 }
 
@@ -690,14 +690,26 @@ export const GEOLOGIST_QUESTS = [
   }
 ];
 
-// Fabrik-Maschinen Ausbaustufen (Schaltet Fertigung mit tieferen Erzen frei & beschleunigt die Herstellungszeit)
+// Fabrik-Maschinen Ausbaustufen (Schaltet Fertigung mit tieferen Erzen frei & beschleunigt die Herstellungszeit leicht)
 export const REFINERY_MACHINE_TIERS = [
   { tier: 1, name: 'Standard-Maschine', costCash: 0, speedBonus: 0, desc: 'Einfache Bauteile aus Eisen, Kupfer und Zinn (Standard-Herstellungszeit).' },
-  { tier: 2, name: 'Präzisions-Werkbank Mk.II', costCash: 1500, speedBonus: 15, desc: '-15% Herstellungszeit. Schaltet Elektronik-Platinen & Silber-Spulen frei.' },
-  { tier: 3, name: 'Kristall-Schleifer Mk.III', costCash: 5000, speedBonus: 30, desc: '-30% Herstellungszeit. Schaltet Saphir-Panzerglas & Kristall-Linsen frei.' },
-  { tier: 4, name: 'Tiefsee-Schmiede Mk.IV', costCash: 15000, speedBonus: 45, desc: '-45% Herstellungszeit. Schaltet Titan-Panzerungen & Titan-Bolzen frei.' },
-  { tier: 5, name: 'Quanten-Assembler V', costCash: 45000, speedBonus: 60, desc: '-60% Herstellungszeit (2.5× schneller!). Schaltet Obsidian-Superleiter & Quanten-Kerne frei.' }
+  { tier: 2, name: 'Präzisions-Werkbank Mk.II', costCash: 1500, speedBonus: 5, desc: '-5% Herstellungszeit. Schaltet Elektronik-Platinen & Silber-Spulen frei.' },
+  { tier: 3, name: 'Kristall-Schleifer Mk.III', costCash: 5000, speedBonus: 10, desc: '-10% Herstellungszeit. Schaltet Saphir-Panzerglas & Kristall-Linsen frei.' },
+  { tier: 4, name: 'Tiefsee-Schmiede Mk.IV', costCash: 15000, speedBonus: 15, desc: '-15% Herstellungszeit. Schaltet Titan-Panzerungen & Titan-Bolzen frei.' },
+  { tier: 5, name: 'Quanten-Assembler V', costCash: 45000, speedBonus: 20, desc: '-20% Herstellungszeit. Schaltet Obsidian-Superleiter & Quanten-Kerne frei.' }
 ];
+
+// Fabrik-Produktions-Slots (Bis zu 2 zusätzliche parallele Produktions-Slots für Schmelzofen & Industriemaschine)
+export const REFINERY_SLOT_UPGRADES = {
+  smelt: [
+    { slot: 2, cost: 60000, name: 'Schmelztiegel II', desc: 'Schaltet einen 2. Schmelzofen frei für paralleles Schmelzen von 2 Erzen.' },
+    { slot: 3, cost: 180000, name: 'Schmelztiegel III', desc: 'Schaltet einen 3. Schmelzofen frei für simultanes Schmelzen von 3 Erzen.' }
+  ],
+  craft: [
+    { slot: 2, cost: 85000, name: 'Montage-Straße II', desc: 'Schaltet eine 2. Fertigungslinie frei für parallele Bauteil-Produktion von 2 Produkten.' },
+    { slot: 3, cost: 250000, name: 'Montage-Straße III', desc: 'Schaltet eine 3. Fertigungslinie frei für gleichzeitiges Herstellen von 3 Produkten.' }
+  ]
+};
 
 // Fabrik-Produkte (Industrielle Werkstoffe mit hohem Börsenwert & Montagebauteile)
 // Jedes Handelsgut benötigt zusätzlich 2x Kohle als Prozesshitze/Brennstoff
@@ -1002,7 +1014,9 @@ export class BaseSystem {
       finished: [], // [{ id, ore, name, value, finishedAt }]
       lastTimestamp: Date.now(),
       fuelCoal: 0,   // Manuell geladene Kohle in der Brennkammer
-      machineTier: 1 // Ausbaustufe der Industrie-Maschine (1-5)
+      machineTier: 1, // Ausbaustufe der Industrie-Maschine (1-5)
+      smeltSlots: 1,  // Parallele Schmelzofen-Slots (1-3)
+      craftSlots: 1   // Parallele Industrie-Slots (1-3)
     };
     this.isRefineryModalOpen = false;
     this.refineryUiInterval = null;
@@ -2189,6 +2203,8 @@ export class BaseSystem {
     if (this.refinery) {
       this.refinery.fuelCoal = 0;
       this.refinery.machineTier = 1;
+      this.refinery.smeltSlots = 1;
+      this.refinery.craftSlots = 1;
       this.refinery.queue = [];
       this.refinery.finished = [];
       this.refinery.activeProcesses = [];
@@ -5916,67 +5932,83 @@ export class BaseSystem {
 
     let finishedCount = 0;
 
-    // 1. Schmelzofen-Linie (Erze -> Barren direkt ins Depot)
-    let remSmelt = elapsedMs;
-    while (remSmelt > 0) {
-      const currentSmelt = this.refinery.queue.find(item => !item.isProduct);
-      if (!currentSmelt) break;
+    const smeltSlots = Math.max(1, Math.min(3, Number(this.refinery.smeltSlots) || 1));
+    const craftSlots = Math.max(1, Math.min(3, Number(this.refinery.craftSlots) || 1));
 
-      if (remSmelt >= currentSmelt.remainingMs) {
-        remSmelt -= currentSmelt.remainingMs;
-        const idx = this.refinery.queue.indexOf(currentSmelt);
-        this.refinery.queue.splice(idx, 1);
-        currentSmelt.remainingMs = 0;
-        currentSmelt.finishedAt = now - remSmelt;
+    // Getrennte Queues für Schmelze und Industrie-Fertigung
+    const smeltQueue = this.refinery.queue.filter(item => !item.isProduct);
+    const craftQueue = this.refinery.queue.filter(item => item.isProduct);
 
-        // Automatisch direkt ins Depot einlagern
-        if (!this.depot) this.depot = { ores: {}, products: {}, capacity: 10, tier: 1 };
-        if (!this.depot.products) this.depot.products = {};
-        const barKey = 'bar_' + currentSmelt.ore;
-        this.depot.products[barKey] = (this.depot.products[barKey] || 0) + 1;
-        if (this.player && this.player.discoverProduct) this.player.discoverProduct(barKey);
-
-        finishedCount++;
-      } else {
-        currentSmelt.remainingMs -= remSmelt;
-        remSmelt = 0;
-      }
-    }
-
-    // 2. Industrie-Fertigungslinie (Produkte direkt ins Depot)
-    let remCraft = elapsedMs;
-    while (remCraft > 0) {
-      const currentCraft = this.refinery.queue.find(item => item.isProduct);
-      if (!currentCraft) break;
-
-      if (remCraft >= currentCraft.remainingMs) {
-        remCraft -= currentCraft.remainingMs;
-        const idx = this.refinery.queue.indexOf(currentCraft);
-        this.refinery.queue.splice(idx, 1);
-        currentCraft.remainingMs = 0;
-        currentCraft.finishedAt = now - remCraft;
-
-        // Automatisch einlagern: isComponent → player.components, sonst → Depot
-        if (!this.depot) this.depot = { ores: {}, products: {}, capacity: 10, tier: 1 };
-        if (!this.depot.products) this.depot.products = {};
-        const prodId = currentCraft.productId;
-        const prodDef = FACTORY_PRODUCTS[prodId];
-        if (prodDef && prodDef.isComponent && prodDef.compKey) {
-          // Montage-Bauteil → direkt in player.components
-          this.player.components[prodDef.compKey] = (this.player.components[prodDef.compKey] || 0) + 1;
-        } else {
-          // Normal-Produkt → ins Depot
-          this.depot.products[prodId] = (this.depot.products[prodId] || 0) + 1;
+    // 1. Schmelzofen-Linie: Bis zu smeltSlots Aufträge werden parallel verarbeitet
+    let remSmeltTime = elapsedMs;
+    while (remSmeltTime > 0 && smeltQueue.length > 0) {
+      const activeCount = Math.min(smeltSlots, smeltQueue.length);
+      let minActiveRemaining = Infinity;
+      for (let i = 0; i < activeCount; i++) {
+        if (smeltQueue[i].remainingMs < minActiveRemaining) {
+          minActiveRemaining = smeltQueue[i].remainingMs;
         }
-        if (this.player && this.player.discoverProduct) this.player.discoverProduct(prodId);
+      }
+      if (!isFinite(minActiveRemaining) || minActiveRemaining <= 0) minActiveRemaining = 1;
 
-        finishedCount++;
-      } else {
-        currentCraft.remainingMs -= remCraft;
-        remCraft = 0;
+      const step = Math.min(remSmeltTime, minActiveRemaining);
+      for (let i = 0; i < activeCount; i++) {
+        smeltQueue[i].remainingMs -= step;
+      }
+      remSmeltTime -= step;
+
+      // Fertiggestellte Barren sofort ins Depot übertragen
+      for (let i = activeCount - 1; i >= 0; i--) {
+        if (smeltQueue[i].remainingMs <= 0) {
+          const completed = smeltQueue.splice(i, 1)[0];
+          if (!this.depot) this.depot = { ores: {}, products: {}, capacity: 10, tier: 1 };
+          if (!this.depot.products) this.depot.products = {};
+          const barKey = 'bar_' + completed.ore;
+          this.depot.products[barKey] = (this.depot.products[barKey] || 0) + 1;
+          if (this.player && this.player.discoverProduct) this.player.discoverProduct(barKey);
+          finishedCount++;
+        }
       }
     }
 
+    // 2. Industriemaschine-Linie: Bis zu craftSlots Aufträge werden parallel gefertigt
+    let remCraftTime = elapsedMs;
+    while (remCraftTime > 0 && craftQueue.length > 0) {
+      const activeCount = Math.min(craftSlots, craftQueue.length);
+      let minActiveRemaining = Infinity;
+      for (let i = 0; i < activeCount; i++) {
+        if (craftQueue[i].remainingMs < minActiveRemaining) {
+          minActiveRemaining = craftQueue[i].remainingMs;
+        }
+      }
+      if (!isFinite(minActiveRemaining) || minActiveRemaining <= 0) minActiveRemaining = 1;
+
+      const step = Math.min(remCraftTime, minActiveRemaining);
+      for (let i = 0; i < activeCount; i++) {
+        craftQueue[i].remainingMs -= step;
+      }
+      remCraftTime -= step;
+
+      // Fertiggestellte Produkte direkt ins Depot oder player.components übertragen
+      for (let i = activeCount - 1; i >= 0; i--) {
+        if (craftQueue[i].remainingMs <= 0) {
+          const completed = craftQueue.splice(i, 1)[0];
+          if (!this.depot) this.depot = { ores: {}, products: {}, capacity: 10, tier: 1 };
+          if (!this.depot.products) this.depot.products = {};
+          const prodId = completed.productId;
+          const prodDef = FACTORY_PRODUCTS[prodId];
+          if (prodDef && prodDef.isComponent && prodDef.compKey) {
+            this.player.components[prodDef.compKey] = (this.player.components[prodDef.compKey] || 0) + 1;
+          } else {
+            this.depot.products[prodId] = (this.depot.products[prodId] || 0) + 1;
+          }
+          if (this.player && this.player.discoverProduct) this.player.discoverProduct(prodId);
+          finishedCount++;
+        }
+      }
+    }
+
+    this.refinery.queue = [...smeltQueue, ...craftQueue];
     return finishedCount;
   }
 
@@ -6004,7 +6036,9 @@ export class BaseSystem {
       })),
       lastTimestamp: this.refinery.lastTimestamp,
       fuelCoal: typeof this.refinery.fuelCoal === 'number' ? this.refinery.fuelCoal : 0,
-      machineTier: typeof this.refinery.machineTier === 'number' ? this.refinery.machineTier : 1
+      machineTier: typeof this.refinery.machineTier === 'number' ? this.refinery.machineTier : 1,
+      smeltSlots: Math.max(1, Math.min(3, Number(this.refinery.smeltSlots) || 1)),
+      craftSlots: Math.max(1, Math.min(3, Number(this.refinery.craftSlots) || 1))
     };
   }
 
@@ -6012,6 +6046,8 @@ export class BaseSystem {
     if (!savedData) return;
     this.refinery.fuelCoal = typeof savedData.fuelCoal === 'number' ? savedData.fuelCoal : 0;
     this.refinery.machineTier = typeof savedData.machineTier === 'number' ? savedData.machineTier : 1;
+    this.refinery.smeltSlots = Math.max(1, Math.min(3, Number(savedData.smeltSlots) || 1));
+    this.refinery.craftSlots = Math.max(1, Math.min(3, Number(savedData.craftSlots) || 1));
     this.refinery.queue = (savedData.queue || []).map(item => {
       const properDuration = (item.isProduct && item.productId)
         ? getFactoryProductDurationMs(item.productId, this.refinery.machineTier)
@@ -6107,42 +6143,65 @@ export class BaseSystem {
 
   updateRefineryLiveTimers() {
     const queue = this.refinery.queue;
-    const currentSmelt = queue.find(item => !item.isProduct);
-    const currentCraft = queue.find(item => item.isProduct);
+    const smeltQueue = queue.filter(item => !item.isProduct);
+    const craftQueue = queue.filter(item => item.isProduct);
+    const smeltSlots = Math.max(1, Math.min(3, Number(this.refinery.smeltSlots) || 1));
+    const craftSlots = Math.max(1, Math.min(3, Number(this.refinery.craftSlots) || 1));
 
-    if (currentSmelt) {
-      const pct = Math.min(100, Math.max(0, Math.round(((currentSmelt.durationMs - currentSmelt.remainingMs) / currentSmelt.durationMs) * 100)));
-      const timerEl = document.getElementById('smelt-timer');
-      if (timerEl) {
-        timerEl.textContent = this.formatRefineryClock(currentSmelt.remainingMs);
-        const smeltQueue = queue.filter(item => !item.isProduct);
-        const totalSmeltMs = smeltQueue.reduce((sum, item, idx) => sum + (idx === 0 ? item.remainingMs : item.durationMs), 0);
-        if (smeltQueue.length > 1) {
-          timerEl.title = `Aktueller Barren: ${this.formatRefineryClock(currentSmelt.remainingMs)} | Gesamtzeit (${smeltQueue.length} Barren): ${this.formatRefineryClock(totalSmeltMs)}`;
-        } else {
-          timerEl.title = `Verbleibende Zeit: ${this.formatRefineryClock(currentSmelt.remainingMs)}`;
-        }
+    for (let i = 0; i < smeltSlots; i++) {
+      const active = smeltQueue[i];
+      const timerEl = document.getElementById(`smelt-timer-${i}`);
+      const fillEl = document.getElementById(`smelt-progress-fill-${i}`);
+      if (active) {
+        const pct = Math.min(100, Math.max(0, Math.round(((active.durationMs - active.remainingMs) / active.durationMs) * 100)));
+        if (timerEl) timerEl.textContent = this.formatRefineryClock(active.remainingMs);
+        if (fillEl) fillEl.style.width = `${pct}%`;
+      } else {
+        if (timerEl) timerEl.textContent = '--:--';
+        if (fillEl) fillEl.style.width = '0%';
       }
-      const fillEl = document.getElementById('smelt-progress-fill');
-      if (fillEl) fillEl.style.width = `${pct}%`;
     }
 
-    if (currentCraft) {
-      const pct = Math.min(100, Math.max(0, Math.round(((currentCraft.durationMs - currentCraft.remainingMs) / currentCraft.durationMs) * 100)));
-      const timerEl = document.getElementById('craft-timer');
-      if (timerEl) {
-        timerEl.textContent = this.formatRefineryClock(currentCraft.remainingMs);
-        const craftQueue = queue.filter(item => item.isProduct);
-        const totalCraftMs = craftQueue.reduce((sum, item, idx) => sum + (idx === 0 ? item.remainingMs : item.durationMs), 0);
-        if (craftQueue.length > 1) {
-          timerEl.title = `Aktuelle Fertigung: ${this.formatRefineryClock(currentCraft.remainingMs)} | Gesamtzeit (${craftQueue.length} Aufträge): ${this.formatRefineryClock(totalCraftMs)}`;
-        } else {
-          timerEl.title = `Verbleibende Zeit: ${this.formatRefineryClock(currentCraft.remainingMs)}`;
-        }
+    for (let i = 0; i < craftSlots; i++) {
+      const active = craftQueue[i];
+      const timerEl = document.getElementById(`craft-timer-${i}`);
+      const fillEl = document.getElementById(`craft-progress-fill-${i}`);
+      if (active) {
+        const pct = Math.min(100, Math.max(0, Math.round(((active.durationMs - active.remainingMs) / active.durationMs) * 100)));
+        if (timerEl) timerEl.textContent = this.formatRefineryClock(active.remainingMs);
+        if (fillEl) fillEl.style.width = `${pct}%`;
+      } else {
+        if (timerEl) timerEl.textContent = '--:--';
+        if (fillEl) fillEl.style.width = '0%';
       }
-      const fillEl = document.getElementById('craft-progress-fill');
-      if (fillEl) fillEl.style.width = `${pct}%`;
     }
+  }
+
+  buyRefinerySlot(machineType) {
+    const isSmelt = machineType === 'smelt';
+    const slotKey = isSmelt ? 'smeltSlots' : 'craftSlots';
+    const currentSlots = Math.max(1, Math.min(3, Number(this.refinery[slotKey]) || 1));
+    const upgrades = REFINERY_SLOT_UPGRADES[machineType] || [];
+    const nextSlotData = upgrades.find(u => u.slot === currentSlots + 1);
+
+    if (!nextSlotData) {
+      this.scene.events.emit('notify', 'Bereits alle zusätzlichen Produktions-Slots freigeschaltet (3/3)!');
+      return;
+    }
+
+    if (this.player.cash < nextSlotData.cost) {
+      this.scene.events.emit('notify', `Nicht genug Geld! Benötigt: €${nextSlotData.cost.toLocaleString('de-DE')}`);
+      return;
+    }
+
+    this.player.cash -= nextSlotData.cost;
+    this.refinery[slotKey] = currentSlots + 1;
+
+    soundFx.playPurchase();
+    this.renderRefineryModalBody();
+    if (this.scene.hud) this.scene.hud.update();
+    const machineName = isSmelt ? 'Schmelzofen' : 'Industriemaschine';
+    this.scene.events.emit('notify', `🏭 ${nextSlotData.name} erworben! ${machineName} besitzt nun ${this.refinery[slotKey]} simultane Produktions-Slots.`);
   }
 
   addFuelCoal(amount = 1) {
@@ -6221,6 +6280,13 @@ export class BaseSystem {
     const nextTierData = REFINERY_MACHINE_TIERS.find(t => t.tier === currentTier + 1) || null;
     const canAffordUpgrade = nextTierData ? (this.player.cash >= nextTierData.costCash) : false;
 
+    const smeltSlots = Math.max(1, Math.min(3, Number(this.refinery.smeltSlots) || 1));
+    const craftSlots = Math.max(1, Math.min(3, Number(this.refinery.craftSlots) || 1));
+    const nextSmeltSlot = REFINERY_SLOT_UPGRADES.smelt.find(u => u.slot === smeltSlots + 1) || null;
+    const nextCraftSlot = REFINERY_SLOT_UPGRADES.craft.find(u => u.slot === craftSlots + 1) || null;
+    const canAffordSmeltSlot = nextSmeltSlot ? (this.player.cash >= nextSmeltSlot.cost) : false;
+    const canAffordCraftSlot = nextCraftSlot ? (this.player.cash >= nextCraftSlot.cost) : false;
+
     // Aufteilung in 2 getrennte Produktionslinien
     const smeltQueue = queue.filter(item => !item.isProduct);
     const craftQueue = queue.filter(item => item.isProduct);
@@ -6230,13 +6296,8 @@ export class BaseSystem {
     const totalSmeltMs = smeltQueue.reduce((sum, item, idx) => sum + (idx === 0 ? item.remainingMs : item.durationMs), 0);
     const totalCraftMs = craftQueue.reduce((sum, item, idx) => sum + (idx === 0 ? item.remainingMs : item.durationMs), 0);
 
-    const currentSmelt = smeltQueue[0] || null;
-    const currentCraft = craftQueue[0] || null;
-    const isSmelting = !!currentSmelt;
-    const isCrafting = !!currentCraft;
-
-    const pctSmelt = currentSmelt ? Math.min(100, Math.max(0, Math.round(((currentSmelt.durationMs - currentSmelt.remainingMs) / currentSmelt.durationMs) * 100))) : 0;
-    const pctCraft = currentCraft ? Math.min(100, Math.max(0, Math.round(((currentCraft.durationMs - currentCraft.remainingMs) / currentCraft.durationMs) * 100))) : 0;
+    const isSmelting = smeltQueue.length > 0;
+    const isCrafting = craftQueue.length > 0;
 
     const hasSmeltFuel = loadedCoal >= 1;
     const hasCraftFuel = loadedCoal >= 2;
@@ -6329,40 +6390,76 @@ export class BaseSystem {
           `;
         })() : ''}
 
-        <!-- 3. SCHMELZOFEN (STATUS & MENÜ VEREINT) -->
+        <!-- 3. SCHMELZOFEN (STATUS, PARALLELE SLOTS & MENÜ) -->
         <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid ${isSmelting ? 'rgba(249, 115, 22, 0.4)' : 'rgba(255,255,255,0.08)'}; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px;">
-          <!-- Schmelzofen Status & Fortschritt direkt im Header -->
-          <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
-            <strong style="color: #f8fafc; font-size: 12.5px; letter-spacing: 0.5px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 6px;">
-              ${icon('flame', isSmelting ? 'flame-anim' : '', 14)} Schmelzofen
-            </strong>
+          <!-- Schmelzofen Status, Slots & Upgrade im Header -->
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <strong style="color: #f8fafc; font-size: 12.5px; letter-spacing: 0.5px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 6px;">
+                ${icon('flame', isSmelting ? 'flame-anim' : '', 14)} Schmelzofen
+              </strong>
+              <span style="font-size: 10.5px; color: #f97316; font-weight: 700; background: rgba(249, 115, 22, 0.15); border: 1px solid rgba(249, 115, 22, 0.3); padding: 1px 6px; border-radius: 4px;">
+                ${smeltSlots}/3 Slots aktiv
+              </span>
+              ${nextSmeltSlot ? `
+                <button id="btn-buy-smelt-slot" class="btn-buy" ${canAffordSmeltSlot ? '' : 'disabled'} style="height: 24px; font-size: 10.5px; font-weight: 700; padding: 0 8px; gap: 4px; border-radius: 5px;" title="${nextSmeltSlot.desc}">
+                  ${icon('plus-circle', '', 11)} + Slot ${nextSmeltSlot.slot} &bull; €${nextSmeltSlot.cost.toLocaleString('de-DE')}
+                </button>
+              ` : `
+                <span style="font-size: 10px; font-weight: 700; color: #34d399; background: rgba(16, 185, 129, 0.12); padding: 2px 6px; border-radius: 4px;">Max Slots (3/3)</span>
+              `}
+            </div>
             <div style="display: flex; align-items: center; gap: 8px;">
               <span style="background: ${hasSmeltFuel ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'}; border: 1px solid ${hasSmeltFuel ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'}; color: ${hasSmeltFuel ? '#34d399' : '#f87171'}; padding: 2px 7px; border-radius: 6px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;" title="Brennstoffverbrauch: 1x Kohle pro Barren">
                 ${itemDisplayIcon('coal', 13)} 1×
               </span>
-              <span id="smelt-timer" style="font-family: monospace; font-size: 12px; font-weight: 800; color: ${isSmelting ? '#fbbf24' : '#64748b'}; font-variant-numeric: tabular-nums;" title="${smeltQueue.length > 1 ? `Aktueller Barren: ${this.formatRefineryClock(currentSmelt.remainingMs)} | Gesamtzeit (${smeltQueue.length} Barren): ${this.formatRefineryClock(totalSmeltMs)}` : `Verbleibende Zeit: ${this.formatRefineryClock(currentSmelt ? currentSmelt.remainingMs : 0)}`}">
-                ${isSmelting ? this.formatRefineryClock(currentSmelt.remainingMs) : '00:00'}
-              </span>
             </div>
           </div>
 
-          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; min-height: 16px;">
-            ${isSmelting ? `
-              <span style="font-weight: 700; color: #fbbf24; display: inline-flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                &bull; ${itemDisplayIcon('bar_' + currentSmelt.ore, 12)} ${currentSmelt.name}
-                ${smeltQueue.length > 1 ? `<span style="font-size: 9.5px; color: #94a3b8; background: rgba(0,0,0,0.35); padding: 1px 5px; border-radius: 4px;" title="Gesamtzeit für alle ${smeltQueue.length} Barren: ${this.formatRefineryClock(totalSmeltMs)}">+${smeltQueue.length - 1} (${this.formatRefineryClock(totalSmeltMs)})</span>` : ''}
-              </span>
-            ` : `
-              <span style="color: ${hasSmeltFuel ? '#94a3b8' : '#f87171'}; font-weight: ${hasSmeltFuel ? '500' : '600'}; display: inline-flex; align-items: center; gap: 5px;">
-                <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: ${hasSmeltFuel ? '#34d399' : '#ef4444'}; box-shadow: 0 0 6px ${hasSmeltFuel ? 'rgba(52, 211, 153, 0.7)' : 'rgba(239, 68, 68, 0.7)'};"></span>
-                ${hasSmeltFuel ? 'Bereit für Roherze' : 'Brennkammer leer'}
-              </span>
-            `}
+          <!-- Parallele Ofen-Slots -->
+          <div style="display: grid; grid-template-columns: repeat(${smeltSlots}, 1fr); gap: 8px;">
+            ${Array.from({ length: smeltSlots }).map((_, idx) => {
+              const active = smeltQueue[idx];
+              const pct = active ? Math.min(100, Math.max(0, Math.round(((active.durationMs - active.remainingMs) / active.durationMs) * 100))) : 0;
+              return `
+                <div style="background: rgba(0,0,0,0.3); border: 1px solid ${active ? 'rgba(249, 115, 22, 0.35)' : 'rgba(255,255,255,0.06)'}; border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
+                    <span style="font-weight: 700; color: #94a3b8; font-size: 10.5px;">Ofen-Slot ${idx + 1}</span>
+                    <span id="smelt-timer-${idx}" style="font-family: monospace; font-size: 11.5px; font-weight: 800; color: ${active ? '#fbbf24' : '#64748b'}; font-variant-numeric: tabular-nums;">
+                      ${active ? this.formatRefineryClock(active.remainingMs) : '--:--'}
+                    </span>
+                  </div>
+                  <div style="min-height: 18px; display: flex; align-items: center; font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    ${active ? `
+                      <span style="color: #fbbf24; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        ${itemDisplayIcon('bar_' + active.ore, 13)} ${active.name}
+                      </span>
+                    ` : `
+                      <span style="color: #64748b; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">
+                        <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: ${hasSmeltFuel ? '#34d399' : '#64748b'};"></span>
+                        ${hasSmeltFuel ? 'Bereit für Erz' : 'Keine Kohle'}
+                      </span>
+                    `}
+                  </div>
+                  <div style="height: 5px; background: #090d16; border: 1px solid rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden;">
+                    <div id="smelt-progress-fill-${idx}" style="width: ${pct}%; height: 100%; background: linear-gradient(90deg, #ea580c 0%, #f59e0b 80%, #fde047 100%); transition: width 0.15s linear;"></div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
           </div>
 
-          <div style="height: 6px; background: #090d16; border: 1px solid rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; margin-bottom: 2px;">
-            <div id="smelt-progress-fill" style="width: ${pctSmelt}%; height: 100%; background: linear-gradient(90deg, #ea580c 0%, #f59e0b 80%, #fde047 100%); box-shadow: ${isSmelting ? '0 0 8px rgba(245, 158, 11, 0.6)' : 'none'}; transition: width 0.15s linear;"></div>
-          </div>
+          ${smeltQueue.length > smeltSlots ? `
+            <div style="font-size: 10.5px; color: #94a3b8; background: rgba(0,0,0,0.25); border: 1px dashed rgba(255,255,255,0.1); border-radius: 6px; padding: 4px 8px; display: flex; align-items: center; justify-content: space-between;">
+              <span style="display: inline-flex; align-items: center; gap: 4px;">
+                ${icon('list-ordered', '', 12)}
+                +${smeltQueue.length - smeltSlots} weitere Barren in Warteschlange (rücken sofort nach)
+              </span>
+              <span style="font-family: monospace; font-size: 10px; color: #64748b;">
+                Gesamtzeit: ${this.formatRefineryClock(totalSmeltMs)}
+              </span>
+            </div>
+          ` : ''}
 
           <!-- Schmelzofen Roherz-Liste -->
           ${(() => {
@@ -6437,9 +6534,9 @@ export class BaseSystem {
           })()}
         </div>
 
-        <!-- 4. INDUSTRIEMASCHINE (STATUS & FERTIGUNG VEREINT) -->
+        <!-- 4. INDUSTRIEMASCHINE (STATUS, PARALLELE SLOTS & FERTIGUNG) -->
         <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid ${isCrafting ? 'rgba(56, 189, 248, 0.4)' : 'rgba(255,255,255,0.08)'}; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px;">
-          <!-- Industriemaschine Status, Fortschritt & Upgrade direkt im Header -->
+          <!-- Industriemaschine Status, Fortschritt, Slots & Upgrade direkt im Header -->
           <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap;">
             <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
               <strong style="color: #f8fafc; font-size: 12.5px; letter-spacing: 0.5px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 6px;">
@@ -6458,34 +6555,68 @@ export class BaseSystem {
               ` : `
                 <span style="font-size: 10px; font-weight: 700; color: #34d399; background: rgba(16, 185, 129, 0.12); padding: 2px 6px; border-radius: 4px;">Max Lvl (-${currentTierData.speedBonus}%)</span>
               `}
+              <span style="font-size: 10.5px; color: #38bdf8; font-weight: 700; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); padding: 1px 6px; border-radius: 4px;">
+                ${craftSlots}/3 Slots aktiv
+              </span>
+              ${nextCraftSlot ? `
+                <button id="btn-buy-craft-slot" class="btn-buy" ${canAffordCraftSlot ? '' : 'disabled'} style="height: 24px; font-size: 10.5px; font-weight: 700; padding: 0 8px; gap: 4px; border-radius: 5px;" title="${nextCraftSlot.desc}">
+                  ${icon('plus-circle', '', 11)} + Slot ${nextCraftSlot.slot} &bull; €${nextCraftSlot.cost.toLocaleString('de-DE')}
+                </button>
+              ` : `
+                <span style="font-size: 10px; font-weight: 700; color: #34d399; background: rgba(16, 185, 129, 0.12); padding: 2px 6px; border-radius: 4px;">Max Slots (3/3)</span>
+              `}
             </div>
             <div style="display: flex; align-items: center; gap: 8px;">
               <span style="background: ${hasCraftFuel ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'}; border: 1px solid ${hasCraftFuel ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'}; color: ${hasCraftFuel ? '#34d399' : '#f87171'}; padding: 2px 7px; border-radius: 6px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;" title="Brennstoffverbrauch: 2x Kohle pro Fertigung">
                 ${itemDisplayIcon('coal', 13)} 2×
               </span>
-              <span id="craft-timer" style="font-family: monospace; font-size: 12px; font-weight: 800; color: ${isCrafting ? '#38bdf8' : '#64748b'}; font-variant-numeric: tabular-nums;" title="${craftQueue.length > 1 ? `Aktuelle Fertigung: ${this.formatRefineryClock(currentCraft.remainingMs)} | Gesamtzeit (${craftQueue.length} Aufträge): ${this.formatRefineryClock(totalCraftMs)}` : `Verbleibende Zeit: ${this.formatRefineryClock(currentCraft ? currentCraft.remainingMs : 0)}`}">
-                ${isCrafting ? this.formatRefineryClock(currentCraft.remainingMs) : '00:00'}
-              </span>
             </div>
           </div>
 
-          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; min-height: 16px;">
-            ${isCrafting ? `
-              <span style="font-weight: 700; color: #38bdf8; display: inline-flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                &bull; ${itemDisplayIcon(currentCraft.productId, 12)} ${currentCraft.name}
-                ${craftQueue.length > 1 ? `<span style="font-size: 9.5px; color: #94a3b8; background: rgba(0,0,0,0.35); padding: 1px 5px; border-radius: 4px;" title="Gesamtzeit für alle ${craftQueue.length} Aufträge: ${this.formatRefineryClock(totalCraftMs)}">+${craftQueue.length - 1} (${this.formatRefineryClock(totalCraftMs)})</span>` : ''}
-              </span>
-            ` : `
-              <span style="color: ${hasCraftFuel ? '#94a3b8' : '#f87171'}; font-weight: ${hasCraftFuel ? '500' : '600'}; display: inline-flex; align-items: center; gap: 5px;">
-                <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: ${hasCraftFuel ? '#34d399' : '#ef4444'}; box-shadow: 0 0 6px ${hasCraftFuel ? 'rgba(52, 211, 153, 0.7)' : 'rgba(239, 68, 68, 0.7)'};"></span>
-                ${hasCraftFuel ? currentTierData.name : 'Brennkammer leer'}
-              </span>
-            `}
+          <!-- Parallele Fertigungs-Slots -->
+          <div style="display: grid; grid-template-columns: repeat(${craftSlots}, 1fr); gap: 8px;">
+            ${Array.from({ length: craftSlots }).map((_, idx) => {
+              const active = craftQueue[idx];
+              const pct = active ? Math.min(100, Math.max(0, Math.round(((active.durationMs - active.remainingMs) / active.durationMs) * 100))) : 0;
+              return `
+                <div style="background: rgba(0,0,0,0.3); border: 1px solid ${active ? 'rgba(56, 189, 248, 0.35)' : 'rgba(255,255,255,0.06)'}; border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
+                    <span style="font-weight: 700; color: #94a3b8; font-size: 10.5px;">Fertigungs-Slot ${idx + 1}</span>
+                    <span id="craft-timer-${idx}" style="font-family: monospace; font-size: 11.5px; font-weight: 800; color: ${active ? '#38bdf8' : '#64748b'}; font-variant-numeric: tabular-nums;">
+                      ${active ? this.formatRefineryClock(active.remainingMs) : '--:--'}
+                    </span>
+                  </div>
+                  <div style="min-height: 18px; display: flex; align-items: center; font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    ${active ? `
+                      <span style="color: #38bdf8; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        ${itemDisplayIcon(active.productId, 13)} ${active.name}
+                      </span>
+                    ` : `
+                      <span style="color: #64748b; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">
+                        <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: ${hasCraftFuel ? '#34d399' : '#64748b'};"></span>
+                        ${hasCraftFuel ? 'Bereit für Fertigung' : 'Keine Kohle'}
+                      </span>
+                    `}
+                  </div>
+                  <div style="height: 5px; background: #090d16; border: 1px solid rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden;">
+                    <div id="craft-progress-fill-${idx}" style="width: ${pct}%; height: 100%; background: linear-gradient(90deg, #0284c7 0%, #38bdf8 80%, #bae6fd 100%); transition: width 0.15s linear;"></div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
           </div>
 
-          <div style="height: 6px; background: #090d16; border: 1px solid rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; margin-bottom: 2px;">
-            <div id="craft-progress-fill" style="width: ${pctCraft}%; height: 100%; background: linear-gradient(90deg, #0284c7 0%, #38bdf8 80%, #bae6fd 100%); box-shadow: ${isCrafting ? '0 0 8px rgba(56, 189, 248, 0.6)' : 'none'}; transition: width 0.15s linear;"></div>
-          </div>
+          ${craftQueue.length > craftSlots ? `
+            <div style="font-size: 10.5px; color: #94a3b8; background: rgba(0,0,0,0.25); border: 1px dashed rgba(255,255,255,0.1); border-radius: 6px; padding: 4px 8px; display: flex; align-items: center; justify-content: space-between;">
+              <span style="display: inline-flex; align-items: center; gap: 4px;">
+                ${icon('list-ordered', '', 12)}
+                +${craftQueue.length - craftSlots} weitere Aufträge in Warteschlange (rücken sofort nach)
+              </span>
+              <span style="font-family: monospace; font-size: 10px; color: #64748b;">
+                Gesamtzeit: ${this.formatRefineryClock(totalCraftMs)}
+              </span>
+            </div>
+          ` : ''}
 
           <!-- Industriemaschine Produkt-Rezepte -->
           <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -6589,6 +6720,16 @@ export class BaseSystem {
     const btnUpgradeMachine = container.querySelector('#btn-upgrade-machine');
     if (btnUpgradeMachine) {
       btnUpgradeMachine.onclick = () => this.upgradeRefineryMachine();
+    }
+
+    const btnBuySmeltSlot = container.querySelector('#btn-buy-smelt-slot');
+    if (btnBuySmeltSlot) {
+      btnBuySmeltSlot.onclick = () => this.buyRefinerySlot('smelt');
+    }
+
+    const btnBuyCraftSlot = container.querySelector('#btn-buy-craft-slot');
+    if (btnBuyCraftSlot) {
+      btnBuyCraftSlot.onclick = () => this.buyRefinerySlot('craft');
     }
 
     const btnTransfer = document.getElementById('btn-transfer-to-storage');

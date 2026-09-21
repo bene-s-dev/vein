@@ -17,6 +17,9 @@ export class MiningScene extends Phaser.Scene {
   }
 
   create() {
+    this.inStartScreen = true;
+    this.isPaused = true;
+
     // 1. GridSystem initialisieren (endlose Welt nach unten & in beide Richtungen)
     this.gridSystem = new GridSystem(this);
 
