@@ -170,6 +170,17 @@
       gap: 2px;
     }
 
+    .hud-label {
+      font-size: 7px;
+      font-weight: 700;
+      color: rgba(148, 163, 184, 0.55);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      text-align: center;
+      line-height: 1;
+      margin-top: -1px;
+    }
+
     #hud-fuel-cluster {
       width: auto;
       min-width: auto;
@@ -3438,6 +3449,7 @@
             <!-- Verbleibender Nutztank (oberhalb der Rückkehrreserve) -->
             <div id="hud-fuel-bar" class="bar-fill bar-fuel"></div>
           </div>
+          <span class="hud-label">Tank</span>
         </div>
 
         <!-- Hülle -->
@@ -3451,6 +3463,7 @@
               </svg>
             </span>
           </div>
+          <span class="hud-label">Hülle</span>
         </div>
 
         <!-- Fracht (Driller-Inventar / Laderaum) -->
@@ -3481,6 +3494,7 @@
               </svg>
             </span>
           </div>
+          <span class="hud-label">Fracht</span>
         </div>
 
         <!-- Depot -->
@@ -3496,6 +3510,7 @@
               </svg>
             </span>
           </div>
+          <span class="hud-label">Depot</span>
         </div>
       </div>
 

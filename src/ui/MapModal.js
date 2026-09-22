@@ -132,15 +132,6 @@ export class MapModal {
       <div class="map-canvas-wrapper mode-select" id="map-canvas-wrapper">
         <canvas id="map-viewport-canvas"></canvas>
 
-        <!-- Legende (schwebend oben rechts) -->
-        <div class="map-legend">
-          <span class="map-legend-item" id="chip-jump-player"><span class="poi-dot" style="background:#fbbf24;"></span> Bohrer</span>
-          <span class="map-legend-item" id="chip-jump-entrance"><span class="poi-dot" style="background:#10b981;"></span> Schacht</span>
-          <span class="map-legend-item" id="chip-jump-fuel"><span class="poi-dot" style="background:#f59e0b;"></span> Tankanlagen</span>
-          <span class="map-legend-item" id="chip-jump-pneumatic"><span class="poi-dot" style="background:#38bdf8;"></span> Erzförderung</span>
-          <span class="map-legend-item" id="chip-jump-surface"><span class="poi-dot" style="background:#a855f7;"></span> Basis</span>
-        </div>
-
         <!-- Floating Navigation Actions -->
         <div class="map-floating-actions" id="map-floating-actions">
           ${this.getFloatingActionsHtml()}
@@ -791,6 +782,39 @@ export class MapModal {
       ctx.fillText('DU', px, py + 13 * this.zoom);
     }
 
+    // 9. Legende oben rechts direkt auf Canvas zeichnen
+    this.drawLegend(ctx, w);
+
     ctx.restore();
+  }
+
+  drawLegend(ctx, canvasW) {
+    const items = [
+      { color: '#fbbf24', label: 'Bohrer' },
+      { color: '#10b981', label: 'Schacht' },
+      { color: '#f59e0b', label: 'Tankanlagen' },
+      { color: '#38bdf8', label: 'Erzförderung' },
+      { color: '#a855f7', label: 'Basis' },
+    ];
+
+    ctx.font = 'bold 9px sans-serif';
+    ctx.textAlign = 'right';
+    const lineH = 15;
+    const startY = 14;
+    const rightX = canvasW - 12;
+
+    items.forEach((item, i) => {
+      const y = startY + i * lineH;
+
+      // Farbpunkt
+      ctx.fillStyle = item.color;
+      ctx.beginPath();
+      ctx.arc(rightX - ctx.measureText(item.label).width - 8, y, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Text
+      ctx.fillStyle = 'rgba(148, 163, 184, 0.6)';
+      ctx.fillText(item.label, rightX, y + 3);
+    });
   }
 }
